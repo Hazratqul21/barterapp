@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 from app.core.locale import resolve_locale
 from app.core.security import current_user, optional_user
 from app.db.session import get_db
+from app.models.desire import Desire
 from app.models.listing import (
     Listing,
     ListingPhoto,
@@ -23,9 +24,9 @@ from app.models.listing import (
 )
 from app.models.user import User, UserType
 from app.schemas.common import Page
-from app.schemas.listing import ListingCard, ListingCreate, ListingDetail
+from app.schemas.listing import DesireIn, ListingCard, ListingCreate, ListingDetail
 from app.services import stats
-from app.services.matching import haversine_km
+from app.services.matching import haversine_km, rebuild_matches
 from app.services.presenter import listing_card, listing_detail, trader_brief
 
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -45,6 +46,39 @@ def _decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
         return datetime.fromisoformat(stamp), uuid.UUID(listing_id)
     except Exception:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kursor yaroqsiz.")
+
+
+#: How far either side of its own worth a listing will look when the owner did
+#: not say. Half to double covers the ordinary swap; `will_add_cash` stretches
+#: the top of that band again inside `Desire.accepts_value`.
+DEFAULT_BAND_LOW = 0.5
+DEFAULT_BAND_HIGH = 2.0
+
+
+def _desires_for(payload: ListingCreate) -> list[DesireIn]:
+    """
+    The structured wishes to store for this listing.
+
+    A listing with no desire row is invisible to the matcher — `wanted()` is a
+    gate, and an owner who asked for nothing matches nothing. That is the right
+    rule for someone who genuinely wants one specific thing, and the wrong
+    outcome for someone who just filled in the form and expects offers. So when
+    the client sends none, one open desire is derived from what the listing is
+    worth: any category, within reach of its own value.
+    """
+    if payload.desires:
+        return payload.desires
+
+    worth = payload.value.minor
+    return [
+        DesireIn(
+            category=None,
+            min_value_minor=int(worth * DEFAULT_BAND_LOW),
+            max_value_minor=int(worth * DEFAULT_BAND_HIGH),
+            will_add_cash=payload.cash_ok,
+            wants_cash=False,
+        )
+    ]
 
 
 async def _owners_for(
@@ -251,9 +285,28 @@ async def create_listing(
                 )
             )
 
+    for position, desire in enumerate(_desires_for(payload)):
+        db.add(
+            Desire(
+                listing_id=listing.id,
+                category=desire.category,
+                min_value_minor=desire.min_value_minor,
+                max_value_minor=desire.max_value_minor,
+                will_add_cash=desire.will_add_cash,
+                wants_cash=desire.wants_cash,
+                position=position,
+            )
+        )
+
     if me.user_type != UserType.business:
         me.free_listings_left -= 1
     me.last_seen_at = datetime.now(UTC)
     await db.commit()
+
+    # Match straight away rather than on the next stale read. Someone who has
+    # just published their first listing opens the matches tab expecting the
+    # product's one promise to have happened; a five-minute cache window there
+    # reads as an empty app, not as a cache.
+    await rebuild_matches(db, me.id, force=True)
 
     return await get_listing(listing.id, locale=locale, viewer=me, db=db)

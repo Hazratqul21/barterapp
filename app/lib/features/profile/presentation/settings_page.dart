@@ -48,17 +48,17 @@ class SettingsPage extends ConsumerWidget {
                       leading: const Icon(Symbols.language_rounded),
                       trailing: Consumer(
                         builder: (context, ref, _) {
-                          final locale = ref.watch(sessionStoreProvider).locale;
+                          final locale = ref.watch(localeProvider);
                           return SegmentedButton<String>(
+                            showSelectedIcon: false,
                             segments: const [
                               ButtonSegment(value: 'uz', label: Text('UZ')),
                               ButtonSegment(value: 'ru', label: Text('RU')),
                               ButtonSegment(value: 'en', label: Text('EN')),
                             ],
                             selected: {locale},
-                            onSelectionChanged: (set) {
-                              ref.read(sessionStoreProvider).setLocale(set.first);
-                            },
+                            onSelectionChanged: (set) =>
+                                ref.read(localeProvider.notifier).set(set.first),
                           );
                         },
                       ),
@@ -108,7 +108,10 @@ class SettingsPage extends ConsumerWidget {
                   ),
                   icon: const Icon(Symbols.logout_rounded),
                   label: Text(l.authSignOut),
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  // Through the notifier, not the repository: the repository
+                  // only clears storage, which left `authStateProvider` still
+                  // reporting a signed-in session.
+                  onPressed: () => ref.read(authStateProvider.notifier).signOut(),
                 ),
               ),
             ],

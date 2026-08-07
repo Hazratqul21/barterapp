@@ -11,3 +11,4 @@ httpx>=0.28
 pytest>=8.3
 pytest-asyncio>=0.24
 greenlet>=3.1
+pillow>=11.0

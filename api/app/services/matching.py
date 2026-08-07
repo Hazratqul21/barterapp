@@ -143,7 +143,9 @@ def explain(score: int, distance_km: float | None) -> str:
     return "Hududingizda mavsumiy talab yuqori."
 
 
-async def rebuild_matches(db: AsyncSession, user_id: uuid.UUID) -> None:
+async def rebuild_matches(
+    db: AsyncSession, user_id: uuid.UUID, *, force: bool = False
+) -> None:
     """
     Recompute this user's matches when the last pass is stale.
 
@@ -151,16 +153,23 @@ async def rebuild_matches(db: AsyncSession, user_id: uuid.UUID) -> None:
     computation on read so the feature works before that worker exists. Moving
     it to a background job later means calling this function from there instead
     — nothing else changes.
+
+    `force` skips the staleness check. Publishing a listing uses it: the whole
+    promise of the product is "we will find who wants this", and waiting out a
+    cache window before the matches tab shows anything reads as a broken app to
+    someone who just posted their first listing.
     """
-    latest = await db.scalar(
-        select(Match.computed_at)
-        .where(Match.user_id == user_id)
-        .order_by(Match.computed_at.desc())
-        .limit(1)
-    )
     now = datetime.now(UTC)
-    if latest is not None and now - latest < STALE_AFTER:
-        return
+
+    if not force:
+        latest = await db.scalar(
+            select(Match.computed_at)
+            .where(Match.user_id == user_id)
+            .order_by(Match.computed_at.desc())
+            .limit(1)
+        )
+        if latest is not None and now - latest < STALE_AFTER:
+            return
 
     mine = (
         (

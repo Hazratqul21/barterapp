@@ -29,6 +29,10 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// The three languages the product ships in. Content and interface always move
+/// together — there is no way to read a Russian interface over Uzbek listings.
+const kSupportedLocales = ['uz', 'ru', 'en'];
+
 /// Holds the session token and the language the API should answer in.
 class SessionStore {
   SessionStore(this._prefs);
@@ -41,7 +45,11 @@ class SessionStore {
 
   String? get accessToken => _prefs.getString(_tokenKey);
   String? get refreshToken => _prefs.getString(_refreshKey);
-  String get locale => _prefs.getString(_localeKey) ?? 'uz';
+
+  String get locale {
+    final stored = _prefs.getString(_localeKey);
+    return kSupportedLocales.contains(stored) ? stored! : 'uz';
+  }
 
   Future<void> saveTokens(String access, String refresh) async {
     await _prefs.setString(_tokenKey, access);
@@ -57,7 +65,7 @@ class SessionStore {
 }
 
 class ApiClient {
-  ApiClient(this._session, {String? baseUrl})
+  ApiClient(this._session, {required this.locale, String? baseUrl})
     : _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl ?? defaultApiBaseUrl(),
@@ -70,7 +78,7 @@ class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           // The API answers in one language; it is chosen here, once.
-          options.headers['Accept-Language'] = _session.locale;
+          options.headers['Accept-Language'] = locale;
           final token = _session.accessToken;
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -83,6 +91,11 @@ class ApiClient {
 
   final Dio _dio;
   final SessionStore _session;
+
+  /// The language this client asks for. Held as a field rather than read from
+  /// storage per request so that switching it replaces the whole client — which
+  /// is what makes every cached listing refetch in the new language.
+  final String locale;
 
   Future<T> get<T>(
     String path, {
@@ -159,6 +172,35 @@ final sessionStoreProvider = Provider<SessionStore>(
   (ref) => SessionStore(ref.watch(sharedPreferencesProvider)),
 );
 
+/// The chosen language, as state rather than as a value read out of storage.
+///
+/// It used to be read straight off `SessionStore`, which returns the same
+/// object every time — so writing a new locale changed nothing Riverpod could
+/// see, and the app stayed in Uzbek until it was restarted. Holding it here
+/// means one setter moves the interface, the `Accept-Language` header and every
+/// cached listing at once.
+class LocaleController extends Notifier<String> {
+  @override
+  String build() => ref.watch(sessionStoreProvider).locale;
+
+  Future<void> set(String value) async {
+    if (!kSupportedLocales.contains(value) || value == state) return;
+    await ref.read(sessionStoreProvider).setLocale(value);
+    state = value;
+  }
+}
+
+final localeProvider = NotifierProvider<LocaleController, String>(
+  LocaleController.new,
+);
+
+/// Watching the locale here is deliberate: a language change builds a new
+/// client, which disposes every repository and provider hanging off it. Content
+/// already on screen is refetched in the new language instead of sitting there
+/// in the old one.
 final apiClientProvider = Provider<ApiClient>(
-  (ref) => ApiClient(ref.watch(sessionStoreProvider)),
+  (ref) => ApiClient(
+    ref.watch(sessionStoreProvider),
+    locale: ref.watch(localeProvider),
+  ),
 );

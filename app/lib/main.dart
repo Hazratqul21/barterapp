@@ -37,10 +37,10 @@ class _BarterAppState extends ConsumerState<BarterApp> {
 
   @override
   Widget build(BuildContext context) {
-    // The stored language drives both the widgets and the Accept-Language
+    // One piece of state drives both the widgets and the Accept-Language
     // header, so the interface and the content can never end up in two
     // different languages on the same screen.
-    final locale = ref.watch(sessionStoreProvider).locale;
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'BarterApp',

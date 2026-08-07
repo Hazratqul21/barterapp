@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.api import account, auth, chat, listings, offers, users
+from app.api import account, auth, chat, listings, offers, uploads, users
 from app.core.config import settings
 
 app = FastAPI(
@@ -29,6 +30,17 @@ app.include_router(listings.router)
 app.include_router(offers.router)
 app.include_router(chat.router)
 app.include_router(account.router)
+app.include_router(uploads.router)
+
+# Uploaded photos are served straight off disk. The directory is created here
+# rather than on first upload so a fresh checkout can serve `/media` without
+# waiting for someone to post a listing.
+settings.media_root.mkdir(parents=True, exist_ok=True)
+app.mount(
+    settings.media_url_prefix,
+    StaticFiles(directory=settings.media_root),
+    name="media",
+)
 
 
 @app.get("/health", tags=["meta"])

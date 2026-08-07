@@ -1,12 +1,22 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+#: Repository root — `api/`, two levels up from this file.
+_API_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+asyncpg://barter:barter@localhost:5434/barter"
+
+    #: Where uploaded listing photos land. A directory on the API host while the
+    #: product is one box; swapping this for an S3 client is a change inside
+    #: `api/uploads.py` alone.
+    media_root: Path = _API_ROOT / "media"
+    media_url_prefix: str = "/media"
 
     jwt_secret: str = "dev-only-change-me"
     jwt_algorithm: str = "HS256"
