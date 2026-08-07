@@ -136,6 +136,35 @@ class ApiClient {
     }
   }
 
+  /// Send one photo and get back the URL the server stored it under.
+  ///
+  /// [bytes] rather than a path because the web build has no filesystem to hand
+  /// Dio, and a listing has to be publishable from a browser as well as a phone.
+  Future<T> upload<T>(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    required T Function(dynamic data) parse,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    try {
+      final form = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
+      });
+      final response = await _dio.post<dynamic>(
+        path,
+        data: form,
+        onSendProgress: onProgress,
+        // Photos travel over the same mobile connection the rest of the app
+        // gives up on after 15 seconds; they need longer.
+        options: Options(sendTimeout: const Duration(seconds: 60)),
+      );
+      return parse(response.data);
+    } on DioException catch (e) {
+      throw _translate(e);
+    }
+  }
+
   Future<T> delete<T>(
     String path, {
     required T Function(dynamic data) parse,

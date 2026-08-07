@@ -158,6 +158,24 @@ class TradeRepository {
         .toList(),
   );
 
+  /// Upload a listing photo and get its hosted URL.
+  ///
+  /// The server re-encodes it: rotated upright, capped at 1600px, stripped of
+  /// EXIF — so nothing here has to care what came out of the camera.
+  Future<String> uploadPhoto({
+    required List<int> bytes,
+    required String filename,
+    void Function(int sent, int total)? onProgress,
+  }) {
+    return _api.upload(
+      '/uploads',
+      bytes: bytes,
+      filename: filename,
+      onProgress: onProgress,
+      parse: (data) => (data as Map<String, dynamic>)['url'] as String,
+    );
+  }
+
   Future<ListingDetail> createListing(Map<String, dynamic> body) => _api.post(
     '/listings',
     body: body,

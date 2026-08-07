@@ -35,7 +35,7 @@ dependencies:
   flutter_animate: ^4.5.2
   animations: ^2.2.0
   material_symbols_icons: ^4.2960.0
-  lottie: ^3.5.1
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
