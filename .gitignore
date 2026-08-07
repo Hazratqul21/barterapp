@@ -1,0 +1,9 @@
+api/.venv/
+api/__pycache__/
+api/**/__pycache__/
+api/.env
+app/build/
+app/.dart_tool/
+app/ios/Pods/
+app/ios/.symlinks/
+.DS_Store

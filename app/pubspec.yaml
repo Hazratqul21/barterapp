@@ -1,0 +1,47 @@
+name: barter_app
+description: "BarterApp — cash-free trading for farms, workshops and individuals."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+
+  # Routing that gives web real URLs and mobile a real back stack.
+  go_router: ^17.0.0
+
+  # State and dependency injection.
+  flutter_riverpod: ^3.0.3
+
+  # Networking.
+  dio: ^5.9.0
+
+  # Number, date and currency formatting per locale.
+  intl: any
+
+  # One socket for live messages, typing and offer updates.
+  web_socket_channel: ^3.0.3
+
+  cached_network_image: ^3.4.1
+  shared_preferences: ^2.5.4
+  google_fonts: ^8.2.1
+  flutter_animate: ^4.5.2
+  animations: ^2.2.0
+  material_symbols_icons: ^4.2960.0
+  lottie: ^3.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

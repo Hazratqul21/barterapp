@@ -1,0 +1,460 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class LEn extends L {
+  LEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appName => 'BarterApp';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get retry => 'Try again';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navMatches => 'Matches';
+
+  @override
+  String get navChat => 'Chat';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get navCreate => 'Create a barter listing';
+
+  @override
+  String get feedTradingIn => 'Trading in';
+
+  @override
+  String get feedSearchHint => 'Search goods, services, machinery…';
+
+  @override
+  String get feedHeading => 'Open for barter';
+
+  @override
+  String feedNearby(int count) {
+    return '$count nearby';
+  }
+
+  @override
+  String feedResults(int count) {
+    return '$count listings found';
+  }
+
+  @override
+  String get feedEmpty => 'Nothing found';
+
+  @override
+  String get feedEmptyHint => 'Try another word or clear the filter.';
+
+  @override
+  String get feedPremium => 'Premium';
+
+  @override
+  String get feedLookingFor => 'Looking for:';
+
+  @override
+  String get feedEstValue => 'est. value';
+
+  @override
+  String get feedPostedAt => 'Posted';
+
+  @override
+  String get feedNotifications => 'Notifications';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterAgri => 'Agriculture';
+
+  @override
+  String get filterLivestock => 'Livestock';
+
+  @override
+  String get filterMachinery => 'Machinery';
+
+  @override
+  String get filterTransport => 'Transport';
+
+  @override
+  String get filterElectronics => 'Electronics';
+
+  @override
+  String get filterConstruction => 'Construction';
+
+  @override
+  String get listingGives => 'Owner gives';
+
+  @override
+  String get listingWants => 'Wants in return';
+
+  @override
+  String get listingAbout => 'Description';
+
+  @override
+  String get listingSpecs => 'Details';
+
+  @override
+  String get listingOwner => 'Listed by';
+
+  @override
+  String get listingSimilar => 'Similar listings';
+
+  @override
+  String get listingMessage => 'Message';
+
+  @override
+  String get listingOffer => 'Send an offer';
+
+  @override
+  String get listingSave => 'Save';
+
+  @override
+  String get listingSaved => 'Saved';
+
+  @override
+  String get listingCashOk => 'Open to added cash';
+
+  @override
+  String get listingCashNo => 'Goods-for-goods only';
+
+  @override
+  String get listingSafety =>
+      'Inspect the goods before hand-over and route any added cash through escrow.';
+
+  @override
+  String listingTrades(int count) {
+    return '$count trades';
+  }
+
+  @override
+  String get specCategory => 'Category';
+
+  @override
+  String get specCondition => 'Condition';
+
+  @override
+  String get specQuantity => 'Quantity';
+
+  @override
+  String get specPosted => 'Posted';
+
+  @override
+  String get specLocation => 'Location';
+
+  @override
+  String get specValue => 'Estimated value';
+
+  @override
+  String get authTitle => 'Your phone number';
+
+  @override
+  String get authSubtitle => 'We will send an SMS code to sign you in.';
+
+  @override
+  String get authPhoneLabel => 'Phone number';
+
+  @override
+  String get authSendCode => 'Send code';
+
+  @override
+  String get authCodeTitle => 'Enter the code';
+
+  @override
+  String authCodeSubtitle(String phone) {
+    return 'The 6-digit code sent to $phone.';
+  }
+
+  @override
+  String get authVerify => 'Verify';
+
+  @override
+  String get authInvalidPhone => 'Enter the full number starting with +998.';
+
+  @override
+  String get authSignedOut => 'You are not signed in';
+
+  @override
+  String get authSignIn => 'Sign in';
+
+  @override
+  String get authSignOut => 'Sign out';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get profileTrustLabel => 'Trust level';
+
+  @override
+  String get profileStatActive => 'Active listings';
+
+  @override
+  String get profileStatCompleted => 'Completed trades';
+
+  @override
+  String get profileStatCompletion => 'Completion rate';
+
+  @override
+  String get profileLanguage => 'Language';
+
+  @override
+  String get profileMyListings => 'My listings';
+
+  @override
+  String get profileReviews => 'Reviews';
+
+  @override
+  String get profileNoReviews => 'No reviews yet.';
+
+  @override
+  String get traderVerified => 'Documents verified';
+
+  @override
+  String get traderUnverified => 'Unverified account';
+
+  @override
+  String get traderListings => 'Active listings';
+
+  @override
+  String get traderListingsEmpty => 'No active listings right now.';
+
+  @override
+  String get traderReviews => 'Partner reviews';
+
+  @override
+  String get traderReviewsEmpty => 'No partner reviews yet.';
+
+  @override
+  String get traderMemberSince => 'Member since';
+
+  @override
+  String get traderRating => 'Rating';
+
+  @override
+  String get traderDeals => 'Deals closed';
+
+  @override
+  String get traderCompletion => 'Completion rate';
+
+  @override
+  String get traderMessage => 'Send a message';
+
+  @override
+  String get traderOnline => 'Online';
+
+  @override
+  String get errorNetwork =>
+      'Could not reach the server. Check your connection.';
+
+  @override
+  String get errorGeneric => 'Something went wrong.';
+
+  @override
+  String get comingSoon => 'This section arrives in the next milestone.';
+
+  @override
+  String get offerTitle => 'Propose a trade';
+
+  @override
+  String get offerYouWant => 'You want';
+
+  @override
+  String get offerSelectItems => 'Choose one of your listings to offer';
+
+  @override
+  String get offerAddCash => 'Add cash';
+
+  @override
+  String get offerAddCashHint => 'to even out the trade';
+
+  @override
+  String get offerSend => 'Send offer';
+
+  @override
+  String get offerNoItems => 'Publish a listing of your own first.';
+
+  @override
+  String get offerSent => 'Offer sent';
+
+  @override
+  String get inboxTitle => 'Messages';
+
+  @override
+  String get inboxEmpty => 'No conversations yet.';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get chatPlaceholder => 'Write a message…';
+
+  @override
+  String get chatSend => 'Send';
+
+  @override
+  String get chatTyping => 'typing…';
+
+  @override
+  String get dealPending => 'Pending deal';
+
+  @override
+  String get dealAccept => 'Accept';
+
+  @override
+  String get dealDecline => 'Decline';
+
+  @override
+  String get dealCounter => 'Counter offer';
+
+  @override
+  String get dealComplete => 'Complete the trade';
+
+  @override
+  String get dealCompleted => 'Trade completed';
+
+  @override
+  String get dealDeclined => 'Declined';
+
+  @override
+  String get dealAccepted => 'Accepted';
+
+  @override
+  String get dealTalking => 'Talking';
+
+  @override
+  String get dealExpired => 'Expired';
+
+  @override
+  String get matchesTitle => 'Smart matches';
+
+  @override
+  String get matchesLede =>
+      'Fits found between your listings and what others are asking for.';
+
+  @override
+  String get matchesEmpty =>
+      'No matches yet. They appear once you publish a listing.';
+
+  @override
+  String get matchesYours => 'Yours';
+
+  @override
+  String get matchesTheirs => 'Theirs';
+
+  @override
+  String get matchesSkip => 'Skip';
+
+  @override
+  String get matchesOffer => 'Make offer';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'Nothing new right now.';
+
+  @override
+  String get notificationsMarkAll => 'Mark all as read';
+
+  @override
+  String get createTitle => 'Create barter';
+
+  @override
+  String get createGive => 'What I offer';
+
+  @override
+  String get createTake => 'What I want in return';
+
+  @override
+  String get createFieldTitle => 'Title';
+
+  @override
+  String get createFieldDesc => 'Description';
+
+  @override
+  String get createFieldCategory => 'Category';
+
+  @override
+  String get createFieldValue => 'Estimated value';
+
+  @override
+  String get createFieldCondition => 'Condition';
+
+  @override
+  String get createFieldQuantity => 'Quantity';
+
+  @override
+  String get createFieldWants => 'What you will accept';
+
+  @override
+  String get createPhotos => 'Photos (URL, one per line)';
+
+  @override
+  String get createPublish => 'Publish listing';
+
+  @override
+  String get createLangHint =>
+      'Fill in all three languages — a listing cannot go up with one missing.';
+
+  @override
+  String get createRequired => 'This field cannot be empty';
+
+  @override
+  String get createPublished => 'Listing published';
+
+  @override
+  String get verifyTitle => 'Safety & verification';
+
+  @override
+  String get verifyLevel => 'Trust level';
+
+  @override
+  String get verifySteps => 'Verification steps';
+
+  @override
+  String get verifySubmit => 'Submit';
+
+  @override
+  String get verifyDone => 'Verified';
+
+  @override
+  String get verifyPending => 'In review';
+
+  @override
+  String get verifyTodo => 'Not started';
+
+  @override
+  String get paymentsTitle => 'Payment methods';
+
+  @override
+  String get paymentsPrimary => 'Primary';
+
+  @override
+  String get paymentsMakePrimary => 'Make primary';
+
+  @override
+  String get paymentsRemove => 'Remove';
+
+  @override
+  String get paymentsHistory => 'Recent settlements';
+
+  @override
+  String get paymentsEmpty => 'No settlements yet.';
+}
