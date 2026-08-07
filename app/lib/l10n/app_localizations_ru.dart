@@ -21,6 +21,36 @@ class LRu extends L {
   String get clear => 'Сбросить';
 
   @override
+  String get introTitle1 => 'Не продавайте — обменивайте';
+
+  @override
+  String get introBody1 =>
+      '«У меня есть лишнее X, мне нужно Y.» Искать наличные не нужно — товар за товар.';
+
+  @override
+  String get introTitle2 => 'Мы сами найдём нужного человека';
+
+  @override
+  String get introBody2 =>
+      'Скажите, что отдаёте и что ищете. Покажем подходящих партнёров по стоимости, региону и рейтингу.';
+
+  @override
+  String get introTitle3 => 'Торгуйтесь спокойно';
+
+  @override
+  String get introBody3 =>
+      'Проверенные профили, настоящие отзывы и панель сделки. Каждый обмен проходит на виду.';
+
+  @override
+  String get introSkip => 'Пропустить';
+
+  @override
+  String get introNext => 'Далее';
+
+  @override
+  String get introStart => 'Начать';
+
+  @override
   String get navHome => 'Главная';
 
   @override

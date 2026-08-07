@@ -123,6 +123,60 @@ abstract class L {
   /// **'Tozalash'**
   String get clear;
 
+  /// No description provided for @introTitle1.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sotmang — almashtiring'**
+  String get introTitle1;
+
+  /// No description provided for @introBody1.
+  ///
+  /// In uz, this message translates to:
+  /// **'«Menda ortiqcha X bor, menga Y kerak.» Naqd pul topishning hojati yo‘q — tovar tovarga.'**
+  String get introBody1;
+
+  /// No description provided for @introTitle2.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kerakli odamni o‘zimiz topamiz'**
+  String get introTitle2;
+
+  /// No description provided for @introBody2.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima berayotganingizni va nima izlayotganingizni ayting. Qiymat, hudud va reyting bo‘yicha mos savdogarlarni ko‘rsatamiz.'**
+  String get introBody2;
+
+  /// No description provided for @introTitle3.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ishonch bilan savdolashing'**
+  String get introTitle3;
+
+  /// No description provided for @introBody3.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlangan profillar, haqiqiy sharhlar va kelishuv paneli. Har bir savdo ochiq kechadi.'**
+  String get introBody3;
+
+  /// No description provided for @introSkip.
+  ///
+  /// In uz, this message translates to:
+  /// **'O‘tkazish'**
+  String get introSkip;
+
+  /// No description provided for @introNext.
+  ///
+  /// In uz, this message translates to:
+  /// **'Keyingisi'**
+  String get introNext;
+
+  /// No description provided for @introStart.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshlash'**
+  String get introStart;
+
   /// No description provided for @navHome.
   ///
   /// In uz, this message translates to:

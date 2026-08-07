@@ -21,6 +21,36 @@ class LEn extends L {
   String get clear => 'Clear';
 
   @override
+  String get introTitle1 => 'Don\'t sell — swap';
+
+  @override
+  String get introBody1 =>
+      '\"I have spare X, I need Y.\" No cash to raise — goods for goods.';
+
+  @override
+  String get introTitle2 => 'We find the right person for you';
+
+  @override
+  String get introBody2 =>
+      'Tell us what you\'re offering and what you\'re after. We\'ll show traders that fit on value, region and rating.';
+
+  @override
+  String get introTitle3 => 'Trade with confidence';
+
+  @override
+  String get introBody3 =>
+      'Verified profiles, real reviews and a deal panel. Every swap stays in the open.';
+
+  @override
+  String get introSkip => 'Skip';
+
+  @override
+  String get introNext => 'Next';
+
+  @override
+  String get introStart => 'Get started';
+
+  @override
   String get navHome => 'Home';
 
   @override

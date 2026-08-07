@@ -40,11 +40,18 @@ class SessionStore {
   static const _tokenKey = 'access_token';
   static const _refreshKey = 'refresh_token';
   static const _localeKey = 'locale';
+  static const _introKey = 'intro_seen';
 
   final SharedPreferences _prefs;
 
   String? get accessToken => _prefs.getString(_tokenKey);
   String? get refreshToken => _prefs.getString(_refreshKey);
+
+  /// Whether the three intro screens have been shown. Kept out of [clear] on
+  /// purpose: signing out is not a reason to re-explain what barter is.
+  bool get introSeen => _prefs.getBool(_introKey) ?? false;
+
+  Future<void> markIntroSeen() => _prefs.setBool(_introKey, true);
 
   String get locale {
     final stored = _prefs.getString(_localeKey);

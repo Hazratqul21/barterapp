@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/feed/presentation/feed_page.dart';
 import '../../features/listing/presentation/listing_detail_page.dart';
+import '../../features/onboarding/presentation/intro_page.dart';
+import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/profile/presentation/payments_page.dart';
 import '../../features/profile/presentation/profile_edit_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
@@ -27,8 +29,20 @@ final _rootKey = GlobalKey<NavigatorState>();
 GoRouter buildRouter() {
   return GoRouter(
     navigatorKey: _rootKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     routes: [
+      // Outside the shell: no tab bar should be visible while the app is still
+      // deciding where the person belongs.
+      GoRoute(
+        path: '/',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const SplashPage(),
+      ),
+      GoRoute(
+        path: '/intro',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const IntroPage(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(navigationShell: shell),
         branches: [

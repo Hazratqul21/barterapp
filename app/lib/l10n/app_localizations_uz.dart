@@ -21,6 +21,36 @@ class LUz extends L {
   String get clear => 'Tozalash';
 
   @override
+  String get introTitle1 => 'Sotmang — almashtiring';
+
+  @override
+  String get introBody1 =>
+      '«Menda ortiqcha X bor, menga Y kerak.» Naqd pul topishning hojati yo‘q — tovar tovarga.';
+
+  @override
+  String get introTitle2 => 'Kerakli odamni o‘zimiz topamiz';
+
+  @override
+  String get introBody2 =>
+      'Nima berayotganingizni va nima izlayotganingizni ayting. Qiymat, hudud va reyting bo‘yicha mos savdogarlarni ko‘rsatamiz.';
+
+  @override
+  String get introTitle3 => 'Ishonch bilan savdolashing';
+
+  @override
+  String get introBody3 =>
+      'Tasdiqlangan profillar, haqiqiy sharhlar va kelishuv paneli. Har bir savdo ochiq kechadi.';
+
+  @override
+  String get introSkip => 'O‘tkazish';
+
+  @override
+  String get introNext => 'Keyingisi';
+
+  @override
+  String get introStart => 'Boshlash';
+
+  @override
   String get navHome => 'Asosiy';
 
   @override
