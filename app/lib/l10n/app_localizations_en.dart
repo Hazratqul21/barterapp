@@ -245,6 +245,58 @@ class LEn extends L {
   String get authResend => 'Send the code again';
 
   @override
+  String get profileSetupTitle => 'About you';
+
+  @override
+  String get profileEditTitle => 'Edit profile';
+
+  @override
+  String get profileSetupLede =>
+      'Your name appears on every listing and offer. Your region helps us find traders nearby.';
+
+  @override
+  String get profileFirstName => 'First name';
+
+  @override
+  String get profileLastName => 'Last name';
+
+  @override
+  String get profileHandle => 'Company name';
+
+  @override
+  String get profileHandleHint => 'Optional — for business accounts';
+
+  @override
+  String get profileRegion => 'Region';
+
+  @override
+  String get profileRegionHint => 'Region is 30% of a match score';
+
+  @override
+  String get profilePhoto => 'Photo';
+
+  @override
+  String get profilePhotoPick => 'Choose a photo';
+
+  @override
+  String get profilePhotoChange => 'Replace photo';
+
+  @override
+  String get profileSave => 'Save';
+
+  @override
+  String get profileRequired => 'This field is required';
+
+  @override
+  String get uploading => 'Uploading…';
+
+  @override
+  String get photoCamera => 'Camera';
+
+  @override
+  String get photoGallery => 'Gallery';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override

@@ -543,6 +543,108 @@ abstract class L {
   /// **'Kodni qayta yuborish'**
   String get authResend;
 
+  /// No description provided for @profileSetupTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'O‘zingiz haqingizda'**
+  String get profileSetupTitle;
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Profilni tahrirlash'**
+  String get profileEditTitle;
+
+  /// No description provided for @profileSetupLede.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ismingiz har bir e’lon va taklifda ko‘rinadi. Hudud esa yaqin savdogarlarni topishga yordam beradi.'**
+  String get profileSetupLede;
+
+  /// No description provided for @profileFirstName.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ism'**
+  String get profileFirstName;
+
+  /// No description provided for @profileLastName.
+  ///
+  /// In uz, this message translates to:
+  /// **'Familiya'**
+  String get profileLastName;
+
+  /// No description provided for @profileHandle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Korxona nomi'**
+  String get profileHandle;
+
+  /// No description provided for @profileHandleHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ixtiyoriy — biznes hisoblar uchun'**
+  String get profileHandleHint;
+
+  /// No description provided for @profileRegion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hudud'**
+  String get profileRegion;
+
+  /// No description provided for @profileRegionHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hudud moslik balining 30% ini tashkil qiladi'**
+  String get profileRegionHint;
+
+  /// No description provided for @profilePhoto.
+  ///
+  /// In uz, this message translates to:
+  /// **'Surat'**
+  String get profilePhoto;
+
+  /// No description provided for @profilePhotoPick.
+  ///
+  /// In uz, this message translates to:
+  /// **'Surat tanlash'**
+  String get profilePhotoPick;
+
+  /// No description provided for @profilePhotoChange.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suratni almashtirish'**
+  String get profilePhotoChange;
+
+  /// No description provided for @profileSave.
+  ///
+  /// In uz, this message translates to:
+  /// **'Saqlash'**
+  String get profileSave;
+
+  /// No description provided for @profileRequired.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu maydon to‘ldirilishi shart'**
+  String get profileRequired;
+
+  /// No description provided for @uploading.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuklanmoqda…'**
+  String get uploading;
+
+  /// No description provided for @photoCamera.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamera'**
+  String get photoCamera;
+
+  /// No description provided for @photoGallery.
+  ///
+  /// In uz, this message translates to:
+  /// **'Galereya'**
+  String get photoGallery;
+
   /// No description provided for @profileTitle.
   ///
   /// In uz, this message translates to:

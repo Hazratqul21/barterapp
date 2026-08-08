@@ -194,6 +194,8 @@ class Me {
   const Me({
     required this.id,
     required this.name,
+    required this.firstName,
+    required this.lastName,
     required this.phone,
     required this.trustScore,
     required this.activeListings,
@@ -203,11 +205,21 @@ class Me {
     this.rating,
     this.reviewCount = 0,
     this.completionRate,
+    this.region,
+    this.district,
     this.locale = 'uz',
   });
 
   final String id;
+
+  /// First and last joined, as everyone else in the app sees you.
   final String name;
+
+  /// The two halves, because that is what the profile form edits and what the
+  /// server stores. Sending a single `name` field is silently ignored.
+  final String firstName;
+  final String lastName;
+
   final String? handle;
   final String phone;
   final String? avatarUrl;
@@ -217,11 +229,24 @@ class Me {
   final int activeListings;
   final int completedTrades;
   final int? completionRate;
+
+  /// Choosing a region is also what puts the account on the map — distance is
+  /// 30% of a match score.
+  final String? region;
+  final String? district;
+
   final String locale;
+
+  /// A new account has no name until the profile form is filled in, and a
+  /// nameless trader is invisible on every card. Screens use this to send
+  /// people to `/onboarding` rather than showing a blank.
+  bool get isIncomplete => firstName.trim().isEmpty && lastName.trim().isEmpty;
 
   factory Me.fromJson(Map<String, dynamic> json) => Me(
     id: json['id'] as String,
     name: json['name'] as String,
+    firstName: json['first_name'] as String? ?? '',
+    lastName: json['last_name'] as String? ?? '',
     handle: json['handle'] as String?,
     phone: json['phone'] as String,
     avatarUrl: json['avatar_url'] as String?,
@@ -231,6 +256,8 @@ class Me {
     activeListings: json['active_listings'] as int? ?? 0,
     completedTrades: json['completed_trades'] as int? ?? 0,
     completionRate: json['completion_rate'] as int?,
+    region: json['region'] as String?,
+    district: json['district'] as String?,
     locale: json['locale'] as String? ?? 'uz',
   );
 }

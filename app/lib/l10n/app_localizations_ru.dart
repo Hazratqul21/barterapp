@@ -245,6 +245,58 @@ class LRu extends L {
   String get authResend => 'Отправить код ещё раз';
 
   @override
+  String get profileSetupTitle => 'О себе';
+
+  @override
+  String get profileEditTitle => 'Редактировать профиль';
+
+  @override
+  String get profileSetupLede =>
+      'Ваше имя видно в каждом объявлении и предложении. Регион помогает находить партнёров поблизости.';
+
+  @override
+  String get profileFirstName => 'Имя';
+
+  @override
+  String get profileLastName => 'Фамилия';
+
+  @override
+  String get profileHandle => 'Название компании';
+
+  @override
+  String get profileHandleHint => 'Необязательно — для бизнес-аккаунтов';
+
+  @override
+  String get profileRegion => 'Регион';
+
+  @override
+  String get profileRegionHint => 'Регион даёт 30% оценки совпадения';
+
+  @override
+  String get profilePhoto => 'Фото';
+
+  @override
+  String get profilePhotoPick => 'Выбрать фото';
+
+  @override
+  String get profilePhotoChange => 'Заменить фото';
+
+  @override
+  String get profileSave => 'Сохранить';
+
+  @override
+  String get profileRequired => 'Обязательное поле';
+
+  @override
+  String get uploading => 'Загрузка…';
+
+  @override
+  String get photoCamera => 'Камера';
+
+  @override
+  String get photoGallery => 'Галерея';
+
+  @override
   String get profileTitle => 'Профиль';
 
   @override

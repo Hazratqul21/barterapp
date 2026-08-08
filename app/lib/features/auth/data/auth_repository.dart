@@ -38,6 +38,15 @@ class AuthRepository {
   Future<Me> updateProfile(Map<String, dynamic> body) =>
       _api.patch('/me', body: body, parse: (data) => Me.fromJson(data as Map<String, dynamic>));
 
+  /// The regions an account can be placed in.
+  ///
+  /// Fetched rather than baked into the app: picking one is also what gives the
+  /// account coordinates, and distance is 30% of every match score.
+  Future<List<String>> regions() => _api.get(
+    '/regions',
+    parse: (data) => (data as List).cast<String>(),
+  );
+
   Future<void> signOut() => _session.clear();
 }
 
@@ -69,3 +78,9 @@ final meProvider = FutureProvider.autoDispose<Me?>((ref) async {
   if (!ref.watch(authStateProvider)) return null;
   return ref.watch(authRepositoryProvider).me();
 });
+
+/// Not auto-disposed: the list never changes during a session, and a profile
+/// form should not wait on a round trip every time it is opened.
+final regionsProvider = FutureProvider<List<String>>(
+  (ref) => ref.watch(authRepositoryProvider).regions(),
+);

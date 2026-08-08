@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
+from app.core.regions import coordinates_for, region_names
 from app.core.security import current_user
 from app.db.session import get_db
 from app.models.listing import Listing, ListingStatus
@@ -74,14 +75,36 @@ async def read_me(
     )
 
 
+@router.get("/regions", response_model=list[str], tags=["meta"])
+async def list_regions() -> list[str]:
+    """
+    The regions an account can be placed in.
+
+    Served rather than hardcoded in the client so that adding one — or fixing a
+    spelling — does not need an app release on three platforms.
+    """
+    return region_names()
+
+
 @router.patch("/me", response_model=Me)
 async def update_me(
     payload: MeUpdate,
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Me:
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    fields = payload.model_dump(exclude_unset=True)
+    for field, value in fields.items():
         setattr(me, field, value)
+
+    # Picking a region also places the account on the map. Distance carries 30%
+    # of every match score, and without this nothing outside the seed ever had
+    # coordinates — so that 30% scored identically for everyone, which is the
+    # same as not having it. An explicit latitude wins when one is sent.
+    if "region" in fields and "latitude" not in fields:
+        point = coordinates_for(me.region)
+        if point is not None:
+            me.latitude, me.longitude = point
+
     me.last_seen_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(me)

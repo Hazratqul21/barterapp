@@ -246,6 +246,59 @@ class LUz extends L {
   String get authResend => 'Kodni qayta yuborish';
 
   @override
+  String get profileSetupTitle => 'O‘zingiz haqingizda';
+
+  @override
+  String get profileEditTitle => 'Profilni tahrirlash';
+
+  @override
+  String get profileSetupLede =>
+      'Ismingiz har bir e’lon va taklifda ko‘rinadi. Hudud esa yaqin savdogarlarni topishga yordam beradi.';
+
+  @override
+  String get profileFirstName => 'Ism';
+
+  @override
+  String get profileLastName => 'Familiya';
+
+  @override
+  String get profileHandle => 'Korxona nomi';
+
+  @override
+  String get profileHandleHint => 'Ixtiyoriy — biznes hisoblar uchun';
+
+  @override
+  String get profileRegion => 'Hudud';
+
+  @override
+  String get profileRegionHint =>
+      'Hudud moslik balining 30% ini tashkil qiladi';
+
+  @override
+  String get profilePhoto => 'Surat';
+
+  @override
+  String get profilePhotoPick => 'Surat tanlash';
+
+  @override
+  String get profilePhotoChange => 'Suratni almashtirish';
+
+  @override
+  String get profileSave => 'Saqlash';
+
+  @override
+  String get profileRequired => 'Bu maydon to‘ldirilishi shart';
+
+  @override
+  String get uploading => 'Yuklanmoqda…';
+
+  @override
+  String get photoCamera => 'Kamera';
+
+  @override
+  String get photoGallery => 'Galereya';
+
+  @override
   String get profileTitle => 'Profil';
 
   @override

@@ -60,6 +60,10 @@ class MeUpdate(ApiModel):
     address: str | None = None
     avatar_url: str | None = None
     locale: str | None = Field(default=None, pattern="^(uz|ru|en)$")
+    #: Set directly only by a client that has a real fix (GPS). Otherwise the
+    #: server derives both from `region` — see `PATCH /me`.
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
 
 
 class OtpRequest(ApiModel):
