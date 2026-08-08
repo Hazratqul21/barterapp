@@ -364,6 +364,8 @@ class ConversationSummary {
     required this.offerId,
     required this.offerStatus,
     required this.dealSummary,
+    required this.gives,
+    required this.receives,
     required this.cash,
     this.lastMessage,
     this.lastMessageAt,
@@ -374,8 +376,14 @@ class ConversationSummary {
   final TraderBrief peer;
   final String offerId;
   final OfferStatus offerStatus;
-  /// Titles only — the server no longer bakes money into this sentence.
+  /// Titles joined with a middle dot, for anywhere that needs one string.
   final String dealSummary;
+
+  /// The same two halves, unjoined, so a row can draw the swap as an icon.
+  /// Neither shipped typeface carries U+2194 — an arrow inside a string came
+  /// out as an empty box.
+  final String gives;
+  final String receives;
 
   /// The top-up that goes with the deal, formatted by the row that shows it.
   final Money cash;
@@ -391,6 +399,8 @@ class ConversationSummary {
         offerId: json['offer_id'] as String,
         offerStatus: OfferStatus.parse(json['offer_status'] as String),
         dealSummary: json['deal_summary'] as String,
+        gives: json['gives'] as String? ?? '',
+        receives: json['receives'] as String? ?? '',
         cash: Money.fromJson(json['cash'] as Map<String, dynamic>),
         lastMessage: json['last_message'] as String?,
         lastMessageAt: json['last_message_at'] == null

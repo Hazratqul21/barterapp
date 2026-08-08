@@ -196,13 +196,27 @@ class _ThreadCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        thread.dealSummary,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          height: 1.35,
-                        ),
+                      // Two halves with the product's own arrow between them.
+                      // A `↔` in the string rendered as an empty box: neither
+                      // Rubik nor Manrope carries that glyph.
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: Gap.x2,
+                        children: [
+                          Text(
+                            thread.gives,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          Icon(
+                            Symbols.swap_horiz_rounded,
+                            size: Sizes.iconMd,
+                            color: p.inkFaint,
+                          ),
+                          Text(
+                            thread.receives,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                        ],
                       ),
                     ),
                     Gap.w2,

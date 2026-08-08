@@ -105,6 +105,8 @@ async def _summary(
         offer_id=offer.id,
         offer_status=offer.status,
         deal_summary=offer_service.deal_summary(out),
+        gives=offer_service.sides(out)[0],
+        receives=offer_service.sides(out)[1],
         cash=Money(minor=offer.cash_delta_minor, currency=offer.currency),
         last_message=last.body if last else None,
         last_message_at=last.created_at if last else None,

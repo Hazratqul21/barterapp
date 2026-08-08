@@ -162,18 +162,30 @@ async def present(
 
 def deal_summary(offer: OfferOut) -> str:
     """
-    The one line that says what is on the table. Shown on inbox rows and pinned
-    above the chat, so the thread stays anchored to the trade.
+    The one line that says what is on the table, for places that can only hold
+    a string — a notification body, a push payload.
 
-    Titles only. This used to append `f"{minor // 100} {currency}"`, which put
-    an ungrouped number and a currency code — "1260000 USD" — into a sentence
-    the client then had no way to reformat. Money crosses the wire as an
-    integer and a currency and is formatted once, on the client, in the
-    reader's language; the cash is carried alongside this string for exactly
-    that reason.
+    The separator is a middle dot, not an arrow. Neither of the app's two
+    typefaces carries U+2194 or U+21C4, so a swap arrow baked into a string
+    rendered as an empty box on every inbox row. Where the interface controls
+    the layout it draws a real arrow icon instead; see `sides()`.
     """
     left = " + ".join(item.title for item in offer.offered) or "—"
-    return f"{left} ↔ {offer.wanted.title}"
+    return f"{left} · {offer.wanted.title}"
+
+
+def sides(offer: OfferOut) -> tuple[str, str]:
+    """
+    The two halves of the trade, unjoined.
+
+    A screen that lays these out itself can put the product's own arrow between
+    them — an icon, which every platform can draw — rather than a character the
+    typeface may not have.
+    """
+    return (
+        " + ".join(item.title for item in offer.offered) or "—",
+        offer.wanted.title,
+    )
 
 
 def link_items(db: AsyncSession, offer: Offer, listing_ids: list[uuid.UUID]) -> None:

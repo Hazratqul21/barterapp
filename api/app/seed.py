@@ -159,6 +159,11 @@ DESIRES = {
     "van":       [(Tag.agri, 0.5, 1.5, False, True)],
     "my_rice":   [(Tag.machinery, 0.6, 2.0, True, False), (Tag.transport, 0.5, 1.6, True, False)],
     "my_laptop": [(Tag.electronics, 0.4, 1.4, True, False)],
+    # An open desire — any category, within reach of its own worth. The spec
+    # expects this to be the common case, so the seed should contain one.
+    "my_truck":  [(Tag.machinery, 0.5, 1.8, True, False),
+                  (Tag.livestock, 0.5, 2.2, True, False),
+                  (None, 0.4, 1.8, True, False)],
 }
 
 LISTINGS = [
@@ -338,6 +343,35 @@ LISTINGS = [
         "wants": [
             t("Traktor (80+ ot kuchi)", "Трактор (80+ л.с.)", "Tractor (80+ hp)"),
             t("Yuk mashinasi", "Бортовой грузовик", "Flatbed truck"),
+        ],
+    },
+    {
+        # A third listing of my own, so the matcher has more than two pairs to
+        # work with. Its desire is open — "any category, roughly this worth" —
+        # which is the option the spec expects most people to pick, and it is
+        # what lets a demo show the matcher doing something.
+        "key": "my_truck",
+        "owner": "me",
+        "tag": ListingTag.transport,
+        "value": 9_400_000_00,
+        "cash_ok": True,
+        "premium": False,
+        "days_ago": 1,
+        "photos": [IMG["truck"], IMG["crops"]],
+        "title": t("Isuzu bortli yuk mashinasi, 2014", "Бортовой грузовик Isuzu, 2014", "Isuzu flatbed truck, 2014"),
+        "wants_summary": t("Texnika / Chorva", "Техника / Скот", "Machinery / Livestock"),
+        "image_alt": t("Yo‘l chetida turgan yuk mashinasi", "Грузовик на обочине", "A flatbed truck at the roadside"),
+        "category": t("Transport", "Транспорт", "Transport"),
+        "condition": t("Ishlab turgan", "В рабочем состоянии", "Working"),
+        "quantity": t("1 dona", "1 шт.", "1 piece"),
+        "description": t(
+            "5 tonnalik bort, yugurgani 240 000 km. Yangi rezina va akkumulyator. Ikkinchi mashina kerak emas, shuning uchun almashtiraman.",
+            "Борт на 5 тонн, пробег 240 000 км. Новая резина и аккумулятор. Вторая машина не нужна, поэтому меняю.",
+            "Five-tonne bed, 240,000 km. New tyres and battery. I do not need a second vehicle, so I am swapping it.",
+        ),
+        "wants": [
+            t("Traktor yoki mini-texnika", "Трактор или минитехника", "A tractor or compact machinery"),
+            t("Qoramol", "Скот", "Cattle"),
         ],
     },
     {
@@ -590,6 +624,102 @@ async def run() -> None:
                 created_at=NOW - timedelta(minutes=minutes_ago),
             ))
 
+        # More threads, one per status, so every state the inbox can show has
+        # something behind it: a demo that only ever shows "pending" leaves the
+        # other five pills untested and unseen.
+        #
+        # These write the offer rows directly rather than going through the
+        # API, exactly as the review fixtures above do. A completed offer made
+        # through `PATCH /offers` closes both listings and empties the feed;
+        # here the goods stay on the market.
+        async def thread_for(
+            *,
+            wanted: str,
+            offered: str,
+            peer: str,
+            status: OfferStatus,
+            cash: int,
+            hours_ago: int,
+            script: list[tuple[str, str, int]],
+            from_me: bool = True,
+        ) -> Conversation:
+            offer = Offer(
+                listing_id=listings[wanted].id,
+                from_user_id=users["me" if from_me else peer].id,
+                to_user_id=users[peer if from_me else "me"].id,
+                status=status,
+                cash_delta_minor=cash,
+                currency="UZS",
+                expires_at=NOW + timedelta(hours=48 - hours_ago),
+                created_at=NOW - timedelta(hours=hours_ago),
+            )
+            db.add(offer)
+            await db.flush()
+            db.add(OfferItem(offer_id=offer.id, listing_id=listings[offered].id))
+
+            conversation = Conversation(
+                offer_id=offer.id,
+                user_a_id=users["me"].id,
+                user_b_id=users[peer].id,
+                last_message_at=NOW - timedelta(minutes=script[-1][2]),
+            )
+            db.add(conversation)
+            await db.flush()
+
+            for sender, body, minutes_ago in script:
+                db.add(Message(
+                    conversation_id=conversation.id,
+                    sender_id=users[sender].id,
+                    body=body,
+                    # Everything but the newest thread is already read, so the
+                    # unread badge means something when it does appear.
+                    read_at=None if status is OfferStatus.talking else NOW,
+                    created_at=NOW - timedelta(minutes=minutes_ago),
+                ))
+            return conversation
+
+        await thread_for(
+            wanted="tractor", offered="my_rice", peer="sardor",
+            status=OfferStatus.talking, cash=3_200_000_00, hours_ago=9,
+            script=[
+                ("me", "Assalomu alaykum. 40 tonna guruchni traktorga almashtirmoqchiman.", 540),
+                ("sardor", "Guruch qaysi navi? Traktor 2019-yil, soati 3 100.", 500),
+                ("me", "Uzun donli, yangi hosil. Ustiga 3,2 mln qo‘shaman.", 420),
+                ("sardor", "Kamroq bo‘lmaydimi? 4 mln bo‘lsa roziman.", 180),
+            ],
+        )
+
+        await thread_for(
+            wanted="maize", offered="my_rice", peer="nodir",
+            status=OfferStatus.accepted, cash=0, hours_ago=30,
+            script=[
+                ("nodir", "Guruchingizga makkajo‘xori kerakmi? 6 tonna bor.", 1800),
+                ("me", "Kerak. Tonnasi qancha turadi?", 1700),
+                ("nodir", "Kelishdik. Chorshanba kuni Jomboyda topshiraman.", 1500),
+                ("me", "Zo‘r, qabul qildim.", 1440),
+            ],
+        )
+
+        await thread_for(
+            wanted="timber", offered="my_laptop", peer="bek",
+            status=OfferStatus.completed, cash=0, hours_ago=96,
+            script=[
+                ("me", "Yog‘och kerak edi, noutbuk taklif qilaman.", 5760),
+                ("bek", "Ko‘rib chiqdim, bo‘ladi. Ustaxonaga olib keling.", 5700),
+                ("me", "Topshirdim, rahmat!", 5000),
+            ],
+        )
+
+        await thread_for(
+            wanted="van", offered="my_rice", peer="dilnoza",
+            status=OfferStatus.declined, cash=0, hours_ago=140,
+            script=[
+                ("me", "Furgonga guruch almashtirasizmi?", 8400),
+                ("dilnoza", "Kechirasiz, menga transport kerak edi.", 8300),
+            ],
+            from_me=True,
+        )
+
         db.add_all([
             Notification(
                 user_id=users["me"].id, kind="offer", target_type="chat",
@@ -621,7 +751,7 @@ async def run() -> None:
         total = await db.scalar(select(Listing).where(Listing.id == listings["cattle"].id))
         print(
             f"seeded: {len(PEOPLE)} users, {len(LISTINGS)} listings, "
-            f"{len(REVIEWS)} reviews, 1 live negotiation "
+            f"{len(REVIEWS)} reviews, 5 conversations "
             f"(sanity check {'ok' if total else 'failed'})"
         )
         print(f"sign in as: {PEOPLE[0]['phone']}  (OTP is returned by /auth/otp/request)")

@@ -66,8 +66,12 @@ class ConversationSummary(ApiModel):
     peer: TraderBrief
     offer_id: uuid.UUID
     offer_status: OfferStatus
-    #: Titles only — see `services.offers.deal_summary`.
+    #: Titles joined with a middle dot, for anywhere that needs one string.
     deal_summary: str
+    #: The same two halves, unjoined, so the row can draw the swap arrow as an
+    #: icon. Neither shipped typeface carries U+2194.
+    gives: str
+    receives: str
     #: The top-up that goes with the deal, so the row can render it in the
     #: reader's language rather than receiving it pre-formatted.
     cash: Money
