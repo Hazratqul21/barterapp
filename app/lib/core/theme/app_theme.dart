@@ -242,6 +242,15 @@ abstract final class M3Motion {
 // App Theme Builder
 // ─────────────────────────────────────────────────────────────────────────────
 abstract final class AppTheme {
+  /// Headlines, section titles, prices — anything meant to be seen before it is
+  /// read. Slightly rounded and heavy-set.
+  static const _displayFamily = 'Rubik';
+
+  /// Everything else. Both families cover Latin and the full Cyrillic block, so
+  /// Uzbek and Russian render in the same typeface rather than one of them
+  /// falling through to a system font.
+  static const _bodyFamily = 'Manrope';
+
   /// iOS gets its edge-swipe-back transition; Android and web get Material's.
   static const _transitions = PageTransitionsTheme(
     builders: {
@@ -290,60 +299,50 @@ abstract final class AppTheme {
         );
 
     // ── Typography ────────────────────────────────────────────────────────
-    // Plus Jakarta Sans carries Cyrillic and Latin at the same weight, which
-    // matters when the same screen is read in Uzbek and Russian.
-    final baseTextTheme = GoogleFonts.plusJakartaSansTextTheme().apply(
+    // Two families, and the reason is not only taste.
+    //
+    // The app shipped on Plus Jakarta Sans, whose Google Fonts subsets are
+    // latin, latin-ext, vietnamese and cyrillic-ext — the last of which holds
+    // the rare historic letters, *not* А–Я. So every Russian screen fell back
+    // to whatever the platform offered, and a reader in Russian saw one
+    // typeface for the buttons and another for the words. Both faces below
+    // carry the full Cyrillic block.
+    //
+    // Rubik leads: its corners are slightly rounded and its weight is solid,
+    // which is the voice a market for farms and workshops should have. Manrope
+    // sets everything else — quieter, airier, and good at numbers, of which a
+    // price-heavy app has many.
+    final display = GoogleFonts.getFont(_displayFamily);
+    final baseTextTheme = GoogleFonts.getTextTheme(_bodyFamily).apply(
       bodyColor: textColor,
       displayColor: textColor,
+    );
+
+    TextStyle head(
+      double size,
+      FontWeight weight, {
+      double spacing = 0,
+      double height = 1.2,
+    }) => display.copyWith(
+      fontSize: size,
+      fontWeight: weight,
+      letterSpacing: spacing,
+      height: height,
+      color: textColor,
     );
 
     // A tighter scale than the default. The old one jumped from 22 to 28 to 32
     // with nothing usable in between, so screens borrowed `titleLarge` for
     // section headers and everything ended up shouting.
     final textTheme = baseTextTheme.copyWith(
-      displayLarge: baseTextTheme.displayLarge?.copyWith(
-        fontSize: 48,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -1.2,
-        height: 1.08,
-      ),
-      displayMedium: baseTextTheme.displayMedium?.copyWith(
-        fontSize: 40,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.8,
-        height: 1.1,
-      ),
-      displaySmall: baseTextTheme.displaySmall?.copyWith(
-        fontSize: 32,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.6,
-        height: 1.15,
-      ),
-      headlineLarge: baseTextTheme.headlineLarge?.copyWith(
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-        height: 1.2,
-      ),
-      headlineMedium: baseTextTheme.headlineMedium?.copyWith(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
-        height: 1.22,
-      ),
-      headlineSmall: baseTextTheme.headlineSmall?.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-        height: 1.25,
-      ),
+      displayLarge: head(48, FontWeight.w800, spacing: -1.4, height: 1.05),
+      displayMedium: head(40, FontWeight.w800, spacing: -1.0, height: 1.08),
+      displaySmall: head(32, FontWeight.w700, spacing: -0.8, height: 1.12),
+      headlineLarge: head(28, FontWeight.w700, spacing: -0.6, height: 1.18),
+      headlineMedium: head(24, FontWeight.w700, spacing: -0.5, height: 1.22),
+      headlineSmall: head(20, FontWeight.w700, spacing: -0.4, height: 1.25),
       // Section headers live here — the most-used style in the app.
-      titleLarge: baseTextTheme.titleLarge?.copyWith(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-        height: 1.3,
-      ),
+      titleLarge: head(18, FontWeight.w700, spacing: -0.3, height: 1.3),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
         fontSize: 16,
         fontWeight: FontWeight.w600,

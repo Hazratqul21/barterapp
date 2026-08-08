@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -64,98 +65,102 @@ class _IntroPageState extends ConsumerState<IntroPage> {
     final last = _page == slides.length - 1;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              children: [
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: AnimatedOpacity(
-                    duration: M3Motion.short4,
-                    opacity: last ? 0 : 1,
-                    child: TextButton(
-                      onPressed: last ? null : _finish,
-                      child: Text(
-                        l.introSkip,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: p.inkSoft,
+      body: AuroraBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: AnimatedOpacity(
+                      duration: M3Motion.short4,
+                      opacity: last ? 0 : 1,
+                      child: TextButton(
+                        onPressed: last ? null : _finish,
+                        child: Text(
+                          l.introSkip,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: p.inkSoft,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: PageView.builder(
-                    controller: _controller,
-                    onPageChanged: (i) => setState(() => _page = i),
-                    itemCount: slides.length,
-                    itemBuilder: (context, index) {
-                      final slide = slides[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: Gap.x6,
-                        ),
-                        // Drawing and sentence read as one block, sitting a
-                        // little above centre. Splitting them with an Expanded
-                        // pushed the picture to the top of the screen and left
-                        // a gap in the middle that looked like missing content.
-                        child: Column(
-                          children: [
-                            const Spacer(flex: 3),
-                            slide.art,
-                            Gap.h8,
-                            Text(
-                              slide.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.headlineMedium,
-                            ),
-                            Gap.h3,
-                            Text(
-                              slide.body,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: p.inkSoft,
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _controller,
+                      onPageChanged: (i) => setState(() => _page = i),
+                      itemCount: slides.length,
+                      itemBuilder: (context, index) {
+                        final slide = slides[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: Gap.x6,
+                          ),
+                          // Drawing and sentence read as one block, sitting a
+                          // little above centre. Splitting them with an Expanded
+                          // pushed the picture to the top of the screen and left
+                          // a gap in the middle that looked like missing content.
+                          child: Column(
+                            children: [
+                              const Spacer(flex: 3),
+                              slide.art,
+                              Gap.h8,
+                              Text(
+                                slide.title,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.headlineMedium,
                               ),
-                            ),
-                            const Spacer(flex: 4),
-                          ],
+                              Gap.h3,
+                              Text(
+                                slide.body,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: p.inkSoft,
+                                ),
+                              ),
+                              const Spacer(flex: 4),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < slides.length; i++)
+                        AnimatedContainer(
+                          duration: M3Motion.short4,
+                          curve: M3Motion.standard,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: Gap.x1,
+                          ),
+                          width: i == _page ? 22 : 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: i == _page ? p.give : p.hair,
+                            borderRadius: Radii.rFull,
+                          ),
                         ),
-                      );
-                    },
+                    ],
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < slides.length; i++)
-                      AnimatedContainer(
-                        duration: M3Motion.short4,
-                        curve: M3Motion.standard,
-                        margin: const EdgeInsets.symmetric(horizontal: Gap.x1),
-                        width: i == _page ? 22 : 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: i == _page ? p.give : p.hair,
-                          borderRadius: Radii.rFull,
-                        ),
-                      ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    Gap.x6,
-                    Gap.x6,
-                    Gap.x6,
-                    Gap.x5,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      Gap.x6,
+                      Gap.x6,
+                      Gap.x6,
+                      Gap.x5,
+                    ),
+                    child: FilledButton(
+                      onPressed: () => _next(slides.length),
+                      child: Text(last ? l.introStart : l.introNext),
+                    ),
                   ),
-                  child: FilledButton(
-                    onPressed: () => _next(slides.length),
-                    child: Text(last ? l.introStart : l.introNext),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -213,10 +218,7 @@ class _SwapArt extends StatelessWidget {
                       tint: p.takeSoft,
                     )
                     .animate()
-                    .fadeIn(
-                      delay: M3Motion.short3,
-                      duration: M3Motion.long1,
-                    )
+                    .fadeIn(delay: M3Motion.short3, duration: M3Motion.long1)
                     .slideX(
                       begin: 0.35,
                       end: 0,
@@ -226,28 +228,26 @@ class _SwapArt extends StatelessWidget {
                     ),
           ),
           Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: p.swapGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: Shadows.lifted,
-                ),
-                child: const Icon(
-                  Symbols.swap_horiz_rounded,
-                  color: Colors.white,
-                  size: 30,
-                  weight: 600,
-                ),
-              )
-              .animate()
-              .scale(
-                delay: M3Motion.medium2,
-                begin: const Offset(0.4, 0.4),
-                end: const Offset(1, 1),
-                duration: M3Motion.long2,
-                curve: M3Motion.emphasizedDecelerate,
-              ),
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: p.swapGradient,
+              shape: BoxShape.circle,
+              boxShadow: Shadows.lifted,
+            ),
+            child: const Icon(
+              Symbols.swap_horiz_rounded,
+              color: Colors.white,
+              size: 30,
+              weight: 600,
+            ),
+          ).animate().scale(
+            delay: M3Motion.medium2,
+            begin: const Offset(0.4, 0.4),
+            end: const Offset(1, 1),
+            duration: M3Motion.long2,
+            curve: M3Motion.emphasizedDecelerate,
+          ),
         ],
       ),
     );
