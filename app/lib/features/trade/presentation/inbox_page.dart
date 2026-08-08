@@ -33,7 +33,7 @@ class InboxPage extends ConsumerWidget {
       body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 700), child: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
-          message: e.toString(),
+          message: errorMessage(context, e),
           retryLabel: l.retry,
           onRetry: () => ref.invalidate(conversationsProvider),
         ),

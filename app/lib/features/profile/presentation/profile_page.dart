@@ -92,15 +92,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
       body: meAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
-          message: e.toString(),
+          message: errorMessage(context, e),
           retryLabel: l.retry,
           onRetry: () => ref.invalidate(meProvider),
         ),
         data: (me) {
           if (me == null) {
             return EmptyState(
-              title: 'Not Found',
-              hint: 'Could not load profile.',
+              title: l.notFound,
+              hint: '',
               actionLabel: l.retry,
               onAction: () => ref.invalidate(meProvider),
             );
@@ -308,7 +308,7 @@ class _MyListingsSection extends ConsumerWidget {
         child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
       ),
       error: (e, _) => ErrorState(
-        message: e.toString(),
+        message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: () => ref.invalidate(myListingsProvider),
       ),
@@ -360,7 +360,7 @@ class _MyReviewsSection extends ConsumerWidget {
         child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
       ),
       error: (e, _) => ErrorState(
-        message: e.toString(),
+        message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: () => ref.invalidate(traderReviewsProvider(meId)),
       ),

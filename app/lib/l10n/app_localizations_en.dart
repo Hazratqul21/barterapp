@@ -406,6 +406,24 @@ class LEn extends L {
   String get offerSent => 'Offer sent';
 
   @override
+  String get offerMessage => 'Message';
+
+  @override
+  String get offerMessageHint => 'Add a note to your offer — optional';
+
+  @override
+  String get offerYouGive => 'You give';
+
+  @override
+  String get offerCreateFirst => 'Post a listing first';
+
+  @override
+  String get confirmRemoveCard => 'Remove this card?';
+
+  @override
+  String get notFound => 'Not found';
+
+  @override
   String get inboxTitle => 'Messages';
 
   @override

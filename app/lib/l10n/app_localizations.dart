@@ -861,6 +861,42 @@ abstract class L {
   /// **'Taklif yuborildi'**
   String get offerSent;
 
+  /// No description provided for @offerMessage.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabar'**
+  String get offerMessage;
+
+  /// No description provided for @offerMessageHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Taklifingizga izoh qo‘shing — ixtiyoriy'**
+  String get offerMessageHint;
+
+  /// No description provided for @offerYouGive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz berasiz'**
+  String get offerYouGive;
+
+  /// No description provided for @offerCreateFirst.
+  ///
+  /// In uz, this message translates to:
+  /// **'Avval e’lon joylang'**
+  String get offerCreateFirst;
+
+  /// No description provided for @confirmRemoveCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu kartani o‘chirasizmi?'**
+  String get confirmRemoveCard;
+
+  /// No description provided for @notFound.
+  ///
+  /// In uz, this message translates to:
+  /// **'Topilmadi'**
+  String get notFound;
+
   /// No description provided for @inboxTitle.
   ///
   /// In uz, this message translates to:

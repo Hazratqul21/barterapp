@@ -39,7 +39,7 @@ class _TraderProfilePageState extends ConsumerState<TraderProfilePage> {
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
-          message: e.toString(),
+          message: errorMessage(context, e),
           retryLabel: l.retry,
           onRetry: () => ref.invalidate(traderProvider(widget.traderId)),
         ),
@@ -217,29 +217,11 @@ class _TraderProfilePageState extends ConsumerState<TraderProfilePage> {
                 ),
               ),
               
-              // BOTTOM CTA
-              SafeArea(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: FilledButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coming soon: Create conversation')),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                    ),
-                    child: Text(
-                      l.traderMessage,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              // No "message this trader" button here. A conversation is
+              // created with an offer and cannot exist without one, so the
+              // stub that used to sit in this spot could never have been
+              // wired up. Their listings are right above; making an offer on
+              // one is how you reach this person.
             ],
           );
         },
@@ -320,7 +302,7 @@ class _TraderListings extends ConsumerWidget {
         child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
       ),
       error: (e, _) => ErrorState(
-        message: e.toString(),
+        message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: () => ref.invalidate(traderListingsProvider(traderId)),
       ),
@@ -372,7 +354,7 @@ class _TraderReviews extends ConsumerWidget {
         child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
       ),
       error: (e, _) => ErrorState(
-        message: e.toString(),
+        message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: () => ref.invalidate(traderReviewsProvider(traderId)),
       ),

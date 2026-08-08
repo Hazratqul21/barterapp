@@ -26,7 +26,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
       ref.invalidate(_cardsProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     }
   }
 
@@ -38,7 +38,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l.paymentsRemove),
-        content: const Text('Are you sure you want to remove this card?'),
+        content: Text(l.confirmRemoveCard),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -59,7 +59,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
       ref.invalidate(_cardsProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     }
   }
 
@@ -100,7 +100,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
             ),
             error: (e, _) => SliverToBoxAdapter(
               child: ErrorState(
-                message: e.toString(),
+                message: errorMessage(context, e),
                 retryLabel: l.retry,
                 onRetry: () => ref.invalidate(_cardsProvider),
               ),
@@ -201,7 +201,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
             ),
             error: (e, _) => SliverToBoxAdapter(
               child: ErrorState(
-                message: e.toString(),
+                message: errorMessage(context, e),
                 retryLabel: l.retry,
                 onRetry: () => ref.invalidate(settlementsProvider),
               ),

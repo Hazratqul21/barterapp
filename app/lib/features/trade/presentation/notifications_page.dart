@@ -34,7 +34,7 @@ class NotificationsPage extends ConsumerWidget {
       body: notificationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => ErrorState(
-          message: e.toString(),
+          message: errorMessage(context, e),
           retryLabel: l.retry,
           onRetry: () => ref.invalidate(notificationsProvider),
         ),

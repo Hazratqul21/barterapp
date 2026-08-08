@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/network/api_client.dart';
@@ -9,7 +10,6 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
-import '../../trade/presentation/create_offer_sheet.dart';
 
 class ListingDetailPage extends ConsumerStatefulWidget {
   const ListingDetailPage({super.key, required this.listingId});
@@ -69,30 +69,13 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
               child: Row(
                 children: [
                   Expanded(
-                flex: 2,
-                child: OutlinedButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    _soon(context, l);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                  child: Text(l.listingMessage),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 3,
                 child: FilledButton.icon(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => CreateOfferSheet(wantedListing: listing),
-                    );
+                    // A route rather than a sheet: the same screen opens from
+                    // a match card and the feed, and an offer in progress
+                    // should survive a link being shared or a back gesture.
+                    context.push('/offer/${listing.id}');
                   },
                   icon: const Icon(Icons.swap_horiz_rounded, size: 19),
                   label: Text(l.listingOffer),
@@ -108,11 +91,6 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
     );
   }
 
-  void _soon(BuildContext context, L l) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l.comingSoon)));
-  }
 }
 
 class _Content extends StatelessWidget {

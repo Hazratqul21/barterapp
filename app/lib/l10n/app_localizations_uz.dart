@@ -407,6 +407,24 @@ class LUz extends L {
   String get offerSent => 'Taklif yuborildi';
 
   @override
+  String get offerMessage => 'Xabar';
+
+  @override
+  String get offerMessageHint => 'Taklifingizga izoh qo‘shing — ixtiyoriy';
+
+  @override
+  String get offerYouGive => 'Siz berasiz';
+
+  @override
+  String get offerCreateFirst => 'Avval e’lon joylang';
+
+  @override
+  String get confirmRemoveCard => 'Bu kartani o‘chirasizmi?';
+
+  @override
+  String get notFound => 'Topilmadi';
+
+  @override
   String get inboxTitle => 'Xabarlar';
 
   @override

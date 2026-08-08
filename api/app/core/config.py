@@ -45,9 +45,44 @@ class Settings(BaseSettings):
     )
 
 
+#: The value `jwt_secret` ships with. A server still running on it will accept
+#: a token anyone can mint, which means anyone can be anyone.
+DEV_JWT_SECRET = "dev-only-change-me"
+
+
+class InsecureConfiguration(RuntimeError):
+    """Raised at import time rather than letting the server take real traffic."""
+
+
+def _guard(settings: Settings) -> None:
+    """
+    Refuse to start in a configuration that would hand out accounts.
+
+    `OTP_DEBUG=false` is taken as the signal that this is a real deployment:
+    development wants the code back in the response, production must not have
+    it. Once that is off, the signing key has to be a real one.
+
+    A check that only logs would be read once and then scroll away. This is the
+    kind of mistake that is invisible until it is exploited, so it stops the
+    process instead.
+    """
+    if settings.otp_debug:
+        return
+
+    if settings.jwt_secret == DEV_JWT_SECRET or len(settings.jwt_secret) < 32:
+        raise InsecureConfiguration(
+            "JWT_SECRET hali standart yoki juda qisqa. Ishlab chiqarishda bu "
+            "har kimga istalgan hisobga kirish imkonini beradi.\n"
+            "Yangi kalit: python -c \"import secrets; "
+            'print(secrets.token_urlsafe(48))"'
+        )
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    _guard(settings)
+    return settings
 
 
 settings = get_settings()

@@ -406,6 +406,25 @@ class LRu extends L {
   String get offerSent => 'Предложение отправлено';
 
   @override
+  String get offerMessage => 'Сообщение';
+
+  @override
+  String get offerMessageHint =>
+      'Добавьте комментарий к предложению — необязательно';
+
+  @override
+  String get offerYouGive => 'Вы отдаёте';
+
+  @override
+  String get offerCreateFirst => 'Сначала разместите объявление';
+
+  @override
+  String get confirmRemoveCard => 'Удалить эту карту?';
+
+  @override
+  String get notFound => 'Не найдено';
+
+  @override
   String get inboxTitle => 'Чаты';
 
   @override

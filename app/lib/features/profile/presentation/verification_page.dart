@@ -29,7 +29,7 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
       ref.invalidate(_verificationProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -47,7 +47,7 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
       body: ref.watch(_verificationProvider).when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
-          message: e.toString(),
+          message: errorMessage(context, e),
           retryLabel: l.retry,
           onRetry: () => ref.invalidate(_verificationProvider),
         ),
