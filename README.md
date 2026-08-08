@@ -10,11 +10,12 @@ barter-platform/
 │   ├── API.md                 mijoz–server shartnomasi
 │   ├── FLUTTER-BRIEF.md       Flutter topshirig'i
 │   ├── BACKEND.md             backend qo'llanmasi
+│   ├── DESIGN.md              dizayn tizimi: rang, shrift, o'lcham
 │   ├── AI-TOPSHIRIQ.md        boshqa AI'ga beriladigan matn
 │   └── biznes-reja/           asl biznes reja (.md, .pdf)
 ├── docker-compose.yml    PostgreSQL 16, port 5434
-├── api/                  FastAPI + SQLAlchemy 2 + Alembic  (tayyor ✅)
-└── app/                  Flutter — web, iOS, Android       (qisman)
+├── api/                  FastAPI + SQLAlchemy 2 + Alembic
+└── app/                  Flutter — web, iOS, Android
 ```
 
 > React prototipi (`~/Desktop/Barterapp`) — bu loyihaning bir qismi emas.
@@ -30,6 +31,7 @@ barter-platform/
 | **[docs/API.md](docs/API.md)** | Mijoz yozuvchiga | Har bir endpoint: so'rov, javob, xatolar. Mijoz va server o'rtasidagi **yagona shartnoma** |
 | **[docs/FLUTTER-BRIEF.md](docs/FLUTTER-BRIEF.md)** | **Flutter yozuvchiga** | Har bir ekran: qanday ko'rinishi, qaysi ma'lumot, qanday xatti-harakat. Mustaqil topshiriq |
 | **[docs/BACKEND.md](docs/BACKEND.md)** | Backend yozuvchiga | Papkalar, qatlamlar, migratsiya, retseptlar |
+| **[docs/DESIGN.md](docs/DESIGN.md)** | Dizayner va Flutter yozuvchiga | Rang, shrift, radius, oraliq — nima uchun shunday |
 | **[docs/AI-TOPSHIRIQ.md](docs/AI-TOPSHIRIQ.md)** | Loyiha egasiga | Boshqa AI'ga beriladigan tayyor topshiriq matni |
 | **[docs/biznes-reja/](docs/biznes-reja/)** | Hammaga | Asl biznes reja — barcha mahsulot qarorlarining manbai |
 
@@ -83,9 +85,9 @@ Kirish: **+998901234122** — SMS kodi javobda qaytadi (provayder hali ulanmagan
 
 ## Holat
 
-### Backend — tayyor ✅
+### Backend
 
-27 endpoint, 18 jadval, butun savdo aylanishi sinalgan.
+33 endpoint, 18 jadval, butun savdo aylanishi sinalgan.
 
 ```bash
 cd api && .venv/bin/python tests/test_trade_loop.py
@@ -95,35 +97,37 @@ cd api && .venv/bin/python tests/test_trade_loop.py
 |---|---|
 | Sxema va migratsiyalar | ✅ |
 | Auth (OTP + JWT) | ✅ |
-| Lenta, e'lon, qidiruv, masofa | ✅ |
-| E'lon yaratish (3 til majburiy) | ✅ |
+| Lenta, e'lon, qidiruv, masofa, kursorli sahifalash | ✅ |
+| E'lon yaratish (3 til majburiy) + `desires` | ✅ |
+| Surat yuklash (`POST /uploads`, Pillow bilan) | ✅ |
+| Hududlar va koordinatalar (`GET /regions`) | ✅ |
 | Takliflar + holat mashinasi | ✅ |
 | Chat + WebSocket | ✅ |
 | Mosliklar (40/30/20/10 ball) | ✅ |
 | Bildirishnomalar | ✅ |
-| Profil, sharhlar, tasdiqlash | ✅ |
+| Profil, sharhlarni **o'qish**, tasdiqlash | ✅ |
 | To'lov usullari, hisob-kitob | ✅ |
+| Sharh **yozish** (`POST /reviews`) | ⬜ |
 | Escrow, obuna, boost | ⬜ |
+| Taklif muddatining avtomatik tugashi | ⬜ |
 
-### Mijoz — qisman
+### Mijoz
 
-| Tayyor | Qolgan |
+Barcha ekran yozilgan va ulangan. `flutter analyze` → 0 muammo.
+
+| Ekran | Holat |
 |---|---|
-| Tema, router, i18n, tarmoq | Xabarlar ro'yxati |
-| **Barcha model va provider** | Chat + kelishuv paneli |
-| Lenta (filtr, qidiruv, masofa) | Taklif paneli |
-| E'lon sahifasi | Mosliklar |
-| Kirish (telefon + SMS) | Bildirishnomalar |
-| | Profil, savdogar profili |
-| | E'lon yaratish |
-| | Tasdiqlash, to'lovlar |
-
-Qolgan ekranlar uchun **ma'lumot qatlami butunlay tayyor** —
-`app/lib/features/trade/data/trade_repository.dart` da barcha repository va
-provider yozilgan. Faqat UI qoldi. Tafsilot:
-[docs/FLUTTER-BRIEF.md](docs/FLUTTER-BRIEF.md).
-
----
+| Splash + uch kirish ekrani | ✅ |
+| Kirish (telefon + SMS) | ✅ |
+| Profil to'ldirish (ism, hudud, surat) | ✅ |
+| Lenta (hero, kategoriyalar, cheksiz scroll) | ✅ |
+| E'lon sahifasi | ✅ |
+| E'lon yaratish (4 bosqich) | ✅ |
+| Taklif yuborish | ✅ |
+| Chat + kelishuv paneli | ✅ |
+| Xabarlar, Mosliklar, Bildirishnomalar | ✅ |
+| Profil, savdogar profili | ✅ |
+| Sozlamalar, tasdiqlash, to'lovlar | ✅ |
 
 ## Sxema nimani kafolatlaydi
 
@@ -146,14 +150,23 @@ docker exec barter-db psql -U barter -d barter -c "INSERT INTO reviews (id,offer
 
 ---
 
+## Ishlab chiqarishga chiqishdan oldin
+
+| Nima | Nega |
+|---|---|
+| `JWT_SECRET` o'rnatish | Standart kalit bilan har kim istalgan hisobga kira oladi. Server `OTP_DEBUG=false` bo'lsa-yu kalit standart bo'lsa **ishga tushmaydi** — `api/.env.example` ga qarang |
+| SMS provayderini ulash | Hozir `OTP_DEBUG=true` bo'lganda kod javobda qaytadi |
+| Suratlar uchun doimiy joy | Hozir `api/media/` papkasi. Ko'p serverga chiqilganda S3/MinIO kerak — o'zgarish faqat `api/uploads.py` ichida |
+| `POST /reviews` | Sharh o'qiladi, lekin yozib bo'lmaydi |
+| Cron: taklif muddati | `expires_at` yoziladi, hech kim `expired` ga o'tkazmaydi |
+
 ## Ma'lum kamchiliklar
 
 - **Android SDK o'rnatilmagan** — kod Android'ga mo'ljallangan, faqat toolchain
   yo'q. Android Studio o'rnating, keyin `flutter doctor`.
-- **iOS simulyator runtime 26.3, Xcode 26.6 esa 26.5 SDK bilan quradi** —
-  `xcodebuild -downloadPlatform iOS` (bir necha GB).
+- **`GET /conversations` N+1 so'rov beradi** — har suhbat uchun taklif alohida
+  yig'iladi. 20 suhbat ≈ 180 so'rov.
 - **Savdogar ismlari tarjima qilinmaydi** — rus tilida lotin harflarida chiqadi.
   Mahsulot qarori kerak: kirill varianti saqlanadimi yoki transliteratsiya
-  qilinadimi?
-- **SMS provayderi ulanmagan** — `OTP_DEBUG=true` bo'lganda kod javobda qaytadi.
-  Ishlab chiqarishda albatta `false` qiling.
+  qilinadimi? (DOMAIN.md §7.4)
+- **Uchburchak barter** — model tayyor, algoritm yozilmagan.

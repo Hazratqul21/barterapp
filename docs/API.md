@@ -132,6 +132,15 @@ Ishlab chiqarishda `null` bo'ladi. Mijoz uni ko'rsatsa ham bo'ladi, lekin
 nomi. Ekranda `"$name · $handle"` ko'rinishida chiqaring, **hech qachon faqat
 `handle`** — aks holda savdogar ismsiz qoladi.
 
+### `GET /regions` → `string[]`
+
+Hisob joylashtiriladigan hududlar (14 ta). Mijozga qattiq kodlanmaydi:
+imlo tuzatish uchun uch platformaga reliz chiqarish kerak bo'lmasin.
+
+```json
+["Qoraqalpog‘iston", "Andijon", "Buxoro", "…"]
+```
+
 ### `PATCH /me` 🔒
 
 ```json
@@ -142,6 +151,18 @@ nomi. Ekranda `"$name · $handle"` ko'rinishida chiqaring, **hech qachon faqat
 ```
 
 Faqat yuborilgan maydonlar o'zgaradi.
+
+**Maydonlar:** `first_name`, `last_name`, `handle`, `region`, `district`,
+`address`, `avatar_url`, `locale`, `latitude`, `longitude` — hammasi ixtiyoriy,
+yuborilgani o'zgaradi.
+
+⚠️ `name` degan maydon **yo'q**. Yuborilsa Pydantic uni indamay tashlaydi va
+ism saqlanmaydi.
+
+⚠️ `region` yuborilganda server `latitude`/`longitude` ni o'zi hisoblaydi
+(viloyat markazi). Masofa moslik balining 30% ini tashkil qiladi — hududsiz
+hisob har doim 0.5 «noma'lum» ballini oladi. `latitude` aniq yuborilsa,
+u ustun turadi.
 
 ### `GET /me/listings` 🔒 → `ListingCard[]`
 
@@ -223,6 +244,32 @@ darajasida taqiqlangan.
 `status`: `draft` | `active` | `in_negotiation` | `completed` | `archived`.
 
 ### `POST /listings` 🔒 → `ListingDetail` (201)
+
+⚠️ Ikkita eng ko'p qilinadigan xato:
+
+- `value` — bu **obyekt**: `{"minor": 630000000, "currency": "UZS"}`.
+  Yalang'och `value_minor` son `422` beradi.
+- `image_alt`, `wants` va uch tilli maydonlarning **hammasi majburiy**.
+
+**`desires`** — algoritm o'qiydigan xohish. `wants` odam o'qiydigan jumla,
+`desires` esa toifa va qiymat oralig'i:
+
+```json
+"desires": [{
+  "category": "machinery",        // null = «farqi yo'q»
+  "min_value_minor": 300000000,
+  "max_value_minor": 900000000,
+  "will_add_cash": true,
+  "wants_cash": false
+}]
+```
+
+Yuborilmasa server e'lon qiymatining **0.5×–2×** oralig'ida ochiq xohish
+yozadi. Busiz e'lon `wanted()` darvozasi uchun ko'rinmas bo'lib qolardi —
+ya'ni hech qachon hech kimning mosliklarida chiqmasdi.
+
+E'lon joylangandan keyin mosliklar **darrov** qayta hisoblanadi.
+
 
 ```json
 {
@@ -445,6 +492,35 @@ prototipdagi eng katta xatolardan biri shu edi.
 → { "ids": [] }        // bo'sh ro'yxat = hammasi
 → { "ids": ["uuid"] }  // faqat tanlanganlar
 ```
+
+---
+
+## 7.5 Surat yuklash
+
+### `POST /uploads` 🔒 → `UploadResult` (201)
+
+`multipart/form-data`, maydon nomi `file`.
+
+Server rasmni **qayta kodlaydi**: EXIF bo'yicha to'g'rilaydi, uzun tomonini
+1600px gacha kichraytiradi, JPEG'ga o'giradi va EXIF'ni (GPS bilan birga)
+olib tashlaydi. Fayl nomini server beradi.
+
+```json
+{
+  "url": "http://127.0.0.1:8010/media/9f2c….jpg",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 148213
+}
+```
+
+| Xato | Qachon |
+|---|---|
+| `400` | Fayl bo'sh yoki rasm emas (dekodlash bilan tekshiriladi, `Content-Type` bilan emas) |
+| `413` | 12 MB dan katta |
+
+Qaytgan `url` ni `POST /listings` ning `photos` massiviga yoki
+`PATCH /me` ning `avatar_url` iga qo'ying.
 
 ---
 

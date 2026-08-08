@@ -33,7 +33,10 @@ Bu ranglarda ham kodlangan:
 
 | Qism | Fayl | Holat |
 |---|---|---|
+| Dizayn tokenlari (radius, oraliq, o'lcham) | `core/theme/tokens.dart` | ✅ |
 | Tema, ranglar, `BarterPalette` | `core/theme/app_theme.dart` | ✅ |
+| Surat tanlash va yuklash | `core/widgets/photo_picker.dart` | ✅ |
+| Til almashtirish | `localeProvider` | ✅ |
 | API klienti, token, til | `core/network/api_client.dart` | ✅ |
 | Router, tab bar / yon panel | `core/router/` | ✅ |
 | Umumiy vidjetlar | `core/widgets/common.dart` | ✅ |
@@ -46,22 +49,43 @@ Bu ranglarda ham kodlangan:
 
 **Ya'ni: ma'lumot qatlami butunlay tayyor.** Qolgani — UI.
 
-### Yozilishi kerak bo'lgan ekranlar
+### Ekranlar — hammasi yozilgan
 
-| # | Ekran | Provider (tayyor) | Route |
+| # | Ekran | Route | Izoh |
 |---|---|---|---|
-| 1 | Xabarlar ro'yxati | `conversationsProvider` | `/inbox` |
-| 2 | Chat + kelishuv paneli | `conversationProvider(id)` | `/chat/:id` |
-| 3 | Taklif yuborish paneli | `myListingsProvider` | `/offer/:listingId` |
-| 4 | Mosliklar | `matchesProvider` | `/matches` |
-| 5 | Bildirishnomalar | `notificationsProvider` | `/notifications` |
-| 6 | Profil | `meProvider`, `myListingsProvider` | `/profile` |
-| 7 | Savdogar profili | `traderProvider(id)` va h.k. | `/trader/:id` |
-| 8 | E'lon yaratish | `tradeRepositoryProvider.createListing` | `/create` |
-| 9 | Tasdiqlash | `tradeRepositoryProvider.verification` | `/settings/verify` |
-| 10 | To'lovlar | `tradeRepositoryProvider.cards` | `/settings/payments` |
+| 1 | Splash + intro | `/`, `/intro` | Uch slayd, bir marta ko'rsatiladi |
+| 2 | Kirish | `/signin` | Telefon + SMS |
+| 3 | Profil to'ldirish | `/onboarding` | Ism, hudud, surat |
+| 4 | Lenta | `/home` | Hero, kategoriyalar, cheksiz scroll |
+| 5 | E'lon sahifasi | `/listing/:id` | |
+| 6 | E'lon yaratish | `/create` | 4 bosqich |
+| 7 | Taklif yuborish | `/offer/:listingId` | |
+| 8 | Chat + kelishuv paneli | `/chat/:id` | |
+| 9 | Xabarlar | `/inbox` | |
+| 10 | Mosliklar | `/matches` | |
+| 11 | Bildirishnomalar | `/notifications` | |
+| 12 | Profil | `/profile` | Sozlamalar shu yerdan ochiladi |
+| 13 | Savdogar profili | `/trader/:id` | |
+| 14 | Sozlamalar / tasdiqlash / to'lovlar | `/settings*` | |
+
+Yangi ekran qo'shayotgan bo'lsangiz, avval **[DESIGN.md](DESIGN.md)** ni
+o'qing — rang, shrift, radius va oraliqlar u yerda belgilangan.
 
 ---
+
+## 2.5 Bilib qo'yish kerak bo'lgan qarorlar
+
+**Suhbat taklifsiz mavjud bo'lmaydi.** `conversations.offer_id` — `NOT NULL`
+va `UNIQUE`. Shuning uchun «bu odamga xabar yozish» tugmasi yo'q va bo'lmaydi:
+odamga yetib borish yo'li — uning e'loniga taklif yuborish.
+
+**Qarshi taklif — bu yangi taklif emas.** `PATCH /offers/{id}` `counter`.
+U tomonlarni almashtiradi, ya'ni `is_mine` teskarisiga o'zgaradi. Yangi taklif
+yaratishga urinish server tomonidan rad etiladi.
+
+**Ishlamaydigan tugma qo'shmang.** Apple/Google/Facebook kirish tugmalari va
+ikkita «Xabar yozish» tugmasi olib tashlandi — hammasi «keyinroq» derdi.
+Ishlamaydigan tugma egallagan joyidan qimmatroq turadi.
 
 ## 3. Ishni boshlash
 
