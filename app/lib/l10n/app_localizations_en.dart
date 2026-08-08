@@ -544,6 +544,38 @@ class LEn extends L {
   String get matchesSkip => 'Skip';
 
   @override
+  String get matchesScore => 'match';
+
+  @override
+  String get matchesEmptyHint =>
+      'Post a listing — we\'ll find the traders that fit.';
+
+  @override
+  String get matchesCreate => 'Post a listing';
+
+  @override
+  String get inboxEmptyHint =>
+      'A conversation starts with an offer. Send one on a listing you like.';
+
+  @override
+  String get agoNow => 'now';
+
+  @override
+  String agoMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String agoHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String agoDays(int count) {
+    return '${count}d';
+  }
+
+  @override
   String get matchesOffer => 'Make offer';
 
   @override

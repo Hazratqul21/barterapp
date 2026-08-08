@@ -164,10 +164,15 @@ def deal_summary(offer: OfferOut) -> str:
     """
     The one line that says what is on the table. Shown on inbox rows and pinned
     above the chat, so the thread stays anchored to the trade.
+
+    Titles only. This used to append `f"{minor // 100} {currency}"`, which put
+    an ungrouped number and a currency code — "1260000 USD" — into a sentence
+    the client then had no way to reformat. Money crosses the wire as an
+    integer and a currency and is formatted once, on the client, in the
+    reader's language; the cash is carried alongside this string for exactly
+    that reason.
     """
     left = " + ".join(item.title for item in offer.offered) or "—"
-    if offer.cash_delta_minor > 0:
-        left = f"{left} + {offer.cash_delta_minor // 100} {offer.currency}"
     return f"{left} ↔ {offer.wanted.title}"
 
 

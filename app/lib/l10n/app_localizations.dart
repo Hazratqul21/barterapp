@@ -1116,8 +1116,56 @@ abstract class L {
   /// No description provided for @matchesSkip.
   ///
   /// In uz, this message translates to:
-  /// **'O‘tkazib yuborish'**
+  /// **'O‘tkazish'**
   String get matchesSkip;
+
+  /// No description provided for @matchesScore.
+  ///
+  /// In uz, this message translates to:
+  /// **'moslik'**
+  String get matchesScore;
+
+  /// No description provided for @matchesEmptyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.'**
+  String get matchesEmptyHint;
+
+  /// No description provided for @matchesCreate.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon joylash'**
+  String get matchesCreate;
+
+  /// No description provided for @inboxEmptyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.'**
+  String get inboxEmptyHint;
+
+  /// No description provided for @agoNow.
+  ///
+  /// In uz, this message translates to:
+  /// **'hozir'**
+  String get agoNow;
+
+  /// No description provided for @agoMinutes.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} daq'**
+  String agoMinutes(int count);
+
+  /// No description provided for @agoHours.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} soat'**
+  String agoHours(int count);
+
+  /// No description provided for @agoDays.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} kun'**
+  String agoDays(int count);
 
   /// No description provided for @matchesOffer.
   ///

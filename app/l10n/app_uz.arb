@@ -225,7 +225,36 @@
   "matchesEmpty": "Hozircha moslik yo‘q. E’lon joylasangiz paydo bo‘ladi.",
   "matchesYours": "Sizniki",
   "matchesTheirs": "Ularniki",
-  "matchesSkip": "O‘tkazib yuborish",
+  "matchesSkip": "O‘tkazish",
+  "matchesScore": "moslik",
+  "matchesEmptyHint": "E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.",
+  "matchesCreate": "E’lon joylash",
+  "inboxEmptyHint": "Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.",
+  "agoNow": "hozir",
+  "agoMinutes": "{count} daq",
+  "@agoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agoHours": "{count} soat",
+  "@agoHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agoDays": "{count} kun",
+  "@agoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "matchesOffer": "Taklif yuborish",
   "notificationsTitle": "Bildirishnomalar",
   "notificationsEmpty": "Yangi bildirishnoma yo‘q.",

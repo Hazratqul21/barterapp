@@ -545,6 +545,38 @@ class LRu extends L {
   String get matchesSkip => 'Пропустить';
 
   @override
+  String get matchesScore => 'совпадение';
+
+  @override
+  String get matchesEmptyHint =>
+      'Разместите объявление — подходящих партнёров найдём сами.';
+
+  @override
+  String get matchesCreate => 'Разместить объявление';
+
+  @override
+  String get inboxEmptyHint =>
+      'Разговор начинается с предложения. Отправьте его на понравившееся объявление.';
+
+  @override
+  String get agoNow => 'сейчас';
+
+  @override
+  String agoMinutes(int count) {
+    return '$count мин';
+  }
+
+  @override
+  String agoHours(int count) {
+    return '$count ч';
+  }
+
+  @override
+  String agoDays(int count) {
+    return '$count дн';
+  }
+
+  @override
   String get matchesOffer => 'Отправить предложение';
 
   @override

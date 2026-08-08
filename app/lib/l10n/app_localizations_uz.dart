@@ -542,7 +542,39 @@ class LUz extends L {
   String get matchesTheirs => 'Ularniki';
 
   @override
-  String get matchesSkip => 'O‘tkazib yuborish';
+  String get matchesSkip => 'O‘tkazish';
+
+  @override
+  String get matchesScore => 'moslik';
+
+  @override
+  String get matchesEmptyHint =>
+      'E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.';
+
+  @override
+  String get matchesCreate => 'E’lon joylash';
+
+  @override
+  String get inboxEmptyHint =>
+      'Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.';
+
+  @override
+  String get agoNow => 'hozir';
+
+  @override
+  String agoMinutes(int count) {
+    return '$count daq';
+  }
+
+  @override
+  String agoHours(int count) {
+    return '$count soat';
+  }
+
+  @override
+  String agoDays(int count) {
+    return '$count kun';
+  }
 
   @override
   String get matchesOffer => 'Taklif yuborish';

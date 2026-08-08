@@ -364,6 +364,7 @@ class ConversationSummary {
     required this.offerId,
     required this.offerStatus,
     required this.dealSummary,
+    required this.cash,
     this.lastMessage,
     this.lastMessageAt,
     this.unread = 0,
@@ -373,7 +374,12 @@ class ConversationSummary {
   final TraderBrief peer;
   final String offerId;
   final OfferStatus offerStatus;
+  /// Titles only — the server no longer bakes money into this sentence.
   final String dealSummary;
+
+  /// The top-up that goes with the deal, formatted by the row that shows it.
+  final Money cash;
+
   final String? lastMessage;
   final DateTime? lastMessageAt;
   final int unread;
@@ -385,6 +391,7 @@ class ConversationSummary {
         offerId: json['offer_id'] as String,
         offerStatus: OfferStatus.parse(json['offer_status'] as String),
         dealSummary: json['deal_summary'] as String,
+        cash: Money.fromJson(json['cash'] as Map<String, dynamic>),
         lastMessage: json['last_message'] as String?,
         lastMessageAt: json['last_message_at'] == null
             ? null

@@ -66,7 +66,11 @@ class ConversationSummary(ApiModel):
     peer: TraderBrief
     offer_id: uuid.UUID
     offer_status: OfferStatus
+    #: Titles only — see `services.offers.deal_summary`.
     deal_summary: str
+    #: The top-up that goes with the deal, so the row can render it in the
+    #: reader's language rather than receiving it pre-formatted.
+    cash: Money
     last_message: str | None = None
     last_message_at: datetime | None = None
     unread: int = 0

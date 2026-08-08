@@ -23,6 +23,7 @@ from app.db.session import SessionLocal, get_db
 from app.models.offer import Conversation, Message, Offer
 from app.models.social import NotifyKind, NotifyTargetType
 from app.models.user import User
+from app.schemas.common import Money
 from app.schemas.trade import (
     ConversationDetail,
     ConversationSummary,
@@ -104,6 +105,7 @@ async def _summary(
         offer_id=offer.id,
         offer_status=offer.status,
         deal_summary=offer_service.deal_summary(out),
+        cash=Money(minor=offer.cash_delta_minor, currency=offer.currency),
         last_message=last.body if last else None,
         last_message_at=last.created_at if last else None,
         unread=unread,

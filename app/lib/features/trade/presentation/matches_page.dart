@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../data/trade_repository.dart';
 
+/// What the matcher found: your listing on one side, a stranger's on the other,
+/// and how well they fit.
+///
+/// The card used to be an `IntrinsicHeight` row holding two full-width network
+/// images. Intrinsic sizing has to measure a child before laying it out, and a
+/// box declared `width: double.infinity` has no intrinsic width to give — so
+/// the whole screen threw during layout and rendered nothing at all. The API
+/// was returning matches the entire time.
+///
+/// It is a column now. Nothing here asks for an intrinsic measurement.
 class MatchesPage extends ConsumerWidget {
   const MatchesPage({super.key});
 
@@ -17,275 +28,351 @@ class MatchesPage extends ConsumerWidget {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
-    final matchesAsync = ref.watch(matchesProvider);
-    final locale = Localizations.localeOf(context).languageCode;
+    final matches = ref.watch(matchesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.matchesTitle),
-      ),
-      body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 700), child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Text(
-              l.matchesLede,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: p.inkFaint,
-              ),
+      appBar: AppBar(title: Text(l.matchesTitle)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+          child: matches.when(
+            loading: () => const _MatchesShimmer(),
+            error: (e, _) => ErrorState(
+              message: errorMessage(context, e),
+              retryLabel: l.retry,
+              onRetry: () => ref.invalidate(matchesProvider),
             ),
-          ),
-          Expanded(
-            child: matchesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => ErrorState(
-                message: errorMessage(context, e),
-                retryLabel: l.retry,
-                onRetry: () => ref.invalidate(matchesProvider),
-              ),
-              data: (matches) {
-                if (matches.isEmpty) {
-                  return EmptyState(
+            data: (items) => items.isEmpty
+                ? EmptyState(
                     title: l.matchesEmpty,
-                    hint: '',
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(matchesProvider),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    itemCount: matches.length,
-                    itemBuilder: (context, index) {
-                      final match = matches[index];
-                      return AnimatedListItem(
-                        index: index,
-                        child: _MatchCard(
-                          match: match,
-                          locale: locale,
-                          l: l,
-                          p: p,
-                        ),
-                      );
-                    },
+                    hint: l.matchesEmptyHint,
+                    actionLabel: l.matchesCreate,
+                    onAction: () => context.push('/create'),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () async => ref.invalidate(matchesProvider),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        Gap.x5,
+                        Gap.x4,
+                        Gap.x5,
+                        Gap.x14,
+                      ),
+                      itemCount: items.length + 1,
+                      separatorBuilder: (_, _) => Gap.h4,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: Gap.x1),
+                            child: Text(
+                              l.matchesLede,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: p.inkSoft,
+                              ),
+                            ),
+                          );
+                        }
+                        return _MatchCard(match: items[index - 1]);
+                      },
+                    ),
                   ),
-                );
-              },
-            ),
           ),
-        ],
-      ))),
+        ),
+      ),
     );
   }
 }
 
 class _MatchCard extends ConsumerWidget {
-  const _MatchCard({
-    required this.match,
-    required this.locale,
-    required this.l,
-    required this.p,
-  });
+  const _MatchCard({required this.match});
 
   final TradeMatch match;
-  final String locale;
-  final L l;
-  final BarterPalette p;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+    final p = palette(context);
     final theme = Theme.of(context);
+    final locale = l.localeName;
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Padding(
+        padding: const EdgeInsets.all(Gap.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // The score leads. It is the reason this card exists, and the one
+            // number that decides whether the rest is worth reading.
+            Row(
               children: [
+                _Score(score: match.score),
+                Gap.w3,
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(color: p.give, width: 4),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.matchesYours,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: p.give,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 100,
-                            child: RemoteImage(
-                              url: match.mine.imageUrl,
-                              semanticLabel: match.mine.imageAlt,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.mine.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          match.mine.value.format(locale),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.inkSoft,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: theme.colorScheme.tertiaryContainer,
-                        child: Icon(
-                          Symbols.swap_horiz_rounded,
-                          color: theme.colorScheme.onTertiaryContainer,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${match.score}%',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: theme.colorScheme.onTertiaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: p.take, width: 4),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.matchesTheirs,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: p.take,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 100,
-                            child: RemoteImage(
-                              url: match.theirs.imageUrl,
-                              semanticLabel: match.theirs.imageAlt,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.theirs.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          match.theirs.value.format(locale),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.inkSoft,
-                          ),
-                        ),
-                      ],
+                  child: Text(
+                    match.reason,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: p.inkSoft,
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+            Gap.h4,
+
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    TraderAvatar(url: match.owner.avatarUrl, name: match.owner.displayName, size: 28),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        match.owner.displayName,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (match.owner.rating != null) ...[
-                      const Icon(Symbols.star_rounded, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        match.owner.rating!.toStringAsFixed(1),
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  match.reason,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: p.inkSoft,
+                Expanded(
+                  child: _Side(
+                    listing: match.mine,
+                    caption: l.matchesYours,
+                    color: p.give,
+                    tint: p.giveSoft,
+                    locale: locale,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        ref.read(tradeRepositoryProvider).dismissMatch(match.id);
-                        ref.invalidate(matchesProvider);
-                      },
-                      child: Text(l.matchesSkip),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
+                  child: Padding(
+                    // Sits level with the thumbnails rather than the captions.
+                    padding: const EdgeInsets.only(top: 40),
+                    child: Icon(
+                      Symbols.swap_horiz_rounded,
+                      size: Sizes.iconLg,
+                      color: p.inkFaint,
                     ),
-                    const SizedBox(width: 12),
-                    FilledButton(
-                      onPressed: () => context.push('/offer/${match.theirs.id}'),
-                      child: Text(l.matchesOffer),
-                    ),
-                  ],
+                  ),
+                ),
+                Expanded(
+                  child: _Side(
+                    listing: match.theirs,
+                    caption: l.matchesTheirs,
+                    color: p.take,
+                    tint: p.takeSoft,
+                    locale: locale,
+                  ),
                 ),
               ],
+            ),
+
+            Gap.h4,
+            Divider(color: p.hair, height: 1),
+            Gap.h3,
+
+            // The owner is always the owner of `theirs` — the server decides
+            // that, so no screen has to work it out.
+            InkWell(
+              onTap: () => context.push('/trader/${match.owner.id}'),
+              borderRadius: Radii.rSm,
+              child: Row(
+                children: [
+                  TraderAvatar(
+                    url: match.owner.avatarUrl,
+                    name: match.owner.name,
+                    size: Sizes.avatarSm,
+                  ),
+                  Gap.w2,
+                  Expanded(
+                    child: Text(
+                      match.owner.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall,
+                    ),
+                  ),
+                  if (match.owner.rating != null) ...[
+                    Icon(
+                      Symbols.star_rounded,
+                      size: Sizes.iconSm,
+                      color: p.money,
+                      fill: 1,
+                    ),
+                    Gap.w1,
+                    Text(
+                      match.owner.rating!.toStringAsFixed(1),
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            Gap.h4,
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      HapticFeedback.lightImpact();
+                      await ref
+                          .read(tradeRepositoryProvider)
+                          .dismissMatch(match.id);
+                      ref.invalidate(matchesProvider);
+                    },
+                    child: Text(l.matchesSkip),
+                  ),
+                ),
+                Gap.w3,
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      context.push('/offer/${match.theirs.id}');
+                    },
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, Sizes.buttonMd),
+                    ),
+                    child: Text(l.matchesOffer),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One half of the pairing: a thumbnail, what it is, what it is worth.
+class _Side extends StatelessWidget {
+  const _Side({
+    required this.listing,
+    required this.caption,
+    required this.color,
+    required this.tint,
+    required this.locale,
+  });
+
+  final ListingCard listing;
+  final String caption;
+  final Color color;
+  final Color tint;
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          caption.toUpperCase(),
+          style: theme.textTheme.labelSmall?.copyWith(color: color),
+        ),
+        Gap.h2,
+        ClipRRect(
+          borderRadius: Radii.rSm,
+          child: Container(
+            height: 84,
+            color: tint,
+            // A fixed height and whatever width the column gives it. No
+            // `double.infinity`, which is what broke the previous card.
+            child: RemoteImage(
+              url: listing.imageUrl,
+              semanticLabel: listing.imageAlt,
+            ),
+          ),
+        ),
+        Gap.h2,
+        Text(
+          listing.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(height: 1.3),
+        ),
+        Gap.h1,
+        Text(
+          listing.value.format(locale),
+          style: theme.textTheme.bodySmall?.copyWith(color: p.inkSoft),
+        ),
+      ],
+    );
+  }
+}
+
+/// The fit, as a number.
+class _Score extends StatelessWidget {
+  const _Score({required this.score});
+
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = palette(context);
+    final theme = Theme.of(context);
+
+    // A strong fit earns the money colour; a weaker one stays quiet rather than
+    // claiming more than it is.
+    final strong = score >= 75;
+    final colour = strong ? p.money : p.inkSoft;
+    final tint = strong ? p.moneySoft : p.sunken;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Gap.x3,
+        vertical: Gap.x2,
+      ),
+      decoration: BoxDecoration(color: tint, borderRadius: Radii.rSm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$score%',
+            style: theme.textTheme.titleLarge?.copyWith(color: colour),
+          ),
+          Text(
+            l.matchesScore,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colour,
+              letterSpacing: 0.3,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The card's own shape while the matcher runs — it computes on read, so this
+/// is a real wait rather than a token one.
+class _MatchesShimmer extends StatelessWidget {
+  const _MatchesShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x14),
+      itemCount: 3,
+      separatorBuilder: (_, _) => Gap.h4,
+      itemBuilder: (context, index) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(Gap.x4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBox(width: 72, height: 44, radius: Radii.rSm),
+              Gap.h4,
+              const Row(
+                children: [
+                  Expanded(
+                    child: SkeletonBox(height: 84, radius: Radii.rSm),
+                  ),
+                  Gap.w4,
+                  Expanded(
+                    child: SkeletonBox(height: 84, radius: Radii.rSm),
+                  ),
+                ],
+              ),
+              Gap.h3,
+              const SkeletonBox(width: 160, height: 14),
+            ],
+          ),
+        ),
       ),
     );
   }
