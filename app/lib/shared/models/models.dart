@@ -13,12 +13,19 @@ class Money {
     currency: json['currency'] as String,
   );
 
+  /// How the currency is written in each language.
+  ///
+  /// `intl` answers "so'm" for UZS whatever the locale, so a Russian screen
+  /// read "1 486 800 so'm" — the number grouped in Russian, the unit in Uzbek.
+  static const _units = {
+    'UZS': {'uz': 'so‘m', 'ru': 'сум', 'en': 'UZS'},
+    'USD': {'uz': '\$', 'ru': '\$', 'en': '\$'},
+  };
+
   String format(String locale) {
-    return NumberFormat.simpleCurrency(
-      locale: locale,
-      name: currency,
-      decimalDigits: 0,
-    ).format(minor / 100);
+    final grouped = NumberFormat.decimalPattern(locale).format(minor ~/ 100);
+    final unit = _units[currency]?[locale] ?? currency;
+    return '$grouped $unit';
   }
 }
 
