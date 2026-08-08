@@ -525,6 +525,24 @@ abstract class L {
   /// **'Chiqish'**
   String get authSignOut;
 
+  /// No description provided for @authChangeNumber.
+  ///
+  /// In uz, this message translates to:
+  /// **'Raqamni o‘zgartirish'**
+  String get authChangeNumber;
+
+  /// No description provided for @authOtpDebug.
+  ///
+  /// In uz, this message translates to:
+  /// **'SMS provayderi hali ulanmagan. Sinov kodi: {code}'**
+  String authOtpDebug(String code);
+
+  /// No description provided for @authResend.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kodni qayta yuborish'**
+  String get authResend;
+
   /// No description provided for @profileTitle.
   ///
   /// In uz, this message translates to:

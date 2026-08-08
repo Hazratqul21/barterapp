@@ -234,6 +234,17 @@ class LEn extends L {
   String get authSignOut => 'Sign out';
 
   @override
+  String get authChangeNumber => 'Change number';
+
+  @override
+  String authOtpDebug(String code) {
+    return 'No SMS provider yet. Test code: $code';
+  }
+
+  @override
+  String get authResend => 'Send the code again';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override

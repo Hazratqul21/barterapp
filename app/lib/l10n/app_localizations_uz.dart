@@ -235,6 +235,17 @@ class LUz extends L {
   String get authSignOut => 'Chiqish';
 
   @override
+  String get authChangeNumber => 'Raqamni o‘zgartirish';
+
+  @override
+  String authOtpDebug(String code) {
+    return 'SMS provayderi hali ulanmagan. Sinov kodi: $code';
+  }
+
+  @override
+  String get authResend => 'Kodni qayta yuborish';
+
+  @override
   String get profileTitle => 'Profil';
 
   @override

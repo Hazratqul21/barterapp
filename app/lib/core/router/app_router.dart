@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/feed/presentation/feed_page.dart';
 import '../../features/listing/presentation/listing_detail_page.dart';
 import '../../features/onboarding/presentation/intro_page.dart';
@@ -42,6 +43,13 @@ GoRouter buildRouter() {
         path: '/intro',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const IntroPage(),
+      ),
+      // The profile and every signed-out prompt push here. The route was
+      // missing entirely, so "Kirish" landed on go_router's error page.
+      GoRoute(
+        path: '/signin',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const SignInPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(navigationShell: shell),

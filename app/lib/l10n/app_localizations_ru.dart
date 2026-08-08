@@ -234,6 +234,17 @@ class LRu extends L {
   String get authSignOut => 'Выйти';
 
   @override
+  String get authChangeNumber => 'Изменить номер';
+
+  @override
+  String authOtpDebug(String code) {
+    return 'SMS-провайдер ещё не подключён. Тестовый код: $code';
+  }
+
+  @override
+  String get authResend => 'Отправить код ещё раз';
+
+  @override
   String get profileTitle => 'Профиль';
 
   @override

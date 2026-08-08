@@ -31,7 +31,6 @@ dependencies:
 
   cached_network_image: ^3.4.1
   shared_preferences: ^2.5.4
-  google_fonts: ^8.2.1
   flutter_animate: ^4.5.2
   animations: ^2.2.0
   material_symbols_icons: ^4.2960.0
@@ -45,3 +44,19 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  # Bundled, not fetched. `google_fonts` downloads a family on first use and
+  # caches it, which means the first launch on a slow connection renders in a
+  # fallback face — and on no connection, always. Half this marketplace opens
+  # the app on rural mobile data, so the type ships with the binary.
+  #
+  # Both are variable fonts with a single weight axis: one file covers 300–900,
+  # and both carry the full Cyrillic block, which is what the previous face was
+  # missing.
+  fonts:
+    - family: Rubik
+      fonts:
+        - asset: assets/fonts/Rubik-Variable.ttf
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Variable.ttf

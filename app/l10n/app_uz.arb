@@ -99,6 +99,16 @@
   "authSignedOut": "Hisobga kirmagansiz",
   "authSignIn": "Kirish",
   "authSignOut": "Chiqish",
+  "authChangeNumber": "Raqamni o‘zgartirish",
+  "authOtpDebug": "SMS provayderi hali ulanmagan. Sinov kodi: {code}",
+  "@authOtpDebug": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "authResend": "Kodni qayta yuborish",
   "profileTitle": "Profil",
   "profileTrustLabel": "Ishonch darajasi",
   "profileStatActive": "Faol e’lon",

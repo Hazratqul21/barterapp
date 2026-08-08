@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
@@ -312,8 +311,11 @@ abstract final class AppTheme {
     // which is the voice a market for farms and workshops should have. Manrope
     // sets everything else — quieter, airier, and good at numbers, of which a
     // price-heavy app has many.
-    final display = GoogleFonts.getFont(_displayFamily);
-    final baseTextTheme = GoogleFonts.getTextTheme(_bodyFamily).apply(
+    //
+    // Both ship inside the binary; see the `fonts:` block in pubspec.yaml.
+    final typography = Typography.material2021();
+    final baseTextTheme = (isDark ? typography.white : typography.black).apply(
+      fontFamily: _bodyFamily,
       bodyColor: textColor,
       displayColor: textColor,
     );
@@ -323,7 +325,8 @@ abstract final class AppTheme {
       FontWeight weight, {
       double spacing = 0,
       double height = 1.2,
-    }) => display.copyWith(
+    }) => TextStyle(
+      fontFamily: _displayFamily,
       fontSize: size,
       fontWeight: weight,
       letterSpacing: spacing,
