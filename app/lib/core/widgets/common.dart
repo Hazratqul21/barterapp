@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../art/illustrations.dart';
@@ -472,6 +473,31 @@ class AnimatedListItem extends StatelessWidget {
           duration: M3Motion.medium2,
           curve: M3Motion.emphasizedDecelerate,
         );
+  }
+}
+
+/// What a screen shows when it needs an account and there is not one.
+///
+/// The inbox and the matches tab used to answer "you have no conversations"
+/// and "no matches yet" to a signed-out visitor — statements about an account
+/// that does not exist, with no way to make one. The brief asked for this
+/// widget from the start; it was never written.
+class SignInPrompt extends StatelessWidget {
+  const SignInPrompt({super.key, required this.reason});
+
+  /// Why an account is needed here, in this screen's own terms.
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return EmptyState(
+      icon: Symbols.lock_person_rounded,
+      title: l.authSignedOut,
+      hint: reason,
+      actionLabel: l.authSignIn,
+      onAction: () => context.push('/signin'),
+    );
   }
 }
 

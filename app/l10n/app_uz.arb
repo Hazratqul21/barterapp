@@ -231,6 +231,8 @@
   "matchesCreate": "E’lon joylash",
   "inboxEmptyHint": "Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.",
   "inboxPickThread": "Chapdan suhbat tanlang.",
+  "inboxSignIn": "Suhbatlaringizni ko‘rish uchun hisobga kiring.",
+  "matchesSignIn": "Mosliklar sizning e’lonlaringizga qarab topiladi — avval hisobga kiring.",
   "agoNow": "hozir",
   "agoMinutes": "{count} daq",
   "@agoMinutes": {

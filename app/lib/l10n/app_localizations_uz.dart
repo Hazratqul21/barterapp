@@ -562,6 +562,13 @@ class LUz extends L {
   String get inboxPickThread => 'Chapdan suhbat tanlang.';
 
   @override
+  String get inboxSignIn => 'Suhbatlaringizni ko‘rish uchun hisobga kiring.';
+
+  @override
+  String get matchesSignIn =>
+      'Mosliklar sizning e’lonlaringizga qarab topiladi — avval hisobga kiring.';
+
+  @override
   String get agoNow => 'hozir';
 
   @override

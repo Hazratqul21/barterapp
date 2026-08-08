@@ -561,6 +561,13 @@ class LEn extends L {
   String get inboxPickThread => 'Pick a conversation on the left.';
 
   @override
+  String get inboxSignIn => 'Sign in to see your conversations.';
+
+  @override
+  String get matchesSignIn =>
+      'Matches are found from your own listings — sign in first.';
+
+  @override
   String get agoNow => 'now';
 
   @override

@@ -175,6 +175,8 @@
   "matchesCreate": "Post a listing",
   "inboxEmptyHint": "A conversation starts with an offer. Send one on a listing you like.",
   "inboxPickThread": "Pick a conversation on the left.",
+  "inboxSignIn": "Sign in to see your conversations.",
+  "matchesSignIn": "Matches are found from your own listings — sign in first.",
   "agoNow": "now",
   "agoMinutes": "{count}m",
   "agoHours": "{count}h",

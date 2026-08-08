@@ -562,6 +562,13 @@ class LRu extends L {
   String get inboxPickThread => 'Выберите разговор слева.';
 
   @override
+  String get inboxSignIn => 'Войдите, чтобы увидеть свои разговоры.';
+
+  @override
+  String get matchesSignIn =>
+      'Совпадения ищутся по вашим объявлениям — сначала войдите.';
+
+  @override
   String get agoNow => 'сейчас';
 
   @override

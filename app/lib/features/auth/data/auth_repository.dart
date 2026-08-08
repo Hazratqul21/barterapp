@@ -70,6 +70,16 @@ class AuthState extends Notifier<bool> {
     state = false;
     ref.invalidate(meProvider);
   }
+
+  /// The server rejected the token. Same outcome as signing out, but nobody
+  /// chose it — so it must not run while already signed out, or a stray 401
+  /// would keep rebuilding every screen that watches this.
+  void sessionExpired() {
+    if (!state) return;
+    state = false;
+    ref.read(sessionStoreProvider).clear();
+    ref.invalidate(meProvider);
+  }
 }
 
 final authStateProvider = NotifierProvider<AuthState, bool>(AuthState.new);

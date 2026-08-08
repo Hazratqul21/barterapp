@@ -9,6 +9,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
 
 /// What the matcher found: your listing on one side, a stranger's on the other,
@@ -30,6 +31,13 @@ class MatchesPage extends ConsumerWidget {
     final p = palette(context);
     final theme = Theme.of(context);
     final matches = ref.watch(matchesProvider);
+
+    if (!ref.watch(authStateProvider)) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l.matchesTitle)),
+        body: SignInPrompt(reason: l.matchesSignIn),
+      );
+    }
 
     final wide = MediaQuery.sizeOf(context).width >= kWebBreakpoint;
 

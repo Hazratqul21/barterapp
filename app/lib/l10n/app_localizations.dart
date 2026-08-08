@@ -1149,6 +1149,18 @@ abstract class L {
   /// **'Chapdan suhbat tanlang.'**
   String get inboxPickThread;
 
+  /// No description provided for @inboxSignIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suhbatlaringizni ko‘rish uchun hisobga kiring.'**
+  String get inboxSignIn;
+
+  /// No description provided for @matchesSignIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Mosliklar sizning e’lonlaringizga qarab topiladi — avval hisobga kiring.'**
+  String get matchesSignIn;
+
   /// No description provided for @agoNow.
   ///
   /// In uz, this message translates to:

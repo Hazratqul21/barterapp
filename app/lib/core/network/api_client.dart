@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/auth/data/auth_repository.dart';
+
 /// Where the API lives during development.
 ///
 /// The Android emulator reaches the host machine on 10.0.2.2, not localhost —
@@ -72,7 +74,12 @@ class SessionStore {
 }
 
 class ApiClient {
-  ApiClient(this._session, {required this.locale, String? baseUrl})
+  ApiClient(
+    this._session, {
+    required this.locale,
+    this.onUnauthorized,
+    String? baseUrl,
+  })
     : _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl ?? defaultApiBaseUrl(),
@@ -103,6 +110,16 @@ class ApiClient {
   /// storage per request so that switching it replaces the whole client — which
   /// is what makes every cached listing refetch in the new language.
   final String locale;
+
+  /// Called once when the server rejects the session.
+  ///
+  /// A token outlives its account — the signing key changes, the row is gone,
+  /// the expiry passes. Without this the app kept the dead token and every
+  /// screen that needs an account sat on a loading skeleton or showed the
+  /// server's "Foydalanuvchi topilmadi", with no way back to the sign-in
+  /// screen. A rejected session is not an error to display; it is a session
+  /// that has ended.
+  final void Function()? onUnauthorized;
 
   Future<T> get<T>(
     String path, {
@@ -188,6 +205,8 @@ class ApiClient {
     final status = e.response?.statusCode;
     final data = e.response?.data;
 
+    if (status == 401) onUnauthorized?.call();
+
     // FastAPI puts a human-readable reason in `detail`; surface it rather than
     // a generic failure, because those messages are already written for users.
     if (data is Map && data['detail'] is String) {
@@ -238,5 +257,8 @@ final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(
     ref.watch(sessionStoreProvider),
     locale: ref.watch(localeProvider),
+    // Read lazily inside the callback: the auth state must not become a
+    // build-time dependency of the client that reports to it.
+    onUnauthorized: () => ref.read(authStateProvider.notifier).sessionExpired(),
   ),
 );

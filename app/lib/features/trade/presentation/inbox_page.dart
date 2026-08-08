@@ -9,6 +9,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
 import 'chat_page.dart';
 
@@ -35,6 +36,16 @@ class _InboxPageState extends ConsumerState<InboxPage> {
     final p = palette(context);
     final threads = ref.watch(conversationsProvider);
     final wide = MediaQuery.sizeOf(context).width >= kWebBreakpoint;
+
+    // Checked before the data, not after: without an account there is nothing
+    // to fetch, and "no conversations" would be a claim about an account that
+    // does not exist.
+    if (!ref.watch(authStateProvider)) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l.inboxTitle)),
+        body: SignInPrompt(reason: l.inboxSignIn),
+      );
+    }
 
     // Two panes on a desktop: the list stays put and the conversation opens
     // beside it. Replacing the whole window with one thread — and making the
