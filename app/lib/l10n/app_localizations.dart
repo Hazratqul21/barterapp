@@ -1107,6 +1107,120 @@ abstract class L {
   /// **'E’lon joylandi'**
   String get createPublished;
 
+  /// No description provided for @createStepPhotos.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suratlar'**
+  String get createStepPhotos;
+
+  /// No description provided for @createStepGive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima beryapsiz?'**
+  String get createStepGive;
+
+  /// No description provided for @createStepTake.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima kerak?'**
+  String get createStepTake;
+
+  /// No description provided for @createStepValue.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qiymati'**
+  String get createStepValue;
+
+  /// No description provided for @createNext.
+  ///
+  /// In uz, this message translates to:
+  /// **'Keyingisi'**
+  String get createNext;
+
+  /// No description provided for @createBack.
+  ///
+  /// In uz, this message translates to:
+  /// **'Orqaga'**
+  String get createBack;
+
+  /// No description provided for @createPhotosHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Birinchi surat lentada ko‘rinadi. Kamida bittasi kerak.'**
+  String get createPhotosHint;
+
+  /// No description provided for @createGiveHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Uchala tilda ham to‘ldiring — ruscha o‘qiydigan odam uchun ilova buzuq ko‘rinmasligi uchun.'**
+  String get createGiveHint;
+
+  /// No description provided for @createTakeHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Evaziga nima olmoqchisiz? Bu moslikni topishga yordam beradi.'**
+  String get createTakeHint;
+
+  /// No description provided for @createValueHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Taxminiy qiymat teng savdolarni topish uchun kerak.'**
+  String get createValueHint;
+
+  /// No description provided for @createFieldDescription.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tavsif'**
+  String get createFieldDescription;
+
+  /// No description provided for @createFieldTag.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bo‘lim'**
+  String get createFieldTag;
+
+  /// No description provided for @createWantCategory.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaysi bo‘limdan?'**
+  String get createWantCategory;
+
+  /// No description provided for @createWantAny.
+  ///
+  /// In uz, this message translates to:
+  /// **'Farqi yo‘q'**
+  String get createWantAny;
+
+  /// No description provided for @createCashAdd.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ustiga pul qo‘sha olaman'**
+  String get createCashAdd;
+
+  /// No description provided for @createCashWant.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ustiga pul kerak'**
+  String get createCashWant;
+
+  /// No description provided for @createQuotaTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bepul e’lonlar tugadi'**
+  String get createQuotaTitle;
+
+  /// No description provided for @createQuotaBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Davom etish uchun tarif tanlang yoki biznes hisobga o‘ting.'**
+  String get createQuotaBody;
+
+  /// No description provided for @createQuotaOk.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tushundim'**
+  String get createQuotaOk;
+
   /// No description provided for @verifyTitle.
   ///
   /// In uz, this message translates to:

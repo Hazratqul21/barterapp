@@ -2,15 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/network/api_client.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
+import '../../feed/data/listing_repository.dart';
 import '../data/trade_repository.dart';
 
+/// Publishing a listing, in four steps.
+///
+/// It was one long form with seven trilingual fields visible at once, which is
+/// where somebody with a spare laptop gives up. Four steps ask one question at
+/// a time and never show the finish line as impossibly far away.
+///
+/// The old form also could not publish at all. It sent `value_minor` as a bare
+/// integer where the server wants a `{minor, currency}` object, and omitted
+/// `image_alt` and `wants` entirely — so every attempt came back 422. Nobody
+/// could post anything.
 class CreateListingPage extends ConsumerStatefulWidget {
   const CreateListingPage({super.key});
 
@@ -19,103 +31,142 @@ class CreateListingPage extends ConsumerStatefulWidget {
 }
 
 class _CreateListingPageState extends ConsumerState<CreateListingPage> {
-  final _formKey = GlobalKey<FormState>();
-  
-  final _photosController = TextEditingController();
-  ListingTag? _selectedTag;
-  
-  final _titleMap = {'uz': '', 'ru': '', 'en': ''};
-  final _descMap = {'uz': '', 'ru': '', 'en': ''};
-  final _categoryMap = {'uz': '', 'ru': '', 'en': ''};
-  final _conditionMap = {'uz': '', 'ru': '', 'en': ''};
-  final _quantityMap = {'uz': '', 'ru': '', 'en': ''};
-  final _wantsMap = {'uz': '', 'ru': '', 'en': ''};
-  
-  final _valueController = TextEditingController();
-  bool _cashOk = false;
-  bool _isSubmitting = false;
+  static const _steps = 4;
 
-  String _getTagName(L l, ListingTag tag) {
-    switch (tag) {
-      case ListingTag.agri: return l.filterAgri;
-      case ListingTag.livestock: return l.filterLivestock;
-      case ListingTag.machinery: return l.filterMachinery;
-      case ListingTag.transport: return l.filterTransport;
-      case ListingTag.electronics: return l.filterElectronics;
-      case ListingTag.construction: return l.filterConstruction;
+  int _step = 0;
+  bool _busy = false;
+  bool _uploading = false;
+
+  final _photos = <String>[];
+  ListingTag? _tag;
+
+  final _title = _Trilingual();
+  final _description = _Trilingual();
+  final _category = _Trilingual();
+  final _condition = _Trilingual();
+  final _quantity = _Trilingual();
+  final _wants = _Trilingual();
+
+  final _value = TextEditingController();
+  ListingTag? _wantTag;
+  bool _cashOk = false;
+  bool _wantsCash = false;
+
+  @override
+  void dispose() {
+    for (final f in [
+      _title,
+      _description,
+      _category,
+      _condition,
+      _quantity,
+      _wants,
+    ]) {
+      f.dispose();
+    }
+    _value.dispose();
+    super.dispose();
+  }
+
+  int get _valueSom => int.tryParse(_value.text.replaceAll(' ', '')) ?? 0;
+
+  /// Whether the step on screen has everything it needs. Checked per step so
+  /// the "next" button is honest rather than failing at the end.
+  bool get _stepComplete => switch (_step) {
+    0 => _photos.isNotEmpty,
+    1 => _tag != null && _title.complete && _description.complete &&
+        _category.complete && _condition.complete && _quantity.complete,
+    2 => _wants.complete,
+    _ => _valueSom > 0,
+  };
+
+  Future<void> _addPhoto() async {
+    setState(() => _uploading = true);
+    try {
+      final url = await pickAndUploadPhoto(context, ref);
+      if (!mounted) return;
+      if (url != null) setState(() => _photos.add(url));
+    } catch (e) {
+      if (mounted) _complain(errorMessage(context, e));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
   }
 
-  void _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    
+  void _complain(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _publish() async {
+    setState(() => _busy = true);
     final l = L.of(context);
-    
-    // Validate trilingual fields are non-empty
-    bool isValidTrilingual(Map<String, String> map) {
-      return map.values.every((v) => v.trim().isNotEmpty);
-    }
-    
-    if (!isValidTrilingual(_titleMap) ||
-        !isValidTrilingual(_descMap) ||
-        !isValidTrilingual(_categoryMap) ||
-        !isValidTrilingual(_conditionMap) ||
-        !isValidTrilingual(_quantityMap) ||
-        !isValidTrilingual(_wantsMap)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.createLangHint)),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-    
     try {
-      final valueMinor = (double.tryParse(_valueController.text) ?? 0) * 100;
-      
-      final body = {
-        'tag': _selectedTag!.name,
-        'photos': _photosController.text.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
-        'title': _titleMap,
-        'description': _descMap,
-        'category': _categoryMap,
-        'condition': _conditionMap,
-        'quantity': _quantityMap,
-        'wants_summary': _wantsMap,
-        'value_minor': valueMinor.toInt(),
+      await ref.read(tradeRepositoryProvider).createListing({
+        'tag': _tag!.name,
+        'title': _title.toJson(),
+        'description': _description.toJson(),
+        // Alt text was never sent and the server requires it. The title says
+        // what the photograph is of, which is what a screen reader needs.
+        'image_alt': _title.toJson(),
+        'category': _category.toJson(),
+        'condition': _condition.toJson(),
+        'quantity': _quantity.toJson(),
+        'wants_summary': _wants.toJson(),
+        'wants': [_wants.toJson()],
+        // The structured half of the same wish — this is what the matcher
+        // reads. Without it a listing is invisible to `wanted()` forever.
+        'desires': [
+          {
+            'category': _wantTag?.name,
+            'will_add_cash': _cashOk,
+            'wants_cash': _wantsCash,
+          },
+        ],
+        'photos': _photos,
+        'value': {'minor': _valueSom * 100, 'currency': 'UZS'},
         'cash_ok': _cashOk,
-      };
+      });
 
-      await ref.read(tradeRepositoryProvider).createListing(body);
-      
+      ref.invalidate(feedProvider);
+      ref.invalidate(myListingsProvider);
+      ref.invalidate(matchesProvider);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.createPublished)),
-      );
+      _complain(l.createPublished);
       context.pop();
     } on ApiException catch (e) {
+      if (!mounted) return;
+      // Not a failure — the free quota ran out, and the answer is a plan.
       if (e.statusCode == 402) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Quota Exceeded'),
-            content: const Text('You have reached your listing limit.'),
-            actions: [
-              TextButton(
-                onPressed: () => context.pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        _showQuotaDialog(e.message);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        _complain(e.message);
       }
+    } catch (e) {
+      if (mounted) _complain(errorMessage(context, e));
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _showQuotaDialog(String serverMessage) {
+    final l = L.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Symbols.workspace_premium_rounded, size: 32),
+        title: Text(l.createQuotaTitle),
+        content: Text(serverMessage.isEmpty ? l.createQuotaBody : serverMessage),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.createQuotaOk),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -123,290 +174,373 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
+    final last = _step == _steps - 1;
+
+    final titles = [
+      l.createStepPhotos,
+      l.createStepGive,
+      l.createStepTake,
+      l.createStepValue,
+    ];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l.createTitle),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(3),
+          child: LinearProgressIndicator(
+            value: (_step + 1) / _steps,
+            minHeight: 3,
+            backgroundColor: p.hair,
+          ),
+        ),
       ),
-      body: Form(
-        key: _formKey,
+      body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  margin: EdgeInsets.zero,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      Gap.x5,
+                      Gap.x5,
+                      Gap.x5,
+                      Gap.x6,
+                    ),
                     children: [
-                      // GIVE BLOCK
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l.createGive,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: p.give,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Card(
-                              margin: EdgeInsets.zero,
-                              color: theme.colorScheme.surfaceContainer,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  children: [
-                                    TextFormField(
-                                      controller: _photosController,
-                                      maxLines: 3,
-                                      decoration: InputDecoration(
-                                        labelText: l.createPhotos,
-                                        hintText: 'https://...',
-                                        border: const OutlineInputBorder(),
-                                      ),
-                                      validator: (val) => val == null || val.trim().isEmpty ? l.createRequired : null,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    
-                                    DropdownButtonFormField<ListingTag>(
-                                      initialValue: _selectedTag,
-                                      decoration: const InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText: 'Tag',
-                                      ),
-                                      items: ListingTag.values.map((t) {
-                                        return DropdownMenuItem(
-                                          value: t,
-                                          child: Text(_getTagName(l, t)),
-                                        );
-                                      }).toList(),
-                                      onChanged: (val) => setState(() => _selectedTag = val),
-                                      validator: (val) => val == null ? l.createRequired : null,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    
-                                    _TrilingualField(
-                                      label: l.createFieldTitle,
-                                      values: _titleMap,
-                                      requiredMessage: l.createRequired,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _TrilingualField(
-                                      label: 'Description', // fallback if missing
-                                      values: _descMap,
-                                      requiredMessage: l.createRequired,
-                                      maxLines: 3,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _TrilingualField(
-                                      label: 'Category', // fallback
-                                      values: _categoryMap,
-                                      requiredMessage: l.createRequired,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _TrilingualField(
-                                      label: 'Condition', // fallback
-                                      values: _conditionMap,
-                                      requiredMessage: l.createRequired,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _TrilingualField(
-                                      label: 'Quantity', // fallback
-                                      values: _quantityMap,
-                                      requiredMessage: l.createRequired,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    
-                                    TextFormField(
-                                      controller: _valueController,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        labelText: l.createFieldValue,
-                                        suffixText: 'UZS',
-                                        border: const OutlineInputBorder(),
-                                      ),
-                                      validator: (val) => val == null || val.trim().isEmpty ? l.createRequired : null,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                      Text(titles[_step], style: theme.textTheme.headlineSmall),
+                      Gap.h2,
+                      Text(
+                        switch (_step) {
+                          0 => l.createPhotosHint,
+                          1 => l.createGiveHint,
+                          2 => l.createTakeHint,
+                          _ => l.createValueHint,
+                        },
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: p.inkSoft,
                         ),
                       ),
-        
-                      const Divider(),
-                      
-                      // TAKE BLOCK
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l.createTake,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: p.take,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Card(
-                              margin: EdgeInsets.zero,
-                              color: theme.colorScheme.surfaceContainer,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  children: [
-                                    _TrilingualField(
-                                      label: l.createFieldWants,
-                                      values: _wantsMap,
-                                      requiredMessage: l.createRequired,
-                                      maxLines: 2,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    
-                                    SwitchListTile(
-                                      title: Text(l.listingCashOk, style: theme.textTheme.bodyLarge),
-                                      value: _cashOk,
-                                      onChanged: (val) => setState(() => _cashOk = val),
-                                      activeThumbColor: p.take,
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                      Gap.h6,
+                      ...switch (_step) {
+                        0 => _photosStep(l),
+                        1 => _giveStep(l),
+                        2 => _takeStep(l),
+                        _ => _valueStep(l, theme),
+                      },
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    Gap.x5,
+                    Gap.x2,
+                    Gap.x5,
+                    Gap.x4,
+                  ),
+                  child: Row(
+                    children: [
+                      if (_step > 0) ...[
+                        OutlinedButton(
+                          onPressed: _busy
+                              ? null
+                              : () => setState(() => _step -= 1),
+                          child: Text(l.createBack),
                         ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, -5),
-                            )
-                          ],
-                        ),
-                        child: SafeArea(
-                          child: FilledButton(
-                            onPressed: _isSubmitting ? null : () {
-                              HapticFeedback.lightImpact();
-                              _submit();
-                            },
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(56),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: _isSubmitting
-                                ? const SizedBox(
-                                    height: 24, width: 24,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                  )
-                                : Text(
-                                    l.createPublish,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: theme.colorScheme.onPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        Gap.w3,
+                      ],
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: !_stepComplete || _busy || _uploading
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  last
+                                      ? _publish()
+                                      : setState(() => _step += 1);
+                                },
+                          child: _busy
+                              ? const SizedBox(
+                                  width: Sizes.iconLg,
+                                  height: Sizes.iconLg,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    color: Colors.white,
                                   ),
-                          ),
+                                )
+                              : Text(last ? l.createPublish : l.createNext),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ).animate().fadeIn(duration: M3Motion.medium2, curve: M3Motion.standard),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+
+  // ── Step 1 · photos ────────────────────────────────────────────────────
+
+  List<Widget> _photosStep(L l) => [
+    Wrap(
+      spacing: Gap.x3,
+      runSpacing: Gap.x3,
+      children: [
+        for (final (index, url) in _photos.indexed)
+          PhotoWell(
+            url: url,
+            onTap: null,
+            onRemove: () => setState(() => _photos.removeAt(index)),
+          ),
+        if (_photos.length < 10)
+          PhotoWell(url: null, busy: _uploading, onTap: _addPhoto),
+      ],
+    ),
+  ];
+
+  // ── Step 2 · what is offered ───────────────────────────────────────────
+
+  List<Widget> _giveStep(L l) => [
+    DropdownButtonFormField<ListingTag>(
+      initialValue: _tag,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: l.createFieldTag),
+      items: [
+        for (final t in ListingTag.values)
+          DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
+      ],
+      onChanged: (v) => setState(() => _tag = v),
+    ),
+    Gap.h4,
+    _TrilingualField(label: l.createFieldTitle, field: _title),
+    Gap.h4,
+    _TrilingualField(
+      label: l.createFieldDescription,
+      field: _description,
+      maxLines: 3,
+    ),
+    Gap.h4,
+    _TrilingualField(label: l.createFieldCategory, field: _category),
+    Gap.h4,
+    _TrilingualField(label: l.createFieldCondition, field: _condition),
+    Gap.h4,
+    _TrilingualField(label: l.createFieldQuantity, field: _quantity),
+  ];
+
+  // ── Step 3 · what is wanted ────────────────────────────────────────────
+
+  List<Widget> _takeStep(L l) => [
+    _TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2),
+    Gap.h4,
+    DropdownButtonFormField<ListingTag?>(
+      initialValue: _wantTag,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: l.createWantCategory),
+      items: [
+        DropdownMenuItem(value: null, child: Text(l.createWantAny)),
+        for (final t in ListingTag.values)
+          DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
+      ],
+      onChanged: (v) => setState(() => _wantTag = v),
+    ),
+    Gap.h4,
+    SwitchListTile(
+      value: _cashOk,
+      onChanged: (v) => setState(() {
+        _cashOk = v;
+        if (v) _wantsCash = false;
+      }),
+      title: Text(l.createCashAdd),
+      contentPadding: EdgeInsets.zero,
+    ),
+    SwitchListTile(
+      value: _wantsCash,
+      onChanged: (v) => setState(() {
+        _wantsCash = v;
+        if (v) _cashOk = false;
+      }),
+      title: Text(l.createCashWant),
+      contentPadding: EdgeInsets.zero,
+    ),
+  ];
+
+  // ── Step 4 · what it is worth ──────────────────────────────────────────
+
+  List<Widget> _valueStep(L l, ThemeData theme) => [
+    TextField(
+      controller: _value,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      style: theme.textTheme.headlineSmall,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: l.createFieldValue,
+        suffixText: 'so‘m',
+      ),
+    ),
+    Gap.h6,
+    if (_title.complete && _wants.complete)
+      TradeSides(
+        giveCaption: l.createGive,
+        giveLabel: _title.text('uz'),
+        takeCaption: l.createTake,
+        takeLabel: _wants.text('uz'),
+      ),
+  ];
 }
 
+/// One field in three languages.
+///
+/// The server rejects a listing missing any locale, so this holds all three and
+/// reports whether it is complete — rather than letting the form reach the end
+/// and come back with a 422 nobody can act on.
+class _Trilingual {
+  final controllers = {
+    'uz': TextEditingController(),
+    'ru': TextEditingController(),
+    'en': TextEditingController(),
+  };
+
+  bool get complete =>
+      controllers.values.every((c) => c.text.trim().isNotEmpty);
+
+  String text(String locale) => controllers[locale]!.text.trim();
+
+  Map<String, String> toJson() => {
+    for (final e in controllers.entries) e.key: e.value.text.trim(),
+  };
+
+  void dispose() {
+    for (final c in controllers.values) {
+      c.dispose();
+    }
+  }
+}
+
+/// UZ / RU / EN tabs over one input, with a tick once all three are filled.
 class _TrilingualField extends StatefulWidget {
   const _TrilingualField({
     required this.label,
-    required this.values,
-    required this.requiredMessage,
+    required this.field,
     this.maxLines = 1,
   });
 
   final String label;
-  final Map<String, String> values;
-  final String requiredMessage;
+  final _Trilingual field;
   final int maxLines;
 
   @override
   State<_TrilingualField> createState() => _TrilingualFieldState();
 }
 
-class _TrilingualFieldState extends State<_TrilingualField> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _TrilingualFieldState extends State<_TrilingualField>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 3, vsync: this);
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-  
-  @override
   void dispose() {
-    _tabController.dispose();
+    _tabs.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final p = palette(context);
     final theme = Theme.of(context);
+    final locales = ['uz', 'ru', 'en'];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(widget.label, style: theme.textTheme.titleSmall),
+            Gap.w2,
+            if (widget.field.complete)
+              Icon(
+                Symbols.check_circle_rounded,
+                size: Sizes.iconSm,
+                color: p.give,
+                fill: 1,
+              ),
+          ],
+        ),
+        Gap.h2,
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: theme.dividerColor),
-            borderRadius: BorderRadius.circular(8),
-            color: theme.colorScheme.surface,
+            color: p.sunken,
+            borderRadius: Radii.rMd,
           ),
           child: Column(
             children: [
               TabBar(
-                controller: _tabController,
-                labelStyle: theme.textTheme.labelLarge,
-                unselectedLabelStyle: theme.textTheme.labelLarge,
-                tabs: const [
-                  Tab(text: 'UZ'),
-                  Tab(text: 'RU'),
-                  Tab(text: 'EN'),
+                controller: _tabs,
+                dividerColor: Colors.transparent,
+                tabs: [
+                  for (final code in locales)
+                    Tab(
+                      height: 40,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(code.toUpperCase()),
+                          if (widget
+                              .field
+                              .controllers[code]!
+                              .text
+                              .trim()
+                              .isNotEmpty) ...[
+                            Gap.w1,
+                            Icon(
+                              Symbols.check_rounded,
+                              size: 14,
+                              color: p.give,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                 ],
               ),
               SizedBox(
-                height: widget.maxLines == 1 ? 64 : 100,
+                height: widget.maxLines == 1 ? 60 : 92,
                 child: TabBarView(
-                  controller: _tabController,
+                  controller: _tabs,
                   children: [
-                    _buildInput('uz', theme),
-                    _buildInput('ru', theme),
-                    _buildInput('en', theme),
+                    for (final code in locales)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Gap.x3,
+                        ),
+                        child: TextField(
+                          controller: widget.field.controllers[code],
+                          maxLines: widget.maxLines,
+                          // Rebuilds the ticks — and the parent's "next"
+                          // button, which is disabled until all three are in.
+                          onChanged: (_) {
+                            setState(() {});
+                            context
+                                .findAncestorStateOfType<
+                                  _CreateListingPageState
+                                >()
+                                ?.setState(() {});
+                          },
+                          decoration: const InputDecoration(
+                            filled: false,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: Gap.x3,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -414,23 +548,6 @@ class _TrilingualFieldState extends State<_TrilingualField> with SingleTickerPro
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildInput(String lang, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        initialValue: widget.values[lang],
-        maxLines: widget.maxLines,
-        onChanged: (val) => widget.values[lang] = val,
-        style: theme.textTheme.bodyMedium,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: '${widget.label} ($lang)',
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-        ),
-      ),
     );
   }
 }

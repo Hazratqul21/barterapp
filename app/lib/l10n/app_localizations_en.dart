@@ -534,6 +534,68 @@ class LEn extends L {
   String get createPublished => 'Listing published';
 
   @override
+  String get createStepPhotos => 'Photos';
+
+  @override
+  String get createStepGive => 'What are you offering?';
+
+  @override
+  String get createStepTake => 'What do you need?';
+
+  @override
+  String get createStepValue => 'Value';
+
+  @override
+  String get createNext => 'Next';
+
+  @override
+  String get createBack => 'Back';
+
+  @override
+  String get createPhotosHint =>
+      'The first photo is the one the feed shows. At least one is needed.';
+
+  @override
+  String get createGiveHint =>
+      'Fill in all three languages — so a Russian reader does not meet a broken app.';
+
+  @override
+  String get createTakeHint =>
+      'What do you want in return? This is what finds your matches.';
+
+  @override
+  String get createValueHint =>
+      'An estimated value is how equal swaps find each other.';
+
+  @override
+  String get createFieldDescription => 'Description';
+
+  @override
+  String get createFieldTag => 'Section';
+
+  @override
+  String get createWantCategory => 'From which section?';
+
+  @override
+  String get createWantAny => 'Doesn\'t matter';
+
+  @override
+  String get createCashAdd => 'I can add cash';
+
+  @override
+  String get createCashWant => 'I need cash on top';
+
+  @override
+  String get createQuotaTitle => 'Free listings used up';
+
+  @override
+  String get createQuotaBody =>
+      'Choose a plan or switch to a business account to continue.';
+
+  @override
+  String get createQuotaOk => 'Got it';
+
+  @override
   String get verifyTitle => 'Safety & verification';
 
   @override

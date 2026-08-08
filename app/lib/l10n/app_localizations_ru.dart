@@ -534,6 +534,68 @@ class LRu extends L {
   String get createPublished => 'Объявление опубликовано';
 
   @override
+  String get createStepPhotos => 'Фотографии';
+
+  @override
+  String get createStepGive => 'Что вы отдаёте?';
+
+  @override
+  String get createStepTake => 'Что вам нужно?';
+
+  @override
+  String get createStepValue => 'Стоимость';
+
+  @override
+  String get createNext => 'Далее';
+
+  @override
+  String get createBack => 'Назад';
+
+  @override
+  String get createPhotosHint =>
+      'Первое фото появится в ленте. Нужно хотя бы одно.';
+
+  @override
+  String get createGiveHint =>
+      'Заполните на всех трёх языках — чтобы читающий по-русски не увидел сломанное приложение.';
+
+  @override
+  String get createTakeHint =>
+      'Что хотите получить взамен? Это помогает находить совпадения.';
+
+  @override
+  String get createValueHint =>
+      'Примерная стоимость нужна, чтобы находить равные обмены.';
+
+  @override
+  String get createFieldDescription => 'Описание';
+
+  @override
+  String get createFieldTag => 'Раздел';
+
+  @override
+  String get createWantCategory => 'Из какого раздела?';
+
+  @override
+  String get createWantAny => 'Не важно';
+
+  @override
+  String get createCashAdd => 'Могу доплатить';
+
+  @override
+  String get createCashWant => 'Нужна доплата';
+
+  @override
+  String get createQuotaTitle => 'Бесплатные объявления закончились';
+
+  @override
+  String get createQuotaBody =>
+      'Выберите тариф или перейдите на бизнес-аккаунт.';
+
+  @override
+  String get createQuotaOk => 'Понятно';
+
+  @override
   String get verifyTitle => 'Безопасность и проверка';
 
   @override

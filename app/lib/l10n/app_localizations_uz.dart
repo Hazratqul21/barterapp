@@ -535,6 +535,68 @@ class LUz extends L {
   String get createPublished => 'E’lon joylandi';
 
   @override
+  String get createStepPhotos => 'Suratlar';
+
+  @override
+  String get createStepGive => 'Nima beryapsiz?';
+
+  @override
+  String get createStepTake => 'Nima kerak?';
+
+  @override
+  String get createStepValue => 'Qiymati';
+
+  @override
+  String get createNext => 'Keyingisi';
+
+  @override
+  String get createBack => 'Orqaga';
+
+  @override
+  String get createPhotosHint =>
+      'Birinchi surat lentada ko‘rinadi. Kamida bittasi kerak.';
+
+  @override
+  String get createGiveHint =>
+      'Uchala tilda ham to‘ldiring — ruscha o‘qiydigan odam uchun ilova buzuq ko‘rinmasligi uchun.';
+
+  @override
+  String get createTakeHint =>
+      'Evaziga nima olmoqchisiz? Bu moslikni topishga yordam beradi.';
+
+  @override
+  String get createValueHint =>
+      'Taxminiy qiymat teng savdolarni topish uchun kerak.';
+
+  @override
+  String get createFieldDescription => 'Tavsif';
+
+  @override
+  String get createFieldTag => 'Bo‘lim';
+
+  @override
+  String get createWantCategory => 'Qaysi bo‘limdan?';
+
+  @override
+  String get createWantAny => 'Farqi yo‘q';
+
+  @override
+  String get createCashAdd => 'Ustiga pul qo‘sha olaman';
+
+  @override
+  String get createCashWant => 'Ustiga pul kerak';
+
+  @override
+  String get createQuotaTitle => 'Bepul e’lonlar tugadi';
+
+  @override
+  String get createQuotaBody =>
+      'Davom etish uchun tarif tanlang yoki biznes hisobga o‘ting.';
+
+  @override
+  String get createQuotaOk => 'Tushundim';
+
+  @override
   String get verifyTitle => 'Xavfsizlik va tasdiqlash';
 
   @override
