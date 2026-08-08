@@ -144,14 +144,56 @@ Ilgari hammasi 60 edi.
 
 ---
 
-## 5. Illyustratsiyalar chiziladi, yuklanmaydi
+## 5. San'at chiziladi, yuklanmaydi
 
-Intro ekranlaridagi uchta rasm, bo'sh va xato holatlari, brend belgisi —
-hammasi dizayn tizimidan yig'ilgan (`Container`, `Icon`, gradient).
+Kod: `app/lib/core/art/`.
 
-Sabab:
+### Girih — loyihaning o'z naqshi
+
+`girih.dart` — sakkiz burchakli yulduz panjarasi (**xatam**), Samarqand va
+Buxoro koshinkorligidan. `CustomPainter` bilan chiziladi.
+
+Nega aynan shu: oddiy gradient dunyodagi istalgan bozorga tegishli bo'lishi
+mumkin, bu naqsh esa **aynan shu bozorga** tegishli. Pichirlab ishlatiladi —
+sezilishi kerak, lekin ko'rinmasligi kerak, va hech qachon fotosurat bilan
+raqobatlashmasligi kerak.
+
+| Qayerda | Qanday |
+|---|---|
+| Intro, kirish, profil to'ldirish foni | Yashil chiziq, `opacity 0.055`, pastga qarab so'nadi |
+| Lenta sarlavhasidagi gradient | Oq chiziq, `opacity 0.14` — to'q maydonda qora chiziq yo'qoladi |
+| Ishonch qalqoni ichida | Qalqon shakli bilan kesilgan |
+| Moslik chokida | Bitta yulduz — mos kelishning o'zi |
+
+### Illyustratsiyalar
+
+`illustrations.dart` — beshta rasm, yo'llar (path) bilan chizilgan.
+
+⚠️ **Ikonka quti ichida — illyustratsiya emas.** Ikonka belgi: u so'z o'rnida
+turadi. Illyustratsiya esa sodir bo'layotgan narsaning rasmi, bu yerda esa
+aniq bir narsa sodir bo'ladi: ikki odam bir-biriga tovar uzatadi, ba'zan
+farqni pul yopadi. Hech qanday ikonka to'plamida bu yo'q — shuning uchun
+chiziladi.
+
+| Rasm | Nima | Qayerda |
+|---|---|---|
+| `SwapIllustration` | Ikki quti qo'l almashadi, orada tanga | Intro 1 |
+| `MatchIllustration` | Ikki yarim qulflanadi — o'xshash emas, **mos** ikki narsa | Intro 2 |
+| `TrustIllustration` | Koshin naqshli qalqon, yulduzlar bilan qozonilgan | Intro 3 |
+| `EmptyIllustration` | Ochiq bo'sh quti | Bo'sh holatlar |
+| `BrokenIllustration` | Sinib qolgan almashinuv strelkasi | Xato holatlari |
+
+Quti ataylab telefon yoki guruch qopi emas: bu ilova noutbuk, traktor, qoramol
+va shifer tashiydi — hammasini ifodalaydigan yagona shakl bu **ichida nimadir
+bor quti**.
+
+Xato holati ham umumiy ogohlantirish uchburchagi emas, **mahsulotning o'z
+tilida**: uzilib qolgan almashinuv strelkasi.
+
+### Nega chiziladi
+
 - Har o'lchamda tiniq
-- Qorong'i temaga o'zi moslashadi
+- Qorong'i temaga o'zi moslashadi (rangni palitradan oladi)
 - Yuklamaga bir bayt qo'shmaydi
 - Litsenziya muammosi yo'q
 
@@ -161,14 +203,12 @@ xato ekrani kerak bo'lgan paytda**.
 
 ### Fon — `AuroraBackground`
 
-Bir burchakdan yashil, ikkinchisidan ko'k yumshoq shu'la. Radial gradient,
-blurlangan rasm emas: yuklab olinadigan fayl yo'q, har kadrda blur
-hisoblanmaydi.
+Bir burchakdan yashil, ikkinchisidan ko'k yumshoq shu'la, ustidan girih
+panjarasi. Radial gradient, blurlangan rasm emas: yuklab olinadigan fayl yo'q,
+har kadrda blur hisoblanmaydi.
 
-**Faqat o'z mazmuni yo'q ekranlarda** — intro va kirish. Fotosuratlar lentasi
-ostida sokin sahifa kerak, e'tibor uchun kurashadigan ikkinchi narsa emas.
-
----
+**Faqat o'z suratlari yo'q ekranlarda.** Fotosuratlar lentasi ostida sokin
+sahifa kerak, e'tibor uchun kurashadigan ikkinchi narsa emas.
 
 ## 6. Umumiy komponentlar
 
@@ -178,7 +218,9 @@ ostida sokin sahifa kerak, e'tibor uchun kurashadigan ikkinchi narsa emas.
 | `CategoryTile` | Kategoriya avval rasm, keyin so'z |
 | `CategoryBadge` | Kartadagi kichik bo'lim nishoni |
 | `PhotoWell` | Surat tanlash maydoni — profil va e'lon yaratishda |
-| `StateArt` | Bo'sh/xato holati rasmi |
+| `StateArt` | Bo'sh/xato holati rasmi (standart — chizilgan illyustratsiya) |
+| `GirihField` | Koshin panjarasi |
+| `SwapBanner` | Naqshli gradient sarlavha |
 | `SkeletonBox` | Yuklanayotgan ekran o'z shaklini darrov ko'rsatadi |
 | `Pill` | Ma'no tashiydigan yorliq: give / take / money |
 | `errorMessage()` | Serverning o'zbekcha xatosini o'zgartirmay ko'rsatadi |
@@ -210,7 +252,7 @@ Yangi ekran yoki komponent qo'shayotganda:
    javob berishi kerak.
 3. **Bu token bilan qilinadimi?** Bo'sh son yoki yangi rang qo'shishdan oldin
    `tokens.dart` ga qarang.
-4. **Rasm fayl kerakmi?** Ehtimol kerak emas — chizib bo'ladi.
+4. **Rasm fayl kerakmi?** Ehtimol kerak emas — `core/art/` da chizib bo'ladi.
 5. **Ishlamaydigan tugma qo'shyapmanmi?** Qo'shmang. Ishlamaydigan tugma
    egallagan joyidan qimmatroq turadi: u odamga bu ilovaning tugmalari bezak
    ekanini o'rgatadi.

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/art/illustrations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/backgrounds.dart';
@@ -172,268 +172,60 @@ class _IntroPageState extends ConsumerState<IntroPage> {
 // ─────────────────────────────────────────────────────────────────────────────
 // Slide art
 // ─────────────────────────────────────────────────────────────────────────────
-// Built from the design system rather than shipped as images: three drawings
-// that stay sharp at any size, follow the light and dark themes on their own,
-// and add nothing to the download.
+// Three drawings from `core/art/illustrations.dart` — paths, not icons in
+// boxes and not image files. They stay sharp at any size, follow the light and
+// dark themes on their own, and add nothing to the download.
 
-/// Slide 1 — two goods changing hands.
+/// Slide 1 — two crates changing hands, with a coin for the difference.
 class _SwapArt extends StatelessWidget {
   const _SwapArt();
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-
-    // Sized on both axes: a Stack inside a Center collapses to the width of its
-    // unpositioned child, which put both tiles underneath the arrow badge.
-    return SizedBox(
-      width: 260,
-      height: 200,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: 0,
-            child:
-                _GoodsTile(
-                      icon: Symbols.laptop_mac_rounded,
-                      color: p.give,
-                      tint: p.giveSoft,
-                    )
-                    .animate()
-                    .fadeIn(duration: M3Motion.long1)
-                    .slideX(
-                      begin: -0.35,
-                      end: 0,
-                      duration: M3Motion.long2,
-                      curve: M3Motion.emphasizedDecelerate,
-                    ),
-          ),
-          Positioned(
-            right: 0,
-            child:
-                _GoodsTile(
-                      icon: Symbols.handyman_rounded,
-                      color: p.take,
-                      tint: p.takeSoft,
-                    )
-                    .animate()
-                    .fadeIn(delay: M3Motion.short3, duration: M3Motion.long1)
-                    .slideX(
-                      begin: 0.35,
-                      end: 0,
-                      delay: M3Motion.short3,
-                      duration: M3Motion.long2,
-                      curve: M3Motion.emphasizedDecelerate,
-                    ),
-          ),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: p.swapGradient,
-              shape: BoxShape.circle,
-              boxShadow: Shadows.lifted,
-            ),
-            child: const Icon(
-              Symbols.swap_horiz_rounded,
-              color: Colors.white,
-              size: 30,
-              weight: 600,
-            ),
-          ).animate().scale(
-            delay: M3Motion.medium2,
-            begin: const Offset(0.4, 0.4),
-            end: const Offset(1, 1),
-            duration: M3Motion.long2,
-            curve: M3Motion.emphasizedDecelerate,
-          ),
-        ],
-      ),
-    );
+    return const SwapIllustration()
+        .animate()
+        .fadeIn(duration: M3Motion.long1)
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1, 1),
+          duration: M3Motion.long2,
+          curve: M3Motion.emphasizedDecelerate,
+        );
   }
 }
 
-/// Slide 2 — the matcher pairing two listings and scoring the fit.
+/// Slide 2 — two halves that lock together.
 class _MatchArt extends StatelessWidget {
   const _MatchArt();
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-    final theme = Theme.of(context);
-
-    return SizedBox(
-      height: 200,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Grain for a tractor — the worked example the matcher was built
-              // around, and the one a farmer recognises without reading.
-              _GoodsTile(
-                icon: Symbols.grass_rounded,
-                color: p.give,
-                tint: p.giveSoft,
-                size: 84,
-              ),
-              Gap.w4,
-              _GoodsTile(
-                icon: Symbols.agriculture_rounded,
-                color: p.take,
-                tint: p.takeSoft,
-                size: 84,
-              ),
-            ],
-          ),
-          Gap.h5,
-          Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Gap.x4,
-                  vertical: Gap.x2,
-                ),
-                decoration: BoxDecoration(
-                  color: p.moneySoft,
-                  borderRadius: Radii.rFull,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Symbols.auto_awesome_rounded,
-                      size: Sizes.iconMd,
-                      color: p.money,
-                    ),
-                    Gap.w2,
-                    Text(
-                      '86%',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: p.money,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-              .animate()
-              .fadeIn(delay: M3Motion.medium2, duration: M3Motion.medium3)
-              .scale(
-                delay: M3Motion.medium2,
-                begin: const Offset(0.7, 0.7),
-                end: const Offset(1, 1),
-                duration: M3Motion.long1,
-                curve: M3Motion.emphasizedDecelerate,
-              ),
-        ],
-      ),
-    );
+    return const MatchIllustration()
+        .animate()
+        .fadeIn(duration: M3Motion.long1)
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1, 1),
+          duration: M3Motion.long2,
+          curve: M3Motion.emphasizedDecelerate,
+        );
   }
 }
 
-/// Slide 3 — the trust that makes a stranger's offer worth taking.
+/// Slide 3 — a shield of tilework, earned in stars.
 class _TrustArt extends StatelessWidget {
   const _TrustArt();
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-
-    return SizedBox(
-      width: 260,
-      height: 200,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 148,
-            height: 148,
-            decoration: BoxDecoration(
-              color: p.giveSoft,
-              shape: BoxShape.circle,
-            ),
-          ),
-          Icon(
-                Symbols.verified_user_rounded,
-                size: 76,
-                color: p.give,
-                weight: 500,
-              )
-              .animate()
-              .scale(
-                begin: const Offset(0.6, 0.6),
-                end: const Offset(1, 1),
-                duration: M3Motion.long2,
-                curve: M3Motion.emphasizedDecelerate,
-              )
-              .fadeIn(duration: M3Motion.medium3),
-          for (final (index, angle) in <(int, Offset)>[
-            (0, Offset(-1, -0.72)),
-            (1, Offset(1, -0.72)),
-            (2, Offset(0, 1)),
-          ])
-            Transform.translate(
-              offset: Offset(angle.dx * 86, angle.dy * 86),
-              child:
-                  Container(
-                        padding: const EdgeInsets.all(Gap.x2),
-                        decoration: BoxDecoration(
-                          color: p.moneySoft,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Symbols.star_rounded,
-                          size: Sizes.iconMd,
-                          color: p.money,
-                          fill: 1,
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(
-                        delay: Duration(milliseconds: 250 + index * 110),
-                        duration: M3Motion.medium2,
-                      )
-                      .scale(
-                        delay: Duration(milliseconds: 250 + index * 110),
-                        begin: const Offset(0.4, 0.4),
-                        end: const Offset(1, 1),
-                        duration: M3Motion.medium4,
-                        curve: M3Motion.emphasizedDecelerate,
-                      ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// One piece of goods: a rounded tile with the thing's symbol in it.
-class _GoodsTile extends StatelessWidget {
-  const _GoodsTile({
-    required this.icon,
-    required this.color,
-    required this.tint,
-    this.size = 104,
-  });
-
-  final IconData icon;
-  final Color color;
-  final Color tint;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: tint,
-        borderRadius: Radii.rLg,
-        border: Border.all(color: color.withValues(alpha: 0.18)),
-      ),
-      child: Icon(icon, size: size * 0.42, color: color),
-    );
+    return const TrustIllustration()
+        .animate()
+        .fadeIn(duration: M3Motion.long1)
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1, 1),
+          duration: M3Motion.long2,
+          curve: M3Motion.emphasizedDecelerate,
+        );
   }
 }

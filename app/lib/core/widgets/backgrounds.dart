@@ -2,23 +2,28 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../art/girih.dart';
 import 'common.dart';
 
-/// A soft two-colour glow behind a screen's content.
+/// The app's wallpaper: a soft two-colour glow with the tile lattice over it.
 ///
 /// Green bleeds in from one corner, blue from the other — the same give-to-take
 /// idea the splash states outright, said quietly enough to read behind text.
-/// Drawn as radial gradients rather than a blurred image: no asset to download,
-/// no blur pass per frame, and it re-tints itself for the dark theme.
+/// Over that sits [GirihField], the eight-point star lattice of Samarkand
+/// tilework, faded out toward the bottom so it never reaches the content.
 ///
-/// Reserved for the screens with no content of their own to carry — the intro
-/// and sign-in. A feed of photographs needs a plain page underneath, not a
-/// second thing competing for attention.
+/// Both halves are drawn, not downloaded: no asset, no blur pass per frame, and
+/// both re-tint themselves for the dark theme.
+///
+/// Reserved for the screens with no pictures of their own — the intro, sign-in
+/// and profile setup. A feed of photographs needs a plain page underneath, not
+/// a second thing competing for attention.
 class AuroraBackground extends StatelessWidget {
   const AuroraBackground({
     super.key,
     required this.child,
     this.intensity = 1.0,
+    this.pattern = true,
   });
 
   final Widget child;
@@ -26,6 +31,10 @@ class AuroraBackground extends StatelessWidget {
   /// Scales both blooms. Below 1 for screens that already have colour of their
   /// own; the default is tuned to sit under body text without tinting it.
   final double intensity;
+
+  /// The tile lattice. Off for screens where even a whisper of ornament would
+  /// crowd the content.
+  final bool pattern;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +73,12 @@ class AuroraBackground extends StatelessWidget {
                   alpha: alpha * 0.85,
                 ),
               ),
+              if (pattern)
+                // Fades as it descends, so the lattice frames the top of the
+                // screen and has let go by the time the reading starts.
+                const Positioned.fill(
+                  child: GirihField(opacity: 0.055, cell: 82, fade: 0.95),
+                ),
               Positioned.fill(child: child),
             ],
           ),
@@ -101,6 +116,43 @@ class _Bloom extends StatelessWidget {
               color.withValues(alpha: 0),
             ],
             stops: const [0.0, 0.35, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The gradient band at the top of the feed, with the lattice worked into it.
+///
+/// The same tilework as the wallpaper, but reversed out in white — on a strong
+/// green-to-blue field a dark line would disappear, and the pattern is what
+/// keeps the header from looking like every other app's gradient.
+class SwapBanner extends StatelessWidget {
+  const SwapBanner({
+    super.key,
+    required this.height,
+    required this.borderRadius,
+  });
+
+  final double height;
+  final BorderRadius borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+
+    return SizedBox(
+      height: height,
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: DecoratedBox(
+          decoration: BoxDecoration(gradient: p.swapGradient),
+          child: const GirihField(
+            color: Colors.white,
+            opacity: 0.14,
+            cell: 64,
+            strokeWidth: 1.1,
           ),
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../art/illustrations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/models/models.dart';
 import '../network/api_client.dart';
@@ -156,14 +157,19 @@ class Pill extends StatelessWidget {
 
 /// The picture at the top of an empty or failed screen.
 ///
-/// A tinted disc with a symbol in it. This replaced two `Lottie.network` calls
-/// that fetched animations from a third-party CDN: on a slow connection they
-/// left a blank square where the explanation should be, and with no connection
-/// at all — exactly when the error state is on screen — they never arrived.
+/// A drawing by default — an empty crate, or a snapped swap arrow — because a
+/// screen with nothing on it is the one that most needs something worth
+/// looking at. Pass an [icon] where a specific subject is clearer than the
+/// generic one.
+///
+/// This replaced two `Lottie.network` calls that fetched animations from a
+/// third-party CDN: on a slow connection they left a blank square where the
+/// explanation should be, and with no connection at all — exactly when the
+/// error state is on screen — they never arrived.
 class StateArt extends StatelessWidget {
-  const StateArt({super.key, required this.icon, this.tone});
+  const StateArt({super.key, this.icon, this.tone});
 
-  final IconData icon;
+  final IconData? icon;
 
   /// Defaults to the neutral surface. Pass a palette colour to make the mood
   /// specific: give for something good, error for something broken.
@@ -171,6 +177,8 @@ class StateArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (icon == null) return const EmptyIllustration();
+
     final p = palette(context);
     final scheme = Theme.of(context).colorScheme;
     final accent = tone ?? p.inkFaint;
@@ -217,10 +225,7 @@ class ErrorState extends StatelessWidget {
             Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    StateArt(
-                      icon: Symbols.cloud_off_rounded,
-                      tone: theme.colorScheme.error,
-                    ),
+                    const BrokenIllustration(),
                     Gap.h5,
                     Text(
                       message,
@@ -291,7 +296,7 @@ class EmptyState extends StatelessWidget {
             Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    StateArt(icon: icon ?? Symbols.inbox_rounded),
+                    StateArt(icon: icon),
                     Gap.h5,
                     Text(
                       title,

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -232,7 +233,6 @@ class _Hero extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
-    final p = palette(context);
     final theme = Theme.of(context);
     final me = ref.watch(meProvider).value;
 
@@ -243,13 +243,7 @@ class _Hero extends ConsumerWidget {
 
     return Stack(
       children: [
-        Container(
-          height: 168,
-          decoration: BoxDecoration(
-            gradient: p.swapGradient,
-            borderRadius: Radii.heroBottom,
-          ),
-        ),
+        const SwapBanner(height: 168, borderRadius: Radii.heroBottom),
         SafeArea(
           bottom: false,
           child: Padding(
