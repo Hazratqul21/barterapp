@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -21,6 +23,7 @@ class ListingCardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
+    final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
 
     return Card(
@@ -30,73 +33,9 @@ class ListingCardTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Stack(
-              children: [
-                SizedBox(
-                  height: 186,
-                  width: double.infinity,
-                  child: Hero(
-                    tag: 'listing-image-${listing.id}',
-                    child: RemoteImage(
-                      url: listing.imageUrl,
-                      semanticLabel: listing.imageAlt,
-                    ),
-                  ),
-                ),
-                if (listing.isPremium)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Pill(
-                      label: l.feedPremium,
-                      foreground: p.money,
-                      background: p.moneySoft,
-                    ),
-                  ),
-                // The owner rides on the photo, so the card names a person
-                // before it names a price.
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(14, 32, 14, 10),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [Color(0xBF06291D), Colors.transparent],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        if (listing.owner.isVerified) ...[
-                          const Icon(
-                            Icons.verified_user_outlined,
-                            size: 15,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        Expanded(
-                          child: Text(
-                            listing.owner.displayName,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _Photo(listing: listing),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Gap.x4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,47 +43,78 @@ class ListingCardTile extends StatelessWidget {
                     listing.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
-                      letterSpacing: -0.2,
-                    ),
+                    style: theme.textTheme.titleLarge,
                   ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Pill(
-                      icon: Icons.swap_horiz_rounded,
-                      label: '${l.feedLookingFor} ${listing.wantsSummary}',
-                      foreground: p.take,
-                      background: p.takeSoft,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Divider(color: p.hair, height: 1),
-                  const SizedBox(height: 12),
+                  Gap.h3,
+
+                  // The other half of the trade. A price alone would make this
+                  // a classifieds card; what the owner wants back is the
+                  // product.
                   Row(
+                    children: [
+                      Icon(
+                        Symbols.swap_horiz_rounded,
+                        size: Sizes.iconMd,
+                        color: p.take,
+                      ),
+                      Gap.w2,
+                      Expanded(
+                        child: RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            style: theme.textTheme.bodyMedium,
+                            children: [
+                              TextSpan(
+                                text: '${l.feedLookingFor} ',
+                                style: TextStyle(color: p.inkFaint),
+                              ),
+                              TextSpan(
+                                text: listing.wantsSummary,
+                                style: TextStyle(
+                                  color: p.take,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Gap.h3,
+                  Divider(color: p.hair, height: 1),
+                  Gap.h3,
+
+                  // Wrap, not Row: with the price, its caption and the date all
+                  // set as unbounded text, a long value in Russian overflowed
+                  // the card by up to 23 pixels.
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: Gap.x2,
+                    runSpacing: Gap.x1,
                     children: [
                       Text(
                         listing.value.format(locale),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
-                      const SizedBox(width: 6),
                       Text(
                         l.feedEstValue,
-                        style: TextStyle(fontSize: 11, color: p.inkFaint),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: p.inkFaint,
+                        ),
                       ),
-                      const Spacer(),
-                      Icon(Icons.schedule_rounded, size: 14, color: p.inkFaint),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat.yMMMd(locale).format(listing.postedAt),
-                        style: TextStyle(fontSize: 11.5, color: p.inkSoft),
+                      if (listing.distanceKm != null)
+                        _Meta(
+                          icon: Symbols.near_me_rounded,
+                          text: '${listing.distanceKm!.round()} km',
+                        ),
+                      _Meta(
+                        icon: Symbols.schedule_rounded,
+                        text: DateFormat.yMMMd(locale).format(listing.postedAt),
                       ),
                     ],
                   ),
@@ -154,6 +124,136 @@ class ListingCardTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The photograph, with the category on one corner and the owner across the
+/// bottom — so the card names a person and a kind of thing before a price.
+class _Photo extends StatelessWidget {
+  const _Photo({required this.listing});
+
+  final ListingCard listing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = palette(context);
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      height: Sizes.cardImage,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Hero(
+            tag: 'listing-image-${listing.id}',
+            child: RemoteImage(
+              url: listing.imageUrl,
+              semanticLabel: listing.imageAlt,
+            ),
+          ),
+          Positioned(
+            top: Gap.x3,
+            left: Gap.x3,
+            child: CategoryBadge(tag: listing.tag),
+          ),
+          if (listing.isPremium)
+            Positioned(
+              top: Gap.x3,
+              right: Gap.x3,
+              child: Pill(
+                label: l.feedPremium,
+                foreground: p.money,
+                background: p.moneySoft,
+              ),
+            ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.x4,
+                Gap.x8,
+                Gap.x4,
+                Gap.x3,
+              ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xCC06291D), Colors.transparent],
+                ),
+              ),
+              child: Row(
+                children: [
+                  if (listing.owner.isVerified) ...[
+                    const Icon(
+                      Symbols.verified_rounded,
+                      size: Sizes.iconSm,
+                      color: Colors.white,
+                    ),
+                    Gap.w1,
+                  ],
+                  Expanded(
+                    child: Text(
+                      listing.owner.displayName,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  if (listing.owner.rating != null) ...[
+                    Gap.w2,
+                    const Icon(
+                      Symbols.star_rounded,
+                      size: Sizes.iconSm,
+                      color: Colors.white,
+                      fill: 1,
+                    ),
+                    Gap.w1,
+                    Text(
+                      listing.owner.rating!.toStringAsFixed(1),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// An icon and a short value — distance, date.
+class _Meta extends StatelessWidget {
+  const _Meta({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: Sizes.iconSm, color: p.inkFaint),
+        Gap.w1,
+        Text(
+          text,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: p.inkSoft),
+        ),
+      ],
     );
   }
 }

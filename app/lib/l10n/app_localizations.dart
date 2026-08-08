@@ -285,6 +285,30 @@ abstract class L {
   /// **'taxminiy qiymat'**
   String get feedEstValue;
 
+  /// No description provided for @feedRegionAny.
+  ///
+  /// In uz, this message translates to:
+  /// **'Butun O‘zbekiston'**
+  String get feedRegionAny;
+
+  /// No description provided for @feedCategories.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima izlayapsiz?'**
+  String get feedCategories;
+
+  /// No description provided for @feedLoadMore.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yana yuklash'**
+  String get feedLoadMore;
+
+  /// No description provided for @feedEnd.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hammasi shu'**
+  String get feedEnd;
+
   /// No description provided for @feedPostedAt.
   ///
   /// In uz, this message translates to:

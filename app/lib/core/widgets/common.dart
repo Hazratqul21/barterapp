@@ -541,7 +541,9 @@ class CategoryTile extends StatelessWidget {
               ),
               Gap.h2,
               SizedBox(
-                width: 74,
+                // Wide enough for "Qishloq xo'jaligi" and "Строительство" to
+                // wrap onto two lines rather than being cut off.
+                width: 78,
                 child: Text(
                   categoryLabel(l, tag),
                   maxLines: 2,

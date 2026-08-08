@@ -109,6 +109,18 @@ class LRu extends L {
   String get feedEstValue => 'примерная стоимость';
 
   @override
+  String get feedRegionAny => 'Весь Узбекистан';
+
+  @override
+  String get feedCategories => 'Что вы ищете?';
+
+  @override
+  String get feedLoadMore => 'Загрузить ещё';
+
+  @override
+  String get feedEnd => 'Это все';
+
+  @override
   String get feedPostedAt => 'Опубликовано';
 
   @override

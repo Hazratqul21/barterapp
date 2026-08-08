@@ -110,6 +110,18 @@ class LUz extends L {
   String get feedEstValue => 'taxminiy qiymat';
 
   @override
+  String get feedRegionAny => 'Butun O‘zbekiston';
+
+  @override
+  String get feedCategories => 'Nima izlayapsiz?';
+
+  @override
+  String get feedLoadMore => 'Yana yuklash';
+
+  @override
+  String get feedEnd => 'Hammasi shu';
+
+  @override
   String get feedPostedAt => 'Joylangan';
 
   @override

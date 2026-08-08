@@ -109,6 +109,18 @@ class LEn extends L {
   String get feedEstValue => 'est. value';
 
   @override
+  String get feedRegionAny => 'All of Uzbekistan';
+
+  @override
+  String get feedCategories => 'What are you looking for?';
+
+  @override
+  String get feedLoadMore => 'Load more';
+
+  @override
+  String get feedEnd => 'That\'s everything';
+
+  @override
   String get feedPostedAt => 'Posted';
 
   @override
