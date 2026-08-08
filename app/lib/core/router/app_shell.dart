@@ -5,17 +5,18 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import 'web_shell.dart';
 
 /// The four places this product is about, and the button that feeds it.
 ///
-/// One layout, on every platform. Past 700px the app used to grow a left-hand
-/// drawer instead — a second navigation model, with its own chrome and its own
-/// layouts to keep in step with the first. A person opening the site on a
-/// laptop is looking at the same marketplace, not a different product, so the
-/// desktop shows the phone (see `DeviceFrame`) rather than rearranging itself.
+/// Two shapes for the same product. A tab bar exists because a thumb reaches
+/// the bottom of a phone; on a laptop nothing reaches the bottom of the window,
+/// so past [kWebBreakpoint] the destinations stand up the left-hand side
+/// instead (`WebShell`). Same screens, same data, same design language.
 ///
-/// Settings is deliberately absent: it is somewhere you go from your own
-/// profile to change something, not a fifth destination.
+/// Settings is absent from the phone bar: it is somewhere you go from your own
+/// profile to change something, not a fifth destination. The desktop sidebar
+/// has room for it at the foot, where it does not compete.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -31,6 +32,14 @@ class AppShell extends StatelessWidget {
       (icon: Symbols.forum_rounded, label: l.navChat),
       (icon: Symbols.person_rounded, label: l.navProfile),
     ];
+
+    if (MediaQuery.sizeOf(context).width >= kWebBreakpoint) {
+      return WebShell(
+        currentIndex: navigationShell.currentIndex,
+        onDestination: _go,
+        child: navigationShell,
+      );
+    }
 
     return Scaffold(
       body: navigationShell,
