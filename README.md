@@ -87,11 +87,21 @@ Kirish: **+998901234122** — SMS kodi javobda qaytadi (provayder hali ulanmagan
 
 ### Backend
 
-33 endpoint, 18 jadval, butun savdo aylanishi sinalgan.
+35 endpoint, 18 jadval, butun savdo aylanishi sinalgan — 60 ta tekshiruv,
+oltita faylda.
 
 ```bash
-cd api && .venv/bin/python tests/test_trade_loop.py
+cd api && ./tests/run_all.sh
 ```
+
+| Fayl | Nimani tekshiradi |
+|---|---|
+| `test_trade_loop.py` | Taklif → chat → qarshi taklif → yakunlash → hisob-kitob |
+| `test_uploads_and_desires.py` | Surat yuklash, `desires`, moslik hosil bo'lishi |
+| `test_profile_and_regions.py` | Ism saqlanishi, hudud → koordinata |
+| `test_create_listing.py` | Mijoz yuboradigan aynan shu payload |
+| `test_counter_offer.py` | Xabar tartibi, qarshi taklif tomonlarni almashtirishi |
+| `test_reviews.py` | Sharh faqat yakunlangandan keyin, bir marta |
 
 | Bosqich | Holat |
 |---|---|
