@@ -558,6 +558,9 @@ class LEn extends L {
       'A conversation starts with an offer. Send one on a listing you like.';
 
   @override
+  String get inboxPickThread => 'Pick a conversation on the left.';
+
+  @override
   String get agoNow => 'now';
 
   @override

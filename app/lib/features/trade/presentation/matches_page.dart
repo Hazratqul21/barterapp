@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/router/web_shell.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -30,11 +31,20 @@ class MatchesPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final matches = ref.watch(matchesProvider);
 
+    final wide = MediaQuery.sizeOf(context).width >= kWebBreakpoint;
+
     return Scaffold(
       appBar: AppBar(title: Text(l.matchesTitle)),
-      body: Center(
+      // Top-aligned, not centred: with two or three cards a `Center` left a
+      // page-high gap above them.
+      body: Align(
+        alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+          // Wider than a reading column on a desk. Match cards are compared,
+          // not read end to end, so several across is the useful shape.
+          constraints: BoxConstraints(
+            maxWidth: wide ? 1320 : Sizes.contentMax,
+          ),
           child: matches.when(
             loading: () => const _MatchesShimmer(),
             error: (e, _) => ErrorState(
@@ -51,28 +61,61 @@ class MatchesPage extends ConsumerWidget {
                   )
                 : RefreshIndicator(
                     onRefresh: () async => ref.invalidate(matchesProvider),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        Gap.x5,
-                        Gap.x4,
-                        Gap.x5,
-                        Gap.x14,
-                      ),
-                      itemCount: items.length + 1,
-                      separatorBuilder: (_, _) => Gap.h4,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: Gap.x1),
-                            child: Text(
-                              l.matchesLede,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: p.inkSoft,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // A match card is a fixed piece of reasoning — score,
+                        // two sides, the owner. On a desk there is room for
+                        // several at once, and comparing them side by side is
+                        // the whole point of the screen.
+                        final columns = (constraints.maxWidth / 420)
+                            .floor()
+                            .clamp(1, 3);
+
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(
+                            Gap.x5,
+                            Gap.x4,
+                            Gap.x5,
+                            Gap.x14,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l.matchesLede,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: p.inkSoft,
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                        return _MatchCard(match: items[index - 1]);
+                              Gap.h4,
+                              if (columns == 1)
+                                for (final match in items) ...[
+                                  _MatchCard(match: match),
+                                  Gap.h4,
+                                ]
+                              else
+                                // Wrap rather than a grid: the cards differ in
+                                // height because the matcher's reason is a
+                                // sentence, and a grid would have to crop it to
+                                // a shared aspect ratio.
+                                Wrap(
+                                  spacing: Gap.x4,
+                                  runSpacing: Gap.x4,
+                                  children: [
+                                    for (final match in items)
+                                      SizedBox(
+                                        width:
+                                            (constraints.maxWidth -
+                                                Gap.x5 * 2 -
+                                                Gap.x4 * (columns - 1)) /
+                                            columns,
+                                        child: _MatchCard(match: match),
+                                      ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        );
                       },
                     ),
                   ),

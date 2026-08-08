@@ -1143,6 +1143,12 @@ abstract class L {
   /// **'Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.'**
   String get inboxEmptyHint;
 
+  /// No description provided for @inboxPickThread.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chapdan suhbat tanlang.'**
+  String get inboxPickThread;
+
   /// No description provided for @agoNow.
   ///
   /// In uz, this message translates to:

@@ -559,6 +559,9 @@ class LRu extends L {
       'Разговор начинается с предложения. Отправьте его на понравившееся объявление.';
 
   @override
+  String get inboxPickThread => 'Выберите разговор слева.';
+
+  @override
   String get agoNow => 'сейчас';
 
   @override

@@ -19,8 +19,18 @@ import '../data/trade_repository.dart';
 /// thread exists — chat, reviews and settlement all hang off its status, not
 /// the other way round.
 class ChatPage extends ConsumerStatefulWidget {
-  const ChatPage({super.key, required this.conversationId});
+  const ChatPage({
+    super.key,
+    required this.conversationId,
+    this.embedded = false,
+  });
+
   final String conversationId;
+
+  /// True when the thread is the right-hand pane of the desktop inbox rather
+  /// than a screen of its own. It then drops its own app bar and back button —
+  /// the list beside it is already the way back.
+  final bool embedded;
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -188,14 +198,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final state = ref.watch(conversationProvider(widget.conversationId));
 
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: state.when(
-          data: (detail) => _PeerHeader(peer: detail.summary.peer),
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-        ),
-      ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              titleSpacing: 0,
+              title: state.when(
+                data: (detail) => _PeerHeader(peer: detail.summary.peer),
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
+            ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
@@ -211,6 +223,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               final offer = detail.offer;
               return Column(
                 children: [
+                  if (widget.embedded)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Gap.x4,
+                        vertical: Gap.x3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                        border: Border(bottom: BorderSide(color: p.hair)),
+                      ),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: _PeerHeader(peer: detail.summary.peer),
+                      ),
+                    ),
                   _DealPanel(
                     offer: offer,
                     onAccept: () => _act(offer.id, 'accept'),

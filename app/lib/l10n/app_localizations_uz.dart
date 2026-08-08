@@ -559,6 +559,9 @@ class LUz extends L {
       'Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.';
 
   @override
+  String get inboxPickThread => 'Chapdan suhbat tanlang.';
+
+  @override
   String get agoNow => 'hozir';
 
   @override

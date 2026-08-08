@@ -4,24 +4,72 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/router/web_shell.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../data/trade_repository.dart';
+import 'chat_page.dart';
 
 /// Threads, each one anchored to the trade that opened it.
 ///
 /// The deal sits above the message on every row. A conversation here exists
 /// because somebody made an offer — it is not a chat that happens to mention
 /// goods — and the row says so before it says anything else.
-class InboxPage extends ConsumerWidget {
+class InboxPage extends ConsumerStatefulWidget {
   const InboxPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InboxPage> createState() => _InboxPageState();
+}
+
+class _InboxPageState extends ConsumerState<InboxPage> {
+  /// The thread open in the right-hand pane. Desktop only — on a phone a row
+  /// pushes a screen instead.
+  String? _open;
+
+  @override
+  Widget build(BuildContext context) {
     final l = L.of(context);
+    final p = palette(context);
     final threads = ref.watch(conversationsProvider);
+    final wide = MediaQuery.sizeOf(context).width >= kWebBreakpoint;
+
+    // Two panes on a desktop: the list stays put and the conversation opens
+    // beside it. Replacing the whole window with one thread — and making the
+    // reader navigate back to see the next — is a phone's compromise, not a
+    // desk's.
+    if (wide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: 380,
+              child: _ThreadList(
+                threads: threads,
+                selectedId: _open,
+                onSelect: (id) => setState(() => _open = id),
+                onRetry: () => ref.invalidate(conversationsProvider),
+              ),
+            ),
+            VerticalDivider(width: 1, color: p.hair),
+            Expanded(
+              child: _open == null
+                  ? EmptyState(
+                      title: l.inboxTitle,
+                      hint: l.inboxPickThread,
+                    )
+                  : ChatPage(
+                      key: ValueKey(_open),
+                      conversationId: _open!,
+                      embedded: true,
+                    ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -38,31 +86,11 @@ class InboxPage extends ConsumerWidget {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-          child: threads.when(
-            loading: () => const _InboxShimmer(),
-            error: (e, _) => ErrorState(
-              message: errorMessage(context, e),
-              retryLabel: l.retry,
-              onRetry: () => ref.invalidate(conversationsProvider),
-            ),
-            data: (items) => items.isEmpty
-                ? EmptyState(title: l.inboxEmpty, hint: l.inboxEmptyHint)
-                : RefreshIndicator(
-                    onRefresh: () async =>
-                        ref.invalidate(conversationsProvider),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        Gap.x5,
-                        Gap.x4,
-                        Gap.x5,
-                        Gap.x14,
-                      ),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => Gap.h3,
-                      itemBuilder: (context, index) =>
-                          _ThreadCard(thread: items[index]),
-                    ),
-                  ),
+          child: _ThreadList(
+            threads: threads,
+            selectedId: null,
+            onSelect: (id) => context.push('/chat/$id'),
+            onRetry: () => ref.invalidate(conversationsProvider),
           ),
         ),
       ),
@@ -70,10 +98,70 @@ class InboxPage extends ConsumerWidget {
   }
 }
 
+/// The list of threads, shared by both shapes: a whole screen on a phone, the
+/// left pane on a desktop.
+class _ThreadList extends StatelessWidget {
+  const _ThreadList({
+    required this.threads,
+    required this.selectedId,
+    required this.onSelect,
+    required this.onRetry,
+  });
+
+  final AsyncValue<List<ConversationSummary>> threads;
+  final String? selectedId;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+
+    return threads.when(
+      loading: () => const _InboxShimmer(),
+      error: (e, _) => ErrorState(
+        message: errorMessage(context, e),
+        retryLabel: l.retry,
+        onRetry: onRetry,
+      ),
+      data: (items) => items.isEmpty
+          ? EmptyState(title: l.inboxEmpty, hint: l.inboxEmptyHint)
+          : RefreshIndicator(
+              onRefresh: () async => onRetry(),
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(
+                  Gap.x4,
+                  Gap.x4,
+                  Gap.x4,
+                  Gap.x14,
+                ),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => Gap.h3,
+                itemBuilder: (context, index) => _ThreadCard(
+                  thread: items[index],
+                  selected: items[index].id == selectedId,
+                  onTap: () => onSelect(items[index].id),
+                ),
+              ),
+            ),
+    );
+  }
+}
+
 class _ThreadCard extends StatelessWidget {
-  const _ThreadCard({required this.thread});
+  const _ThreadCard({
+    required this.thread,
+    required this.selected,
+    required this.onTap,
+  });
 
   final ConversationSummary thread;
+
+  /// Marked in the desktop list so it is clear which thread the right-hand
+  /// pane is showing.
+  final bool selected;
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -87,8 +175,15 @@ class _ThreadCard extends StatelessWidget {
     final unread = thread.unread > 0;
 
     return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: Radii.rLg,
+        side: BorderSide(
+          color: selected ? p.give : p.hair,
+          width: selected ? 2 : 1,
+        ),
+      ),
       child: InkWell(
-        onTap: () => context.push('/chat/${thread.id}'),
+        onTap: onTap,
         borderRadius: Radii.rLg,
         child: Opacity(
           opacity: live ? 1 : 0.62,

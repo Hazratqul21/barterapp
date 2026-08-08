@@ -230,6 +230,7 @@
   "matchesEmptyHint": "E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.",
   "matchesCreate": "E’lon joylash",
   "inboxEmptyHint": "Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.",
+  "inboxPickThread": "Chapdan suhbat tanlang.",
   "agoNow": "hozir",
   "agoMinutes": "{count} daq",
   "@agoMinutes": {
