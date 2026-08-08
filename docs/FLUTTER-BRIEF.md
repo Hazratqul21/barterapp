@@ -521,14 +521,31 @@ listing.value.format(locale)                        // ✅
 
 ---
 
-## 8. Responsive — bitta breakpoint
+## 8. Bitta layout — hamma joyda
 
-`core/router/app_shell.dart` da `kRailBreakpoint = 700`:
+Ilova **bitta** ko'rinishga ega: pastda tab bar, markazda kontent, o'ngda
+yaratish tugmasi. iOS, Android va web — uchalasi ham bir xil.
 
-- `< 700` → pastki `NavigationBar` + markazda FAB
-- `≥ 700` → chapda `NavigationRail`, kontent `maxWidth: 720`
+Ilgari 700px dan keng ekranda chapdan panel chiqardi. Bu ikkinchi navigatsiya
+modeli, o'z chrome'i va birinchisi bilan qadam tashlab yurishi kerak bo'lgan
+o'z layoutlari bilan. Noutbukdan kirgan odam **o'sha bozorni** ko'rmoqda,
+boshqa mahsulotni emas.
 
-**Boshqa hech qayerda platforma tekshirilmasin.** `Platform.isIOS` yozishga
+Endi 720px dan keng ekranda ilova **telefon ramkasi ichida** markazda turadi
+(`core/widgets/device_frame.dart`), orqa fonda girih naqshi. Ramka
+`MaterialApp.builder` da — navigator ustida — shuning uchun bosiladigan har bir
+marshrut ham uning ichida qoladi.
+
+```dart
+builder: (context, child) => DeviceFrame(child: child!),
+```
+
+Ramka ichida `MediaQuery` ham almashtiriladi: chat pufagi o'zini oyna kengligiga
+emas, **telefon kengligiga** o'lchaydi.
+
+Telefonda yoki tor oynada `DeviceFrame` hech nima qilmaydi.
+
+⚠️ **Boshqa hech qayerda platforma tekshirilmasin.** `Platform.isIOS` yozishga
 majbur bo'lsangiz — to'xtang, ehtimol `LayoutBuilder` yetadi.
 
 Platformaga xos narsalar faqat uch joyda va allaqachon yozilgan:
@@ -536,8 +553,6 @@ Platformaga xos narsalar faqat uch joyda va allaqachon yozilgan:
 `usePathUrlStrategy()` (web URL).
 
 Har bir ekranni **375px va 1280px** da sinang.
-
----
 
 ## 9. Tayyor bo'lganini qanday bilasiz
 

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/device_frame.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
@@ -48,6 +49,9 @@ class _BarterAppState extends ConsumerState<BarterApp> {
       routerConfig: _router,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      // Above the navigator, so every pushed route is inside the frame too.
+      // On a phone it does nothing at all.
+      builder: (context, child) => DeviceFrame(child: child!),
       locale: Locale(locale),
       supportedLocales: L.supportedLocales,
       localizationsDelegates: const [

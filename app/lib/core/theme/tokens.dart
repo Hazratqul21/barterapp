@@ -102,9 +102,6 @@ abstract final class Sizes {
   /// Feed card photo.
   static const cardImage = 190.0;
 
-  /// Above this the tab bar becomes a side rail.
-  static const railBreakpoint = 700.0;
-
   /// Reading width. Wider than this and a line of Cyrillic gets tiring.
   static const contentMax = 720.0;
 }

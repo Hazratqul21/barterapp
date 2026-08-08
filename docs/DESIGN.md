@@ -210,6 +210,21 @@ har kadrda blur hisoblanmaydi.
 **Faqat o'z suratlari yo'q ekranlarda.** Fotosuratlar lentasi ostida sokin
 sahifa kerak, e'tibor uchun kurashadigan ikkinchi narsa emas.
 
+## 5.5 Web — o'sha ilova, boshqa emas
+
+720px dan keng ekranda ilova **telefon ramkasi ichida** markazda turadi
+(`core/widgets/device_frame.dart`). Orqa fon — girih naqshi, ya'ni qurilma
+atrofidagi bo'shliq ham mahsulotga tegishli.
+
+Nega: ilgari keng ekranda chapdan panel chiqardi — ikkinchi navigatsiya modeli,
+o'z chrome'i va o'z layoutlari bilan. Bu bozorning hammasi dalada yoki
+ustaxonada turgan telefon uchun qurilgan; noutbukdan tashrif — o'sha narsani
+kattaroq ekranda ko'rayotgan odam, boshqa mahsulot emas.
+
+Ramka `MaterialApp.builder` da, navigator ustida — shuning uchun bosiladigan
+marshrutlar, panellar va dialoglar ham uning ichida. `MediaQuery` ham
+almashtiriladi, aks holda chat pufagi o'zini butun oyna kengligiga o'lchardi.
+
 ## 6. Umumiy komponentlar
 
 | Komponent | Nima uchun |
@@ -221,6 +236,7 @@ sahifa kerak, e'tibor uchun kurashadigan ikkinchi narsa emas.
 | `StateArt` | Bo'sh/xato holati rasmi (standart — chizilgan illyustratsiya) |
 | `GirihField` | Koshin panjarasi |
 | `SwapBanner` | Naqshli gradient sarlavha |
+| `DeviceFrame` | Web'da telefon ramkasi |
 | `SkeletonBox` | Yuklanayotgan ekran o'z shaklini darrov ko'rsatadi |
 | `Pill` | Ma'no tashiydigan yorliq: give / take / money |
 | `errorMessage()` | Serverning o'zbekcha xatosini o'zgartirmay ko'rsatadi |
