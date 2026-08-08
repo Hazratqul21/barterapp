@@ -207,6 +207,24 @@ abstract class L {
   /// **'Barter e’lonini yaratish'**
   String get navCreate;
 
+  /// No description provided for @navSettings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sozlamalar'**
+  String get navSettings;
+
+  /// No description provided for @settingsGeneral.
+  ///
+  /// In uz, this message translates to:
+  /// **'Umumiy'**
+  String get settingsGeneral;
+
+  /// No description provided for @settingsSecurity.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xavfsizlik va to‘lovlar'**
+  String get settingsSecurity;
+
   /// No description provided for @feedTradingIn.
   ///
   /// In uz, this message translates to:

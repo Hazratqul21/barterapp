@@ -66,6 +66,15 @@ class LRu extends L {
   String get navCreate => 'Создать объявление для обмена';
 
   @override
+  String get navSettings => 'Настройки';
+
+  @override
+  String get settingsGeneral => 'Общие';
+
+  @override
+  String get settingsSecurity => 'Безопасность и платежи';
+
+  @override
   String get feedTradingIn => 'Регион обмена';
 
   @override

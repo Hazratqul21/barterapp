@@ -21,7 +21,7 @@ class SettingsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sozlamalar'),
+        title: Text(l.navSettings),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -32,7 +32,7 @@ class SettingsPage extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Text(
-                  'Umumiy',
+                  l.settingsGeneral,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: p.inkSoft,
                     letterSpacing: 0.5,
@@ -70,7 +70,7 @@ class SettingsPage extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Text(
-                  'Xavfsizlik va To\'lovlar',
+                  l.settingsSecurity,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: p.inkSoft,
                     letterSpacing: 0.5,

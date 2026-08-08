@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -47,19 +48,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
       return Scaffold(
         appBar: AppBar(
           title: Text(l.profileTitle),
+          actions: [_SettingsAction(label: l.navSettings)],
         ),
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l.authSignedOut, style: theme.textTheme.titleMedium),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => context.push('/signin'),
-                child: Text(l.authSignIn),
-              ),
-            ],
-          ).animate().fadeIn(duration: M3Motion.medium2, curve: M3Motion.standard),
+          child: Padding(
+            // The button's theme gives it a full-width minimum, so without a
+            // margin here it ran edge to edge against the screen.
+            padding: const EdgeInsets.symmetric(horizontal: Gap.x6),
+            child:
+                Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        StateArt(icon: Symbols.person_rounded),
+                        Gap.h5,
+                        Text(
+                          l.authSignedOut,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        Gap.h6,
+                        FilledButton(
+                          onPressed: () => context.push('/signin'),
+                          child: Text(l.authSignIn),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(
+                      duration: M3Motion.medium2,
+                      curve: M3Motion.standard,
+                    ),
+          ),
         ),
       );
     }
@@ -69,6 +87,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     return Scaffold(
       appBar: AppBar(
         title: Text(l.profileTitle),
+        actions: [_SettingsAction(label: l.navSettings)],
       ),
       body: meAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -433,6 +452,28 @@ class _ReviewCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The way into settings, now that they no longer own a tab.
+///
+/// It sits on the profile because that is what settings are: your account, your
+/// language, your cards — not a fifth place the marketplace goes.
+class _SettingsAction extends StatelessWidget {
+  const _SettingsAction({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: Gap.x2),
+      child: IconButton(
+        tooltip: label,
+        onPressed: () => context.push('/settings'),
+        icon: const Icon(Symbols.settings_rounded, size: Sizes.iconLg),
       ),
     );
   }

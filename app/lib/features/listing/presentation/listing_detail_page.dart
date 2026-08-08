@@ -59,7 +59,11 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
       bottomNavigationBar: async.maybeWhen(
         data: (listing) => SafeArea(
           minimum: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+          // heightFactor 1 makes this bar as tall as its buttons. Without it a
+          // Center takes every pixel the Scaffold will give a bottom bar, which
+          // is all of them — leaving the listing itself no room at all.
           child: Center(
+            heightFactor: 1,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 700),
               child: Row(

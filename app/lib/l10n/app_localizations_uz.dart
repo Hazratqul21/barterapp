@@ -66,6 +66,15 @@ class LUz extends L {
   String get navCreate => 'Barter e’lonini yaratish';
 
   @override
+  String get navSettings => 'Sozlamalar';
+
+  @override
+  String get settingsGeneral => 'Umumiy';
+
+  @override
+  String get settingsSecurity => 'Xavfsizlik va to‘lovlar';
+
+  @override
   String get feedTradingIn => 'Savdo hududi';
 
   @override

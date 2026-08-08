@@ -66,6 +66,15 @@ class LEn extends L {
   String get navCreate => 'Create a barter listing';
 
   @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get settingsGeneral => 'General';
+
+  @override
+  String get settingsSecurity => 'Security and payments';
+
+  @override
   String get feedTradingIn => 'Trading in';
 
   @override

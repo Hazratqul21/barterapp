@@ -43,11 +43,10 @@ class AppShell extends StatelessWidget {
         active: Symbols.person_rounded,
         label: l.navProfile,
       ),
-      (
-        icon: Symbols.settings_rounded,
-        active: Symbols.settings_rounded,
-        label: 'Sozlamalar',
-      ),
+      // Settings is not a destination. It is somewhere you go from your own
+      // profile, once, to change something — not one of the four places the
+      // product is actually about. Giving it a fifth of the bar put a gear icon
+      // next to the trades it exists to support.
     ];
 
     return LayoutBuilder(

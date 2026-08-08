@@ -78,15 +78,14 @@ GoRouter buildRouter() {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/settings',
-                builder: (context, state) => const SettingsPage(),
-              ),
-            ],
-          ),
         ],
+      ),
+      // Reached from the profile, pushed over the tabs — see the note in
+      // `app_shell.dart` for why it is not a destination of its own.
+      GoRoute(
+        path: '/settings',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const SettingsPage(),
       ),
       GoRoute(
         path: '/listing/:id',
