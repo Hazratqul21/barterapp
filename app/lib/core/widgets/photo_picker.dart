@@ -109,6 +109,10 @@ class PhotoWell extends StatelessWidget {
       height: size,
       child: Stack(
         clipBehavior: Clip.none,
+        // Expand, not the default loose fit: the well is a fixed square, but a
+        // loose Stack let the Material shrink to the size of the camera icon
+        // inside it and sit in the top-left corner of the space.
+        fit: StackFit.expand,
         children: [
           Material(
             color: p.sunken,

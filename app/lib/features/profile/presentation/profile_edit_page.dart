@@ -149,30 +149,33 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     Gap.h6,
                   ],
 
-                  Center(
-                    child: Column(
-                      children: [
-                        PhotoWell(
-                          url: _avatarUrl,
-                          busy: _uploading,
-                          circular: true,
-                          size: Sizes.avatarXl,
-                          onTap: _pickPhoto,
-                          onRemove: () => setState(() => _avatarUrl = null),
+                  // Not wrapped in a Center: inside a ListView that hands the
+                  // child an unbounded height, and the Column then stretched
+                  // instead of hugging the avatar.
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      PhotoWell(
+                        url: _avatarUrl,
+                        busy: _uploading,
+                        circular: true,
+                        size: Sizes.avatarXl,
+                        onTap: _pickPhoto,
+                        onRemove: () => setState(() => _avatarUrl = null),
+                      ),
+                      Gap.h2,
+                      TextButton(
+                        onPressed: _uploading ? null : _pickPhoto,
+                        child: Text(
+                          _uploading
+                              ? l.uploading
+                              : (_avatarUrl == null
+                                    ? l.profilePhotoPick
+                                    : l.profilePhotoChange),
                         ),
-                        Gap.h2,
-                        TextButton(
-                          onPressed: _uploading ? null : _pickPhoto,
-                          child: Text(
-                            _uploading
-                                ? l.uploading
-                                : (_avatarUrl == null
-                                      ? l.profilePhotoPick
-                                      : l.profilePhotoChange),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   Gap.h5,
 
