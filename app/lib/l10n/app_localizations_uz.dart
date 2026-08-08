@@ -427,6 +427,33 @@ class LUz extends L {
   String get chatTyping => 'yozmoqda…';
 
   @override
+  String chatExpiresIn(int hours) {
+    return '$hours soatda tugaydi';
+  }
+
+  @override
+  String get chatExpiresSoon => 'Kamida bir soatdan kam qoldi';
+
+  @override
+  String get dealCounterTitle => 'Qarshi taklif';
+
+  @override
+  String get dealCounterCash => 'Qo‘shimcha pul';
+
+  @override
+  String get dealCounterSend => 'Qarshi taklifni yuborish';
+
+  @override
+  String get dealCounterHint =>
+      'Yuborsangiz javob berish navbati narigi tomonga o‘tadi.';
+
+  @override
+  String get dealYouGive => 'Siz berasiz';
+
+  @override
+  String get dealYouGet => 'Siz olasiz';
+
+  @override
   String get dealPending => 'Kutilayotgan savdo';
 
   @override

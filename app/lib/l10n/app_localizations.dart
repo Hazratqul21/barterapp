@@ -897,6 +897,54 @@ abstract class L {
   /// **'yozmoqda…'**
   String get chatTyping;
 
+  /// No description provided for @chatExpiresIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'{hours} soatda tugaydi'**
+  String chatExpiresIn(int hours);
+
+  /// No description provided for @chatExpiresSoon.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamida bir soatdan kam qoldi'**
+  String get chatExpiresSoon;
+
+  /// No description provided for @dealCounterTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qarshi taklif'**
+  String get dealCounterTitle;
+
+  /// No description provided for @dealCounterCash.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qo‘shimcha pul'**
+  String get dealCounterCash;
+
+  /// No description provided for @dealCounterSend.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qarshi taklifni yuborish'**
+  String get dealCounterSend;
+
+  /// No description provided for @dealCounterHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuborsangiz javob berish navbati narigi tomonga o‘tadi.'**
+  String get dealCounterHint;
+
+  /// No description provided for @dealYouGive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz berasiz'**
+  String get dealYouGive;
+
+  /// No description provided for @dealYouGet.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz olasiz'**
+  String get dealYouGet;
+
   /// No description provided for @dealPending.
   ///
   /// In uz, this message translates to:

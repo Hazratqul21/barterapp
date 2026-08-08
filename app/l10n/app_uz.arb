@@ -175,6 +175,21 @@
   "chatPlaceholder": "Xabar yozing…",
   "chatSend": "Yuborish",
   "chatTyping": "yozmoqda…",
+  "chatExpiresIn": "{hours} soatda tugaydi",
+  "@chatExpiresIn": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatExpiresSoon": "Kamida bir soatdan kam qoldi",
+  "dealCounterTitle": "Qarshi taklif",
+  "dealCounterCash": "Qo‘shimcha pul",
+  "dealCounterSend": "Qarshi taklifni yuborish",
+  "dealCounterHint": "Yuborsangiz javob berish navbati narigi tomonga o‘tadi.",
+  "dealYouGive": "Siz berasiz",
+  "dealYouGet": "Siz olasiz",
   "dealPending": "Kutilayotgan savdo",
   "dealAccept": "Qabul qilish",
   "dealDecline": "Rad etish",

@@ -426,6 +426,33 @@ class LEn extends L {
   String get chatTyping => 'typing…';
 
   @override
+  String chatExpiresIn(int hours) {
+    return 'Expires in ${hours}h';
+  }
+
+  @override
+  String get chatExpiresSoon => 'Less than an hour left';
+
+  @override
+  String get dealCounterTitle => 'Counter-offer';
+
+  @override
+  String get dealCounterCash => 'Cash on top';
+
+  @override
+  String get dealCounterSend => 'Send counter-offer';
+
+  @override
+  String get dealCounterHint =>
+      'Once sent, it is the other side\'s turn to answer.';
+
+  @override
+  String get dealYouGive => 'You give';
+
+  @override
+  String get dealYouGet => 'You get';
+
+  @override
   String get dealPending => 'Pending deal';
 
   @override

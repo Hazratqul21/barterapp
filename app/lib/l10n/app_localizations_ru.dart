@@ -426,6 +426,33 @@ class LRu extends L {
   String get chatTyping => 'печатает…';
 
   @override
+  String chatExpiresIn(int hours) {
+    return 'Истекает через $hours ч';
+  }
+
+  @override
+  String get chatExpiresSoon => 'Осталось меньше часа';
+
+  @override
+  String get dealCounterTitle => 'Встречное предложение';
+
+  @override
+  String get dealCounterCash => 'Доплата';
+
+  @override
+  String get dealCounterSend => 'Отправить встречное';
+
+  @override
+  String get dealCounterHint =>
+      'После отправки очередь отвечать переходит другой стороне.';
+
+  @override
+  String get dealYouGive => 'Вы отдаёте';
+
+  @override
+  String get dealYouGet => 'Вы получаете';
+
+  @override
   String get dealPending => 'Сделка на рассмотрении';
 
   @override
