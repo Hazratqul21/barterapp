@@ -202,6 +202,20 @@
   "dealCounter": "Qarshi taklif",
   "dealComplete": "Savdoni yakunlash",
   "dealCompleted": "Savdo yakunlandi",
+  "reviewTitle": "Savdo qanday o‘tdi?",
+  "reviewLede": "{name} bilan savdongiz yakunlandi. Sharhingiz boshqalarga ishonch beradi.",
+  "@reviewLede": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewBody": "Nima yozasiz?",
+  "reviewSend": "Sharh qoldirish",
+  "reviewLater": "Keyinroq",
+  "reviewThanks": "Sharh uchun rahmat",
+  "reviewDone": "Siz sharh qoldirgansiz",
   "dealDeclined": "Rad etilgan",
   "dealAccepted": "Qabul qilingan",
   "dealTalking": "Muhokamada",

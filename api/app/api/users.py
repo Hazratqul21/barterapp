@@ -4,6 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,11 +14,14 @@ from app.core.regions import coordinates_for, region_names
 from app.core.security import current_user
 from app.db.session import get_db
 from app.models.listing import Listing, ListingStatus
+from app.models.offer import Offer, OfferStatus
 from app.models.review import Review
+from app.models.social import NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.common import ApiModel
 from app.schemas.listing import ListingCard
 from app.schemas.user import Me, MeUpdate, TraderProfile
+from app.services import offers as offer_service
 from app.services import stats
 from app.services.presenter import listing_card, trader_brief
 
@@ -169,6 +173,114 @@ async def trader_listings(
         user, rating=ratings.get(user_id, (None, 0))[0], deals=deals.get(user_id, 0)
     )
     return [listing_card(row, locale, brief) for row in rows]
+
+
+class ReviewCreate(ApiModel):
+    offer_id: uuid.UUID
+    rating: int = Field(ge=1, le=5)
+    body: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/reviews", response_model=ReviewOut, status_code=status.HTTP_201_CREATED)
+async def write_review(
+    payload: ReviewCreate,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewOut:
+    """
+    Rate the other side of a finished trade.
+
+    Reviews were readable and unwritable: `GET /users/{id}/reviews` has always
+    been there, the rows only ever came from the seed. A rating carries 20% of
+    every match score and is the whole of the trust system, so a marketplace
+    where nobody can leave one is a marketplace where the number never moves.
+
+    Who may write is decided here; the schema then makes the rest impossible:
+    `author_id <> about_id` and one review per person per deal.
+    """
+    offer = await db.get(Offer, payload.offer_id)
+    if offer is None or me.id not in (offer.from_user_id, offer.to_user_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Savdo topilmadi.")
+
+    if offer.status != OfferStatus.completed:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Sharh faqat yakunlangan savdodan keyin yoziladi.",
+        )
+
+    about_id = (
+        offer.to_user_id if offer.from_user_id == me.id else offer.from_user_id
+    )
+
+    existing = await db.scalar(
+        select(Review).where(
+            Review.offer_id == offer.id, Review.author_id == me.id
+        )
+    )
+    if existing is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "Bu savdoga allaqachon sharh yozgansiz."
+        )
+
+    review = Review(
+        offer_id=offer.id,
+        author_id=me.id,
+        about_id=about_id,
+        rating=payload.rating,
+        body=payload.body,
+        created_at=datetime.now(UTC),
+    )
+    db.add(review)
+
+    await offer_service.notify(
+        db,
+        user_id=about_id,
+        kind=NotifyKind.system,
+        title=f"{me.full_name} sharh qoldirdi",
+        body=payload.body[:120],
+        target_type=NotifyTargetType.listing,
+        target_id=offer.listing_id,
+        avatar_url=me.avatar_url,
+    )
+    await db.commit()
+
+    return ReviewOut(
+        id=review.id,
+        rating=review.rating,
+        body=review.body,
+        created_at=review.created_at,
+        author_id=me.id,
+        author_name=me.full_name,
+        author_avatar_url=me.avatar_url,
+    )
+
+
+@router.get("/offers/{offer_id}/review", response_model=ReviewOut | None)
+async def my_review_for(
+    offer_id: uuid.UUID,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewOut | None:
+    """What this user already wrote about a deal, so the screen can ask once."""
+    row = await db.execute(
+        select(Review, User)
+        .join(User, User.id == Review.author_id)
+        .where(Review.offer_id == offer_id, Review.author_id == me.id)
+    )
+    found = row.first()
+    if found is None:
+        return None
+
+    review, author = found
+    return ReviewOut(
+        id=review.id,
+        rating=review.rating,
+        body=review.body,
+        created_at=review.created_at,
+        author_id=author.id,
+        author_name=author.full_name,
+        author_avatar_url=author.avatar_url,
+    )
 
 
 @router.get("/users/{user_id}/reviews", response_model=list[ReviewOut])

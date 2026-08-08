@@ -106,6 +106,30 @@ class TradeRepository {
     parse: (data) => TraderProfile.fromJson(data as Map<String, dynamic>),
   );
 
+  /// Rate the other side of a finished trade.
+  ///
+  /// The server decides who may write: only a participant, only once, only
+  /// after the offer reached `completed`.
+  Future<Review> writeReview({
+    required String offerId,
+    required int rating,
+    required String body,
+  }) {
+    return _api.post(
+      '/reviews',
+      body: {'offer_id': offerId, 'rating': rating, 'body': body},
+      parse: (data) => Review.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
+  /// What this user already wrote about a deal, so the screen asks only once.
+  Future<Review?> myReviewFor(String offerId) => _api.get(
+    '/offers/$offerId/review',
+    parse: (data) => data == null
+        ? null
+        : Review.fromJson(data as Map<String, dynamic>),
+  );
+
   Future<List<Review>> reviews(String userId) => _api.get(
     '/users/$userId/reviews',
     parse: (data) => (data as List)
@@ -225,6 +249,11 @@ final traderProvider = FutureProvider.autoDispose
     .family<TraderProfile, String>(
       (ref, id) => ref.watch(tradeRepositoryProvider).trader(id),
     );
+
+/// The review this user already left on a given offer, if any.
+final myReviewProvider = FutureProvider.autoDispose.family<Review?, String>(
+  (ref, offerId) => ref.watch(tradeRepositoryProvider).myReviewFor(offerId),
+);
 
 final traderReviewsProvider = FutureProvider.autoDispose
     .family<List<Review>, String>(

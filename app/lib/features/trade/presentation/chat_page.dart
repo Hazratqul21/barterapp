@@ -349,7 +349,7 @@ class _PeerHeader extends StatelessWidget {
 }
 
 /// What is on the table, and what this person can do about it.
-class _DealPanel extends StatelessWidget {
+class _DealPanel extends ConsumerWidget {
   const _DealPanel({
     required this.offer,
     required this.onAccept,
@@ -365,7 +365,7 @@ class _DealPanel extends StatelessWidget {
   final VoidCallback onComplete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
@@ -450,7 +450,8 @@ class _DealPanel extends StatelessWidget {
               icon: const Icon(Symbols.check_circle_rounded),
               label: Text(l.dealComplete),
             ),
-          ],
+          ] else if (offer.status == OfferStatus.completed)
+            _ReviewPrompt(offer: offer),
         ],
       ),
     );
@@ -640,6 +641,202 @@ class _Composer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// After a completed trade: rate the other side, once.
+///
+/// It lives at the bottom of the deal panel because that is where the trade
+/// ended. Asking on a separate screen means asking later, and later is never —
+/// which is how the seed data ended up being the only reviews in the product.
+class _ReviewPrompt extends ConsumerStatefulWidget {
+  const _ReviewPrompt({required this.offer});
+
+  final Offer offer;
+
+  @override
+  ConsumerState<_ReviewPrompt> createState() => _ReviewPromptState();
+}
+
+class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
+  final _body = TextEditingController();
+  int _rating = 5;
+  bool _sending = false;
+  bool _open = false;
+
+  @override
+  void dispose() {
+    _body.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_body.text.trim().isEmpty) return;
+    setState(() => _sending = true);
+    final l = L.of(context);
+    try {
+      await ref
+          .read(tradeRepositoryProvider)
+          .writeReview(
+            offerId: widget.offer.id,
+            rating: _rating,
+            body: _body.text.trim(),
+          );
+      ref.invalidate(myReviewProvider(widget.offer.id));
+      ref.invalidate(traderProvider(widget.offer.counterparty.id));
+      ref.invalidate(traderReviewsProvider(widget.offer.counterparty.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.reviewThanks)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = palette(context);
+    final theme = Theme.of(context);
+    final existing = ref.watch(myReviewProvider(widget.offer.id));
+
+    return existing.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (review) {
+        if (review != null) {
+          return Padding(
+            padding: const EdgeInsets.only(top: Gap.x3),
+            child: Row(
+              children: [
+                Icon(
+                  Symbols.rate_review_rounded,
+                  size: Sizes.iconMd,
+                  color: p.give,
+                ),
+                Gap.w2,
+                Text(
+                  l.reviewDone,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
+                ),
+                Gap.w2,
+                _Stars(rating: review.rating, size: Sizes.iconSm),
+              ],
+            ),
+          );
+        }
+
+        if (!_open) {
+          return Padding(
+            padding: const EdgeInsets.only(top: Gap.x3),
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _open = true),
+              icon: const Icon(Symbols.star_rounded, size: Sizes.iconMd),
+              label: Text(l.reviewSend),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: Gap.x4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l.reviewTitle, style: theme.textTheme.titleMedium),
+              Gap.h1,
+              Text(
+                l.reviewLede(widget.offer.counterparty.name),
+                style: theme.textTheme.bodySmall?.copyWith(color: p.inkSoft),
+              ),
+              Gap.h3,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var star = 1; star <= 5; star++)
+                    IconButton(
+                      onPressed: () => setState(() => _rating = star),
+                      icon: Icon(
+                        Symbols.star_rounded,
+                        size: 32,
+                        fill: star <= _rating ? 1 : 0,
+                        color: star <= _rating ? p.money : p.inkFaint,
+                      ),
+                    ),
+                ],
+              ),
+              Gap.h3,
+              TextField(
+                controller: _body,
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(hintText: l.reviewBody),
+              ),
+              Gap.h3,
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => _open = false),
+                    child: Text(l.reviewLater),
+                  ),
+                  Gap.w2,
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _sending || _body.text.trim().isEmpty
+                          ? null
+                          : _send,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, Sizes.buttonMd),
+                      ),
+                      child: _sending
+                          ? const SizedBox(
+                              width: Sizes.iconMd,
+                              height: Sizes.iconMd,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l.reviewSend),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Five stars, filled to the rating.
+class _Stars extends StatelessWidget {
+  const _Stars({required this.rating, this.size = Sizes.iconMd});
+
+  final int rating;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var star = 1; star <= 5; star++)
+          Icon(
+            Symbols.star_rounded,
+            size: size,
+            fill: star <= rating ? 1 : 0,
+            color: star <= rating ? p.money : p.inkFaint,
+          ),
+      ],
     );
   }
 }

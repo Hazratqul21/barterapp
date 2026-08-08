@@ -489,6 +489,29 @@ class LEn extends L {
   String get dealCompleted => 'Trade completed';
 
   @override
+  String get reviewTitle => 'How did the trade go?';
+
+  @override
+  String reviewLede(String name) {
+    return 'Your trade with $name is done. Your review is what lets the next person trust them.';
+  }
+
+  @override
+  String get reviewBody => 'What would you say?';
+
+  @override
+  String get reviewSend => 'Leave a review';
+
+  @override
+  String get reviewLater => 'Later';
+
+  @override
+  String get reviewThanks => 'Thanks for the review';
+
+  @override
+  String get reviewDone => 'You left a review';
+
+  @override
   String get dealDeclined => 'Declined';
 
   @override

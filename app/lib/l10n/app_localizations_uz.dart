@@ -490,6 +490,29 @@ class LUz extends L {
   String get dealCompleted => 'Savdo yakunlandi';
 
   @override
+  String get reviewTitle => 'Savdo qanday o‘tdi?';
+
+  @override
+  String reviewLede(String name) {
+    return '$name bilan savdongiz yakunlandi. Sharhingiz boshqalarga ishonch beradi.';
+  }
+
+  @override
+  String get reviewBody => 'Nima yozasiz?';
+
+  @override
+  String get reviewSend => 'Sharh qoldirish';
+
+  @override
+  String get reviewLater => 'Keyinroq';
+
+  @override
+  String get reviewThanks => 'Sharh uchun rahmat';
+
+  @override
+  String get reviewDone => 'Siz sharh qoldirgansiz';
+
+  @override
   String get dealDeclined => 'Rad etilgan';
 
   @override

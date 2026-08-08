@@ -490,6 +490,29 @@ class LRu extends L {
   String get dealCompleted => 'Сделка завершена';
 
   @override
+  String get reviewTitle => 'Как прошёл обмен?';
+
+  @override
+  String reviewLede(String name) {
+    return 'Обмен с $name завершён. Ваш отзыв помогает другим доверять.';
+  }
+
+  @override
+  String get reviewBody => 'Что напишете?';
+
+  @override
+  String get reviewSend => 'Оставить отзыв';
+
+  @override
+  String get reviewLater => 'Позже';
+
+  @override
+  String get reviewThanks => 'Спасибо за отзыв';
+
+  @override
+  String get reviewDone => 'Вы оставили отзыв';
+
+  @override
   String get dealDeclined => 'Отклонено';
 
   @override

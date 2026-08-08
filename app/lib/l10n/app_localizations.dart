@@ -1017,6 +1017,48 @@ abstract class L {
   /// **'Savdo yakunlandi'**
   String get dealCompleted;
 
+  /// No description provided for @reviewTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Savdo qanday o‘tdi?'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewLede.
+  ///
+  /// In uz, this message translates to:
+  /// **'{name} bilan savdongiz yakunlandi. Sharhingiz boshqalarga ishonch beradi.'**
+  String reviewLede(String name);
+
+  /// No description provided for @reviewBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima yozasiz?'**
+  String get reviewBody;
+
+  /// No description provided for @reviewSend.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sharh qoldirish'**
+  String get reviewSend;
+
+  /// No description provided for @reviewLater.
+  ///
+  /// In uz, this message translates to:
+  /// **'Keyinroq'**
+  String get reviewLater;
+
+  /// No description provided for @reviewThanks.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sharh uchun rahmat'**
+  String get reviewThanks;
+
+  /// No description provided for @reviewDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz sharh qoldirgansiz'**
+  String get reviewDone;
+
   /// No description provided for @dealDeclined.
   ///
   /// In uz, this message translates to:
