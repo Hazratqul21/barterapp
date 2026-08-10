@@ -314,11 +314,14 @@ class _MyListingsSection extends ConsumerWidget {
     final listingsAsync = ref.watch(myListingsProvider);
     final l = L.of(context);
 
-    return listingsAsync.when(
+    // Posting a first listing turns this from the empty state into a list;
+    // crossfading makes that read as the listing arriving.
+    return listingsAsync.fade(
+      identity: listingsAsync.value?.length,
       loading: () => const Center(
         child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
       ),
-      error: (e, _) => ErrorState(
+      error: (e) => ErrorState(
         message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: () => ref.invalidate(myListingsProvider),

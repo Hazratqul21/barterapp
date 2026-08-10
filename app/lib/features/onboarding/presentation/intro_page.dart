@@ -72,20 +72,33 @@ class _IntroPageState extends ConsumerState<IntroPage> {
               constraints: const BoxConstraints(maxWidth: 560),
               child: Column(
                 children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: AnimatedOpacity(
-                      duration: M3Motion.short4,
-                      opacity: last ? 0 : 1,
-                      child: TextButton(
-                        onPressed: last ? null : _finish,
-                        child: Text(
-                          l.introSkip,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: p.inkSoft,
+                  Padding(
+                    padding: const EdgeInsets.only(left: Gap.x5),
+                    child: Row(
+                      children: [
+                        // The mark arrives here from the centre of the splash.
+                        // It also gives these three screens a sender: without
+                        // it the intro was an unbranded slideshow between the
+                        // logo and the app.
+                        const Hero(
+                          tag: BrandMark.heroTag,
+                          child: BrandMark(size: 36),
+                        ),
+                        const Spacer(),
+                        AnimatedOpacity(
+                          duration: M3Motion.short4,
+                          opacity: last ? 0 : 1,
+                          child: TextButton(
+                            onPressed: last ? null : _finish,
+                            child: Text(
+                              l.introSkip,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: p.inkSoft,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                   Expanded(

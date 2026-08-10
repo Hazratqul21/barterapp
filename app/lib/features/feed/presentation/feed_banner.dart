@@ -45,18 +45,30 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
 
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
     final me = ref.watch(meProvider).value;
     final mine = ref.watch(myListingsProvider).value;
 
     // Nothing until both answers are in, so the strip never appears and then
     // changes its mind a moment later.
-    if (me == null || mine == null) return const SizedBox.shrink();
+    final nudge = (me == null || mine == null) ? null : _pick(me, mine.length);
+    final show = nudge != null && !_dismissed.contains(nudge);
 
-    final nudge = _pick(me, mine.length);
-    if (nudge == null || _dismissed.contains(nudge)) {
-      return const SizedBox.shrink();
-    }
+    // Collapse rather than vanish. Posting a first listing satisfies the nudge,
+    // and the strip used to disappear between one frame and the next — the feed
+    // jumped upward at the exact moment the person was looking for confirmation
+    // that their listing had gone up.
+    return AnimatedSize(
+      duration: M3Motion.medium4,
+      curve: M3Motion.emphasized,
+      alignment: Alignment.topCenter,
+      child: show
+          ? _strip(context, nudge)
+          : const SizedBox(width: double.infinity),
+    );
+  }
+
+  Widget _strip(BuildContext context, _Nudge nudge) {
+    final l = L.of(context);
 
     final (title, body, action, route, icon) = switch (nudge) {
       _Nudge.createListing => (

@@ -870,3 +870,95 @@ extension AsyncFadeX<T> on AsyncValue<T> {
     );
   }
 }
+
+/// The product in one glyph: two arrows swapping places.
+///
+/// Shared by the splash and the intro so the mark can fly between them — it is
+/// the same object moving from the centre of the first screen to the corner of
+/// the second, which is what makes those two screens read as one arrival rather
+/// than as a brand slide followed by an unrelated app.
+///
+/// [onDark] over the swap gradient (the splash), where the mark is a pane of
+/// frosted white; otherwise the mark carries the gradient itself, so it stays
+/// legible on the app's own pale surface.
+class BrandMark extends StatelessWidget {
+  const BrandMark({
+    super.key,
+    this.size = 104,
+    this.onDark = false,
+    this.animate = false,
+  });
+
+  /// The tag both copies share. Hero needs them to match exactly.
+  static const heroTag = 'brand-mark';
+
+  final double size;
+  final bool onDark;
+
+  /// Whether the arrows slide in. True on the splash, where the mark is the
+  /// only thing on screen; false everywhere else, where it is furniture.
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final arrow = size * 0.33;
+
+    Widget top = Icon(
+      Symbols.arrow_forward_rounded,
+      size: arrow,
+      color: Colors.white,
+      weight: 700,
+    );
+    Widget bottom = Icon(
+      Symbols.arrow_back_rounded,
+      size: arrow,
+      color: Colors.white,
+      weight: 700,
+    );
+
+    if (animate) {
+      top = top
+          .animate()
+          .fadeIn(duration: M3Motion.medium2)
+          .slideX(
+            begin: -0.9,
+            end: 0,
+            duration: M3Motion.long1,
+            curve: M3Motion.emphasizedDecelerate,
+          );
+      bottom = bottom
+          .animate()
+          .fadeIn(delay: M3Motion.short3, duration: M3Motion.medium2)
+          .slideX(
+            begin: 0.9,
+            end: 0,
+            delay: M3Motion.short3,
+            duration: M3Motion.long1,
+            curve: M3Motion.emphasizedDecelerate,
+          );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: onDark ? Colors.white.withValues(alpha: 0.16) : null,
+        gradient: onDark ? null : p.swapGradient,
+        // Proportional, so the 40px mark in the intro corner is the same shape
+        // as the 104px one on the splash rather than a rounder version of it.
+        borderRadius: BorderRadius.circular(size * 0.27),
+        border: onDark
+            ? Border.all(color: Colors.white.withValues(alpha: 0.28))
+            : null,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(top: size * 0.25, child: top),
+          Positioned(bottom: size * 0.25, child: bottom),
+        ],
+      ),
+    );
+  }
+}
