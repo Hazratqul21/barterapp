@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -33,16 +34,32 @@ class AppShell extends StatelessWidget {
       (icon: Symbols.person_rounded, label: l.navProfile),
     ];
 
+    // Destinations are peers, not steps: nothing slides sideways between them.
+    // A fade-through says "a different place" without implying a direction.
+    final body = PageTransitionSwitcher(
+      duration: M3Motion.medium2,
+      transitionBuilder: (child, animation, secondary) => FadeThroughTransition(
+        animation: animation,
+        secondaryAnimation: secondary,
+        fillColor: Colors.transparent,
+        child: child,
+      ),
+      child: KeyedSubtree(
+        key: ValueKey(navigationShell.currentIndex),
+        child: navigationShell,
+      ),
+    );
+
     if (MediaQuery.sizeOf(context).width >= kWebBreakpoint) {
       return WebShell(
         currentIndex: navigationShell.currentIndex,
         onDestination: _go,
-        child: navigationShell,
+        child: body,
       );
     }
 
     return Scaffold(
-      body: navigationShell,
+      body: body,
       floatingActionButton:
           FloatingActionButton(
                 heroTag: 'create-fab',

@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
@@ -12,6 +14,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/listing_repository.dart';
+import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
 
@@ -97,6 +100,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                         : _clearSearch,
                   ),
                 ),
+                const SliverToBoxAdapter(child: FeedBanner()),
                 SliverToBoxAdapter(
                   child: _Categories(
                     selected: query.tag,
@@ -179,10 +183,27 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           separatorBuilder: (_, _) => Gap.h4,
           itemBuilder: (context, index) {
             final listing = feed.items[index];
-            return ListingCardTile(
+            final card = ListingCardTile(
               listing: listing,
               onTap: () => context.push('/listing/${listing.id}'),
             );
+            // Only the first screenful is staggered. Delaying by index all the
+            // way down means page four arrives seconds after it is scrolled
+            // to, which reads as the app being slow rather than as motion.
+            if (index >= 4) return card;
+            return card
+                .animate()
+                .fadeIn(
+                  delay: Duration(milliseconds: 60 * index),
+                  duration: M3Motion.medium3,
+                )
+                .slideY(
+                  begin: 0.05,
+                  end: 0,
+                  delay: Duration(milliseconds: 60 * index),
+                  duration: M3Motion.medium4,
+                  curve: M3Motion.emphasizedDecelerate,
+                );
           },
         ),
       ),

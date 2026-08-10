@@ -121,6 +121,29 @@ class LEn extends L {
   String get feedEnd => 'That\'s everything';
 
   @override
+  String get bannerVerifyTitle => 'Raise your trust score';
+
+  @override
+  String get bannerVerifyBody =>
+      'A verified profile gets twice as many replies to an offer.';
+
+  @override
+  String get bannerVerifyAction => 'Get verified';
+
+  @override
+  String get bannerCreateTitle => 'Something spare at home?';
+
+  @override
+  String get bannerCreateBody =>
+      'Post a listing — we\'ll find the traders that fit.';
+
+  @override
+  String get bannerCreateAction => 'Post a listing';
+
+  @override
+  String get bannerDismiss => 'Dismiss';
+
+  @override
   String get feedPostedAt => 'Posted';
 
   @override

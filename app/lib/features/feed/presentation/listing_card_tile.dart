@@ -26,10 +26,10 @@ class ListingCardTile extends StatelessWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
+    return Pressable(
+      onTap: onTap,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

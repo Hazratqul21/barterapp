@@ -19,6 +19,7 @@ import '../../features/trade/presentation/notifications_page.dart';
 import '../../features/trade/presentation/offer_page.dart';
 import '../../features/trade/presentation/trader_profile_page.dart';
 import 'app_shell.dart';
+import 'transitions.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
@@ -37,19 +38,22 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const SplashPage(),
+        pageBuilder: (context, state) =>
+            fadePage(key: state.pageKey, child: const SplashPage()),
       ),
       GoRoute(
         path: '/intro',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const IntroPage(),
+        pageBuilder: (context, state) =>
+            fadePage(key: state.pageKey, child: const IntroPage()),
       ),
       // The profile and every signed-out prompt push here. The route was
       // missing entirely, so "Kirish" landed on go_router's error page.
       GoRoute(
         path: '/signin',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const SignInPage(),
+        pageBuilder: (context, state) =>
+            risingPage(key: state.pageKey, child: const SignInPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(navigationShell: shell),
@@ -93,61 +97,76 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/settings',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const SettingsPage(),
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const SettingsPage()),
       ),
       GoRoute(
         path: '/listing/:id',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) =>
-            ListingDetailPage(listingId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: ListingDetailPage(listingId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/chat/:id',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) =>
-            ChatPage(conversationId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: ChatPage(conversationId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/offer/:listingId',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) =>
-            OfferPage(listingId: state.pathParameters['listingId']!),
+        pageBuilder: (context, state) => risingPage(
+          key: state.pageKey,
+          child: OfferPage(listingId: state.pathParameters['listingId']!),
+        ),
       ),
       GoRoute(
         path: '/trader/:id',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) =>
-            TraderProfilePage(traderId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: TraderProfilePage(traderId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/create',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const CreateListingPage(),
+        pageBuilder: (context, state) =>
+            risingPage(key: state.pageKey, child: const CreateListingPage()),
       ),
       GoRoute(
         path: '/notifications',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const NotificationsPage(),
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const NotificationsPage()),
       ),
       GoRoute(
         path: '/settings/verify',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const VerificationPage(),
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const VerificationPage()),
       ),
       GoRoute(
         path: '/settings/payments',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const PaymentsPage(),
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const PaymentsPage()),
       ),
       GoRoute(
         path: '/onboarding',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const ProfileEditPage(isOnboarding: true),
+        pageBuilder: (context, state) =>
+            risingPage(key: state.pageKey, child: const ProfileEditPage(isOnboarding: true)),
       ),
       GoRoute(
         path: '/settings/profile',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const ProfileEditPage(isOnboarding: false),
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const ProfileEditPage(isOnboarding: false)),
       ),
     ],
   );

@@ -309,6 +309,48 @@ abstract class L {
   /// **'Hammasi shu'**
   String get feedEnd;
 
+  /// No description provided for @bannerVerifyTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ishonch darajangizni oshiring'**
+  String get bannerVerifyTitle;
+
+  /// No description provided for @bannerVerifyBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlangan profil taklifga ikki barobar ko‘p javob oladi.'**
+  String get bannerVerifyBody;
+
+  /// No description provided for @bannerVerifyAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlash'**
+  String get bannerVerifyAction;
+
+  /// No description provided for @bannerCreateTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ortiqcha narsangiz bormi?'**
+  String get bannerCreateTitle;
+
+  /// No description provided for @bannerCreateBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.'**
+  String get bannerCreateBody;
+
+  /// No description provided for @bannerCreateAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon joylash'**
+  String get bannerCreateAction;
+
+  /// No description provided for @bannerDismiss.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yopish'**
+  String get bannerDismiss;
+
   /// No description provided for @feedPostedAt.
   ///
   /// In uz, this message translates to:

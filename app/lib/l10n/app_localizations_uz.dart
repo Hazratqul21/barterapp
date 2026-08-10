@@ -122,6 +122,29 @@ class LUz extends L {
   String get feedEnd => 'Hammasi shu';
 
   @override
+  String get bannerVerifyTitle => 'Ishonch darajangizni oshiring';
+
+  @override
+  String get bannerVerifyBody =>
+      'Tasdiqlangan profil taklifga ikki barobar ko‘p javob oladi.';
+
+  @override
+  String get bannerVerifyAction => 'Tasdiqlash';
+
+  @override
+  String get bannerCreateTitle => 'Ortiqcha narsangiz bormi?';
+
+  @override
+  String get bannerCreateBody =>
+      'E’lon joylang — sizga mos savdogarlarni o‘zimiz topamiz.';
+
+  @override
+  String get bannerCreateAction => 'E’lon joylash';
+
+  @override
+  String get bannerDismiss => 'Yopish';
+
+  @override
   String get feedPostedAt => 'Joylangan';
 
   @override

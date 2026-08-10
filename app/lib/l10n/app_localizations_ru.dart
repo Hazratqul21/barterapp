@@ -121,6 +121,29 @@ class LRu extends L {
   String get feedEnd => 'Это все';
 
   @override
+  String get bannerVerifyTitle => 'Повысьте уровень доверия';
+
+  @override
+  String get bannerVerifyBody =>
+      'Проверенный профиль получает вдвое больше ответов.';
+
+  @override
+  String get bannerVerifyAction => 'Пройти проверку';
+
+  @override
+  String get bannerCreateTitle => 'Есть что-то лишнее?';
+
+  @override
+  String get bannerCreateBody =>
+      'Разместите объявление — подходящих партнёров найдём сами.';
+
+  @override
+  String get bannerCreateAction => 'Разместить';
+
+  @override
+  String get bannerDismiss => 'Закрыть';
+
+  @override
   String get feedPostedAt => 'Опубликовано';
 
   @override

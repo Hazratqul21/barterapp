@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -497,6 +498,55 @@ class SignInPrompt extends StatelessWidget {
       hint: reason,
       actionLabel: l.authSignIn,
       onAction: () => context.push('/signin'),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Touch response
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A card that answers the finger before the screen changes.
+///
+/// A ripple spreading under a photograph is invisible, so a feed card used to
+/// give no sign it had been pressed until the next screen arrived — which on a
+/// slow connection is long enough to press again. This dips the whole card
+/// instead: the response is instant and does not depend on what is underneath.
+class Pressable extends StatefulWidget {
+  const Pressable({super.key, required this.child, required this.onTap});
+
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _down = false;
+
+  void _set(bool value) {
+    if (_down != value) setState(() => _down = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        // Small enough to feel rather than to watch. Anything deeper reads as
+        // the card falling away from the finger.
+        scale: _down ? 0.977 : 1,
+        duration: _down ? M3Motion.short2 : M3Motion.medium1,
+        curve: M3Motion.emphasizedDecelerate,
+        child: widget.child,
+      ),
     );
   }
 }
