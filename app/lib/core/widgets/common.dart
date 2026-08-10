@@ -605,22 +605,7 @@ class CategoryTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: M3Motion.short4,
-                curve: M3Motion.standard,
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: selected ? style.color : style.tint,
-                  shape: BoxShape.circle,
-                  boxShadow: selected ? Shadows.raised : null,
-                ),
-                child: Icon(
-                  style.icon,
-                  size: 28,
-                  color: selected ? Colors.white : style.color,
-                ),
-              ),
+              _CategoryMedallion(style: style, selected: selected),
               Gap.h2,
               SizedBox(
                 // Wide enough for "Qishloq xo'jaligi" and "Строительство" to
@@ -641,6 +626,73 @@ class CategoryTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The category symbol itself.
+///
+/// A flat pastel circle with a hairline outline symbol inside is what every
+/// marketplace ships, and it looked like a placeholder. Four things carry the
+/// weight here, and each one is doing a job:
+///
+/// * **A squircle, not a circle.** Continuous corners read as drawn rather than
+///   as the default shape a framework hands you.
+/// * **A gradient, not a flat tint.** Two stops of the same hue give the tile a
+///   light source, which is most of what separates a crafted icon from a fill.
+/// * **A solid symbol.** Material Symbols are a variable font: `fill: 1` with a
+///   heavier optical weight turns the thin outline into a real mark that holds
+///   up at 30 pixels.
+/// * **A shadow in the tile's own colour.** A grey drop shadow under a green
+///   tile looks like dirt; the hue makes it look like light.
+class _CategoryMedallion extends StatelessWidget {
+  const _CategoryMedallion({required this.style, required this.selected});
+
+  final CategoryStyle style;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    // Selected fills with the category's own colour; at rest it is the pale
+    // tint lifted toward white at the top so the light falls from above.
+    final top = selected
+        ? Color.lerp(style.color, Colors.white, 0.22)!
+        : Color.lerp(style.tint, Colors.white, 0.55)!;
+    final bottom = selected ? style.color : style.tint;
+
+    return AnimatedContainer(
+      duration: M3Motion.medium1,
+      curve: M3Motion.emphasized,
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [top, bottom],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        // A rim of the tile's own colour rather than a grey outline: it defines
+        // the edge on a pale page without reading as a border.
+        border: Border.all(
+          color: style.color.withValues(alpha: selected ? 0.0 : 0.14),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: style.color.withValues(alpha: selected ? 0.32 : 0.14),
+            blurRadius: selected ? 16 : 10,
+            offset: Offset(0, selected ? 6 : 3),
+          ),
+        ],
+      ),
+      child: Icon(
+        style.icon,
+        size: 30,
+        fill: 1,
+        weight: 500,
+        opticalSize: 24,
+        color: selected ? Colors.white : style.color,
       ),
     );
   }

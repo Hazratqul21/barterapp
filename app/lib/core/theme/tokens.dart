@@ -167,17 +167,17 @@ class CategoryStyle {
 
   static const _styles = <ListingTag, CategoryStyle>{
     ListingTag.agri: CategoryStyle(
-      icon: Symbols.agriculture_rounded,
+      icon: Symbols.grass_rounded,
       color: Color(0xFF15803D),
       tint: Color(0xFFDCFCE7),
     ),
     ListingTag.livestock: CategoryStyle(
-      icon: Symbols.pet_supplies_rounded,
+      icon: Symbols.pets_rounded,
       color: Color(0xFFA16207),
       tint: Color(0xFFFEF3C7),
     ),
     ListingTag.machinery: CategoryStyle(
-      icon: Symbols.precision_manufacturing_rounded,
+      icon: Symbols.agriculture_rounded,
       color: Color(0xFFC2410C),
       tint: Color(0xFFFFEDD5),
     ),
@@ -187,12 +187,12 @@ class CategoryStyle {
       tint: Color(0xFFDBEAFE),
     ),
     ListingTag.electronics: CategoryStyle(
-      icon: Symbols.devices_rounded,
+      icon: Symbols.memory_rounded,
       color: Color(0xFF6D28D9),
       tint: Color(0xFFEDE9FE),
     ),
     ListingTag.construction: CategoryStyle(
-      icon: Symbols.construction_rounded,
+      icon: Symbols.foundation_rounded,
       color: Color(0xFFB91C1C),
       tint: Color(0xFFFEE2E2),
     ),
