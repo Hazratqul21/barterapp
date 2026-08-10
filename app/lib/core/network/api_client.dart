@@ -15,6 +15,18 @@ String defaultApiBaseUrl() {
   const override = String.fromEnvironment('API_BASE_URL');
   if (override.isNotEmpty) return override;
 
+  // A release build has no business talking to a laptop. Without this, a
+  // store build compiled without the define would install, open, and fail
+  // every request in silence — which looks like a broken server, not a
+  // broken build, and is found by users rather than by whoever shipped it.
+  if (kReleaseMode) {
+    throw StateError(
+      'API_BASE_URL berilmagan. Reliz quring:\n'
+      '  flutter build web --dart-define=API_BASE_URL=https://api.example.uz',
+    );
+  }
+
+  // The Android emulator reaches the host machine on 10.0.2.2, not localhost.
   if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:8010';
   return 'http://127.0.0.1:8010';
 }

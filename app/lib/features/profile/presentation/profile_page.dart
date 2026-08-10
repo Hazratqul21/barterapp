@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../core/router/web_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -44,11 +45,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     final theme = Theme.of(context);
     final isAuthed = ref.watch(authStateProvider);
 
+    // The desktop sidebar already carries settings at its foot. Offering the
+    // same door twice on one screen is not two ways in, it is one more thing
+    // to read past.
+    final showSettings =
+        MediaQuery.sizeOf(context).width < kWebBreakpoint;
+
     if (!isAuthed) {
       return Scaffold(
         appBar: AppBar(
           title: Text(l.profileTitle),
-          actions: [_SettingsAction(label: l.navSettings)],
+          actions: [
+            if (showSettings) _SettingsAction(label: l.navSettings),
+          ],
         ),
         body: Center(
           child: Padding(
@@ -87,7 +96,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     return Scaffold(
       appBar: AppBar(
         title: Text(l.profileTitle),
-        actions: [_SettingsAction(label: l.navSettings)],
+        actions: [
+          if (showSettings) _SettingsAction(label: l.navSettings),
+        ],
       ),
       body: meAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
