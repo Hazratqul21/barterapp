@@ -144,8 +144,8 @@ class SwapBanner extends StatelessWidget {
 
     return SizedBox(
       height: height,
-      child: ClipRRect(
-        borderRadius: borderRadius,
+      child: ClipPath(
+        clipper: _SweptBottom(borderRadius.topLeft.x),
         child: DecoratedBox(
           decoration: BoxDecoration(gradient: p.swapGradient),
           child: const GirihField(
@@ -158,4 +158,64 @@ class SwapBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The band's lower edge: a single shallow curve rather than two corner radii.
+///
+/// A rounded rectangle is what every app's header does. One bezier sweeping
+/// across the full width reads as hand-drawn — closer to the tilework above it
+/// — and it costs nothing extra to paint.
+///
+/// The drop is deliberately small. The classified-app pattern this borrows from
+/// dips 80 logical pixels, which swallows the first row of content and dates
+/// the screen to about 2019; at [_drop] the curve is felt more than seen.
+class _SweptBottom extends CustomClipper<Path> {
+  const _SweptBottom(this.topRadius);
+
+  /// Matches the radius the banner used before, so the top corners are
+  /// unchanged and only the bottom edge is new.
+  final double topRadius;
+
+  @override
+  Path getClip(Size size) {
+    final r = topRadius.clamp(0.0, size.width / 2);
+
+    // Proportional to the width, so the curvature is the same on a phone and
+    // on a desktop pane. A fixed drop looked right at 375 logical pixels and
+    // flattened into what read as a misaligned edge across a 900-pixel shell.
+    final drop = (size.width * 0.055).clamp(18.0, 44.0);
+
+    // Small radii where the curve meets the vertical sides. Without them the
+    // sweep arrives at the edge on a slope and leaves a visible kink.
+    const corner = 18.0;
+
+    return Path()
+      ..moveTo(0, r)
+      ..arcToPoint(Offset(r, 0), radius: Radius.circular(r))
+      ..lineTo(size.width - r, 0)
+      ..arcToPoint(Offset(size.width, r), radius: Radius.circular(r))
+      ..lineTo(size.width, size.height - drop - corner)
+      ..arcToPoint(
+        Offset(size.width - corner, size.height - drop),
+        radius: const Radius.circular(corner),
+        clockwise: true,
+      )
+      // One control point at the midpoint, so the curve is symmetric and its
+      // deepest point sits under the search field rather than off to one side.
+      ..quadraticBezierTo(
+        size.width / 2,
+        size.height + drop,
+        corner,
+        size.height - drop,
+      )
+      ..arcToPoint(
+        Offset(0, size.height - drop - corner),
+        radius: const Radius.circular(corner),
+        clockwise: true,
+      )
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(_SweptBottom old) => old.topRadius != topRadius;
 }

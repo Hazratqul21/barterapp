@@ -303,3 +303,23 @@ paytda CDN dan kelmay qoladigan Lottie animatsiyasidan farqli.
 **Wallpaper qayerda ishlatiladi:** intro, kirish, profil sozlash, tasdiqlash.
 Ya'ni o'z rasmi yo'q ekranlarda. E'lonlar lentasi kabi fotosuratga to'la
 ekranlarda fon tekis qoladi — aks holda ikkita narsa e'tibor uchun kurashadi.
+
+### Koddan olingan yagona narsa
+
+Assetlardan farqli, `flutter_classified_app` kodidagi bitta g'oya foydali
+chiqdi: `CustomShapeClipper` — sarlavhaning pastki chetini bezier egri
+chizig'i bilan kesish. Uni ko'chirib olmadik (u kod null-safety'dan oldingi,
+2019 yilgi), lekin usulni oldik va `SwapBanner` ga o'zimizcha chizdik:
+
+- egrilik kenglikka mutanosib (`width * 0.055`, 18–44 orasida qisilgan) —
+  aks holda telefonda to'g'ri ko'rinadigan qat'iy chuqurlik desktopda
+  qiyshaygan chekka bo'lib qoladi;
+- pastki burchaklar 18px radius bilan yumaloqlangan — manbadagi variantda
+  egri chiziq yon chetga qiya kelib, ko'zga tashlanadigan siniq hosil qiladi;
+- chuqurlik manbadagi 80px o'rniga ancha kichik — 80px kontentning birinchi
+  qatorini yutib yuboradi va ekranni 2019 yilga qaytaradi.
+
+Qolgan kod olinmadi va olinmaydi: `StatelessWidget` da o'zgaruvchan public
+maydonlar, `MediaQuery.height / 40` bilan shrift o'lchami, qattiq kodlangan
+ranglar, animatsiya listenerida `setState` (har kadrda butun daraxtni qayta
+quradi). Bizdagi `flutter_animate` va dizayn tokenlari bundan ancha ustun.
