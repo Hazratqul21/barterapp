@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -410,13 +411,27 @@ class _DealPanel extends ConsumerWidget {
         offer.status == OfferStatus.pending ||
         offer.status == OfferStatus.talking;
 
-    return Container(
+    return AnimatedContainer(
+      // Accepting or countering changes both the buttons and the height of
+      // this panel. Without the animation the messages below jump, and the
+      // moment a trade is agreed — the one moment this product exists for —
+      // reads as a glitch.
+      duration: M3Motion.medium3,
+      curve: M3Motion.emphasized,
       margin: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, 0),
       padding: const EdgeInsets.all(Gap.x4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: Radii.rLg,
-        border: Border.all(color: p.hair),
+        border: Border.all(
+          // The border picks up the status colour once the deal is settled,
+          // so the panel itself says where things stand.
+          color: switch (offer.status) {
+            OfferStatus.accepted || OfferStatus.completed => p.give,
+            OfferStatus.declined => theme.colorScheme.error,
+            _ => p.hair,
+          },
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -436,6 +451,8 @@ class _DealPanel extends ConsumerWidget {
             takeCaption: offer.isMine ? l.dealYouGet : l.dealYouGive,
             takeLabel: offer.wanted.title,
           ),
+          // AnimatedSize so the panel grows and shrinks with its own actions
+          // instead of snapping between two heights.
           if (open && awaitingMe) ...[
             Gap.h4,
             Row(
