@@ -1197,6 +1197,12 @@ abstract class L {
   /// **'Suhbatlaringizni ko‘rish uchun hisobga kiring.'**
   String get inboxSignIn;
 
+  /// No description provided for @accountSignIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu bo‘lim hisobingizga bog‘liq. Davom etish uchun kiring.'**
+  String get accountSignIn;
+
   /// No description provided for @matchesSignIn.
   ///
   /// In uz, this message translates to:
@@ -1244,6 +1250,24 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Yangi bildirishnoma yo‘q.'**
   String get notificationsEmpty;
+
+  /// No description provided for @notifyToday.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bugun'**
+  String get notifyToday;
+
+  /// No description provided for @notifyEarlier.
+  ///
+  /// In uz, this message translates to:
+  /// **'Oldinroq'**
+  String get notifyEarlier;
+
+  /// No description provided for @notificationsEmptyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Taklif, moslik va xabarlar shu yerda ko‘rinadi.'**
+  String get notificationsEmptyHint;
 
   /// No description provided for @notificationsMarkAll.
   ///
@@ -1473,6 +1497,84 @@ abstract class L {
   /// **'Tasdiqlash bosqichlari'**
   String get verifySteps;
 
+  /// No description provided for @verifyStepPhone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Telefon raqami'**
+  String get verifyStepPhone;
+
+  /// No description provided for @verifyStepPhoneHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'SMS orqali tasdiqlanadi'**
+  String get verifyStepPhoneHint;
+
+  /// No description provided for @verifyStepPassport.
+  ///
+  /// In uz, this message translates to:
+  /// **'Pasport'**
+  String get verifyStepPassport;
+
+  /// No description provided for @verifyStepPassportHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Pasport yoki JSHSHIR'**
+  String get verifyStepPassportHint;
+
+  /// No description provided for @verifyStepBusiness.
+  ///
+  /// In uz, this message translates to:
+  /// **'Korxona'**
+  String get verifyStepBusiness;
+
+  /// No description provided for @verifyStepBusinessHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Korxona hujjatlari'**
+  String get verifyStepBusinessHint;
+
+  /// No description provided for @verifyStepBank.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bank hisobi'**
+  String get verifyStepBank;
+
+  /// No description provided for @verifyStepBankHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Escrow to‘lovlari uchun'**
+  String get verifyStepBankHint;
+
+  /// No description provided for @verifyStepVideo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video selfi'**
+  String get verifyStepVideo;
+
+  /// No description provided for @verifyStepVideoHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'30 soniyalik selfi video'**
+  String get verifyStepVideoHint;
+
+  /// No description provided for @verifyProgress.
+  ///
+  /// In uz, this message translates to:
+  /// **'{score} balldan 100'**
+  String verifyProgress(int score);
+
+  /// No description provided for @verifyHeadline.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ishonch darajangiz'**
+  String get verifyHeadline;
+
+  /// No description provided for @verifyIntro.
+  ///
+  /// In uz, this message translates to:
+  /// **'Har bir tasdiqlangan qadam ishonch balingizni oshiradi — ball qancha yuqori bo‘lsa, taklifingizga shuncha ko‘p javob keladi.'**
+  String get verifyIntro;
+
   /// No description provided for @verifySubmit.
   ///
   /// In uz, this message translates to:
@@ -1532,6 +1634,42 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Hali to‘lov qilinmagan.'**
   String get paymentsEmpty;
+
+  /// No description provided for @paymentsCards.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kartalar'**
+  String get paymentsCards;
+
+  /// No description provided for @paymentsNoCards.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta biriktirilmagan'**
+  String get paymentsNoCards;
+
+  /// No description provided for @paymentsNoCardsHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Escrow va pul ustamasi uchun karta kerak bo‘ladi.'**
+  String get paymentsNoCardsHint;
+
+  /// No description provided for @paymentsEmptyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kelishuv yakunlangach, pul harakati shu yerda ko‘rinadi.'**
+  String get paymentsEmptyHint;
+
+  /// No description provided for @paymentsIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kirim'**
+  String get paymentsIn;
+
+  /// No description provided for @paymentsOut.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chiqim'**
+  String get paymentsOut;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

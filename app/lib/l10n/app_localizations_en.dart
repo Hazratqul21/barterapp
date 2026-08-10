@@ -587,6 +587,10 @@ class LEn extends L {
   String get inboxSignIn => 'Sign in to see your conversations.';
 
   @override
+  String get accountSignIn =>
+      'This section belongs to your account. Sign in to continue.';
+
+  @override
   String get matchesSignIn =>
       'Matches are found from your own listings — sign in first.';
 
@@ -616,6 +620,16 @@ class LEn extends L {
 
   @override
   String get notificationsEmpty => 'Nothing new right now.';
+
+  @override
+  String get notifyToday => 'Today';
+
+  @override
+  String get notifyEarlier => 'Earlier';
+
+  @override
+  String get notificationsEmptyHint =>
+      'Offers, matches and messages show up here.';
 
   @override
   String get notificationsMarkAll => 'Mark all as read';
@@ -738,6 +752,48 @@ class LEn extends L {
   String get verifySteps => 'Verification steps';
 
   @override
+  String get verifyStepPhone => 'Phone number';
+
+  @override
+  String get verifyStepPhoneHint => 'Confirmed by SMS';
+
+  @override
+  String get verifyStepPassport => 'Passport';
+
+  @override
+  String get verifyStepPassportHint => 'Passport or PINFL';
+
+  @override
+  String get verifyStepBusiness => 'Business';
+
+  @override
+  String get verifyStepBusinessHint => 'Company documents';
+
+  @override
+  String get verifyStepBank => 'Bank account';
+
+  @override
+  String get verifyStepBankHint => 'For escrow payments';
+
+  @override
+  String get verifyStepVideo => 'Video selfie';
+
+  @override
+  String get verifyStepVideoHint => 'A 30-second selfie video';
+
+  @override
+  String verifyProgress(int score) {
+    return '$score of 100';
+  }
+
+  @override
+  String get verifyHeadline => 'Your trust level';
+
+  @override
+  String get verifyIntro =>
+      'Every confirmed step raises your trust score — the higher it is, the more often people answer your offers.';
+
+  @override
   String get verifySubmit => 'Submit';
 
   @override
@@ -766,4 +822,24 @@ class LEn extends L {
 
   @override
   String get paymentsEmpty => 'No settlements yet.';
+
+  @override
+  String get paymentsCards => 'Cards';
+
+  @override
+  String get paymentsNoCards => 'No card linked';
+
+  @override
+  String get paymentsNoCardsHint =>
+      'A card is needed for escrow and cash top-ups.';
+
+  @override
+  String get paymentsEmptyHint =>
+      'Money movement shows up here once a deal completes.';
+
+  @override
+  String get paymentsIn => 'In';
+
+  @override
+  String get paymentsOut => 'Out';
 }

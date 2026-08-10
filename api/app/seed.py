@@ -733,7 +733,7 @@ async def run() -> None:
                 user_id=users["me"].id, kind="match", target_type="matches",
                 target_id=None,
                 title="95% moslik topildi",
-                body="40 t guruch ↔ MTZ-892 traktor",
+                body="40 t guruch · MTZ-892 traktor",
                 avatar_url=IMG["tractor_alt"],
                 created_at=NOW - timedelta(hours=3),
             ),

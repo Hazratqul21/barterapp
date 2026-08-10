@@ -235,6 +235,9 @@ abstract final class M3Motion {
   static const long3 = Duration(milliseconds: 550);
   static const long4 = Duration(milliseconds: 600);
   static const extraLong1 = Duration(milliseconds: 700);
+  static const extraLong2 = Duration(milliseconds: 800);
+  static const extraLong3 = Duration(milliseconds: 900);
+  static const extraLong4 = Duration(milliseconds: 1000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

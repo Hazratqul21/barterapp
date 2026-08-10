@@ -588,6 +588,10 @@ class LRu extends L {
   String get inboxSignIn => 'Войдите, чтобы увидеть свои разговоры.';
 
   @override
+  String get accountSignIn =>
+      'Этот раздел привязан к вашему аккаунту. Войдите, чтобы продолжить.';
+
+  @override
   String get matchesSignIn =>
       'Совпадения ищутся по вашим объявлениям — сначала войдите.';
 
@@ -617,6 +621,16 @@ class LRu extends L {
 
   @override
   String get notificationsEmpty => 'Новых уведомлений нет.';
+
+  @override
+  String get notifyToday => 'Сегодня';
+
+  @override
+  String get notifyEarlier => 'Ранее';
+
+  @override
+  String get notificationsEmptyHint =>
+      'Предложения, совпадения и сообщения появятся здесь.';
 
   @override
   String get notificationsMarkAll => 'Отметить всё прочитанным';
@@ -739,6 +753,48 @@ class LRu extends L {
   String get verifySteps => 'Этапы проверки';
 
   @override
+  String get verifyStepPhone => 'Номер телефона';
+
+  @override
+  String get verifyStepPhoneHint => 'Подтверждается по SMS';
+
+  @override
+  String get verifyStepPassport => 'Паспорт';
+
+  @override
+  String get verifyStepPassportHint => 'Паспорт или ПИНФЛ';
+
+  @override
+  String get verifyStepBusiness => 'Компания';
+
+  @override
+  String get verifyStepBusinessHint => 'Документы компании';
+
+  @override
+  String get verifyStepBank => 'Банковский счёт';
+
+  @override
+  String get verifyStepBankHint => 'Для эскроу-платежей';
+
+  @override
+  String get verifyStepVideo => 'Видеоселфи';
+
+  @override
+  String get verifyStepVideoHint => 'Селфи-видео на 30 секунд';
+
+  @override
+  String verifyProgress(int score) {
+    return '$score из 100';
+  }
+
+  @override
+  String get verifyHeadline => 'Ваш уровень доверия';
+
+  @override
+  String get verifyIntro =>
+      'Каждый подтверждённый шаг повышает балл доверия — чем он выше, тем чаще отвечают на ваши предложения.';
+
+  @override
   String get verifySubmit => 'Отправить';
 
   @override
@@ -767,4 +823,23 @@ class LRu extends L {
 
   @override
   String get paymentsEmpty => 'Платежей пока не было.';
+
+  @override
+  String get paymentsCards => 'Карты';
+
+  @override
+  String get paymentsNoCards => 'Карта не привязана';
+
+  @override
+  String get paymentsNoCardsHint => 'Карта понадобится для эскроу и доплаты.';
+
+  @override
+  String get paymentsEmptyHint =>
+      'Движение денег появится здесь после завершения сделки.';
+
+  @override
+  String get paymentsIn => 'Поступление';
+
+  @override
+  String get paymentsOut => 'Списание';
 }

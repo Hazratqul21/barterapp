@@ -239,6 +239,7 @@
   "inboxEmptyHint": "Suhbat taklif bilan boshlanadi. Yoqqan e’longa taklif yuboring.",
   "inboxPickThread": "Chapdan suhbat tanlang.",
   "inboxSignIn": "Suhbatlaringizni ko‘rish uchun hisobga kiring.",
+  "accountSignIn": "Bu bo‘lim hisobingizga bog‘liq. Davom etish uchun kiring.",
   "matchesSignIn": "Mosliklar sizning e’lonlaringizga qarab topiladi — avval hisobga kiring.",
   "agoNow": "hozir",
   "agoMinutes": "{count} daq",
@@ -268,6 +269,9 @@
   "matchesOffer": "Taklif yuborish",
   "notificationsTitle": "Bildirishnomalar",
   "notificationsEmpty": "Yangi bildirishnoma yo‘q.",
+  "notifyToday": "Bugun",
+  "notifyEarlier": "Oldinroq",
+  "notificationsEmptyHint": "Taklif, moslik va xabarlar shu yerda ko‘rinadi.",
   "notificationsMarkAll": "Hammasini o‘qilgan qilish",
   "createTitle": "Barter yaratish",
   "createGive": "Nima beraman",
@@ -306,6 +310,26 @@
   "verifyTitle": "Xavfsizlik va tasdiqlash",
   "verifyLevel": "Ishonch darajasi",
   "verifySteps": "Tasdiqlash bosqichlari",
+  "verifyStepPhone": "Telefon raqami",
+  "verifyStepPhoneHint": "SMS orqali tasdiqlanadi",
+  "verifyStepPassport": "Pasport",
+  "verifyStepPassportHint": "Pasport yoki JSHSHIR",
+  "verifyStepBusiness": "Korxona",
+  "verifyStepBusinessHint": "Korxona hujjatlari",
+  "verifyStepBank": "Bank hisobi",
+  "verifyStepBankHint": "Escrow to‘lovlari uchun",
+  "verifyStepVideo": "Video selfi",
+  "verifyStepVideoHint": "30 soniyalik selfi video",
+  "verifyProgress": "{score} balldan 100",
+  "@verifyProgress": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyHeadline": "Ishonch darajangiz",
+  "verifyIntro": "Har bir tasdiqlangan qadam ishonch balingizni oshiradi — ball qancha yuqori bo‘lsa, taklifingizga shuncha ko‘p javob keladi.",
   "verifySubmit": "Yuborish",
   "verifyDone": "Tasdiqlangan",
   "verifyPending": "Tekshiruvda",
@@ -315,5 +339,11 @@
   "paymentsMakePrimary": "Asosiy qilish",
   "paymentsRemove": "O‘chirish",
   "paymentsHistory": "Oxirgi to‘lovlar",
-  "paymentsEmpty": "Hali to‘lov qilinmagan."
+  "paymentsEmpty": "Hali to‘lov qilinmagan.",
+  "paymentsCards": "Kartalar",
+  "paymentsNoCards": "Karta biriktirilmagan",
+  "paymentsNoCardsHint": "Escrow va pul ustamasi uchun karta kerak bo‘ladi.",
+  "paymentsEmptyHint": "Kelishuv yakunlangach, pul harakati shu yerda ko‘rinadi.",
+  "paymentsIn": "Kirim",
+  "paymentsOut": "Chiqim"
 }

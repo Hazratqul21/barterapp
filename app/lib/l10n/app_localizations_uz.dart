@@ -588,6 +588,10 @@ class LUz extends L {
   String get inboxSignIn => 'Suhbatlaringizni ko‘rish uchun hisobga kiring.';
 
   @override
+  String get accountSignIn =>
+      'Bu bo‘lim hisobingizga bog‘liq. Davom etish uchun kiring.';
+
+  @override
   String get matchesSignIn =>
       'Mosliklar sizning e’lonlaringizga qarab topiladi — avval hisobga kiring.';
 
@@ -617,6 +621,16 @@ class LUz extends L {
 
   @override
   String get notificationsEmpty => 'Yangi bildirishnoma yo‘q.';
+
+  @override
+  String get notifyToday => 'Bugun';
+
+  @override
+  String get notifyEarlier => 'Oldinroq';
+
+  @override
+  String get notificationsEmptyHint =>
+      'Taklif, moslik va xabarlar shu yerda ko‘rinadi.';
 
   @override
   String get notificationsMarkAll => 'Hammasini o‘qilgan qilish';
@@ -739,6 +753,48 @@ class LUz extends L {
   String get verifySteps => 'Tasdiqlash bosqichlari';
 
   @override
+  String get verifyStepPhone => 'Telefon raqami';
+
+  @override
+  String get verifyStepPhoneHint => 'SMS orqali tasdiqlanadi';
+
+  @override
+  String get verifyStepPassport => 'Pasport';
+
+  @override
+  String get verifyStepPassportHint => 'Pasport yoki JSHSHIR';
+
+  @override
+  String get verifyStepBusiness => 'Korxona';
+
+  @override
+  String get verifyStepBusinessHint => 'Korxona hujjatlari';
+
+  @override
+  String get verifyStepBank => 'Bank hisobi';
+
+  @override
+  String get verifyStepBankHint => 'Escrow to‘lovlari uchun';
+
+  @override
+  String get verifyStepVideo => 'Video selfi';
+
+  @override
+  String get verifyStepVideoHint => '30 soniyalik selfi video';
+
+  @override
+  String verifyProgress(int score) {
+    return '$score balldan 100';
+  }
+
+  @override
+  String get verifyHeadline => 'Ishonch darajangiz';
+
+  @override
+  String get verifyIntro =>
+      'Har bir tasdiqlangan qadam ishonch balingizni oshiradi — ball qancha yuqori bo‘lsa, taklifingizga shuncha ko‘p javob keladi.';
+
+  @override
   String get verifySubmit => 'Yuborish';
 
   @override
@@ -767,4 +823,24 @@ class LUz extends L {
 
   @override
   String get paymentsEmpty => 'Hali to‘lov qilinmagan.';
+
+  @override
+  String get paymentsCards => 'Kartalar';
+
+  @override
+  String get paymentsNoCards => 'Karta biriktirilmagan';
+
+  @override
+  String get paymentsNoCardsHint =>
+      'Escrow va pul ustamasi uchun karta kerak bo‘ladi.';
+
+  @override
+  String get paymentsEmptyHint =>
+      'Kelishuv yakunlangach, pul harakati shu yerda ko‘rinadi.';
+
+  @override
+  String get paymentsIn => 'Kirim';
+
+  @override
+  String get paymentsOut => 'Chiqim';
 }
