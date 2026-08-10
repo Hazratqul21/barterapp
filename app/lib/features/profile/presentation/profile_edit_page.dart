@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../shared/models/models.dart';
@@ -125,133 +126,144 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         // yet, and a nameless trader cannot be seen on any card.
         automaticallyImplyLeading: !widget.isOnboarding,
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  Gap.x5,
-                  Gap.x5,
-                  Gap.x5,
-                  Gap.x10,
-                ),
-                children: [
-                  if (widget.isOnboarding) ...[
-                    Text(
-                      l.profileSetupLede,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: p.inkSoft,
-                      ),
-                    ),
-                    Gap.h6,
-                  ],
-
-                  // Not wrapped in a Center: inside a ListView that hands the
-                  // child an unbounded height, and the Column then stretched
-                  // instead of hugging the avatar.
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      PhotoWell(
-                        url: _avatarUrl,
-                        busy: _uploading,
-                        circular: true,
-                        size: Sizes.avatarXl,
-                        onTap: _pickPhoto,
-                        onRemove: () => setState(() => _avatarUrl = null),
-                      ),
-                      Gap.h2,
-                      TextButton(
-                        onPressed: _uploading ? null : _pickPhoto,
-                        child: Text(
-                          _uploading
-                              ? l.uploading
-                              : (_avatarUrl == null
-                                    ? l.profilePhotoPick
-                                    : l.profilePhotoChange),
+      // The wallpaper belongs on the screens with no pictures of their own,
+      // and profile setup is the first of those a new account meets — it was
+      // named in the design note and never wired up.
+      body: AuroraBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    Gap.x5,
+                    Gap.x5,
+                    Gap.x5,
+                    Gap.x10,
+                  ),
+                  children: [
+                    if (widget.isOnboarding) ...[
+                      Text(
+                        l.profileSetupLede,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: p.inkSoft,
                         ),
                       ),
+                      Gap.h6,
                     ],
-                  ),
-                  Gap.h5,
 
-                  TextFormField(
-                    controller: _firstName,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.givenName],
-                    decoration: InputDecoration(labelText: l.profileFirstName),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? l.profileRequired : null,
-                  ),
-                  Gap.h3,
-                  TextFormField(
-                    controller: _lastName,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.familyName],
-                    decoration: InputDecoration(labelText: l.profileLastName),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? l.profileRequired : null,
-                  ),
-                  Gap.h3,
-
-                  regionsAsync.when(
-                    loading: () => const SkeletonBox(height: Sizes.buttonLg),
-                    error: (_, _) => const SizedBox.shrink(),
-                    data: (regions) => DropdownButtonFormField<String>(
-                      initialValue: regions.contains(_region) ? _region : null,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: l.profileRegion,
-                        helperText: l.profileRegionHint,
-                        prefixIcon: const Icon(Symbols.location_on_rounded),
-                      ),
-                      items: [
-                        for (final r in regions)
-                          DropdownMenuItem(value: r, child: Text(r)),
+                    // Not wrapped in a Center: inside a ListView that hands the
+                    // child an unbounded height, and the Column then stretched
+                    // instead of hugging the avatar.
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        PhotoWell(
+                          url: _avatarUrl,
+                          busy: _uploading,
+                          circular: true,
+                          size: Sizes.avatarXl,
+                          onTap: _pickPhoto,
+                          onRemove: () => setState(() => _avatarUrl = null),
+                        ),
+                        Gap.h2,
+                        TextButton(
+                          onPressed: _uploading ? null : _pickPhoto,
+                          child: Text(
+                            _uploading
+                                ? l.uploading
+                                : (_avatarUrl == null
+                                      ? l.profilePhotoPick
+                                      : l.profilePhotoChange),
+                          ),
+                        ),
                       ],
-                      onChanged: _busy
+                    ),
+                    Gap.h5,
+
+                    TextFormField(
+                      controller: _firstName,
+                      enabled: !_busy,
+                      textCapitalization: TextCapitalization.words,
+                      autofillHints: const [AutofillHints.givenName],
+                      decoration: InputDecoration(
+                        labelText: l.profileFirstName,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l.profileRequired
+                          : null,
+                    ),
+                    Gap.h3,
+                    TextFormField(
+                      controller: _lastName,
+                      enabled: !_busy,
+                      textCapitalization: TextCapitalization.words,
+                      autofillHints: const [AutofillHints.familyName],
+                      decoration: InputDecoration(labelText: l.profileLastName),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l.profileRequired
+                          : null,
+                    ),
+                    Gap.h3,
+
+                    regionsAsync.when(
+                      loading: () => const SkeletonBox(height: Sizes.buttonLg),
+                      error: (_, _) => const SizedBox.shrink(),
+                      data: (regions) => DropdownButtonFormField<String>(
+                        initialValue: regions.contains(_region)
+                            ? _region
+                            : null,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: l.profileRegion,
+                          helperText: l.profileRegionHint,
+                          prefixIcon: const Icon(Symbols.location_on_rounded),
+                        ),
+                        items: [
+                          for (final r in regions)
+                            DropdownMenuItem(value: r, child: Text(r)),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) => setState(() => _region = v),
+                      ),
+                    ),
+                    Gap.h3,
+
+                    TextFormField(
+                      controller: _handle,
+                      enabled: !_busy,
+                      decoration: InputDecoration(
+                        labelText: l.profileHandle,
+                        helperText: l.profileHandleHint,
+                        prefixIcon: const Icon(Symbols.storefront_rounded),
+                      ),
+                    ),
+
+                    Gap.h8,
+                    FilledButton(
+                      onPressed: _busy || _uploading
                           ? null
-                          : (v) => setState(() => _region = v),
+                          : () {
+                              HapticFeedback.lightImpact();
+                              _save();
+                            },
+                      child: _busy
+                          ? const SizedBox(
+                              width: Sizes.iconLg,
+                              height: Sizes.iconLg,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l.profileSave),
                     ),
-                  ),
-                  Gap.h3,
-
-                  TextFormField(
-                    controller: _handle,
-                    enabled: !_busy,
-                    decoration: InputDecoration(
-                      labelText: l.profileHandle,
-                      helperText: l.profileHandleHint,
-                      prefixIcon: const Icon(Symbols.storefront_rounded),
-                    ),
-                  ),
-
-                  Gap.h8,
-                  FilledButton(
-                    onPressed: _busy || _uploading
-                        ? null
-                        : () {
-                            HapticFeedback.lightImpact();
-                            _save();
-                          },
-                    child: _busy
-                        ? const SizedBox(
-                            width: Sizes.iconLg,
-                            height: Sizes.iconLg,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(l.profileSave),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

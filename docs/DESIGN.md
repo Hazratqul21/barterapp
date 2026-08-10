@@ -272,3 +272,34 @@ Yangi ekran yoki komponent qo'shayotganda:
 5. **Ishlamaydigan tugma qo'shyapmanmi?** Qo'shmang. Ishlamaydigan tugma
    egallagan joyidan qimmatroq turadi: u odamga bu ilovaning tugmalari bezak
    ekanini o'rgatadi.
+
+## Tashqi assetlar auditi
+
+Desktopdagi `flutterdevs/` papkasi to'liq ko'rib chiqildi — undan hech narsa
+olinmadi, sababi:
+
+| Repo | Nima bor | Xulosa |
+|---|---|---|
+| `flutter_Ecommerce_UI_clone` | 32 ta PNG | Flipkart brendi (`flipkart-plus`, `fk-plus`) va mahsulot fotolari — birovning tovar belgisi |
+| `flutter_classified_app` | 20 ta PNG/JPG | Aeologic brendi, 2019 yildagi mahsulot fotolari |
+| `flutter_splash_app` | 3 ta skrinshot | Faqat demo rasmlari, asset emas |
+| `awesome-flutter` | Havolalar ro'yxati | Fayl yo'q; Animation bo'limidagi `flutter_animate` bizda allaqachon ishlatiladi |
+
+Butun papkada **birorta ham Lottie (`.json`) yoki Rive (`.riv`) fayli yo'q**,
+wallpaper ham yo'q. Shu sababli fon, illyustratsiya va naqshlarning hammasi
+kod bilan chizilgan:
+
+- `core/art/girih.dart` — Samarqand va Buxoro koshinlaridagi sakkiz burchakli
+  yulduz panjarasi (`CustomPainter`)
+- `core/art/illustrations.dart` — beshta illyustratsiya
+- `core/widgets/backgrounds.dart` — `AuroraBackground` (wallpaper),
+  `SwapBanner` (feed sarlavhasi)
+
+Bu shunchaki huquqiy ehtiyotkorlik emas: chizilgan fon har qanday o'lchamda
+o'tkir qoladi, qorong'i mavzuga o'zi moslashadi, yuklab olish hajmiga hech
+narsa qo'shmaydi va tarmoqsiz ham ko'rinadi — aynan xato ekrani chiqqan
+paytda CDN dan kelmay qoladigan Lottie animatsiyasidan farqli.
+
+**Wallpaper qayerda ishlatiladi:** intro, kirish, profil sozlash, tasdiqlash.
+Ya'ni o'z rasmi yo'q ekranlarda. E'lonlar lentasi kabi fotosuratga to'la
+ekranlarda fon tekis qoladi — aks holda ikkita narsa e'tibor uchun kurashadi.
