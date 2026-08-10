@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../art/category_marks.dart';
 import '../art/illustrations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/models/models.dart';
@@ -59,11 +60,7 @@ class RemoteImage extends StatelessWidget {
     final placeholder = Container(
       color: scheme.surfaceContainerHigh,
       child: Center(
-        child: Icon(
-          Symbols.image_rounded,
-          color: p.inkFaint,
-          size: 28,
-        ),
+        child: Icon(Symbols.image_rounded, color: p.inkFaint, size: 28),
       ),
     );
     if (url == null || url!.isEmpty) return placeholder;
@@ -143,9 +140,9 @@ class Pill extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: foreground,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -377,11 +374,11 @@ class TraderAvatar extends StatelessWidget {
     // Generate initials for fallback
     final initials = name.isNotEmpty
         ? name
-            .split(' ')
-            .where((w) => w.isNotEmpty)
-            .take(2)
-            .map((w) => w[0].toUpperCase())
-            .join()
+              .split(' ')
+              .where((w) => w.isNotEmpty)
+              .take(2)
+              .map((w) => w[0].toUpperCase())
+              .join()
         : '?';
 
     return SizedBox(
@@ -427,13 +424,8 @@ class TraderAvatar extends StatelessWidget {
                 height: dot,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isOnline
-                      ? BrandColors.brand500
-                      : p.inkFaint,
-                  border: Border.all(
-                    color: scheme.surface,
-                    width: 2.5,
-                  ),
+                  color: isOnline ? BrandColors.brand500 : p.inkFaint,
+                  border: Border.all(color: scheme.surface, width: 2.5),
                 ),
               ),
             ),
@@ -450,11 +442,7 @@ class TraderAvatar extends StatelessWidget {
 /// Wraps a child with a staggered slide+fade entrance animation.
 /// Use in ListViews: `AnimatedListItem(index: index, child: yourWidget)`
 class AnimatedListItem extends StatelessWidget {
-  const AnimatedListItem({
-    super.key,
-    required this.index,
-    required this.child,
-  });
+  const AnimatedListItem({super.key, required this.index, required this.child});
 
   final int index;
   final Widget child;
@@ -686,13 +674,12 @@ class _CategoryMedallion extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        style.icon,
-        size: 30,
-        fill: 1,
-        weight: 500,
-        opticalSize: 24,
-        color: selected ? Colors.white : style.color,
+      child: Center(
+        child: CategoryMarkIcon(
+          mark: style.mark,
+          size: 30,
+          color: selected ? Colors.white : style.color,
+        ),
       ),
     );
   }
@@ -717,21 +704,22 @@ class CategoryBadge extends StatelessWidget {
         horizontal: compact ? Gap.x2 : Gap.x3,
         vertical: Gap.x1 + 2,
       ),
-      decoration: BoxDecoration(
-        color: style.tint,
-        borderRadius: Radii.rFull,
-      ),
+      decoration: BoxDecoration(color: style.tint, borderRadius: Radii.rFull),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(style.icon, size: Sizes.iconSm, color: style.color),
+          CategoryMarkIcon(
+            mark: style.mark,
+            size: Sizes.iconSm,
+            color: style.color,
+          ),
           if (!compact) ...[
             Gap.w1,
             Text(
               categoryLabel(l, tag),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: style.color,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: style.color),
             ),
           ],
         ],

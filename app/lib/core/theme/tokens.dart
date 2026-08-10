@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+
+import '../art/category_marks.dart';
 
 import '../../shared/models/models.dart';
 
@@ -152,12 +153,13 @@ abstract final class Shadows {
 @immutable
 class CategoryStyle {
   const CategoryStyle({
-    required this.icon,
+    required this.mark,
     required this.color,
     required this.tint,
   });
 
-  final IconData icon;
+  /// Which of the six hand-drawn marks this category wears.
+  final CategoryMark mark;
 
   /// Icon and label colour.
   final Color color;
@@ -167,32 +169,32 @@ class CategoryStyle {
 
   static const _styles = <ListingTag, CategoryStyle>{
     ListingTag.agri: CategoryStyle(
-      icon: Symbols.grass_rounded,
+      mark: CategoryMark.crops,
       color: Color(0xFF15803D),
       tint: Color(0xFFDCFCE7),
     ),
     ListingTag.livestock: CategoryStyle(
-      icon: Symbols.pets_rounded,
+      mark: CategoryMark.livestock,
       color: Color(0xFFA16207),
       tint: Color(0xFFFEF3C7),
     ),
     ListingTag.machinery: CategoryStyle(
-      icon: Symbols.agriculture_rounded,
+      mark: CategoryMark.tractor,
       color: Color(0xFFC2410C),
       tint: Color(0xFFFFEDD5),
     ),
     ListingTag.transport: CategoryStyle(
-      icon: Symbols.local_shipping_rounded,
+      mark: CategoryMark.truck,
       color: Color(0xFF1D4ED8),
       tint: Color(0xFFDBEAFE),
     ),
     ListingTag.electronics: CategoryStyle(
-      icon: Symbols.memory_rounded,
+      mark: CategoryMark.chip,
       color: Color(0xFF6D28D9),
       tint: Color(0xFFEDE9FE),
     ),
     ListingTag.construction: CategoryStyle(
-      icon: Symbols.foundation_rounded,
+      mark: CategoryMark.bricks,
       color: Color(0xFFB91C1C),
       tint: Color(0xFFFEE2E2),
     ),
@@ -203,7 +205,7 @@ class CategoryStyle {
   /// The dark-theme tint: the same hue, dropped to a depth that sits on a dark
   /// surface without glowing.
   CategoryStyle get dark => CategoryStyle(
-    icon: icon,
+    mark: mark,
     color: Color.lerp(color, Colors.white, 0.45)!,
     tint: Color.lerp(color, const Color(0xFF0B1014), 0.82)!,
   );
