@@ -53,9 +53,10 @@ class MatchesPage extends ConsumerWidget {
           constraints: BoxConstraints(
             maxWidth: wide ? 1320 : Sizes.contentMax,
           ),
-          child: matches.when(
+          child: matches.fade(
+            identity: matches.value?.length,
             loading: () => const _MatchesShimmer(),
-            error: (e, _) => ErrorState(
+            error: (e) => ErrorState(
               message: errorMessage(context, e),
               retryLabel: l.retry,
               onRetry: () => ref.invalidate(matchesProvider),
@@ -251,7 +252,11 @@ class _MatchCard extends ConsumerWidget {
             Gap.h4,
             Row(
               children: [
+                // 2:3, not 1:2. At a third of the card "O‘tkazish" wrapped to
+                // two lines and broke mid-word; the primary action still reads
+                // as the larger of the two.
                 Expanded(
+                  flex: 2,
                   child: OutlinedButton(
                     onPressed: () async {
                       HapticFeedback.lightImpact();
@@ -260,12 +265,20 @@ class _MatchCard extends ConsumerWidget {
                           .dismissMatch(match.id);
                       ref.invalidate(matchesProvider);
                     },
-                    child: Text(l.matchesSkip),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, Sizes.buttonMd),
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
+                    ),
+                    child: Text(
+                      l.matchesSkip,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 Gap.w3,
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: FilledButton(
                     onPressed: () {
                       HapticFeedback.lightImpact();

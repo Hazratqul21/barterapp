@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -805,5 +806,67 @@ class SkeletonBox extends StatelessWidget {
           duration: const Duration(milliseconds: 1200),
           color: p.hair.withValues(alpha: 0.6),
         );
+  }
+}
+
+/// Crossfades between a screen's loading, error and content states.
+///
+/// Every screen in the app renders `AsyncValue.when(...)`, and each of those
+/// swapped its skeleton for the real list in a single frame. The content is
+/// then staggered in by [AnimatedListItem], so the sequence read as a flash
+/// followed by an animation rather than as one arrival.
+///
+/// A plain crossfade, not a fade-through: the skeleton and the list are the
+/// same content at two moments, so nothing should scale or displace. The
+/// children are stacked from the top, because the default centres them and a
+/// tall list would slide as its height changed mid-transition.
+class AsyncFade extends StatelessWidget {
+  const AsyncFade({super.key, required this.phase, required this.child});
+
+  /// What is being shown — anything that differs between the three states.
+  /// Include an identity where the data itself can change (a listing id, say),
+  /// and the swap between two records also crossfades.
+  final Object phase;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: M3Motion.medium2,
+      switchInCurve: M3Motion.emphasizedDecelerate,
+      switchOutCurve: M3Motion.emphasizedAccelerate,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          ...previous.map(
+            (c) => Positioned(left: 0, right: 0, top: 0, child: c),
+          ),
+          ?current,
+        ],
+      ),
+      child: KeyedSubtree(key: ValueKey(phase), child: child),
+    );
+  }
+}
+
+/// [AsyncFade] around the three branches of an [AsyncValue], so a screen does
+/// not have to name its own phase.
+extension AsyncFadeX<T> on AsyncValue<T> {
+  Widget fade({
+    required Widget Function(T value) data,
+    required Widget Function() loading,
+    required Widget Function(Object error) error,
+    Object? identity,
+  }) {
+    final phase = switch (this) {
+      AsyncData() => 'data:${identity ?? ''}',
+      AsyncError() => 'error',
+      _ => 'loading',
+    };
+    return AsyncFade(
+      phase: phase,
+      child: when(data: data, loading: loading, error: (e, _) => error(e)),
+    );
   }
 }

@@ -59,13 +59,14 @@ class NotificationsPage extends ConsumerWidget {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-          child: items.when(
+          child: items.fade(
             loading: () => const _NotificationsShimmer(),
-            error: (e, _) => ErrorState(
+            error: (e) => ErrorState(
               message: errorMessage(context, e),
               retryLabel: l.retry,
               onRetry: () => ref.invalidate(notificationsProvider),
             ),
+            identity: items.value?.length,
             data: (rows) => rows.isEmpty
                 ? EmptyState(
                     icon: Symbols.notifications_rounded,

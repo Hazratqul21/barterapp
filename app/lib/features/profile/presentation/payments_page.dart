@@ -106,9 +106,9 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
             ),
             children: [
               _Heading(l.paymentsCards),
-              cards.when(
+              cards.fade(
                 loading: () => const _CardSkeleton(),
-                error: (e, _) => ErrorState(
+                error: (e) => ErrorState(
                   message: errorMessage(context, e),
                   retryLabel: l.retry,
                   onRetry: () => ref.invalidate(_cardsProvider),
@@ -135,9 +135,9 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
               ),
               Gap.h6,
               _Heading(l.paymentsHistory),
-              settlements.when(
+              settlements.fade(
                 loading: () => const _CardSkeleton(),
-                error: (e, _) => ErrorState(
+                error: (e) => ErrorState(
                   message: errorMessage(context, e),
                   retryLabel: l.retry,
                   onRetry: () => ref.invalidate(settlementsProvider),

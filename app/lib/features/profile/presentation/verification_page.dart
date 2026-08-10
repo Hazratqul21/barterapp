@@ -106,10 +106,10 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
             constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
             child: ref
                 .watch(_verificationProvider)
-                .when(
+                .fade(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => ErrorState(
+                  error: (e) => ErrorState(
                     message: errorMessage(context, e),
                     retryLabel: l.retry,
                     onRetry: () => ref.invalidate(_verificationProvider),

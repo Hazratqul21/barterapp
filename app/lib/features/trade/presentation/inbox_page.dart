@@ -128,9 +128,10 @@ class _ThreadList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
 
-    return threads.when(
+    return threads.fade(
+      identity: threads.value?.length,
       loading: () => const _InboxShimmer(),
-      error: (e, _) => ErrorState(
+      error: (e) => ErrorState(
         message: errorMessage(context, e),
         retryLabel: l.retry,
         onRetry: onRetry,
