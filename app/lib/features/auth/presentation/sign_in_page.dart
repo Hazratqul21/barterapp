@@ -7,7 +7,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
@@ -67,7 +66,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _sendCode() => _run(() async {
-    final code = await ref.read(authRepositoryProvider).requestCode(_cleanPhone);
+    final code = await ref
+        .read(authRepositoryProvider)
+        .requestCode(_cleanPhone);
     if (!mounted) return;
     setState(() {
       _codeSent = true;
@@ -104,166 +105,160 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: AuroraBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                Gap.x6,
-                Gap.x4,
-                Gap.x6,
-                Gap.x8,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (context.canPop())
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: IconButton(
-                          tooltip: l.back,
-                          onPressed: context.pop,
-                          icon: const Icon(Symbols.arrow_back_rounded),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(Gap.x6, Gap.x4, Gap.x6, Gap.x8),
+            child:
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (context.canPop())
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: IconButton(
+                            tooltip: l.back,
+                            onPressed: context.pop,
+                            icon: const Icon(Symbols.arrow_back_rounded),
+                          ),
                         ),
+                      Gap.h6,
+                      const _BrandMark(),
+                      Gap.h8,
+                      Text(
+                        _codeSent ? l.authCodeTitle : l.authTitle,
+                        style: theme.textTheme.headlineMedium,
                       ),
-                    Gap.h6,
-                    const _BrandMark(),
-                    Gap.h8,
-                    Text(
-                      _codeSent ? l.authCodeTitle : l.authTitle,
-                      style: theme.textTheme.headlineMedium,
-                    ),
-                    Gap.h2,
-                    Text(
-                      _codeSent
-                          ? l.authCodeSubtitle(_cleanPhone)
-                          : l.authSubtitle,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: p.inkSoft,
-                      ),
-                    ),
-                    Gap.h8,
-
-                    TextField(
-                      controller: _phone,
-                      enabled: !_codeSent && !_busy,
-                      keyboardType: TextInputType.phone,
-                      autofillHints: const [AutofillHints.telephoneNumber],
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[\d+]')),
-                        LengthLimitingTextInputFormatter(13),
-                      ],
-                      style: theme.textTheme.titleMedium,
-                      decoration: InputDecoration(
-                        labelText: l.authPhoneLabel,
-                        prefixIcon: const Icon(Symbols.call_rounded),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      onSubmitted: (_) =>
-                          _phoneLooksValid && !_busy ? _sendCode() : null,
-                    ),
-
-                    if (!_codeSent &&
-                        !_phoneLooksValid &&
-                        _phone.text.length > 4) ...[
                       Gap.h2,
                       Text(
-                        l.authInvalidPhone,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: p.inkFaint,
+                        _codeSent
+                            ? l.authCodeSubtitle(_cleanPhone)
+                            : l.authSubtitle,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: p.inkSoft,
                         ),
                       ),
-                    ],
+                      Gap.h8,
 
-                    if (_codeSent) ...[
-                      Gap.h3,
                       TextField(
-                        controller: _code,
-                        enabled: !_busy,
-                        autofocus: true,
-                        keyboardType: TextInputType.number,
-                        autofillHints: const [AutofillHints.oneTimeCode],
+                        controller: _phone,
+                        enabled: !_codeSent && !_busy,
+                        keyboardType: TextInputType.phone,
+                        autofillHints: const [AutofillHints.telephoneNumber],
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
+                          FilteringTextInputFormatter.allow(RegExp(r'[\d+]')),
+                          LengthLimitingTextInputFormatter(13),
                         ],
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          letterSpacing: 10,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                        style: theme.textTheme.titleMedium,
+                        decoration: InputDecoration(
+                          labelText: l.authPhoneLabel,
+                          prefixIcon: const Icon(Symbols.call_rounded),
                         ),
-                        decoration: const InputDecoration(counterText: ''),
-                        onSubmitted: (_) {
-                          HapticFeedback.lightImpact();
-                          _verify();
-                        },
+                        onChanged: (_) => setState(() {}),
+                        onSubmitted: (_) =>
+                            _phoneLooksValid && !_busy ? _sendCode() : null,
                       ),
-                      if (_debugCode != null) ...[
+
+                      if (!_codeSent &&
+                          !_phoneLooksValid &&
+                          _phone.text.length > 4) ...[
+                        Gap.h2,
+                        Text(
+                          l.authInvalidPhone,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: p.inkFaint,
+                          ),
+                        ),
+                      ],
+
+                      if (_codeSent) ...[
+                        Gap.h3,
+                        TextField(
+                          controller: _code,
+                          enabled: !_busy,
+                          autofocus: true,
+                          keyboardType: TextInputType.number,
+                          autofillHints: const [AutofillHints.oneTimeCode],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            letterSpacing: 10,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                          decoration: const InputDecoration(counterText: ''),
+                          onSubmitted: (_) {
+                            HapticFeedback.lightImpact();
+                            _verify();
+                          },
+                        ),
+                        if (_debugCode != null) ...[
+                          Gap.h3,
+                          _Notice(
+                            icon: Symbols.info_rounded,
+                            color: p.money,
+                            background: p.moneySoft,
+                            text: l.authOtpDebug(_debugCode!),
+                          ),
+                        ],
+                      ],
+
+                      if (_error != null) ...[
                         Gap.h3,
                         _Notice(
-                          icon: Symbols.info_rounded,
-                          color: p.money,
-                          background: p.moneySoft,
-                          text: l.authOtpDebug(_debugCode!),
+                          icon: Symbols.error_rounded,
+                          color: theme.colorScheme.error,
+                          background: theme.colorScheme.errorContainer,
+                          text: _error!,
+                        ),
+                      ],
+
+                      Gap.h6,
+                      FilledButton(
+                        onPressed: _busy || (!_codeSent && !_phoneLooksValid)
+                            ? null
+                            : () {
+                                HapticFeedback.lightImpact();
+                                _codeSent ? _verify() : _sendCode();
+                              },
+                        child: _busy
+                            ? const SizedBox(
+                                width: Sizes.iconLg,
+                                height: Sizes.iconLg,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(_codeSent ? l.authVerify : l.authSendCode),
+                      ),
+
+                      if (_codeSent) ...[
+                        Gap.h2,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: _busy ? null : _backToPhone,
+                              child: Text(l.authChangeNumber),
+                            ),
+                            TextButton(
+                              onPressed: _busy ? null : _sendCode,
+                              child: Text(l.authResend),
+                            ),
+                          ],
                         ),
                       ],
                     ],
-
-                    if (_error != null) ...[
-                      Gap.h3,
-                      _Notice(
-                        icon: Symbols.error_rounded,
-                        color: theme.colorScheme.error,
-                        background: theme.colorScheme.errorContainer,
-                        text: _error!,
-                      ),
-                    ],
-
-                    Gap.h6,
-                    FilledButton(
-                      onPressed: _busy || (!_codeSent && !_phoneLooksValid)
-                          ? null
-                          : () {
-                              HapticFeedback.lightImpact();
-                              _codeSent ? _verify() : _sendCode();
-                            },
-                      child: _busy
-                          ? const SizedBox(
-                              width: Sizes.iconLg,
-                              height: Sizes.iconLg,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.4,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(_codeSent ? l.authVerify : l.authSendCode),
-                    ),
-
-                    if (_codeSent) ...[
-                      Gap.h2,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: _busy ? null : _backToPhone,
-                            child: Text(l.authChangeNumber),
-                          ),
-                          TextButton(
-                            onPressed: _busy ? null : _sendCode,
-                            child: Text(l.authResend),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+                  ),
+                ).animate().fadeIn(
+                  duration: M3Motion.medium3,
+                  curve: M3Motion.emphasizedDecelerate,
                 ),
-              ).animate().fadeIn(
-                duration: M3Motion.medium3,
-                curve: M3Motion.emphasizedDecelerate,
-              ),
-            ),
           ),
         ),
       ),
@@ -318,10 +313,7 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Gap.x3,
-        vertical: Gap.x3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: Gap.x3),
       decoration: BoxDecoration(color: background, borderRadius: Radii.rSm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

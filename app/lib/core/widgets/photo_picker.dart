@@ -6,7 +6,9 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../features/trade/data/trade_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/tokens.dart';
 import 'common.dart';
+import 'glass.dart';
 
 /// Take a photo — or pick one — and hand back the URL the server stored it at.
 ///
@@ -51,24 +53,25 @@ Future<ImageSource?> _chooseSource(BuildContext context) async {
   if (kIsWeb) return ImageSource.gallery;
 
   final l = L.of(context);
-  return showModalBottomSheet<ImageSource>(
+  return showBarterPanel<ImageSource>(
     context: context,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Symbols.photo_camera_rounded),
-            title: Text(l.photoCamera),
-            onTap: () => Navigator.pop(context, ImageSource.camera),
-          ),
-          ListTile(
-            leading: const Icon(Symbols.photo_library_rounded),
-            title: Text(l.photoGallery),
-            onTap: () => Navigator.pop(context, ImageSource.gallery),
-          ),
-        ],
-      ),
+    title: l.profilePhoto,
+    builder: (context) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          leading: const Icon(Symbols.photo_camera_rounded),
+          title: Text(l.photoCamera),
+          shape: const RoundedRectangleBorder(borderRadius: Radii.rMd),
+          onTap: () => Navigator.pop(context, ImageSource.camera),
+        ),
+        ListTile(
+          leading: const Icon(Symbols.photo_library_rounded),
+          title: Text(l.photoGallery),
+          shape: const RoundedRectangleBorder(borderRadius: Radii.rMd),
+          onTap: () => Navigator.pop(context, ImageSource.gallery),
+        ),
+      ],
     ),
   );
 }

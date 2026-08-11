@@ -49,15 +49,19 @@ class AuroraBackground extends StatelessWidget {
         // Blooms scale with the viewport: a fixed radius that reads as a soft
         // corner glow on a phone becomes a hard disc on a desktop window.
         final span = math.max(constraints.maxWidth, constraints.maxHeight);
-        final diameter = span * 0.95;
+        // Wider than the viewport on purpose. Sized to the viewport, the two
+        // blooms only tinted the corners and the middle of the page — where
+        // the reading happens — stayed flat cream, which made the wallpaper
+        // invisible exactly where it was supposed to be felt.
+        final diameter = span * 1.25;
 
         return DecoratedBox(
           decoration: BoxDecoration(color: p.canvas),
           child: Stack(
             children: [
               Positioned(
-                top: -diameter * 0.42,
-                left: -diameter * 0.34,
+                top: -diameter * 0.38,
+                left: -diameter * 0.30,
                 child: _Bloom(
                   diameter: diameter,
                   color: p.giveVivid,
@@ -65,8 +69,8 @@ class AuroraBackground extends StatelessWidget {
                 ),
               ),
               Positioned(
-                bottom: -diameter * 0.5,
-                right: -diameter * 0.38,
+                bottom: -diameter * 0.44,
+                right: -diameter * 0.30,
                 child: _Bloom(
                   diameter: diameter,
                   color: p.takeVivid,
@@ -74,10 +78,12 @@ class AuroraBackground extends StatelessWidget {
                 ),
               ),
               if (pattern)
-                // Fades as it descends, so the lattice frames the top of the
-                // screen and has let go by the time the reading starts.
+                // Thins as it descends rather than vanishing. At the old
+                // `fade: 0.95` the lattice was gone within the first strip of
+                // the page, so on every screen below the header there was no
+                // wallpaper at all — only a plain cream field.
                 const Positioned.fill(
-                  child: GirihField(opacity: 0.055, cell: 82, fade: 0.95),
+                  child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
                 ),
               Positioned.fill(child: child),
             ],

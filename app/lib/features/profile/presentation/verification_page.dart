@@ -4,7 +4,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -12,9 +11,9 @@ import '../../auth/data/auth_repository.dart';
 import '../../trade/data/trade_repository.dart';
 
 final _verificationProvider =
-    FutureProvider.autoDispose<({int trustScore, List<VerificationStep> steps})>(
-      (ref) => ref.watch(tradeRepositoryProvider).verification(),
-    );
+    FutureProvider.autoDispose<
+      ({int trustScore, List<VerificationStep> steps})
+    >((ref) => ref.watch(tradeRepositoryProvider).verification());
 
 /// How much of a stranger you still are.
 ///
@@ -99,58 +98,55 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l.verifyTitle)),
-      body: AuroraBackground(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-            child: ref
-                .watch(_verificationProvider)
-                .fade(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e) => ErrorState(
-                    message: errorMessage(context, e),
-                    retryLabel: l.retry,
-                    onRetry: () => ref.invalidate(_verificationProvider),
-                  ),
-                  data: (data) => ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      Gap.x5,
-                      Gap.x6,
-                      Gap.x5,
-                      Gap.x14,
-                    ),
-                    children: [
-                      _TrustDial(score: data.trustScore),
-                      Gap.h6,
-                      Text(
-                        l.verifyIntro,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: palette(context).inkSoft,
-                        ),
-                      ),
-                      Gap.h8,
-                      Text(
-                        l.verifySteps,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Gap.h3,
-                      for (var i = 0; i < data.steps.length; i++)
-                        AnimatedListItem(
-                          index: i,
-                          child: _StepCard(
-                            step: data.steps[i],
-                            busy: _submitting == data.steps[i].step,
-                            locked: _submitting != null,
-                            onSubmit: () => _submitStep(data.steps[i].step),
-                          ),
-                        ),
-                    ],
-                  ),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+          child: ref
+              .watch(_verificationProvider)
+              .fade(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e) => ErrorState(
+                  message: errorMessage(context, e),
+                  retryLabel: l.retry,
+                  onRetry: () => ref.invalidate(_verificationProvider),
                 ),
-          ),
+                data: (data) => ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    Gap.x5,
+                    Gap.x6,
+                    Gap.x5,
+                    Gap.x14,
+                  ),
+                  children: [
+                    _TrustDial(score: data.trustScore),
+                    Gap.h6,
+                    Text(
+                      l.verifyIntro,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: palette(context).inkSoft,
+                      ),
+                    ),
+                    Gap.h8,
+                    Text(
+                      l.verifySteps,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Gap.h3,
+                    for (var i = 0; i < data.steps.length; i++)
+                      AnimatedListItem(
+                        index: i,
+                        child: _StepCard(
+                          step: data.steps[i],
+                          busy: _submitting == data.steps[i].step,
+                          locked: _submitting != null,
+                          onSubmit: () => _submitStep(data.steps[i].step),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
         ),
       ),
     );

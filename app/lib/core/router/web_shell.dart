@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../art/girih.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/glass.dart';
 
 /// Above this the app lays itself out for a desk; below it, for a hand.
 const kWebBreakpoint = 900.0;
@@ -33,7 +34,6 @@ class WebShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
-    final scheme = Theme.of(context).colorScheme;
 
     final destinations = <({IconData icon, String label})>[
       (icon: Symbols.home_rounded, label: l.navHome),
@@ -45,56 +45,65 @@ class WebShell extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          Container(
-            width: 248,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLowest,
-              border: Border(right: BorderSide(color: p.hair)),
-            ),
-            child: SafeArea(
-              right: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _Brand(),
-                  Gap.h5,
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-                    child: FilledButton.icon(
-                      onPressed: () => context.push('/create'),
-                      icon: const Icon(Symbols.add_rounded, size: 22),
-                      label: Text(l.navCreate),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(Sizes.buttonMd),
+          // Glass, not an opaque panel. The rail is chrome sitting over the
+          // page, and the wallpaper's green corner now shows through it —
+          // which is the whole reason the wallpaper went behind the app
+          // rather than onto four screens.
+          GlassSurface(
+            level: GlassLevel.chrome,
+            borderRadius: BorderRadius.zero,
+            // Pinned to the left edge: a shadow there would only draw a dark
+            // seam against the window frame.
+            shadow: false,
+            child: Container(
+              width: 248,
+              decoration: BoxDecoration(
+                border: Border(right: BorderSide(color: p.hair)),
+              ),
+              child: SafeArea(
+                right: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _Brand(),
+                    Gap.h5,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
+                      child: FilledButton.icon(
+                        onPressed: () => context.push('/create'),
+                        icon: const Icon(Symbols.add_rounded, size: 22),
+                        label: Text(l.navCreate),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(Sizes.buttonMd),
+                        ),
                       ),
                     ),
-                  ),
-                  Gap.h6,
-                  for (final (index, d) in destinations.indexed)
+                    Gap.h6,
+                    for (final (index, d) in destinations.indexed)
+                      _NavItem(
+                        icon: d.icon,
+                        label: d.label,
+                        selected: index == currentIndex,
+                        onTap: () => onDestination(index),
+                      ),
+                    const Spacer(),
                     _NavItem(
-                      icon: d.icon,
-                      label: d.label,
-                      selected: index == currentIndex,
-                      onTap: () => onDestination(index),
+                      icon: Symbols.settings_rounded,
+                      label: l.navSettings,
+                      selected: false,
+                      onTap: () => context.push('/settings'),
                     ),
-                  const Spacer(),
-                  _NavItem(
-                    icon: Symbols.settings_rounded,
-                    label: l.navSettings,
-                    selected: false,
-                    onTap: () => context.push('/settings'),
-                  ),
-                  Gap.h4,
-                ],
+                    Gap.h4,
+                  ],
+                ),
               ),
             ),
           ),
-          Expanded(
-            child: ColoredBox(
-              color: p.canvas,
-              child: child,
-            ),
-          ),
+          // No `ColoredBox` here. It used to paint the canvas colour over this
+          // half of the window, which was harmless while the page had no
+          // wallpaper and became the reason the wallpaper was invisible
+          // everywhere except behind the rail.
+          Expanded(child: child),
         ],
       ),
     );

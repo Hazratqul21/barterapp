@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../widgets/glass.dart';
 import '../theme/app_theme.dart';
 import 'web_shell.dart';
 
@@ -59,6 +60,10 @@ class AppShell extends StatelessWidget {
     }
 
     return Scaffold(
+      // The body runs to the bottom of the screen so the list passes *behind*
+      // the bar. Without this the bar has an opaque page under it and the
+      // blur has nothing to work on — glass over nothing is just a tint.
+      extendBody: true,
       body: body,
       floatingActionButton:
           FloatingActionButton(
@@ -76,18 +81,28 @@ class AppShell extends StatelessWidget {
               )
               .fadeIn(duration: M3Motion.medium2),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _go,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: [
-          for (final d in destinations)
-            NavigationDestination(
-              icon: Icon(d.icon),
-              selectedIcon: Icon(d.icon, fill: 1),
-              label: d.label,
-            ),
-        ],
+      bottomNavigationBar: GlassSurface(
+        level: GlassLevel.chrome,
+        borderRadius: BorderRadius.zero,
+        shadow: false,
+        child: NavigationBar(
+          // Transparent so the glass beneath shows: `NavigationBar` paints its
+          // own surface by default and would cover it completely.
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: _go,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            for (final d in destinations)
+              NavigationDestination(
+                icon: Icon(d.icon),
+                selectedIcon: Icon(d.icon, fill: 1),
+                label: d.label,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/glass.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../data/trade_repository.dart';
@@ -137,50 +138,31 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           : (offer.cashDeltaMinor.abs() ~/ 100).toString(),
     );
 
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await showBarterPanel<bool>(
       context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          Gap.x5,
-          Gap.x4,
-          Gap.x5,
-          Gap.x5 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l.dealCounterTitle,
-              style: Theme.of(context).textTheme.titleLarge,
+      title: l.dealCounterTitle,
+      subtitle: l.dealCounterHint,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l.dealCounterCash,
+              suffixText: 'so‘m',
+              prefixIcon: const Icon(Symbols.payments_rounded),
             ),
-            Gap.h2,
-            Text(
-              l.dealCounterHint,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: palette(context).inkSoft,
-              ),
-            ),
-            Gap.h5,
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l.dealCounterCash,
-                suffixText: 'so‘m',
-                prefixIcon: const Icon(Symbols.payments_rounded),
-              ),
-            ),
-            Gap.h5,
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l.dealCounterSend),
-            ),
-          ],
-        ),
+          ),
+          Gap.h5,
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.dealCounterSend),
+          ),
+        ],
       ),
     );
 

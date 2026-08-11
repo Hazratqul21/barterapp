@@ -402,7 +402,10 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       textTheme: textTheme,
-      scaffoldBackgroundColor: palette.canvas,
+      // Transparent, not the canvas colour: the wallpaper is painted once
+      // beneath the whole app in `main.dart`, and an opaque scaffold would
+      // paint over it on every screen.
+      scaffoldBackgroundColor: Colors.transparent,
       pageTransitionsTheme: _transitions,
       extensions: [palette],
       splashFactory: InkSparkle.splashFactory,
@@ -411,7 +414,7 @@ abstract final class AppTheme {
     // ── Component Themes ──────────────────────────────────────────────────
     return base.copyWith(
       appBarTheme: AppBarTheme(
-        backgroundColor: palette.canvas,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
