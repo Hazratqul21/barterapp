@@ -229,6 +229,10 @@ Future<T?> showBarterSheet<T>({
     backgroundColor: Colors.transparent,
     barrierColor: barrier,
     useSafeArea: true,
+    // The theme turns Material's own handle on for every sheet in the app.
+    // Ours lives inside the glass, where it belongs; leaving both on drew two
+    // bars, one floating above the pane on nothing.
+    showDragHandle: false,
     builder: (context) => _DragSheet(
       title: title,
       action: action,
@@ -473,6 +477,10 @@ Future<T?> showBarterPanel<T>({
     backgroundColor: Colors.transparent,
     barrierColor: barrier,
     useSafeArea: true,
+    // The theme turns Material's own handle on for every sheet in the app.
+    // Ours lives inside the glass, where it belongs; leaving both on drew two
+    // bars, one floating above the pane on nothing.
+    showDragHandle: false,
     builder: (context) => GlassSurface(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.xl)),
       child: SingleChildScrollView(

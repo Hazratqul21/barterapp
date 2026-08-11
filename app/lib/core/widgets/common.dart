@@ -876,14 +876,15 @@ class AsyncFade extends StatelessWidget {
       duration: M3Motion.medium2,
       switchInCurve: M3Motion.emphasizedDecelerate,
       switchOutCurve: M3Motion.emphasizedAccelerate,
+      // Material's own layout with one change — top alignment instead of
+      // centre, so a list does not jump as its height changes mid-fade.
+      //
+      // The outgoing child stays a plain stack child. Positioning it gave it
+      // an unbounded height, and a `ListView` handed unbounded height throws
+      // `RenderBox was not laid out` on the frame the transition starts.
       layoutBuilder: (current, previous) => Stack(
         alignment: Alignment.topCenter,
-        children: [
-          ...previous.map(
-            (c) => Positioned(left: 0, right: 0, top: 0, child: c),
-          ),
-          ?current,
-        ],
+        children: [...previous, ?current],
       ),
       child: KeyedSubtree(key: ValueKey(phase), child: child),
     );
