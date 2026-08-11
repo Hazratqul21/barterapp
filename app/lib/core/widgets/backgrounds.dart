@@ -65,50 +65,109 @@ class _AuroraBackgroundState extends State<AuroraBackground>
 
         return DecoratedBox(
           decoration: BoxDecoration(color: p.canvas),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              // Gentle breathing and shifting
-              final shift = math.sin(_controller.value * math.pi) * 30;
-              final scale = 1.0 + (_controller.value * 0.1);
-              
-              return Stack(
-                children: [
-                  Positioned(
-                    top: -diameter * 0.38 + shift,
-                    left: -diameter * 0.30 - shift,
-                    child: Transform.scale(
-                      scale: scale,
-                      child: _Bloom(
-                        diameter: diameter,
-                        color: p.giveVivid,
-                        alpha: alpha,
-                      ),
-                    ),
+          child: Stack(
+            children: [
+              // Three layers, and the split between them is the whole point.
+              //
+              // The cost of a drifting wallpaper is paint, not build: the
+              // stack used to have no repaint boundaries in it, so the blooms,
+              // the lattice and the entire app shared one layer. A bloom
+              // moving a pixel marked that layer dirty, and every frame
+              // repainted the lattice's hundreds of stroked paths and the
+              // app's own painting along with it — measured at one full
+              // repaint per frame, which is what the jank was.
+              //
+              // Boundaries split them, and the drift now only transforms a
+              // layer that was painted once.
+              _Drift(
+                controller: _controller,
+                diameter: diameter,
+                alignment: Alignment.topLeft,
+                bloom: _Bloom(
+                  diameter: diameter,
+                  color: p.giveVivid,
+                  alpha: alpha,
+                ),
+              ),
+              _Drift(
+                controller: _controller,
+                diameter: diameter,
+                alignment: Alignment.bottomRight,
+                bloom: _Bloom(
+                  diameter: diameter,
+                  color: p.takeVivid,
+                  alpha: alpha * 0.85,
+                ),
+              ),
+
+              // The lattice is hundreds of stroked star paths and never
+              // changes. Its own boundary means it is rasterised once and
+              // then only composited.
+              if (widget.pattern)
+                const Positioned.fill(
+                  child: RepaintBoundary(
+                    child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
                   ),
-                  Positioned(
-                    bottom: -diameter * 0.44 - shift,
-                    right: -diameter * 0.30 + shift,
-                    child: Transform.scale(
-                      scale: 1.1 - (_controller.value * 0.1),
-                      child: _Bloom(
-                        diameter: diameter,
-                        color: p.takeVivid,
-                        alpha: alpha * 0.85,
-                      ),
-                    ),
-                  ),
-                  if (widget.pattern)
-                    const Positioned.fill(
-                      child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
-                    ),
-                  Positioned.fill(child: widget.child),
-                ],
-              );
-            },
+                ),
+
+              // The app on its own layer, so a drifting bloom cannot dirty it
+              // and a scrolling feed cannot dirty the wallpaper.
+              Positioned.fill(child: RepaintBoundary(child: widget.child)),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+/// One bloom, drifting.
+///
+/// The bloom itself is passed in as `child` and therefore built once; the
+/// builder only wraps it in a transform. A transform moves an existing layer
+/// rather than repainting a full-screen gradient, which is the difference
+/// between a wallpaper that costs nothing and one that costs a frame.
+class _Drift extends StatelessWidget {
+  const _Drift({
+    required this.controller,
+    required this.diameter,
+    required this.alignment,
+    required this.bloom,
+  });
+
+  final Animation<double> controller;
+  final double diameter;
+
+  /// Which corner this bloom is anchored to.
+  final Alignment alignment;
+
+  final Widget bloom;
+
+  @override
+  Widget build(BuildContext context) {
+    final fromTop = alignment.y < 0;
+
+    return Positioned(
+      top: fromTop ? -diameter * 0.38 : null,
+      left: fromTop ? -diameter * 0.30 : null,
+      bottom: fromTop ? null : -diameter * 0.44,
+      right: fromTop ? null : -diameter * 0.30,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: controller,
+          child: bloom,
+          builder: (context, child) {
+            final t = math.sin(controller.value * math.pi);
+            final shift = t * 30 * (fromTop ? 1 : -1);
+            final scale = fromTop ? 1.0 + t * 0.1 : 1.1 - t * 0.1;
+
+            return Transform.translate(
+              offset: Offset(-shift, shift),
+              child: Transform.scale(scale: scale, child: child),
+            );
+          },
+        ),
+      ),
     );
   }
 }

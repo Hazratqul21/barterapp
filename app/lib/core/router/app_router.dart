@@ -103,7 +103,7 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/listing/:id',
         parentNavigatorKey: _rootKey,
-        pageBuilder: (context, state) => forwardPage(
+        pageBuilder: (context, state) => heroPage(
           key: state.pageKey,
           child: ListingDetailPage(listingId: state.pathParameters['id']!),
         ),
