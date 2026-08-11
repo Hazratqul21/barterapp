@@ -55,42 +55,44 @@ class WebShell extends StatelessWidget {
             // Pinned to the left edge: a shadow there would only draw a dark
             // seam against the window frame.
             shadow: false,
+            // Liquid, not merely frosted. The rail is the tallest glass in the
+            // app and a pane that tall with no light down its edge reads as a
+            // grey strip.
+            specular: true,
             child: Container(
-              width: 248,
+              width: 68,
               decoration: BoxDecoration(
                 border: Border(right: BorderSide(color: p.hair)),
               ),
               child: SafeArea(
                 right: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const _Brand(),
-                    Gap.h5,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-                      child: FilledButton.icon(
-                        onPressed: () => context.push('/create'),
-                        icon: const Icon(Symbols.add_rounded, size: 22),
-                        label: Text(l.navCreate),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(Sizes.buttonMd),
-                        ),
-                      ),
+                    const _RailDivider(),
+                    // Posting is not a destination — it is the one thing the
+                    // rail asks you to do — so it keeps the brand colour while
+                    // every navigation tile stays neutral clay.
+                    _RailButton(
+                      icon: Symbols.add_rounded,
+                      label: l.navCreate,
+                      tone: p.give,
+                      foreground: Colors.white,
+                      onTap: () => context.push('/create'),
                     ),
-                    Gap.h6,
+                    const _RailDivider(),
                     for (final (index, d) in destinations.indexed)
-                      _NavItem(
+                      _RailButton(
                         icon: d.icon,
                         label: d.label,
                         selected: index == currentIndex,
                         onTap: () => onDestination(index),
                       ),
                     const Spacer(),
-                    _NavItem(
+                    const _RailDivider(),
+                    _RailButton(
                       icon: Symbols.settings_rounded,
                       label: l.navSettings,
-                      selected: false,
                       onTap: () => context.push('/settings'),
                     ),
                     Gap.h4,
@@ -115,96 +117,97 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
     final p = palette(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x6, Gap.x4, 0),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              gradient: p.swapGradient,
-              borderRadius: Radii.rSm,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: const Stack(
-              alignment: Alignment.center,
-              children: [
-                GirihField(color: Colors.white, opacity: 0.2, cell: 26),
-                Icon(
-                  Symbols.swap_horiz_rounded,
-                  color: Colors.white,
-                  size: 22,
-                  weight: 600,
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(Gap.x2, Gap.x5, Gap.x2, 0),
+      child: Center(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: p.swapGradient,
+            borderRadius: Radii.rSm,
           ),
-          Gap.w3,
-          Text(l.appName, style: Theme.of(context).textTheme.titleLarge),
-        ],
+          clipBehavior: Clip.antiAlias,
+          child: const Stack(
+            alignment: Alignment.center,
+            children: [
+              GirihField(color: Colors.white, opacity: 0.2, cell: 26),
+              Icon(
+                Symbols.swap_horiz_rounded,
+                color: Colors.white,
+                size: 26,
+                weight: 600,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _NavItem extends StatelessWidget {
-  const _NavItem({
+/// One tile in the rail.
+///
+/// Clay rather than a filled rectangle. The selected tile is pressed into the
+/// pane instead of being painted a colour: on a rail this narrow a coloured
+/// block is the loudest thing on the screen, and the thing it is competing
+/// with is the listing photographs.
+class _RailButton extends StatelessWidget {
+  const _RailButton({
     required this.icon,
     required this.label,
-    required this.selected,
     required this.onTap,
+    this.selected = false,
+    this.tone,
+    this.foreground,
   });
 
   final IconData icon;
   final String label;
-  final bool selected;
   final VoidCallback onTap;
+  final bool selected;
+  final Color? tone;
+  final Color? foreground;
 
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
-    final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Gap.x3,
-        vertical: Gap.x1 / 2,
-      ),
-      child: Material(
-        color: selected ? p.giveSoft : Colors.transparent,
-        borderRadius: Radii.rMd,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: Radii.rMd,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Gap.x3,
-              vertical: Gap.x3,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: Sizes.iconLg,
-                  fill: selected ? 1 : 0,
-                  color: selected ? p.give : p.inkSoft,
-                ),
-                Gap.w3,
-                Text(
-                  label,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: selected ? p.give : p.inkSoft,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      padding: const EdgeInsets.symmetric(vertical: Gap.x1),
+      child: ClayTile(
+        size: 46,
+        radius: 15,
+        pressed: selected,
+        tone: tone,
+        tooltip: label,
+        onTap: onTap,
+        child: Icon(
+          icon,
+          size: Sizes.iconLg,
+          fill: selected ? 1 : 0,
+          color: foreground ?? (selected ? p.give : p.inkSoft),
         ),
       ),
+    );
+  }
+}
+
+/// The hairline that groups the rail.
+///
+/// Four destinations, a create button and a settings tile in one unbroken
+/// column read as six equal choices. The rules say which of them belong
+/// together — the same job the separators in a desktop toolbar do.
+class _RailDivider extends StatelessWidget {
+  const _RailDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
+      child: Divider(height: 1, thickness: 1, color: palette(context).hair),
     );
   }
 }

@@ -1,0 +1,20 @@
+name: ai_backend
+description: A simple command-line application.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.12.2
+
+# Add regular dependencies here.
+dependencies:
+  genkit: ^0.15.1
+  genkit_google_genai: ^0.2.12
+  genkit_shelf: ^0.1.11
+  schemantic: ^0.2.2
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  # path: ^1.9.0
+
+dev_dependencies:
+  lints: ^6.0.0

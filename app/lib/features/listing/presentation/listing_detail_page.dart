@@ -124,6 +124,16 @@ class _Content extends StatelessWidget {
           expandedHeight: 280,
           backgroundColor: BrandColors.brand900,
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: Icon(context.canPop() ? Icons.arrow_back : Icons.close_rounded),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 8),

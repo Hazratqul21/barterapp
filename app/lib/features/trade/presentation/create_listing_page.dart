@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -169,6 +172,110 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     );
   }
 
+  void _showAiMagicDialog() {
+    final aiController = TextEditingController();
+    bool isLoading = false;
+    
+    showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            icon: const Icon(Symbols.auto_awesome_rounded, size: 32, color: Colors.purple),
+            title: const Text('AI E\'lon Yozuvchi'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Qanday narsani barter qilmoqchisiz? Qisqacha yozing, AI uni mukammal e\'longa aylantiradi.'),
+                Gap.h4,
+                TextField(
+                  controller: aiController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: "Masalan: Menda iPhone 13 Pro bor, holati yangi. 200\$ farqi bilan velosipedga almashaman.",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: Gap.x4),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(context),
+                child: const Text('Bekor qilish'),
+              ),
+              FilledButton.icon(
+                icon: const Icon(Symbols.auto_awesome_rounded, size: 18),
+                onPressed: isLoading ? null : () async {
+                  if (aiController.text.trim().isEmpty) return;
+                  
+                  setDialogState(() => isLoading = true);
+                  
+                  try {
+                    final response = await http.post(
+                      Uri.parse('http://127.0.0.1:8081/api/generateListing'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode({'data': aiController.text.trim()}),
+                    );
+                    
+                    if (response.statusCode == 200) {
+                      final body = jsonDecode(response.body);
+                      final result = body['result'] as Map<String, dynamic>;
+                      
+                      setState(() {
+                        if (result['title'] != null) {
+                          _title.controllers['uz']!.text = result['title'];
+                        }
+                        if (result['description'] != null) {
+                          _description.controllers['uz']!.text = result['description'];
+                        }
+                        if (result['suggested_value'] != null) {
+                          _value.text = result['suggested_value'].toString();
+                        }
+                        // Move to Step 2 so user can see it!
+                        if (_step == 0 && _photos.isNotEmpty) {
+                          _step = 1;
+                        } else {
+                          _step = 1; // Just jump to 1 so they see the form
+                        }
+                      });
+                      
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('AI e\'lon matnini yozib tugatdi!')),
+                        );
+                      }
+                    } else {
+                      throw Exception('Failed to generate');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('AI xatoga yo\'liqdi')),
+                      );
+                    }
+                  } finally {
+                    setDialogState(() => isLoading = false);
+                  }
+                },
+                label: const Text('Sehrlash'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -186,6 +293,24 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.createTitle),
+        leading: IconButton(
+          icon: Icon(context.canPop() ? Icons.arrow_back : Icons.close_rounded),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Symbols.auto_awesome_rounded, color: Colors.purple),
+            tooltip: 'AI E\'lon yozuvchi',
+            onPressed: _showAiMagicDialog,
+          ),
+          Gap.w2,
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3),
           child: LinearProgressIndicator(

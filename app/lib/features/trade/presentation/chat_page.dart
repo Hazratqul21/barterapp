@@ -142,6 +142,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       context: context,
       title: l.dealCounterTitle,
       subtitle: l.dealCounterHint,
+      // The one sheet in the app that changes a deal, so it gets the
+      // wallpaper rather than the plain frost every other sheet uses.
+      skin: const SheetSkin.wallpaper(intensity: 1.4),
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

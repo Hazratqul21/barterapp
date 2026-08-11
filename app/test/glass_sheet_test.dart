@@ -1,4 +1,5 @@
 import 'package:barter_app/core/theme/app_theme.dart';
+import 'package:barter_app/core/widgets/backgrounds.dart';
 import 'package:barter_app/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +15,12 @@ void main() {
   Future<void> pumpAt(
     WidgetTester tester,
     Size size,
-    Future<void> Function(BuildContext) open,
-  ) async {
+    Future<void> Function(BuildContext) open, {
+    /// Off for skins that never come to rest. The wallpaper drifts on a
+    /// fifteen-second loop, so `pumpAndSettle` would wait for a quiet frame
+    /// that by design never arrives.
+    bool settle = true,
+  }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -37,7 +42,13 @@ void main() {
     );
 
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      // Long enough for the sheet itself to finish opening.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+    }
   }
 
   group('showBarterPanel', () {
@@ -110,6 +121,47 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, 'kamera');
+    });
+  });
+
+  group('SheetSkin', () {
+    testWidgets('wallpaper carries the app background into the sheet', (
+      tester,
+    ) async {
+      await pumpAt(
+        tester,
+        const Size(390, 844),
+        (context) => showBarterPanel<void>(
+          context: context,
+          title: 'Qarshi taklif',
+          skin: const SheetSkin.wallpaper(),
+          builder: (context) => const Text('body'),
+        ),
+        settle: false,
+      );
+
+      expect(find.byType(AuroraBackground), findsOneWidget);
+      expect(find.text('body'), findsOneWidget);
+    });
+
+    testWidgets('custom puts whatever it is handed behind the content', (
+      tester,
+    ) async {
+      const marker = Key('my-own-wallpaper');
+
+      await pumpAt(
+        tester,
+        const Size(390, 844),
+        (context) => showBarterPanel<void>(
+          context: context,
+          title: 'Qarshi taklif',
+          skin: const SheetSkin.custom(ColoredBox(key: marker, color: Color(0xFF123456))),
+          builder: (context) => const Text('body'),
+        ),
+      );
+
+      expect(find.byKey(marker), findsOneWidget);
+      expect(find.text('body'), findsOneWidget);
     });
   });
 

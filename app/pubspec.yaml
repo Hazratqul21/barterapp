@@ -35,6 +35,8 @@ dependencies:
   animations: ^2.2.0
   material_symbols_icons: ^4.2960.0
   image_picker: ^1.2.3
+  genkit: ^0.15.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

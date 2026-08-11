@@ -18,7 +18,7 @@ import 'common.dart';
 /// Reserved for the screens with no pictures of their own — the intro, sign-in
 /// and profile setup. A feed of photographs needs a plain page underneath, not
 /// a second thing competing for attention.
-class AuroraBackground extends StatelessWidget {
+class AuroraBackground extends StatefulWidget {
   const AuroraBackground({
     super.key,
     required this.child,
@@ -27,66 +27,85 @@ class AuroraBackground extends StatelessWidget {
   });
 
   final Widget child;
-
-  /// Scales both blooms. Below 1 for screens that already have colour of their
-  /// own; the default is tuned to sit under body text without tinting it.
   final double intensity;
-
-  /// The tile lattice. Off for screens where even a whisper of ornament would
-  /// crowd the content.
   final bool pattern;
+
+  @override
+  State<AuroraBackground> createState() => _AuroraBackgroundState();
+}
+
+class _AuroraBackgroundState extends State<AuroraBackground>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
-
-    // Dark surfaces swallow a wash that light ones would show, so the same
-    // apparent softness needs more of it.
-    final alpha = (p.isDark ? 0.26 : 0.16) * intensity;
+    final alpha = (p.isDark ? 0.26 : 0.16) * widget.intensity;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Blooms scale with the viewport: a fixed radius that reads as a soft
-        // corner glow on a phone becomes a hard disc on a desktop window.
         final span = math.max(constraints.maxWidth, constraints.maxHeight);
-        // Wider than the viewport on purpose. Sized to the viewport, the two
-        // blooms only tinted the corners and the middle of the page — where
-        // the reading happens — stayed flat cream, which made the wallpaper
-        // invisible exactly where it was supposed to be felt.
         final diameter = span * 1.25;
 
         return DecoratedBox(
           decoration: BoxDecoration(color: p.canvas),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -diameter * 0.38,
-                left: -diameter * 0.30,
-                child: _Bloom(
-                  diameter: diameter,
-                  color: p.giveVivid,
-                  alpha: alpha,
-                ),
-              ),
-              Positioned(
-                bottom: -diameter * 0.44,
-                right: -diameter * 0.30,
-                child: _Bloom(
-                  diameter: diameter,
-                  color: p.takeVivid,
-                  alpha: alpha * 0.85,
-                ),
-              ),
-              if (pattern)
-                // Thins as it descends rather than vanishing. At the old
-                // `fade: 0.95` the lattice was gone within the first strip of
-                // the page, so on every screen below the header there was no
-                // wallpaper at all — only a plain cream field.
-                const Positioned.fill(
-                  child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
-                ),
-              Positioned.fill(child: child),
-            ],
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              // Gentle breathing and shifting
+              final shift = math.sin(_controller.value * math.pi) * 30;
+              final scale = 1.0 + (_controller.value * 0.1);
+              
+              return Stack(
+                children: [
+                  Positioned(
+                    top: -diameter * 0.38 + shift,
+                    left: -diameter * 0.30 - shift,
+                    child: Transform.scale(
+                      scale: scale,
+                      child: _Bloom(
+                        diameter: diameter,
+                        color: p.giveVivid,
+                        alpha: alpha,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -diameter * 0.44 - shift,
+                    right: -diameter * 0.30 + shift,
+                    child: Transform.scale(
+                      scale: 1.1 - (_controller.value * 0.1),
+                      child: _Bloom(
+                        diameter: diameter,
+                        color: p.takeVivid,
+                        alpha: alpha * 0.85,
+                      ),
+                    ),
+                  ),
+                  if (widget.pattern)
+                    const Positioned.fill(
+                      child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
+                    ),
+                  Positioned.fill(child: widget.child),
+                ],
+              );
+            },
           ),
         );
       },
