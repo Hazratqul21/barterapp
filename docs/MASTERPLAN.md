@@ -63,7 +63,7 @@ Bular alohida bosqich emas — **har bir o'zgarishda** rioya qilinadi:
 
 ## 2. DIZAYN bosqichlari
 
-### D1 — Bo'limga qarab o'zgaruvchan gradient  ⭐ eng birinchi
+### D1 — Bo'limga qarab o'zgaruvchan gradient  ✅ TUGALLANDI
 
 **Muammo:** hozir `swapGradient` (yashil→ko'k) butun ilovada bir xil,
 o'zgarmas. Bo'limdan bo'limga o'tganda fon bir xil qoladi — bu ilovani "tekis"
@@ -87,7 +87,7 @@ oladi), `core/router/app_shell.dart` + `web_shell.dart` (joriy bo'limni
 blomlari ham mos rangga suriladi; test gradient bo'lim bilan o'zgarishini
 tekshiradi.
 
-### D2 — Claymorphism kengaytmasi
+### D2 — Claymorphism kengaytmasi  🔄 medalyonlar clay; profil statistikasi qoldi
 
 Hozir clay faqat web panelida (`ClayTile`). Uni mahsulot bo'ylab tarqatish:
 
@@ -126,7 +126,7 @@ oson tahrirlanadi), `core/widgets/backgrounds.dart`.
 rasmini almashtira oladi; kichik ekranda overflow yo'q (mavjud
 `intro_layout_test` saqlanadi va kengaytiriladi); uch tilda to'g'ri.
 
-### D4 — Motion tizimi (hamma joyda silliqlik)
+### D4 — Motion tizimi (hamma joyda silliqlik)  🔄 asosiy ziddiyat yechildi
 
 Splash sifatidagi silliqlikni standartga aylantirish:
 
@@ -224,8 +224,8 @@ kalitlaringizni talab qiladi — ular sizda qolishi shart):
 
 Har bosqich mustaqil kommit, oxirida analyze+test+ko'z tekshiruvi:
 
-1. **D1** — bo'limga qarab gradient (eng ko'rinarli o'zgarish)
-2. **D4** — motion tizimini izchillashtirish
+1. **D1** — bo'limga qarab gradient ✅
+2. **D4** — motion tizimini izchillashtirish ✅ (karta→tafsilot ziddiyati yechildi; predictive-back qoldi)
 3. **D2** — claymorphism kengaytmasi
 4. **D3** — onboarding + sozlanadigan fon
 5. **D5** — dark tema + tipografiya + accessibility
