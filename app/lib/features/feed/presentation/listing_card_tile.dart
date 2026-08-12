@@ -3,7 +3,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
-import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 
 class ListingCardTile extends StatelessWidget {
@@ -18,10 +17,8 @@ class ListingCardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
 
     return Pressable(
       onTap: onTap,
@@ -37,25 +34,32 @@ class ListingCardTile extends StatelessWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
           ),
         ),
+        // 80 / 10 / 10 — the photo does the selling. The card's whole job is
+        // to catch the eye and answer "I have ↔ I want" in a second, so the
+        // text below is only the name and that one barter line. Everything else
+        // — price detail, distance, date, specs — waits on the detail page.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _Photo(listing: listing),
             Padding(
-              padding: const EdgeInsets.all(Gap.x4),
+              padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, Gap.x3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // 10% — what it is.
                   Text(
                     listing.title,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
-                      height: 1.2,
+                      height: 1.15,
                     ),
                   ),
-                  Gap.h3,
+                  Gap.h1,
+                  // 10% — the barter itself: what the owner wants back.
                   Row(
                     children: [
                       Icon(
@@ -65,53 +69,15 @@ class ListingCardTile extends StatelessWidget {
                       ),
                       Gap.w2,
                       Expanded(
-                        child: RichText(
+                        child: Text(
+                          listing.wantsSummary,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          text: TextSpan(
-                            style: theme.textTheme.bodySmall,
-                            children: [
-                              TextSpan(
-                                text: '${l.feedLookingFor} ',
-                                style: TextStyle(color: p.inkFaint),
-                              ),
-                              TextSpan(
-                                text: listing.wantsSummary,
-                                style: TextStyle(
-                                  color: p.take,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: p.take,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Gap.h3,
-                  Divider(color: p.hair.withValues(alpha: 0.5), height: 1),
-                  Gap.h3,
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: Gap.x3,
-                    runSpacing: Gap.x1,
-                    children: [
-                      Text(
-                        listing.value.format(locale),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      if (listing.distanceKm != null)
-                        _Meta(
-                          icon: Symbols.near_me_rounded,
-                          text: '${listing.distanceKm!.round()} km',
-                        ),
-                      _Meta(
-                        icon: Symbols.schedule_rounded,
-                        text: formatDate(context, listing.postedAt),
                       ),
                     ],
                   ),
@@ -131,12 +97,13 @@ class _Photo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
 
     return SizedBox(
-      height: 190,
+      // Tall on purpose: the photo is ~80% of the card, the part that sells.
+      height: 236,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
@@ -153,27 +120,43 @@ class _Photo extends StatelessWidget {
             left: Gap.x3,
             child: CategoryBadge(tag: listing.tag, compact: true),
           ),
-          if (listing.isPremium)
-            Positioned(
-              top: Gap.x3,
-              right: Gap.x3,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: p.money,
-                  borderRadius: Radii.rFull,
-                ),
-                child: Text(
-                  l.feedPremium.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+          // The value lives on the photo as a frosted pill, so the card body
+          // stays down to a name and one barter line. A gold dot marks premium
+          // without spending a second pill on it.
+          Positioned(
+            top: Gap.x3,
+            right: Gap.x3,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.92),
+                borderRadius: Radii.rFull,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (listing.isPremium) ...[
+                    Icon(Symbols.star_rounded, size: 12, color: p.money, fill: 1),
+                    Gap.w1,
+                  ],
+                  Text(
+                    listing.value.format(locale),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
           Positioned(
             left: 0,
             right: 0,
@@ -215,31 +198,6 @@ class _Photo extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  const _Meta({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = palette(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: p.inkFaint),
-        Gap.w1,
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: p.inkSoft,
-                fontSize: 11,
-              ),
-        ),
-      ],
     );
   }
 }
