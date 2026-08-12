@@ -1,0 +1,17 @@
+# Reliz imzosi. Bu faylni `key.properties` nomi bilan nusxalang va to'ldiring.
+#
+# `key.properties` va `.jks` fayli git'ga TUSHMASLIGI kerak — kalitni qo'lga
+# kiritgan har kim sizning nomingizdan ilova yangilanishini chiqara oladi.
+#
+# Kalit yaratish:
+#
+#   keytool -genkey -v -keystore ~/barterapp-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias barterapp
+#
+# Bir marta yaratiladi va abadiy saqlanadi: kalit yo'qolsa, Play Store'dagi
+# ilovaga boshqa hech qachon yangilanish chiqarib bo'lmaydi.
+
+storePassword=<keystore paroli>
+keyPassword=<kalit paroli>
+keyAlias=barterapp
+storeFile=/home/foydalanuvchi/barterapp-release.jks

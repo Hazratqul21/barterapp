@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -182,7 +181,6 @@ class _Row extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
 
@@ -274,7 +272,7 @@ class _Row extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _ago(l, notification.createdAt),
+                    timeAgo(context, notification.createdAt),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: p.inkFaint,
                     ),
@@ -299,18 +297,6 @@ class _Row extends ConsumerWidget {
     );
   }
 
-  /// The old row wrote "3d", "5h", "now" — English abbreviations on a Russian
-  /// screen.
-  String _ago(L l, DateTime at) {
-    final diff = DateTime.now().difference(at);
-    if (diff.inDays > 6) {
-      return DateFormat.MMMd(l.localeName).format(at.toLocal());
-    }
-    if (diff.inDays >= 1) return l.agoDays(diff.inDays);
-    if (diff.inHours >= 1) return l.agoHours(diff.inHours);
-    if (diff.inMinutes >= 1) return l.agoMinutes(diff.inMinutes);
-    return l.agoNow;
-  }
 }
 
 class _NotificationsShimmer extends StatelessWidget {

@@ -115,7 +115,25 @@ class _IntroPageState extends ConsumerState<IntroPage> {
                         child: Column(
                           children: [
                             const Spacer(flex: 3),
-                            slide.art,
+                            // The drawing gives up its space before the words
+                            // do. It is a fixed 260×200 CustomPaint, and the
+                            // two `Spacer`s can only surrender what they hold:
+                            // once they are at zero the picture and the
+                            // sentence together still needed ~350px, so a
+                            // 302px-tall viewport — a small phone in
+                            // landscape, or a short window — struck the first
+                            // screen of the app with overflow stripes.
+                            //
+                            // `scaleDown` never enlarges, so the drawing keeps
+                            // its intended size wherever it fits, and shrinks
+                            // only where the alternative was clipping. It is
+                            // vector, so shrinking costs it nothing.
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: slide.art,
+                              ),
+                            ),
                             Gap.h8,
                             Text(
                               slide.title,

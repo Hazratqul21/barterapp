@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../art/category_marks.dart';
@@ -34,6 +35,39 @@ String errorMessage(BuildContext context, Object error) {
   }
   return l.errorGeneric;
 }
+
+/// How long ago, in words the reader's language has.
+///
+/// Four screens needed this and four screens answered it differently: the inbox
+/// and the notification list each grew their own identical copy, while both
+/// review lists wrote `'Today'` and `'3 d'` straight into the widget — English
+/// abbreviations sitting on a Russian screen, in an app whose whole point is
+/// that it speaks three languages properly.
+///
+/// The `.toLocal()` matters as much as the wording. The API sends UTC, and a
+/// date rendered without converting is wrong for a third of the evening: a
+/// listing posted at 02:00 in Tashkent is 21:00 UTC the day before, so the card
+/// showed yesterday's date to everyone who posted after midnight.
+String timeAgo(BuildContext context, DateTime at) {
+  final l = L.of(context);
+  final diff = DateTime.now().difference(at);
+
+  // Past a week the gap stops being the useful fact; the date is.
+  if (diff.inDays > 6) {
+    return DateFormat.MMMd(l.localeName).format(at.toLocal());
+  }
+  if (diff.inDays >= 1) return l.agoDays(diff.inDays);
+  if (diff.inHours >= 1) return l.agoHours(diff.inHours);
+  if (diff.inMinutes >= 1) return l.agoMinutes(diff.inMinutes);
+  return l.agoNow;
+}
+
+/// A calendar date in the reader's language and time zone.
+///
+/// Every caller of `DateFormat.yMMMd` goes through here so that none of them
+/// can forget the `.toLocal()` again.
+String formatDate(BuildContext context, DateTime at) =>
+    DateFormat.yMMMd(L.of(context).localeName).format(at.toLocal());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Remote Image
@@ -919,9 +953,8 @@ extension AsyncFadeX<T> on AsyncValue<T> {
 /// the second, which is what makes those two screens read as one arrival rather
 /// than as a brand slide followed by an unrelated app.
 ///
-/// [onDark] over the swap gradient (the splash), where the mark is a pane of
-/// frosted white; otherwise the mark carries the gradient itself, so it stays
-/// legible on the app's own pale surface.
+/// The mark deliberately stays light in every context: its clean white tile
+/// and deep ink arrows are the inverse of the former dark generated logo.
 class BrandMark extends StatelessWidget {
   const BrandMark({
     super.key,
@@ -942,22 +975,14 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-    final arrow = size * 0.33;
+    final arrow = size * 0.56;
 
     Widget top = Icon(
-      Symbols.arrow_forward_rounded,
+      Symbols.sync_alt_rounded,
       size: arrow,
-      color: Colors.white,
+      color: const Color(0xFF123B31),
       weight: 700,
     );
-    Widget bottom = Icon(
-      Symbols.arrow_back_rounded,
-      size: arrow,
-      color: Colors.white,
-      weight: 700,
-    );
-
     if (animate) {
       top = top
           .animate()
@@ -968,38 +993,20 @@ class BrandMark extends StatelessWidget {
             duration: M3Motion.long1,
             curve: M3Motion.emphasizedDecelerate,
           );
-      bottom = bottom
-          .animate()
-          .fadeIn(delay: M3Motion.short3, duration: M3Motion.medium2)
-          .slideX(
-            begin: 0.9,
-            end: 0,
-            delay: M3Motion.short3,
-            duration: M3Motion.long1,
-            curve: M3Motion.emphasizedDecelerate,
-          );
     }
 
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: onDark ? Colors.white.withValues(alpha: 0.16) : null,
-        gradient: onDark ? null : p.swapGradient,
+        color: const Color(0xFFF9FCFA),
         // Proportional, so the 40px mark in the intro corner is the same shape
         // as the 104px one on the splash rather than a rounder version of it.
         borderRadius: BorderRadius.circular(size * 0.27),
-        border: onDark
-            ? Border.all(color: Colors.white.withValues(alpha: 0.28))
-            : null,
+        border: Border.all(color: const Color(0xFFD9E6DF)),
+        boxShadow: onDark ? Shadows.raised : null,
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(top: size * 0.25, child: top),
-          Positioned(bottom: size * 0.25, child: bottom),
-        ],
-      ),
+      child: Center(child: top),
     );
   }
 }

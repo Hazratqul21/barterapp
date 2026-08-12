@@ -129,7 +129,7 @@ cd api && ./tests/run_all.sh
 | Bildirishnomalar | ✅ |
 | Profil, sharhlarni **o'qish**, tasdiqlash | ✅ |
 | To'lov usullari, hisob-kitob | ✅ |
-| Sharh **yozish** (`POST /reviews`) | ⬜ |
+| Sharh **yozish** (`POST /reviews`) | ✅ |
 | Escrow, obuna, boost | ⬜ |
 | Taklif muddatining avtomatik tugashi | ⬜ |
 
@@ -179,13 +179,14 @@ docker exec barter-db psql -U barter -d barter -c "INSERT INTO reviews (id,offer
 | `JWT_SECRET` o'rnatish | Standart kalit bilan har kim istalgan hisobga kira oladi. Server `OTP_DEBUG=false` bo'lsa-yu kalit standart bo'lsa **ishga tushmaydi** — `api/.env.example` ga qarang |
 | SMS provayderini ulash | Hozir `OTP_DEBUG=true` bo'lganda kod javobda qaytadi |
 | Suratlar uchun doimiy joy | Hozir `api/media/` papkasi. Ko'p serverga chiqilganda S3/MinIO kerak — o'zgarish faqat `api/uploads.py` ichida |
-| `POST /reviews` | Sharh o'qiladi, lekin yozib bo'lmaydi |
-| Cron: taklif muddati | `expires_at` yoziladi, hech kim `expired` ga o'tkazmaydi |
+| Android reliz kaliti | `android/key.properties` yaratilmasa reliz debug kaliti bilan imzolanadi va Play Console uni qabul qilmaydi — `android/key.properties.example` ga qarang |
+| Cron: taklif muddati | `expires_at` yoziladi, hech kim `expired` ga o'tkazmaydi. Chat paneli muddati o'tganini o'zi aniqlaydi, lekin holat `pending` bo'lib qolaveradi |
 
 ## Ma'lum kamchiliklar
 
-- **Android SDK o'rnatilmagan** — kod Android'ga mo'ljallangan, faqat toolchain
-  yo'q. Android Studio o'rnating, keyin `flutter doctor`.
+- **iOS build sinalmagan** — kod, ikonkalar va ruxsat matnlari joyida, lekin
+  `flutter build ios` faqat macOS + Xcode'da ishlaydi. Bu mashinada (Linux)
+  tekshirib bo'lmaydi.
 - **`GET /conversations` N+1 so'rov beradi** — har suhbat uchun taklif alohida
   yig'iladi. 20 suhbat ≈ 180 so'rov.
 - **Savdogar ismlari tarjima qilinmaydi** — rus tilida lotin harflarida chiqadi.

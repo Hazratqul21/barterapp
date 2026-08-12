@@ -11,15 +11,6 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
 
-/// Phone, then code. Two steps on one screen so the number stays visible while
-/// the code that was sent to it is typed.
-///
-/// There is no "continue with Google / Apple / Facebook". Those three buttons
-/// used to sit at the top and every one of them answered with "coming soon" —
-/// the server has no such flow and never had one. A button that cannot do its
-/// job costs more than the space it takes: it teaches people that this app's
-/// buttons are decorative. Phone and SMS is also simply how this market signs
-/// in.
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
@@ -34,9 +25,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   bool _codeSent = false;
   bool _busy = false;
   String? _error;
-
-  /// Only ever set while the backend runs with `OTP_DEBUG` on, which is where
-  /// it hands the code back instead of sending an SMS.
   String? _debugCode;
 
   @override
@@ -47,14 +35,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   String get _cleanPhone => _phone.text.replaceAll(' ', '');
-
   bool get _phoneLooksValid => RegExp(r'^\+998\d{9}$').hasMatch(_cleanPhone);
 
   Future<void> _run(Future<void> Function() action) async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    setState(() { _busy = true; _error = null; });
     try {
       await action();
     } catch (e) {
@@ -66,37 +50,27 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _sendCode() => _run(() async {
-    final code = await ref
-        .read(authRepositoryProvider)
-        .requestCode(_cleanPhone);
+    final code = await ref.read(authRepositoryProvider).requestCode(_cleanPhone);
     if (!mounted) return;
     setState(() {
       _codeSent = true;
       _debugCode = code;
-      // Filling it in is the point of the debug code: it lets the whole trade
-      // loop be walked end to end without an SMS gateway.
       if (code != null) _code.text = code;
     });
   });
 
   Future<void> _verify() => _run(() async {
-    final isNewUser = await ref
-        .read(authRepositoryProvider)
-        .verify(_cleanPhone, _code.text.trim());
+    final isNewUser = await ref.read(authRepositoryProvider).verify(_cleanPhone, _code.text.trim());
     await ref.read(authStateProvider.notifier).signedIn();
     ref.invalidate(meProvider);
     if (!mounted) return;
-    // A new account has no name yet, and a nameless trader is invisible on
-    // every card in the app — so that is the next screen, not the feed.
     context.go(isNewUser ? '/onboarding' : '/home');
   });
 
-  void _backToPhone() => setState(() {
-    _codeSent = false;
-    _code.clear();
-    _debugCode = null;
-    _error = null;
-  });
+  void _notYet(L l) {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content: Text(l.comingSoon)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,351 +79,93 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(Gap.x6, Gap.x4, Gap.x6, Gap.x8),
-            child:
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (context.canPop())
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: IconButton(
-                            tooltip: l.back,
-                            onPressed: context.pop,
-                            icon: const Icon(Symbols.arrow_back_rounded),
-                          ),
-                        ),
-                      Gap.h6,
-                      const _BrandMark(),
-                      Gap.h8,
-                      Text(
-                        _codeSent ? l.authCodeTitle : l.authTitle,
-                        style: theme.textTheme.headlineMedium,
-                      ),
-                      Gap.h2,
-                      Text(
-                        _codeSent
-                            ? l.authCodeSubtitle(_cleanPhone)
-                            : l.authSubtitle,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: p.inkSoft,
-                        ),
-                      ),
-                      if (!_codeSent) ...[
-                        _SocialButton(
-                          icon: Icons.apple,
-                          label: "Continue with Apple",
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
-                          },
-                        ),
-                        Gap.h3,
-                        _SocialButton(
-                          icon: Icons.g_mobiledata,
-                          label: "Continue with Google",
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black87,
-                          borderColor: Colors.grey.shade300,
-                          iconSize: 32,
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
-                          },
-                        ),
-                        Gap.h3,
-                        _SocialButton(
-                          icon: Icons.facebook,
-                          label: "Continue with Facebook",
-                          backgroundColor: const Color(0xFF1877F2),
-                          textColor: Colors.white,
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
-                          },
-                        ),
-                        Gap.h6,
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-                              child: Text(
-                                "Yoki telefon orqali",
-                                style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        Gap.h6,
-                      ],
-
-                      TextField(
-                        controller: _phone,
-                        enabled: !_codeSent && !_busy,
-                        keyboardType: TextInputType.phone,
-                        autofillHints: const [AutofillHints.telephoneNumber],
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[\d+]')),
-                          LengthLimitingTextInputFormatter(13),
-                        ],
-                        style: theme.textTheme.titleMedium,
-                        decoration: InputDecoration(
-                          labelText: l.authPhoneLabel,
-                          prefixIcon: const Icon(Symbols.call_rounded),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: Gap.x5, horizontal: Gap.x4),
-                        ),
-                        onChanged: (_) => setState(() {}),
-                        onSubmitted: (_) =>
-                            _phoneLooksValid && !_busy ? _sendCode() : null,
-                      ),
-
-                      if (!_codeSent &&
-                          !_phoneLooksValid &&
-                          _phone.text.length > 4) ...[
-                        Gap.h2,
-                        Text(
-                          l.authInvalidPhone,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.inkFaint,
-                          ),
-                        ),
-                      ],
-
-                      if (_codeSent) ...[
-                        Gap.h3,
-                        TextField(
-                          controller: _code,
-                          enabled: !_busy,
-                          autofocus: true,
-                          keyboardType: TextInputType.number,
-                          autofillHints: const [AutofillHints.oneTimeCode],
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
-                          ],
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            letterSpacing: 10,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                          decoration: InputDecoration(
-                            counterText: '',
-                            filled: true,
-                            fillColor: theme.colorScheme.surfaceContainerHighest,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(vertical: Gap.x5),
-                          ),
-                          onSubmitted: (_) {
-                            HapticFeedback.lightImpact();
-                            _verify();
-                          },
-                        ),
-                        if (_debugCode != null) ...[
-                          Gap.h3,
-                          _Notice(
-                            icon: Symbols.info_rounded,
-                            color: p.money,
-                            background: p.moneySoft,
-                            text: l.authOtpDebug(_debugCode!),
-                          ),
-                        ],
-                      ],
-
-                      if (_error != null) ...[
-                        Gap.h3,
-                        _Notice(
-                          icon: Symbols.error_rounded,
-                          color: theme.colorScheme.error,
-                          background: theme.colorScheme.errorContainer,
-                          text: _error!,
-                        ),
-                      ],
-
-                      Gap.h6,
-                      FilledButton(
-                        onPressed: _busy || (!_codeSent && !_phoneLooksValid)
-                            ? null
-                            : () {
-                                HapticFeedback.lightImpact();
-                                _codeSent ? _verify() : _sendCode();
-                              },
-                        child: _busy
-                            ? const SizedBox(
-                                width: Sizes.iconLg,
-                                height: Sizes.iconLg,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(_codeSent ? l.authVerify : l.authSendCode),
-                      ),
-
-                      if (_codeSent) ...[
-                        Gap.h2,
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextButton(
-                              onPressed: _busy ? null : _backToPhone,
-                              child: Text(l.authChangeNumber),
-                            ),
-                            TextButton(
-                              onPressed: _busy ? null : _sendCode,
-                              child: Text(l.authResend),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: BrandMark(size: 64)),
+                  Gap.h8,
+                  Text(
+                    _codeSent ? l.authCodeTitle : l.authTitle,
+                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
                   ),
-                ).animate().fadeIn(
-                  duration: M3Motion.medium3,
-                  curve: M3Motion.emphasizedDecelerate,
-                ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+                  Gap.h2,
+                  Text(
+                    _codeSent ? l.authCodeSubtitle(_cleanPhone) : l.authSubtitle,
+                    style: theme.textTheme.bodyLarge?.copyWith(color: p.inkSoft),
+                  ),
+                  Gap.h6,
 
-/// The swap mark, small. Signing in is the first screen most people reach after
-/// the intro, and it should still look like the same app.
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
+                  if (!_codeSent) ...[
+                    _SocialButton(icon: Icons.apple, label: l.authWithApple, backgroundColor: Colors.black, textColor: Colors.white, onPressed: () => _notYet(l)),
+                    Gap.h3,
+                    _SocialButton(icon: Icons.g_mobiledata, label: l.authWithGoogle, backgroundColor: Colors.white, textColor: Colors.black87, borderColor: theme.colorScheme.outlineVariant, iconSize: 32, onPressed: () => _notYet(l)),
+                    Gap.h6,
+                    Row(children: [const Expanded(child: Divider()), Padding(padding: const EdgeInsets.symmetric(horizontal: Gap.x4), child: Text(l.authOrPhone, style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint))), const Expanded(child: Divider())]),
+                    Gap.h6,
+                  ].animate(interval: 50.ms).fadeIn().slideY(begin: 0.1, end: 0),
 
-  @override
-  Widget build(BuildContext context) {
-    final p = palette(context);
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: p.swapGradient,
-          borderRadius: Radii.rMd,
-          boxShadow: Shadows.raised,
-        ),
-        child: const Icon(
-          Symbols.swap_horiz_rounded,
-          color: Colors.white,
-          size: 30,
-          weight: 600,
-        ),
-      ),
-    );
-  }
-}
+                  TextField(
+                    controller: _phone,
+                    enabled: !_codeSent && !_busy,
+                    keyboardType: TextInputType.phone,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    decoration: InputDecoration(
+                      labelText: l.authPhoneLabel,
+                      prefixIcon: const Icon(Symbols.call_rounded),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerLow,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
 
-/// A tinted line of explanation under a field — an error, or the development
-/// notice that carries the OTP while there is no SMS gateway.
-class _Notice extends StatelessWidget {
-  const _Notice({
-    required this.icon,
-    required this.color,
-    required this.background,
-    required this.text,
-  });
+                  if (_codeSent) ...[
+                    Gap.h4,
+                    TextField(
+                      controller: _code,
+                      enabled: !_busy,
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(letterSpacing: 12, fontWeight: FontWeight.w900),
+                      decoration: InputDecoration(filled: true, fillColor: theme.colorScheme.surfaceContainerLow),
+                      onSubmitted: (_) => _verify(),
+                    ),
+                  ],
 
-  final IconData icon;
-  final Color color;
-  final Color background;
-  final String text;
+                  if (_error != null) ...[Gap.h4, _Notice(icon: Symbols.error_rounded, color: theme.colorScheme.error, background: theme.colorScheme.errorContainer.withValues(alpha: 0.5), text: _error!)],
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: Gap.x3),
-      decoration: BoxDecoration(color: background, borderRadius: Radii.rSm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: Sizes.iconMd, color: color),
-          Gap.w2,
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: color),
+                  Gap.h6,
+                  FilledButton(
+                    onPressed: _busy || (!_codeSent && !_phoneLooksValid) ? null : () { HapticFeedback.mediumImpact(); _codeSent ? _verify() : _sendCode(); },
+                    child: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : Text(_codeSent ? l.authVerify : l.authSendCode),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({required this.icon, required this.color, required this.background, required this.text});
+  final IconData icon; final Color color; final Color background; final String text;
+  @override
+  Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(Gap.x3), decoration: BoxDecoration(color: background, borderRadius: Radii.rMd), child: Row(children: [Icon(icon, size: 20, color: color), Gap.w2, Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)))]));
 }
 
 class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.icon,
-    required this.label,
-    required this.backgroundColor,
-    required this.textColor,
-    required this.onPressed,
-    this.borderColor,
-    this.iconSize = 24,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color? borderColor;
-  final double iconSize;
-  final VoidCallback onPressed;
-
+  const _SocialButton({required this.icon, required this.label, required this.backgroundColor, required this.textColor, required this.onPressed, this.borderColor, this.iconSize = 24});
+  final IconData icon; final String label; final Color backgroundColor; final Color textColor; final Color? borderColor; final double iconSize; final VoidCallback onPressed;
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: borderColor != null ? BorderSide(color: borderColor!) : BorderSide.none,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-        ),
-        onPressed: onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: iconSize, color: textColor),
-            Gap.w3,
-            Text(
-              label,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SizedBox(height: 56, child: OutlinedButton(style: OutlinedButton.styleFrom(backgroundColor: backgroundColor, foregroundColor: textColor, side: borderColor != null ? BorderSide(color: borderColor!) : BorderSide.none, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))), onPressed: onPressed, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, size: iconSize), Gap.w3, Text(label, style: const TextStyle(fontWeight: FontWeight.w700))])));
 }

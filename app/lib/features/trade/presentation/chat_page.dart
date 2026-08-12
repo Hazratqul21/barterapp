@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -15,11 +16,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../data/trade_repository.dart';
 
-/// One trade, negotiated.
-///
-/// The deal panel is pinned above the messages because the offer is why the
-/// thread exists — chat, reviews and settlement all hang off its status, not
-/// the other way round.
 class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({
     super.key,
@@ -28,17 +24,13 @@ class ChatPage extends ConsumerStatefulWidget {
   });
 
   final String conversationId;
-
-  /// True when the thread is the right-hand pane of the desktop inbox rather
-  /// than a screen of its own. It then drops its own app bar and back button —
-  /// the list beside it is already the way back.
   final bool embedded;
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends ConsumerState<ChatPage> {
+class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   StreamSubscription<LiveEvent>? _live;
@@ -48,8 +40,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _sending = false;
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    ref.read(liveChannelProvider).resume();
+    ref.invalidate(conversationProvider(widget.conversationId));
+    ref.invalidate(conversationsProvider);
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final channel = ref.read(liveChannelProvider)..connect();
     _live = channel.events.listen((event) {
       if (event.conversationId != widget.conversationId) return;
@@ -68,6 +69,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _live?.cancel();
     _typingTimer?.cancel();
     _controller.dispose();
@@ -96,7 +98,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ref.invalidate(conversationsProvider);
     } catch (e) {
       if (!mounted) return;
-      _controller.text = text; // do not lose what they wrote
+      _controller.text = text;
       _complain(errorMessage(context, e));
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -111,11 +113,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   Future<void> _act(String offerId, String action, {int? cashDeltaMinor}) async {
     try {
-      await ref
-          .read(tradeRepositoryProvider)
-          .act(offerId, action, cashDeltaMinor: cashDeltaMinor);
-      // `counter` swaps the two sides, so `is_mine` flips and the buttons must
-      // be rebuilt from the response rather than from what was on screen.
+      await ref.read(tradeRepositoryProvider).act(offerId, action, cashDeltaMinor: cashDeltaMinor);
       ref.invalidate(conversationProvider(widget.conversationId));
       ref.invalidate(conversationsProvider);
       ref.invalidate(matchesProvider);
@@ -124,26 +122,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  /// Ask for the new cash figure, then counter.
-  ///
-  /// This used to push `/offer/{wanted.id}` — a brand new offer against the
-  /// listing the sender wanted. For the recipient that listing is their own, so
-  /// the server refused it every time: "you cannot offer on your own listing".
-  /// A counter is a state change on the offer that already exists.
   Future<void> _counter(Offer offer) async {
     final l = L.of(context);
     final controller = TextEditingController(
-      text: offer.cashDeltaMinor == 0
-          ? ''
-          : (offer.cashDeltaMinor.abs() ~/ 100).toString(),
+      text: offer.cashDeltaMinor == 0 ? '' : (offer.cashDeltaMinor.abs() ~/ 100).toString(),
     );
 
     final confirmed = await showBarterPanel<bool>(
       context: context,
       title: l.dealCounterTitle,
       subtitle: l.dealCounterHint,
-      // The one sheet in the app that changes a deal, so it gets the
-      // wallpaper rather than the plain frost every other sheet uses.
       skin: const SheetSkin.wallpaper(intensity: 1.4),
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
@@ -202,8 +190,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             error: (e, _) => ErrorState(
               message: errorMessage(context, e),
               retryLabel: l.retry,
-              onRetry: () =>
-                  ref.invalidate(conversationProvider(widget.conversationId)),
+              onRetry: () => ref.invalidate(conversationProvider(widget.conversationId)),
             ),
             data: (detail) {
               final offer = detail.offer;
@@ -211,12 +198,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 children: [
                   if (widget.embedded)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Gap.x4,
-                        vertical: Gap.x3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                        color: theme.colorScheme.surfaceContainerLowest,
                         border: Border(bottom: BorderSide(color: p.hair)),
                       ),
                       child: Align(
@@ -240,36 +224,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                           )
                         : ListView.builder(
                             controller: _scroll,
-                            // The server returns oldest first. `reverse` walks
-                            // the list from the bottom of the screen upward, so
-                            // it has to be read back to front — otherwise the
-                            // newest message sits at the top and the whole
-                            // conversation reads backwards.
                             reverse: true,
-                            padding: const EdgeInsets.all(Gap.x4),
+                            padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x4),
                             itemCount: detail.messages.length,
                             itemBuilder: (context, index) {
-                              final message = detail
-                                  .messages[detail.messages.length - 1 - index];
-                              return _Bubble(message: message);
+                              final message = detail.messages[detail.messages.length - 1 - index];
+                              return _Bubble(message: message)
+                                  .animate()
+                                  .fadeIn(duration: 200.ms)
+                                  .slideY(begin: 0.05, end: 0, curve: M3Motion.emphasizedDecelerate);
                             },
                           ),
                   ),
                   if (_peerTyping)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        Gap.x5,
-                        0,
-                        Gap.x5,
-                        Gap.x2,
-                      ),
+                      padding: const EdgeInsets.fromLTRB(Gap.x5, 0, Gap.x5, Gap.x2),
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Text(
                           l.chatTyping,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.inkFaint,
-                          ),
+                          style: theme.textTheme.labelSmall?.copyWith(color: p.give, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -289,10 +263,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 }
 
-/// Who you are talking to, tappable through to their profile.
 class _PeerHeader extends StatelessWidget {
   const _PeerHeader({required this.peer});
-
   final TraderBrief peer;
 
   @override
@@ -334,22 +306,14 @@ class _PeerHeader extends StatelessWidget {
                       ),
                       if (peer.isVerified) ...[
                         Gap.w1,
-                        Icon(
-                          Symbols.verified_rounded,
-                          size: Sizes.iconSm,
-                          color: p.give,
-                          fill: 1,
-                        ),
+                        Icon(Symbols.verified_rounded, size: Sizes.iconSm, color: p.give, fill: 1),
                       ],
                     ],
                   ),
                   if (peer.isOnline)
                     Text(
                       l.traderOnline,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: p.give,
-                        letterSpacing: 0,
-                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(color: p.give, letterSpacing: 0),
                     ),
                 ],
               ),
@@ -361,7 +325,6 @@ class _PeerHeader extends StatelessWidget {
   }
 }
 
-/// What is on the table, and what this person can do about it.
 class _DealPanel extends ConsumerWidget {
   const _DealPanel({
     required this.offer,
@@ -385,36 +348,23 @@ class _DealPanel extends ConsumerWidget {
     final locale = l.localeName;
 
     final mine = offer.offered.map((o) => o.title).join(' + ');
-    final cash = offer.cashDeltaMinor != 0
-        ? ' + ${offer.cash.format(locale)}'
-        : '';
-
-    // `is_mine` says who sent it, which decides who may answer. It flips on
-    // every counter, so it is read fresh from the response each time.
+    final cash = offer.cashDeltaMinor != 0 ? ' + ${offer.cash.format(locale)}' : '';
     final awaitingMe = !offer.isMine;
-    final open =
-        offer.status == OfferStatus.pending ||
-        offer.status == OfferStatus.talking;
+    final open = offer.status == OfferStatus.pending || offer.status == OfferStatus.talking;
 
     return AnimatedContainer(
-      // Accepting or countering changes both the buttons and the height of
-      // this panel. Without the animation the messages below jump, and the
-      // moment a trade is agreed — the one moment this product exists for —
-      // reads as a glitch.
       duration: M3Motion.medium3,
       curve: M3Motion.emphasized,
       margin: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, 0),
       padding: const EdgeInsets.all(Gap.x4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: Radii.rLg,
         border: Border.all(
-          // The border picks up the status colour once the deal is settled,
-          // so the panel itself says where things stand.
           color: switch (offer.status) {
             OfferStatus.accepted || OfferStatus.completed => p.give,
             OfferStatus.declined => theme.colorScheme.error,
-            _ => p.hair,
+            _ => theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           },
         ),
       ),
@@ -424,8 +374,7 @@ class _DealPanel extends ConsumerWidget {
           Row(
             children: [
               Expanded(child: _StatusLine(status: offer.status)),
-              if (open && offer.expiresAt != null)
-                _Expiry(expiresAt: offer.expiresAt!),
+              if (open && offer.expiresAt != null) _Expiry(expiresAt: offer.expiresAt!),
             ],
           ),
           Gap.h3,
@@ -436,8 +385,6 @@ class _DealPanel extends ConsumerWidget {
             takeCaption: offer.isMine ? l.dealYouGet : l.dealYouGive,
             takeLabel: offer.wanted.title,
           ),
-          // AnimatedSize so the panel grows and shrinks with its own actions
-          // instead of snapping between two heights.
           if (open && awaitingMe) ...[
             Gap.h4,
             Row(
@@ -453,20 +400,12 @@ class _DealPanel extends ConsumerWidget {
                   ),
                 ),
                 Gap.w2,
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCounter,
-                    child: Text(l.dealCounter),
-                  ),
-                ),
+                Expanded(child: OutlinedButton(onPressed: onCounter, child: Text(l.dealCounter))),
                 Gap.w2,
                 Expanded(
                   child: FilledButton(
                     onPressed: onAccept,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, Sizes.buttonMd),
-                      padding: EdgeInsets.zero,
-                    ),
+                    style: FilledButton.styleFrom(minimumSize: const Size(0, Sizes.buttonMd), padding: EdgeInsets.zero),
                     child: Text(l.dealAccept),
                   ),
                 ),
@@ -487,93 +426,74 @@ class _DealPanel extends ConsumerWidget {
   }
 }
 
-/// The offer's state, as a coloured word.
 class _StatusLine extends StatelessWidget {
   const _StatusLine({required this.status});
-
   final OfferStatus status;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
-    final scheme = Theme.of(context).colorScheme;
-
     final (label, color) = switch (status) {
       OfferStatus.pending => (l.dealPending, p.money),
       OfferStatus.talking => (l.dealTalking, p.take),
       OfferStatus.accepted => (l.dealAccepted, p.give),
       OfferStatus.completed => (l.dealCompleted, p.give),
-      OfferStatus.declined => (l.dealDeclined, scheme.error),
-      OfferStatus.expired => (l.dealExpired, p.inkFaint),
+      OfferStatus.declined => (l.dealDeclined, Theme.of(context).colorScheme.error),
       _ => (l.dealExpired, p.inkFaint),
     };
-
-    return Text(
-      label.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
-    );
+    return Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color));
   }
 }
 
-/// How long is left to answer. An offer lives 48 hours.
 class _Expiry extends StatelessWidget {
   const _Expiry({required this.expiresAt});
-
   final DateTime expiresAt;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
-    final hours = expiresAt.difference(DateTime.now()).inHours;
-
-    return Text(
-      hours < 1 ? l.chatExpiresSoon : l.chatExpiresIn(hours),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: hours < 6 ? Theme.of(context).colorScheme.error : p.inkFaint,
-        letterSpacing: 0,
-      ),
-    );
+    final theme = Theme.of(context);
+    final left = expiresAt.difference(DateTime.now());
+    final (label, colour) = switch (left) {
+      _ when left.isNegative => (l.dealExpired, p.inkFaint),
+      _ when left.inHours < 1 => (l.chatExpiresSoon, theme.colorScheme.error),
+      _ when left.inHours < 6 => (l.chatExpiresIn(left.inHours), theme.colorScheme.error),
+      _ => (l.chatExpiresIn(left.inHours), p.inkFaint),
+    };
+    return Text(label, style: theme.textTheme.labelSmall?.copyWith(color: colour, letterSpacing: 0));
   }
 }
 
 class _Bubble extends StatelessWidget {
   const _Bubble({required this.message});
-
   final ChatMessage message;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final p = palette(context);
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final mine = message.isMine;
+    final p = palette(context);
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: Gap.x2),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: Gap.x3,
-          vertical: Gap.x2 + 2,
-        ),
+        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+        padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
         decoration: BoxDecoration(
-          color: mine ? p.giveSoft : scheme.surfaceContainerLowest,
-          border: mine ? null : Border.all(color: p.hair),
+          color: mine ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(Radii.md),
-            topRight: const Radius.circular(Radii.md),
-            bottomLeft: Radius.circular(mine ? Radii.md : Radii.xs),
-            bottomRight: Radius.circular(mine ? Radii.xs : Radii.md),
+            topLeft: const Radius.circular(22),
+            topRight: const Radius.circular(22),
+            bottomLeft: Radius.circular(mine ? 22 : 4),
+            bottomRight: Radius.circular(mine ? 4 : 22),
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             if (message.photoUrl != null) ...[
               ClipRRect(
@@ -584,15 +504,16 @@ class _Bubble extends StatelessWidget {
             ],
             Text(
               message.body,
-              style: theme.textTheme.bodyLarge,
-              textAlign: TextAlign.start,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: mine ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             Gap.h1,
             Text(
               DateFormat.Hm(l.localeName).format(message.createdAt.toLocal()),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: p.inkFaint,
-                letterSpacing: 0,
+                color: mine ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.6) : p.inkFaint,
+                fontSize: 10,
               ),
             ),
           ],
@@ -618,32 +539,34 @@ class _Composer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final p = palette(context);
+    final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x2, Gap.x4, Gap.x2),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        border: Border(top: BorderSide(color: p.hair)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x2, Gap.x4, Gap.x4),
       child: SafeArea(
         top: false,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: TextField(
-                controller: controller,
-                onChanged: onChanged,
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                decoration: InputDecoration(
-                  hintText: l.chatPlaceholder,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: Gap.x4,
-                    vertical: Gap.x3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
+                child: TextField(
+                  controller: controller,
+                  onChanged: onChanged,
+                  minLines: 1,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: l.chatPlaceholder,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: Gap.x3),
                   ),
                 ),
               ),
@@ -652,19 +575,12 @@ class _Composer extends StatelessWidget {
             IconButton.filled(
               onPressed: sending ? null : onSend,
               icon: sending
-                  ? const SizedBox(
-                      width: Sizes.iconMd,
-                      height: Sizes.iconMd,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: Colors.white,
-                      ),
-                    )
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Symbols.send_rounded),
               style: IconButton.styleFrom(
-                backgroundColor: p.give,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(Sizes.buttonMd, Sizes.buttonMd),
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                minimumSize: const Size(52, 52),
               ),
             ),
           ],
@@ -674,16 +590,9 @@ class _Composer extends StatelessWidget {
   }
 }
 
-/// After a completed trade: rate the other side, once.
-///
-/// It lives at the bottom of the deal panel because that is where the trade
-/// ended. Asking on a separate screen means asking later, and later is never —
-/// which is how the seed data ended up being the only reviews in the product.
 class _ReviewPrompt extends ConsumerStatefulWidget {
   const _ReviewPrompt({required this.offer});
-
   final Offer offer;
-
   @override
   ConsumerState<_ReviewPrompt> createState() => _ReviewPromptState();
 }
@@ -703,27 +612,15 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
   Future<void> _send() async {
     if (_body.text.trim().isEmpty) return;
     setState(() => _sending = true);
-    final l = L.of(context);
     try {
-      await ref
-          .read(tradeRepositoryProvider)
-          .writeReview(
-            offerId: widget.offer.id,
-            rating: _rating,
-            body: _body.text.trim(),
-          );
+      await ref.read(tradeRepositoryProvider).writeReview(offerId: widget.offer.id, rating: _rating, body: _body.text.trim());
       ref.invalidate(myReviewProvider(widget.offer.id));
       ref.invalidate(traderProvider(widget.offer.counterparty.id));
-      ref.invalidate(traderReviewsProvider(widget.offer.counterparty.id));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l.reviewThanks)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context).reviewThanks)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -732,7 +629,6 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final p = palette(context);
     final theme = Theme.of(context);
     final existing = ref.watch(myReviewProvider(widget.offer.id));
 
@@ -740,101 +636,30 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (review) {
-        if (review != null) {
-          return Padding(
-            padding: const EdgeInsets.only(top: Gap.x3),
-            child: Row(
-              children: [
-                Icon(
-                  Symbols.rate_review_rounded,
-                  size: Sizes.iconMd,
-                  color: p.give,
-                ),
-                Gap.w2,
-                Text(
-                  l.reviewDone,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
-                ),
-                Gap.w2,
-                _Stars(rating: review.rating, size: Sizes.iconSm),
-              ],
-            ),
-          );
-        }
-
-        if (!_open) {
-          return Padding(
-            padding: const EdgeInsets.only(top: Gap.x3),
-            child: OutlinedButton.icon(
-              onPressed: () => setState(() => _open = true),
-              icon: const Icon(Symbols.star_rounded, size: Sizes.iconMd),
-              label: Text(l.reviewSend),
-            ),
-          );
-        }
-
+        if (review != null) return Padding(padding: const EdgeInsets.only(top: Gap.x3), child: Text(l.reviewDone, style: theme.textTheme.bodySmall));
+        if (!_open) return Padding(padding: const EdgeInsets.only(top: Gap.x3), child: OutlinedButton.icon(onPressed: () => setState(() => _open = true), icon: const Icon(Symbols.star_rounded), label: Text(l.reviewSend)));
         return Padding(
           padding: const EdgeInsets.only(top: Gap.x4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l.reviewTitle, style: theme.textTheme.titleMedium),
-              Gap.h1,
-              Text(
-                l.reviewLede(widget.offer.counterparty.name),
-                style: theme.textTheme.bodySmall?.copyWith(color: p.inkSoft),
-              ),
               Gap.h3,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   for (var star = 1; star <= 5; star++)
-                    IconButton(
-                      onPressed: () => setState(() => _rating = star),
-                      icon: Icon(
-                        Symbols.star_rounded,
-                        size: 32,
-                        fill: star <= _rating ? 1 : 0,
-                        color: star <= _rating ? p.money : p.inkFaint,
-                      ),
-                    ),
+                    IconButton(onPressed: () => setState(() => _rating = star), icon: Icon(Symbols.star_rounded, size: 32, fill: star <= _rating ? 1 : 0, color: star <= _rating ? palette(context).money : palette(context).inkFaint)),
                 ],
               ),
               Gap.h3,
-              TextField(
-                controller: _body,
-                maxLines: 3,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(hintText: l.reviewBody),
-              ),
+              TextField(controller: _body, maxLines: 3, decoration: InputDecoration(hintText: l.reviewBody)),
               Gap.h3,
               Row(
                 children: [
-                  TextButton(
-                    onPressed: () => setState(() => _open = false),
-                    child: Text(l.reviewLater),
-                  ),
+                  TextButton(onPressed: () => setState(() => _open = false), child: Text(l.reviewLater)),
                   Gap.w2,
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _sending || _body.text.trim().isEmpty
-                          ? null
-                          : _send,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, Sizes.buttonMd),
-                      ),
-                      child: _sending
-                          ? const SizedBox(
-                              width: Sizes.iconMd,
-                              height: Sizes.iconMd,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(l.reviewSend),
-                    ),
-                  ),
+                  Expanded(child: FilledButton(onPressed: _sending ? null : _send, child: Text(l.reviewSend))),
                 ],
               ),
             ],
@@ -845,27 +670,12 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
   }
 }
 
-/// Five stars, filled to the rating.
 class _Stars extends StatelessWidget {
   const _Stars({required this.rating, this.size = Sizes.iconMd});
-
   final int rating;
   final double size;
-
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var star = 1; star <= 5; star++)
-          Icon(
-            Symbols.star_rounded,
-            size: size,
-            fill: star <= rating ? 1 : 0,
-            color: star <= rating ? p.money : p.inkFaint,
-          ),
-      ],
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: [for (var star = 1; star <= 5; star++) Icon(Symbols.star_rounded, size: size, fill: star <= rating ? 1 : 0, color: star <= rating ? palette(context).money : palette(context).inkFaint)]);
   }
 }

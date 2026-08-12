@@ -1,4 +1,4 @@
-"""BarterApp ilova ikonkasi — brend belgisi, kodda chizilgan.
+"""BarterApp ilova ikonkasi — light brend belgisi, kodda chizilgan.
 
 Ikkilikda saqlangan PNG kerak (do'konlar shuni talab qiladi), lekin uni
 qo'lda chizish o'rniga shu skript yasaydi: rang yoki shakl o'zgarsa,
@@ -9,53 +9,23 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-GIVE = (20, 168, 107)   # brand500
-TAKE = (59, 118, 240)   # take500
+SURFACE = (249, 252, 250)
+INK = (18, 59, 49)
+HAIR = (217, 230, 223)
 S = 1024                # eng katta o'lcham, qolgani shundan kichraytiriladi
 SS = 4                  # supersampling
 
 
-def gradient(size):
-    """give → take, diagonal bo'ylab."""
-    img = Image.new("RGB", (size, size))
-    px = img.load()
-    for y in range(size):
-        for x in range(size):
-            t = (x + y) / (2 * size - 2)
-            px[x, y] = tuple(round(GIVE[i] + (TAKE[i] - GIVE[i]) * t) for i in range(3))
-    return img
-
-
-def star(draw, cx, cy, outer, inner, colour, width):
-    pts = []
-    for i in range(16):
-        r = outer if i % 2 == 0 else inner
-        a = -math.pi / 2 + i * math.pi / 8
-        pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
-    draw.polygon(pts, outline=colour, width=width)
-
-
-def arrow(draw, y, x0, x1, colour, width, head):
-    """A rounded shaft with a solid head.
-
-    Drawn as shapes rather than strokes: at icon sizes a stroked arrowhead
-    leaves ragged corners where the two lines meet, and every store renders
-    this at a dozen resolutions.
-    """
-    d = 1 if x1 > x0 else -1
-    tip = x1
-    base = x1 - d * head
-    half = width / 2
-
-    draw.rounded_rectangle(
-        [min(x0, base), y - half, max(x0, base), y + half],
-        radius=half,
-        fill=colour,
-    )
-    draw.polygon(
-        [(tip, y), (base, y - head * 0.86), (base, y + head * 0.86)],
-        fill=colour,
-    )
+def arrow(draw, points, colour, width):
+    """Rounded segment plus a crisp arrowhead for the circular swap mark."""
+    draw.line(points[:-1], fill=colour, width=width, joint="curve")
+    tip, base = points[-1], points[-2]
+    dx, dy = tip[0] - base[0], tip[1] - base[1]
+    length = math.hypot(dx, dy)
+    nx, ny = -dy / length, dx / length
+    head = width * 1.35
+    draw.polygon([tip, (base[0] + nx * head * .65, base[1] + ny * head * .65),
+                   (base[0] - nx * head * .65, base[1] - ny * head * .65)], fill=colour)
 
 
 def build(size, scale=1.0):
@@ -65,24 +35,21 @@ def build(size, scale=1.0):
     circle and would otherwise cut the arrowheads off.
     """
     n = size * SS
-    img = gradient(n).convert("RGBA")
+    img = Image.new("RGBA", (n, n), SURFACE + (255,))
     d = ImageDraw.Draw(img)
 
-    # No tilework here. It belongs on a full screen, where there is room to
-    # notice it; at 40 pixels on a home screen it collides with the mark and
-    # both turn to mud. The gradient and the two arrows are the brand.
-
-    # Kept well inside the square — every platform crops this differently, and
-    # iOS rounds the corners hard.
+    # Light app tile with two curved arrows, matching the in-app brand mark.
     def s(fraction):
         """A fraction of the square, pulled toward the centre by `scale`."""
         return n * (0.5 + (fraction - 0.5) * scale)
 
-    w = n * 0.075 * scale
-    head = n * 0.105 * scale
-    white = (255, 255, 255, 255)
-    arrow(d, s(0.395), s(0.265), s(0.735), white, w, head)
-    arrow(d, s(0.605), s(0.735), s(0.265), white, w, head)
+    inset = n * .10
+    d.rounded_rectangle([inset, inset, n - inset, n - inset], radius=n * .23,
+                        outline=HAIR + (255,), width=max(1, n // 180))
+    w = int(n * 0.085 * scale)
+    ink = INK + (255,)
+    arrow(d, [(s(.31), s(.58)), (s(.31), s(.38)), (s(.50), s(.38)), (s(.67), s(.38))], ink, w)
+    arrow(d, [(s(.69), s(.42)), (s(.69), s(.62)), (s(.50), s(.62)), (s(.33), s(.62))], ink, w)
 
     return img.resize((size, size), Image.LANCZOS)
 

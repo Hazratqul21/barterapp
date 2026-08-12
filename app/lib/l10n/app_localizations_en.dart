@@ -280,6 +280,18 @@ class LEn extends L {
   String get authResend => 'Send the code again';
 
   @override
+  String get authWithApple => 'Continue with Apple';
+
+  @override
+  String get authWithGoogle => 'Continue with Google';
+
+  @override
+  String get authWithFacebook => 'Continue with Facebook';
+
+  @override
+  String get authOrPhone => 'Or use your phone number';
+
+  @override
   String get profileSetupTitle => 'About you';
 
   @override
@@ -741,6 +753,31 @@ class LEn extends L {
 
   @override
   String get createQuotaOk => 'Got it';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get aiTitle => 'AI listing writer';
+
+  @override
+  String get aiIntro =>
+      'What do you want to trade? Write a line — the AI fills in the rest.';
+
+  @override
+  String get aiHint =>
+      'For example: I have an iPhone 13 Pro in good condition. Trading it for a bicycle.';
+
+  @override
+  String get aiGenerate => 'Write it';
+
+  @override
+  String get aiDone =>
+      'Draft ready. Read it over and change anything that is off.';
+
+  @override
+  String get aiFailed =>
+      'The AI did not answer. You can fill the fields in yourself.';
 
   @override
   String get verifyTitle => 'Safety & verification';

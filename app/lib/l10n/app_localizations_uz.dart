@@ -281,6 +281,18 @@ class LUz extends L {
   String get authResend => 'Kodni qayta yuborish';
 
   @override
+  String get authWithApple => 'Apple bilan davom etish';
+
+  @override
+  String get authWithGoogle => 'Google bilan davom etish';
+
+  @override
+  String get authWithFacebook => 'Facebook bilan davom etish';
+
+  @override
+  String get authOrPhone => 'Yoki telefon orqali';
+
+  @override
   String get profileSetupTitle => 'O‘zingiz haqingizda';
 
   @override
@@ -742,6 +754,31 @@ class LUz extends L {
 
   @override
   String get createQuotaOk => 'Tushundim';
+
+  @override
+  String get cancel => 'Bekor qilish';
+
+  @override
+  String get aiTitle => 'AI e’lon yozuvchi';
+
+  @override
+  String get aiIntro =>
+      'Nimani ayirboshlamoqchisiz? Qisqacha yozing — qolganini AI to‘ldiradi.';
+
+  @override
+  String get aiHint =>
+      'Masalan: Menda iPhone 13 Pro bor, holati yaxshi. Velosipedga almashaman.';
+
+  @override
+  String get aiGenerate => 'Yozib ber';
+
+  @override
+  String get aiDone =>
+      'Matn tayyor. Tekshirib chiqing — kerak bo‘lsa tuzating.';
+
+  @override
+  String get aiFailed =>
+      'AI javob bermadi. Maydonlarni qo‘lda to‘ldirishingiz mumkin.';
 
   @override
   String get verifyTitle => 'Xavfsizlik va tasdiqlash';

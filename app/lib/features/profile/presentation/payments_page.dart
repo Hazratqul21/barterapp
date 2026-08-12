@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/art/girih.dart';
@@ -364,7 +363,7 @@ class _SettlementTile extends StatelessWidget {
                 Gap.h1,
                 Text(
                   '${out ? l.paymentsOut : l.paymentsIn} · '
-                  '${DateFormat.yMMMd(locale).format(settlement.settledAt)}',
+                  '${formatDate(context, settlement.settledAt)}',
                   style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint),
                 ),
               ],

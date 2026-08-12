@@ -609,6 +609,30 @@ abstract class L {
   /// **'Kodni qayta yuborish'**
   String get authResend;
 
+  /// No description provided for @authWithApple.
+  ///
+  /// In uz, this message translates to:
+  /// **'Apple bilan davom etish'**
+  String get authWithApple;
+
+  /// No description provided for @authWithGoogle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Google bilan davom etish'**
+  String get authWithGoogle;
+
+  /// No description provided for @authWithFacebook.
+  ///
+  /// In uz, this message translates to:
+  /// **'Facebook bilan davom etish'**
+  String get authWithFacebook;
+
+  /// No description provided for @authOrPhone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yoki telefon orqali'**
+  String get authOrPhone;
+
   /// No description provided for @profileSetupTitle.
   ///
   /// In uz, this message translates to:
@@ -1478,6 +1502,48 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Tushundim'**
   String get createQuotaOk;
+
+  /// No description provided for @cancel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get cancel;
+
+  /// No description provided for @aiTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'AI e’lon yozuvchi'**
+  String get aiTitle;
+
+  /// No description provided for @aiIntro.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nimani ayirboshlamoqchisiz? Qisqacha yozing — qolganini AI to‘ldiradi.'**
+  String get aiIntro;
+
+  /// No description provided for @aiHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: Menda iPhone 13 Pro bor, holati yaxshi. Velosipedga almashaman.'**
+  String get aiHint;
+
+  /// No description provided for @aiGenerate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yozib ber'**
+  String get aiGenerate;
+
+  /// No description provided for @aiDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Matn tayyor. Tekshirib chiqing — kerak bo‘lsa tuzating.'**
+  String get aiDone;
+
+  /// No description provided for @aiFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'AI javob bermadi. Maydonlarni qo‘lda to‘ldirishingiz mumkin.'**
+  String get aiFailed;
 
   /// No description provided for @verifyTitle.
   ///

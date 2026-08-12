@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -45,7 +45,7 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
         data: (listing) => Container(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 700),
+            constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
             child: _Content(
               listing: listing,
               shot: _shot,
@@ -58,31 +58,25 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
       ),
       bottomNavigationBar: async.maybeWhen(
         data: (listing) => SafeArea(
-          minimum: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-          // heightFactor 1 makes this bar as tall as its buttons. Without it a
-          // Center takes every pixel the Scaffold will give a bottom bar, which
-          // is all of them — leaving the listing itself no room at all.
+          minimum: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x3),
           child: Center(
             heightFactor: 1,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 700),
+              constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
               child: Row(
                 children: [
                   Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    // A route rather than a sheet: the same screen opens from
-                    // a match card and the feed, and an offer in progress
-                    // should survive a link being shared or a back gesture.
-                    context.push('/offer/${listing.id}');
-                  },
-                  icon: const Icon(Icons.swap_horiz_rounded, size: 19),
-                  label: Text(l.listingOffer),
-                ),
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/offer/${listing.id}');
+                      },
+                      icon: const Icon(Icons.swap_horiz_rounded, size: Sizes.iconMd),
+                      label: Text(l.listingOffer),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
             ),
           ),
         ),
@@ -90,7 +84,6 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
       ),
     );
   }
-
 }
 
 class _Content extends StatelessWidget {
@@ -112,6 +105,7 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
+    final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final gallery = listing.gallery.isEmpty
         ? [if (listing.imageUrl != null) listing.imageUrl!]
@@ -136,7 +130,7 @@ class _Content extends StatelessWidget {
           ),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: Gap.x2),
               child: TextButton(
                 onPressed: onToggleSave,
                 style: TextButton.styleFrom(
@@ -161,7 +155,7 @@ class _Content extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -171,14 +165,14 @@ class _Content extends StatelessWidget {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: gallery.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => Gap.w2,
                       itemBuilder: (context, i) => InkWell(
                         onTap: () => onShot(i),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: Radii.rSm,
                         child: Container(
                           width: 60,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: Radii.rSm,
                             border: Border.all(
                               color: i == shot ? p.give : Colors.transparent,
                               width: 2,
@@ -190,30 +184,23 @@ class _Content extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  Gap.h5,
                 ],
 
                 Text(
                   listing.title,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                    letterSpacing: -0.5,
-                  ),
+                  style: theme.textTheme.headlineMedium,
                 ),
-                const SizedBox(height: 10),
+                Gap.h2,
                 Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
+                  spacing: Gap.x3,
+                  runSpacing: Gap.x2,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       listing.value.format(locale),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                     Pill(
@@ -221,37 +208,32 @@ class _Content extends StatelessWidget {
                       foreground: listing.cashOk ? p.money : p.inkSoft,
                       background: listing.cashOk
                           ? p.moneySoft
-                          : Theme.of(context).colorScheme.surfaceContainerLowest,
+                          : theme.colorScheme.surfaceContainerHighest,
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 22),
-                // The two sides of the trade, stacked — the point of the product.
+                Gap.h6,
                 _GiveTakeCard(listing: listing),
 
-                const SizedBox(height: 24),
+                Gap.h6,
                 _SectionLabel(l.listingAbout),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(Gap.x4),
                     child: Text(
                       listing.description,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        height: 1.6,
-                        color: p.inkSoft,
-                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                Gap.h6,
                 Card(
                   clipBehavior: Clip.antiAlias,
                   child: ExpansionTile(
                     title: _SectionLabel(l.listingSpecs),
-                    tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                    tilePadding: const EdgeInsets.symmetric(horizontal: Gap.x4),
                     initiallyExpanded: true,
                     shape: const Border(),
                     children: [
@@ -260,20 +242,20 @@ class _Content extends StatelessWidget {
                       _SpecRow(l.specQuantity, listing.quantity),
                       _SpecRow(
                         l.specPosted,
-                        DateFormat.yMMMd(locale).format(listing.postedAt),
+                        formatDate(context, listing.postedAt),
                       ),
                       _SpecRow(l.specValue, listing.value.format(locale),
                           last: true),
-                      const SizedBox(height: 8),
+                      Gap.h2,
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                Gap.h6,
                 _SectionLabel(l.listingOwner),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(Gap.x4),
                     child: Row(
                       children: [
                         TraderAvatar(
@@ -283,7 +265,7 @@ class _Content extends StatelessWidget {
                           isOnline: listing.owner.isOnline,
                           showPresence: true,
                         ),
-                        const SizedBox(width: 12),
+                        Gap.w3,
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,40 +276,36 @@ class _Content extends StatelessWidget {
                                     child: Text(
                                       listing.owner.name,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.titleSmall,
                                     ),
                                   ),
                                   if (listing.owner.isVerified) ...[
-                                    const SizedBox(width: 5),
+                                    Gap.w1,
                                     Icon(
                                       Icons.verified_user_outlined,
-                                      size: 15,
+                                      size: Sizes.iconSm,
                                       color: p.give,
                                     ),
                                   ],
                                 ],
                               ),
-                              const SizedBox(height: 2),
+                              Gap.h1,
                               Row(
                                 children: [
                                   Icon(
                                     Icons.star_rounded,
-                                    size: 14,
+                                    size: Sizes.iconSm,
                                     color: BrandColors.gold500,
                                   ),
-                                  const SizedBox(width: 3),
+                                  Gap.w1,
                                   Text(
                                     listing.owner.rating?.toStringAsFixed(1) ??
                                         '—',
-                                    style: const TextStyle(fontSize: 12.5),
+                                    style: theme.textTheme.bodySmall,
                                   ),
                                   Text(
                                     '  ·  ${l.listingTrades(listing.owner.deals)}',
-                                    style: TextStyle(
-                                      fontSize: 12.5,
+                                    style: theme.textTheme.bodySmall?.copyWith(
                                       color: p.inkSoft,
                                     ),
                                   ),
@@ -341,18 +319,16 @@ class _Content extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 14),
+                Gap.h4,
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.shield_outlined, size: 15, color: p.give),
-                    const SizedBox(width: 8),
+                    Icon(Icons.shield_outlined, size: Sizes.iconSm, color: p.give),
+                    Gap.w2,
                     Expanded(
                       child: Text(
                         l.listingSafety,
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.5,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: p.inkFaint,
                         ),
                       ),
@@ -377,6 +353,7 @@ class _GiveTakeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
+    final theme = Theme.of(context);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -384,7 +361,7 @@ class _GiveTakeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x4, Gap.x4, Gap.x4),
             decoration: BoxDecoration(
               border: BorderDirectional(
                 start: BorderSide(color: p.give, width: 3),
@@ -395,32 +372,23 @@ class _GiveTakeCard extends StatelessWidget {
               children: [
                 Text(
                   l.listingGives.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    letterSpacing: 1.3,
-                    fontWeight: FontWeight.w600,
-                    color: p.give,
-                  ),
+                  style: theme.textTheme.labelSmall?.copyWith(color: p.give),
                 ),
-                const SizedBox(height: 5),
+                Gap.h1,
                 Text(
                   listing.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
+                  style: theme.textTheme.titleSmall,
                 ),
               ],
             ),
           ),
           Container(
-            color: Theme.of(context).colorScheme.surfaceContainerLowest,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Icon(Icons.swap_vert_rounded, size: 18, color: p.give),
+            color: theme.colorScheme.surfaceContainerHighest,
+            padding: const EdgeInsets.symmetric(vertical: Gap.x2),
+            child: Icon(Icons.swap_vert_rounded, size: Sizes.iconMd, color: p.give),
           ),
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x4, Gap.x4, Gap.x4),
             decoration: BoxDecoration(
               border: BorderDirectional(
                 start: BorderSide(color: p.take, width: 3),
@@ -431,17 +399,12 @@ class _GiveTakeCard extends StatelessWidget {
               children: [
                 Text(
                   l.listingWants.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    letterSpacing: 1.3,
-                    fontWeight: FontWeight.w600,
-                    color: p.take,
-                  ),
+                  style: theme.textTheme.labelSmall?.copyWith(color: p.take),
                 ),
-                const SizedBox(height: 10),
+                Gap.h3,
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: Gap.x2,
+                  runSpacing: Gap.x2,
                   children: [
                     for (final want in listing.wants)
                       Pill(
@@ -468,13 +431,10 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: Gap.x2),
       child: Text(
         text.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          letterSpacing: 1.4,
-          fontWeight: FontWeight.w600,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: palette(context).inkFaint,
         ),
       ),
@@ -492,8 +452,9 @@ class _SpecRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
       decoration: last
           ? null
           : BoxDecoration(
@@ -504,17 +465,14 @@ class _SpecRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 13, color: p.inkSoft),
+              style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
             ),
           ),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-              ),
+              style: theme.textTheme.titleSmall,
             ),
           ),
         ],

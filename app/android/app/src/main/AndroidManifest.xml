@@ -1,4 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The whole app is an API client: the feed, the chat socket, every photo.
+         This declaration used to live only in the debug and profile manifests,
+         which the Flutter template ships for the tooling's own benefit. Those
+         are not merged into a release build, so `flutter run` worked and the
+         APK that reached a phone could not open a single connection — a store
+         build that installs, launches, and then fails every request in silence.
+         It reads as a dead server rather than as a missing line here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Lets the app tell "no signal" apart from "the server refused", so the
+         feed can say which one happened instead of showing one error for both. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
     <application
         android:label="BarterApp"
         android:name="${applicationName}"

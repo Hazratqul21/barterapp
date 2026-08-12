@@ -31,6 +31,30 @@ String defaultApiBaseUrl() {
   return 'http://127.0.0.1:8010';
 }
 
+/// Where the listing-writing AI service lives.
+///
+/// A separate process from the API — `ai_backend/`, Dart and Genkit — so it
+/// gets its own address rather than a path on the main one.
+///
+/// It follows the same rules as [defaultApiBaseUrl] for the same reason: the
+/// dialog used to post to a literal `http://127.0.0.1:8081`, which on a phone
+/// is the phone. Not the laptop that is running the service — the handset
+/// itself, where nothing is listening. The feature worked in a desktop browser
+/// and could not work on a single real device, which is the only place this app
+/// is meant to run.
+String defaultAiBaseUrl() {
+  const override = String.fromEnvironment('AI_BASE_URL');
+  if (override.isNotEmpty) return override;
+
+  // Unlike the API, a missing address here is not fatal: the button is a
+  // shortcut and the form is fully usable without it. So a release build gets
+  // an empty string and the button hides itself, rather than throwing.
+  if (kReleaseMode) return '';
+
+  if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:8081';
+  return 'http://127.0.0.1:8081';
+}
+
 class ApiException implements Exception {
   ApiException(this.message, {this.statusCode});
 

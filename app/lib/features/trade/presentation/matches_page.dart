@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/router/web_shell.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -12,16 +14,6 @@ import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
 
-/// What the matcher found: your listing on one side, a stranger's on the other,
-/// and how well they fit.
-///
-/// The card used to be an `IntrinsicHeight` row holding two full-width network
-/// images. Intrinsic sizing has to measure a child before laying it out, and a
-/// box declared `width: double.infinity` has no intrinsic width to give — so
-/// the whole screen threw during layout and rendered nothing at all. The API
-/// was returning matches the entire time.
-///
-/// It is a column now. Nothing here asks for an intrinsic measurement.
 class MatchesPage extends ConsumerWidget {
   const MatchesPage({super.key});
 
@@ -31,6 +23,8 @@ class MatchesPage extends ConsumerWidget {
     final p = palette(context);
     final theme = Theme.of(context);
     final matches = ref.watch(matchesProvider);
+    // iOS Safe Area uchun dinamik padding
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + Gap.x14;
 
     if (!ref.watch(authStateProvider)) {
       return Scaffold(
@@ -42,83 +36,59 @@ class MatchesPage extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= kWebBreakpoint;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.matchesTitle)),
-      // Top-aligned, not centred: with two or three cards a `Center` left a
-      // page-high gap above them.
+      appBar: AppBar(
+        title: Text(l.matchesTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Symbols.info_rounded),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showExplain(context, l);
+            },
+          ),
+          Gap.w2,
+        ],
+      ),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          // Wider than a reading column on a desk. Match cards are compared,
-          // not read end to end, so several across is the useful shape.
-          constraints: BoxConstraints(
-            maxWidth: wide ? 1320 : Sizes.contentMax,
-          ),
+          constraints: BoxConstraints(maxWidth: wide ? 1320 : Sizes.contentMax),
           child: matches.fade(
             identity: matches.value?.length,
             loading: () => const _MatchesShimmer(),
-            error: (e) => ErrorState(
-              message: errorMessage(context, e),
-              retryLabel: l.retry,
-              onRetry: () => ref.invalidate(matchesProvider),
-            ),
+            error: (e) => ErrorState(message: errorMessage(context, e), retryLabel: l.retry, onRetry: () => ref.invalidate(matchesProvider)),
             data: (items) => items.isEmpty
-                ? EmptyState(
-                    title: l.matchesEmpty,
-                    hint: l.matchesEmptyHint,
-                    actionLabel: l.matchesCreate,
-                    onAction: () => context.push('/create'),
-                  )
+                ? EmptyState(icon: Symbols.auto_awesome_rounded, title: l.matchesEmpty, hint: l.matchesEmptyHint, actionLabel: l.matchesCreate, onAction: () => context.push('/create'))
                 : RefreshIndicator(
-                    onRefresh: () async => ref.invalidate(matchesProvider),
+                    onRefresh: () async {
+                      HapticFeedback.mediumImpact();
+                      return ref.invalidate(matchesProvider);
+                    },
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        // A match card is a fixed piece of reasoning — score,
-                        // two sides, the owner. On a desk there is room for
-                        // several at once, and comparing them side by side is
-                        // the whole point of the screen.
-                        final columns = (constraints.maxWidth / 420)
-                            .floor()
-                            .clamp(1, 3);
-
+                        final columns = (constraints.maxWidth / 420).floor().clamp(1, 3);
                         return SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(
-                            Gap.x5,
-                            Gap.x4,
-                            Gap.x5,
-                            Gap.x14,
-                          ),
+                          padding: EdgeInsets.fromLTRB(Gap.x5, Gap.x4, Gap.x5, bottomPadding),
+                          physics: const BouncingScrollPhysics(),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l.matchesLede,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: p.inkSoft,
-                                ),
-                              ),
+                              Text(l.matchesLede, style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft)),
                               Gap.h4,
                               if (columns == 1)
-                                for (final match in items) ...[
-                                  _MatchCard(match: match),
+                                for (final (index, match) in items.indexed) ...[
+                                  _MatchCard(match: match).animate().fadeIn(delay: (100 * index).ms).slideY(begin: 0.1, end: 0, curve: M3Motion.emphasizedDecelerate),
                                   Gap.h4,
                                 ]
                               else
-                                // Wrap rather than a grid: the cards differ in
-                                // height because the matcher's reason is a
-                                // sentence, and a grid would have to crop it to
-                                // a shared aspect ratio.
                                 Wrap(
                                   spacing: Gap.x4,
                                   runSpacing: Gap.x4,
                                   children: [
-                                    for (final match in items)
+                                    for (final (index, match) in items.indexed)
                                       SizedBox(
-                                        width:
-                                            (constraints.maxWidth -
-                                                Gap.x5 * 2 -
-                                                Gap.x4 * (columns - 1)) /
-                                            columns,
-                                        child: _MatchCard(match: match),
+                                        width: (constraints.maxWidth - Gap.x5 * 2 - Gap.x4 * (columns - 1)) / columns,
+                                        child: _MatchCard(match: match).animate().fadeIn(delay: (100 * index).ms).scale(begin: const Offset(0.95, 0.95), curve: M3Motion.emphasizedDecelerate),
                                       ),
                                   ],
                                 ),
@@ -133,11 +103,22 @@ class MatchesPage extends ConsumerWidget {
       ),
     );
   }
+
+  void _showExplain(BuildContext context, L l) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Symbols.auto_awesome_rounded),
+        title: Text(l.matchesTitle),
+        content: Text(l.matchesLede),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      ),
+    );
+  }
 }
 
 class _MatchCard extends ConsumerWidget {
   const _MatchCard({required this.match});
-
   final TradeMatch match;
 
   @override
@@ -148,148 +129,45 @@ class _MatchCard extends ConsumerWidget {
     final locale = l.localeName;
 
     return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: Radii.rLg, side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
       child: Padding(
         padding: const EdgeInsets.all(Gap.x4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The score leads. It is the reason this card exists, and the one
-            // number that decides whether the rest is worth reading.
-            Row(
-              children: [
-                _Score(score: match.score),
-                Gap.w3,
-                Expanded(
-                  child: Text(
-                    match.reason,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: p.inkSoft,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            Row(children: [_Score(score: match.score), Gap.w3, Expanded(child: Text(match.reason, style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft, height: 1.3)))]),
             Gap.h4,
-
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _Side(
-                    listing: match.mine,
-                    caption: l.matchesYours,
-                    color: p.give,
-                    tint: p.giveSoft,
-                    locale: locale,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
-                  child: Padding(
-                    // Sits level with the thumbnails rather than the captions.
-                    padding: const EdgeInsets.only(top: 40),
-                    child: Icon(
-                      Symbols.swap_horiz_rounded,
-                      size: Sizes.iconLg,
-                      color: p.inkFaint,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: _Side(
-                    listing: match.theirs,
-                    caption: l.matchesTheirs,
-                    color: p.take,
-                    tint: p.takeSoft,
-                    locale: locale,
-                  ),
-                ),
+                Expanded(child: _Side(listing: match.mine, caption: l.matchesYours, color: p.give, tint: p.giveSoft, locale: locale)),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: Gap.x2), child: Padding(padding: const EdgeInsets.only(top: 48), child: Container(padding: const EdgeInsets.all(Gap.x1), decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest, shape: BoxShape.circle), child: Icon(Symbols.swap_horiz_rounded, size: Sizes.iconMd, color: p.inkFaint)))),
+                Expanded(child: _Side(listing: match.theirs, caption: l.matchesTheirs, color: p.take, tint: p.takeSoft, locale: locale)),
               ],
             ),
-
             Gap.h4,
-            Divider(color: p.hair, height: 1),
+            Divider(color: p.hair.withValues(alpha: 0.5)),
             Gap.h3,
-
-            // The owner is always the owner of `theirs` — the server decides
-            // that, so no screen has to work it out.
             InkWell(
-              onTap: () => context.push('/trader/${match.owner.id}'),
+              onTap: () { HapticFeedback.lightImpact(); context.push('/trader/${match.owner.id}'); },
               borderRadius: Radii.rSm,
               child: Row(
                 children: [
-                  TraderAvatar(
-                    url: match.owner.avatarUrl,
-                    name: match.owner.name,
-                    size: Sizes.avatarSm,
-                  ),
+                  TraderAvatar(url: match.owner.avatarUrl, name: match.owner.name, size: Sizes.avatarSm),
                   Gap.w2,
-                  Expanded(
-                    child: Text(
-                      match.owner.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall,
-                    ),
-                  ),
-                  if (match.owner.rating != null) ...[
-                    Icon(
-                      Symbols.star_rounded,
-                      size: Sizes.iconSm,
-                      color: p.money,
-                      fill: 1,
-                    ),
-                    Gap.w1,
-                    Text(
-                      match.owner.rating!.toStringAsFixed(1),
-                      style: theme.textTheme.labelLarge,
-                    ),
-                  ],
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(match.owner.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall), if (match.owner.rating != null) Row(children: [Icon(Symbols.star_rounded, size: 14, color: p.money, fill: 1), Gap.w1, Text(match.owner.rating!.toStringAsFixed(1), style: theme.textTheme.labelSmall?.copyWith(color: p.inkSoft))])])),
+                  Icon(Symbols.chevron_right_rounded, size: Sizes.iconMd, color: p.inkFaint),
                 ],
               ),
             ),
-
             Gap.h4,
             Row(
               children: [
-                // 2:3, not 1:2. At a third of the card "O‘tkazish" wrapped to
-                // two lines and broke mid-word; the primary action still reads
-                // as the larger of the two.
-                Expanded(
-                  flex: 2,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      HapticFeedback.lightImpact();
-                      await ref
-                          .read(tradeRepositoryProvider)
-                          .dismissMatch(match.id);
-                      ref.invalidate(matchesProvider);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, Sizes.buttonMd),
-                      padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
-                    ),
-                    child: Text(
-                      l.matchesSkip,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
+                Expanded(flex: 2, child: OutlinedButton(onPressed: () async { HapticFeedback.lightImpact(); await ref.read(tradeRepositoryProvider).dismissMatch(match.id); ref.invalidate(matchesProvider); }, child: Text(l.matchesSkip))),
                 Gap.w3,
-                Expanded(
-                  flex: 3,
-                  child: FilledButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      context.push('/offer/${match.theirs.id}');
-                    },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, Sizes.buttonMd),
-                    ),
-                    child: Text(l.matchesOffer),
-                  ),
-                ),
+                Expanded(flex: 3, child: FilledButton.icon(onPressed: () { HapticFeedback.mediumImpact(); context.push('/offer/${match.theirs.id}'); }, icon: const Icon(Symbols.bolt_rounded, size: 18), label: Text(l.matchesOffer))),
               ],
             ),
           ],
@@ -299,145 +177,53 @@ class _MatchCard extends ConsumerWidget {
   }
 }
 
-/// One half of the pairing: a thumbnail, what it is, what it is worth.
 class _Side extends StatelessWidget {
-  const _Side({
-    required this.listing,
-    required this.caption,
-    required this.color,
-    required this.tint,
-    required this.locale,
-  });
-
-  final ListingCard listing;
-  final String caption;
-  final Color color;
-  final Color tint;
-  final String locale;
-
+  const _Side({required this.listing, required this.caption, required this.color, required this.tint, required this.locale});
+  final ListingCard listing; final String caption; final Color color; final Color tint; final String locale;
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-    final theme = Theme.of(context);
-
+    final p = palette(context); final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          caption.toUpperCase(),
-          style: theme.textTheme.labelSmall?.copyWith(color: color),
-        ),
+        Text(caption.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(color: color, letterSpacing: 1.1)),
         Gap.h2,
-        ClipRRect(
-          borderRadius: Radii.rSm,
-          child: Container(
-            height: 84,
-            color: tint,
-            // A fixed height and whatever width the column gives it. No
-            // `double.infinity`, which is what broke the previous card.
-            child: RemoteImage(
-              url: listing.imageUrl,
-              semanticLabel: listing.imageAlt,
-            ),
-          ),
-        ),
+        ClipRRect(borderRadius: Radii.rSm, child: Container(height: 90, width: double.infinity, color: tint, child: RemoteImage(url: listing.imageUrl, semanticLabel: listing.imageAlt))),
         Gap.h2,
-        Text(
-          listing.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(height: 1.3),
-        ),
+        Text(listing.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(height: 1.2)),
         Gap.h1,
-        Text(
-          listing.value.format(locale),
-          style: theme.textTheme.bodySmall?.copyWith(color: p.inkSoft),
-        ),
+        Text(listing.value.format(locale), style: theme.textTheme.labelMedium?.copyWith(color: p.inkSoft)),
       ],
     );
   }
 }
 
-/// The fit, as a number.
 class _Score extends StatelessWidget {
   const _Score({required this.score});
-
   final int score;
-
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
-    final p = palette(context);
-    final theme = Theme.of(context);
-
-    // A strong fit earns the money colour; a weaker one stays quiet rather than
-    // claiming more than it is.
+    final p = palette(context); final theme = Theme.of(context);
     final strong = score >= 75;
-    final colour = strong ? p.money : p.inkSoft;
-    final tint = strong ? p.moneySoft : p.sunken;
-
+    final colour = strong ? p.give : p.inkSoft;
+    final tint = strong ? p.giveSoft : theme.colorScheme.surfaceContainerHighest;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Gap.x3,
-        vertical: Gap.x2,
-      ),
-      decoration: BoxDecoration(color: tint, borderRadius: Radii.rSm),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$score%',
-            style: theme.textTheme.titleLarge?.copyWith(color: colour),
-          ),
-          Text(
-            l.matchesScore,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colour,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: Gap.x2),
+      decoration: BoxDecoration(color: tint, borderRadius: Radii.rMd, border: strong ? Border.all(color: p.give.withValues(alpha: 0.2)) : null),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [Text('$score%', style: theme.textTheme.titleLarge?.copyWith(color: colour, fontWeight: FontWeight.w800)), Text('MATCH', style: theme.textTheme.labelSmall?.copyWith(color: colour, fontSize: 9, letterSpacing: 0.5))]),
     );
   }
 }
 
-/// The card's own shape while the matcher runs — it computes on read, so this
-/// is a real wait rather than a token one.
 class _MatchesShimmer extends StatelessWidget {
   const _MatchesShimmer();
-
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x14),
       itemCount: 3,
       separatorBuilder: (_, _) => Gap.h4,
-      itemBuilder: (context, index) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(Gap.x4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SkeletonBox(width: 72, height: 44, radius: Radii.rSm),
-              Gap.h4,
-              const Row(
-                children: [
-                  Expanded(
-                    child: SkeletonBox(height: 84, radius: Radii.rSm),
-                  ),
-                  Gap.w4,
-                  Expanded(
-                    child: SkeletonBox(height: 84, radius: Radii.rSm),
-                  ),
-                ],
-              ),
-              Gap.h3,
-              const SkeletonBox(width: 160, height: 14),
-            ],
-          ),
-        ),
-      ),
+      itemBuilder: (context, index) => Card(child: Padding(padding: const EdgeInsets.all(Gap.x4), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const SkeletonBox(width: 72, height: 44, radius: Radii.rSm), Gap.h4, const Row(children: [Expanded(child: SkeletonBox(height: 84, radius: Radii.rSm)), Gap.w4, Expanded(child: SkeletonBox(height: 84, radius: Radii.rSm))]), Gap.h3, const SkeletonBox(width: 160, height: 14)]))),
     );
   }
 }

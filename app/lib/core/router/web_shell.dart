@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../art/girih.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import '../widgets/glass.dart';
@@ -117,33 +116,9 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(Gap.x2, Gap.x5, Gap.x2, 0),
-      child: Center(
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: p.swapGradient,
-            borderRadius: Radii.rSm,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: const Stack(
-            alignment: Alignment.center,
-            children: [
-              GirihField(color: Colors.white, opacity: 0.2, cell: 26),
-              Icon(
-                Symbols.swap_horiz_rounded,
-                color: Colors.white,
-                size: 26,
-                weight: 600,
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: Center(child: const BrandMark(size: 40)),
     );
   }
 }

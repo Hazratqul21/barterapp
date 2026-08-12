@@ -280,6 +280,18 @@ class LRu extends L {
   String get authResend => 'Отправить код ещё раз';
 
   @override
+  String get authWithApple => 'Продолжить с Apple';
+
+  @override
+  String get authWithGoogle => 'Продолжить с Google';
+
+  @override
+  String get authWithFacebook => 'Продолжить с Facebook';
+
+  @override
+  String get authOrPhone => 'Или по номеру телефона';
+
+  @override
   String get profileSetupTitle => 'О себе';
 
   @override
@@ -742,6 +754,29 @@ class LRu extends L {
 
   @override
   String get createQuotaOk => 'Понятно';
+
+  @override
+  String get cancel => 'Отмена';
+
+  @override
+  String get aiTitle => 'ИИ-помощник';
+
+  @override
+  String get aiIntro =>
+      'Что вы хотите обменять? Напишите коротко — остальное допишет ИИ.';
+
+  @override
+  String get aiHint =>
+      'Например: У меня iPhone 13 Pro в хорошем состоянии. Меняю на велосипед.';
+
+  @override
+  String get aiGenerate => 'Написать';
+
+  @override
+  String get aiDone => 'Текст готов. Проверьте и при необходимости поправьте.';
+
+  @override
+  String get aiFailed => 'ИИ не ответил. Поля можно заполнить вручную.';
 
   @override
   String get verifyTitle => 'Безопасность и проверка';

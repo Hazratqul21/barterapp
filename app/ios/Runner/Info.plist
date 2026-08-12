@@ -4,6 +4,26 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- App Transport Security blocks plain HTTP, which is correct for the
+	     shipped app — the API is reached over HTTPS and nothing here weakens
+	     that. What it also blocked was development: a real iPhone pointed at a
+	     laptop running `uvicorn` on the office wifi could not open a single
+	     request, so the app could only be tested in the simulator.
+
+	     NSAllowsLocalNetworking lifts the restriction for local addresses only.
+	     It is not NSAllowsArbitraryLoads: connections to the public internet
+	     still have to be HTTPS, so this needs no justification at review and
+	     leaves no hole in the released build. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<!-- Shown when iOS asks whether the app may find devices on the local
+	     network — which it does the first time a debug build talks to a dev
+	     server by address. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Ishlab chiqish rejimida ilova shu tarmoqdagi sinov serveriga ulanadi.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>NSCameraUsageDescription</key>
