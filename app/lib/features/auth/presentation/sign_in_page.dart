@@ -140,7 +140,57 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           color: p.inkSoft,
                         ),
                       ),
-                      Gap.h8,
+                      if (!_codeSent) ...[
+                        _SocialButton(
+                          icon: Icons.apple,
+                          label: "Continue with Apple",
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
+                          },
+                        ),
+                        Gap.h3,
+                        _SocialButton(
+                          icon: Icons.g_mobiledata,
+                          label: "Continue with Google",
+                          backgroundColor: Colors.white,
+                          textColor: Colors.black87,
+                          borderColor: Colors.grey.shade300,
+                          iconSize: 32,
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
+                          },
+                        ),
+                        Gap.h3,
+                        _SocialButton(
+                          icon: Icons.facebook,
+                          label: "Continue with Facebook",
+                          backgroundColor: const Color(0xFF1877F2),
+                          textColor: Colors.white,
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.comingSoon)));
+                          },
+                        ),
+                        Gap.h6,
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
+                              child: Text(
+                                "Yoki telefon orqali",
+                                style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        Gap.h6,
+                      ],
 
                       TextField(
                         controller: _phone,
@@ -155,6 +205,13 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         decoration: InputDecoration(
                           labelText: l.authPhoneLabel,
                           prefixIcon: const Icon(Symbols.call_rounded),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceContainerHighest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: Gap.x5, horizontal: Gap.x4),
                         ),
                         onChanged: (_) => setState(() {}),
                         onSubmitted: (_) =>
@@ -190,7 +247,16 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             letterSpacing: 10,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
-                          decoration: const InputDecoration(counterText: ''),
+                          decoration: InputDecoration(
+                            counterText: '',
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceContainerHighest,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(vertical: Gap.x5),
+                          ),
                           onSubmitted: (_) {
                             HapticFeedback.lightImpact();
                             _verify();
@@ -329,6 +395,60 @@ class _Notice extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.onPressed,
+    this.borderColor,
+    this.iconSize = 24,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color? borderColor;
+  final double iconSize;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: borderColor != null ? BorderSide(color: borderColor!) : BorderSide.none,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: iconSize, color: textColor),
+            Gap.w3,
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -30,6 +30,13 @@ class ListingCardTile extends StatelessWidget {
       onTap: onTap,
       child: Card(
         clipBehavior: Clip.antiAlias,
+        elevation: 0,
+        color: theme.colorScheme.surfaceContainerLow,
+        margin: const EdgeInsets.only(bottom: Gap.x2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
