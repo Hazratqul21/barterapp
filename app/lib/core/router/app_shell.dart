@@ -1,12 +1,14 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../widgets/glass.dart';
 import '../theme/app_theme.dart';
+import '../theme/section_theme.dart';
+import '../widgets/glass.dart';
 import 'web_shell.dart';
 
 /// The four places this product is about, and the button that feeds it.
@@ -19,14 +21,23 @@ import 'web_shell.dart';
 /// Settings is absent from the phone bar: it is somewhere you go from your own
 /// profile to change something, not a fifth destination. The desktop sidebar
 /// has room for it at the foot, where it does not compete.
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
+
+    // Tell the wallpaper which section it is behind, after this frame so the
+    // write never lands mid-build. Driven off `currentIndex` rather than the
+    // tap handler so it stays in sync however navigation happened — a tab, a
+    // deep link, or the back gesture.
+    final section = AppSection.values[navigationShell.currentIndex];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sectionProvider.notifier).set(section);
+    });
 
     final destinations = <({IconData icon, String label})>[
       (icon: Symbols.home_rounded, label: l.navHome),

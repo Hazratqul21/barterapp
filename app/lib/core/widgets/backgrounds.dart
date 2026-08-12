@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../art/girih.dart';
+import '../theme/section_theme.dart';
 import 'common.dart';
 
 /// The app's wallpaper: a soft two-colour glow with the tile lattice over it.
@@ -18,7 +20,7 @@ import 'common.dart';
 /// Reserved for the screens with no pictures of their own — the intro, sign-in
 /// and profile setup. A feed of photographs needs a plain page underneath, not
 /// a second thing competing for attention.
-class AuroraBackground extends StatefulWidget {
+class AuroraBackground extends ConsumerStatefulWidget {
   const AuroraBackground({
     super.key,
     required this.child,
@@ -31,10 +33,10 @@ class AuroraBackground extends StatefulWidget {
   final bool pattern;
 
   @override
-  State<AuroraBackground> createState() => _AuroraBackgroundState();
+  ConsumerState<AuroraBackground> createState() => _AuroraBackgroundState();
 }
 
-class _AuroraBackgroundState extends State<AuroraBackground>
+class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
@@ -58,6 +60,9 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     final p = palette(context);
     final alpha = (p.isDark ? 0.26 : 0.16) * widget.intensity;
 
+    // The two glow colours follow the current tab and drift when it changes.
+    final aura = sectionAura(p, ref.watch(sectionProvider));
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final span = math.max(constraints.maxWidth, constraints.maxHeight);
@@ -78,25 +83,15 @@ class _AuroraBackgroundState extends State<AuroraBackground>
               // repaint per frame, which is what the jank was.
               //
               // Boundaries split them, and the drift now only transforms a
-              // layer that was painted once.
-              _Drift(
-                controller: _controller,
-                diameter: diameter,
-                alignment: Alignment.topLeft,
-                bloom: _Bloom(
+              // layer that was painted once. The blooms sit in their own
+              // subtree so that recolouring them on a tab change cannot reach
+              // the app below.
+              Positioned.fill(
+                child: _AnimatedBlooms(
+                  controller: _controller,
                   diameter: diameter,
-                  color: p.giveVivid,
                   alpha: alpha,
-                ),
-              ),
-              _Drift(
-                controller: _controller,
-                diameter: diameter,
-                alignment: Alignment.bottomRight,
-                bloom: _Bloom(
-                  diameter: diameter,
-                  color: p.takeVivid,
-                  alpha: alpha * 0.85,
+                  aura: aura,
                 ),
               ),
 
@@ -117,6 +112,73 @@ class _AuroraBackgroundState extends State<AuroraBackground>
           ),
         );
       },
+    );
+  }
+}
+
+/// The two drifting blooms, whose colours cross-fade when the section changes.
+///
+/// It is a separate widget for one reason: the colour animation must not reach
+/// the app. The wallpaper's whole performance rests on the app sitting in a
+/// sibling `RepaintBoundary`; if the tab-change colour tween lived up in
+/// [AuroraBackground.build], the app would be inside its rebuild scope and every
+/// section change would repaint every screen. Here the tween's scope is exactly
+/// the two blooms and nothing else.
+class _AnimatedBlooms extends StatelessWidget {
+  const _AnimatedBlooms({
+    required this.controller,
+    required this.diameter,
+    required this.alpha,
+    required this.aura,
+  });
+
+  final Animation<double> controller;
+  final double diameter;
+  final double alpha;
+  final ({Color a, Color b}) aura;
+
+  @override
+  Widget build(BuildContext context) {
+    // `TweenAnimationBuilder` remembers the last value it built, so giving it a
+    // new `end` when the tab changes animates from the colour already on
+    // screen. Two are nested because there are two independent colours; the
+    // duration is long enough to read as a drift, not a switch.
+    const dur = Duration(milliseconds: 620);
+    const curve = Curves.easeInOutCubic;
+
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: aura.a),
+      duration: dur,
+      curve: curve,
+      builder: (context, colorA, _) => TweenAnimationBuilder<Color?>(
+        tween: ColorTween(end: aura.b),
+        duration: dur,
+        curve: curve,
+        builder: (context, colorB, _) => Stack(
+          children: [
+            _Drift(
+              controller: controller,
+              diameter: diameter,
+              alignment: Alignment.topLeft,
+              bloom: _Bloom(
+                diameter: diameter,
+                color: colorA ?? aura.a,
+                alpha: alpha,
+              ),
+            ),
+            _Drift(
+              controller: controller,
+              diameter: diameter,
+              alignment: Alignment.bottomRight,
+              bloom: _Bloom(
+                diameter: diameter,
+                color: colorB ?? aura.b,
+                alpha: alpha * 0.85,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

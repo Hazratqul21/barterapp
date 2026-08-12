@@ -1,6 +1,7 @@
 import 'package:barter_app/core/theme/app_theme.dart';
 import 'package:barter_app/core/widgets/backgrounds.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The wallpaper sits under every screen and drifts on a fifteen-second loop,
@@ -22,12 +23,14 @@ void main() {
     var paints = 0;
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: AuroraBackground(
-          child: CustomPaint(
-            painter: _CountingPainter(() => paints++),
-            child: const SizedBox.expand(),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: AuroraBackground(
+            child: CustomPaint(
+              painter: _CountingPainter(() => paints++),
+              child: const SizedBox.expand(),
+            ),
           ),
         ),
       ),

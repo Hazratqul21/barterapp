@@ -2,6 +2,7 @@ import 'package:barter_app/core/theme/app_theme.dart';
 import 'package:barter_app/core/widgets/backgrounds.dart';
 import 'package:barter_app/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The sheet system, checked at both window sizes.
@@ -16,6 +17,7 @@ void main() {
     WidgetTester tester,
     Size size,
     Future<void> Function(BuildContext) open, {
+
     /// Off for skins that never come to rest. The wallpaper drifts on a
     /// fifteen-second loop, so `pumpAndSettle` would wait for a quiet frame
     /// that by design never arrives.
@@ -26,14 +28,16 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Center(
-              child: ElevatedButton(
-                onPressed: () => open(context),
-                child: const Text('open'),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: ElevatedButton(
+                  onPressed: () => open(context),
+                  child: const Text('open'),
+                ),
               ),
             ),
           ),
@@ -155,7 +159,9 @@ void main() {
         (context) => showBarterPanel<void>(
           context: context,
           title: 'Qarshi taklif',
-          skin: const SheetSkin.custom(ColoredBox(key: marker, color: Color(0xFF123456))),
+          skin: const SheetSkin.custom(
+            ColoredBox(key: marker, color: Color(0xFF123456)),
+          ),
           builder: (context) => const Text('body'),
         ),
       );

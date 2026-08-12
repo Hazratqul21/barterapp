@@ -60,7 +60,7 @@ class _BarterAppState extends ConsumerState<BarterApp> {
         // visible as a wallpaper — and that the frosted chrome has something
         // worth blurring — while still sitting behind photographs without
         // tinting them.
-        intensity: 0.9,
+        intensity: 1.15,
         child: child ?? const SizedBox.shrink(),
       ),
       locale: Locale(locale),
