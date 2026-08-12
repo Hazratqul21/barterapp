@@ -307,16 +307,24 @@ class _Categories extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 110,
+          height: 232,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x2),
             itemCount: ListingTag.values.length,
             separatorBuilder: (_, _) => Gap.w3,
-            itemBuilder: (context, index) => CategoryTile(
+            itemBuilder: (context, index) => CategoryCard(
               tag: ListingTag.values[index],
               selected: selected == ListingTag.values[index],
-              onTap: () => onSelect(selected == ListingTag.values[index] ? null : ListingTag.values[index]),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSelect(
+                  selected == ListingTag.values[index]
+                      ? null
+                      : ListingTag.values[index],
+                );
+              },
             ),
           ),
         ),

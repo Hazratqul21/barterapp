@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/models/models.dart';
 import '../network/api_client.dart';
 import '../theme/app_theme.dart';
+import '../theme/category_images.dart';
 import '../theme/tokens.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -588,15 +589,18 @@ String categoryLabel(L l, ListingTag tag) => switch (tag) {
   ListingTag.electronics => l.filterElectronics,
   ListingTag.construction => l.filterConstruction,
 };
-
-/// A category as a picture first and a word second.
+/// A category as a tall photo card — the shape from the design reference.
 ///
-/// The feed used to filter through a row of grey text chips. Someone with a
-/// spare laptop looking to get their flat painted scans for the thing that
-/// looks like what they have; a colour and a symbol do that at a glance, and do
-/// it identically in all three languages.
-class CategoryTile extends StatelessWidget {
-  const CategoryTile({
+/// The strip used to be small medallions. This is the richer version: a soft
+/// clay card with a photograph on top, the drawn mark on a floating disc that
+/// straddles the photo's lower edge, and the name beneath. Selecting one draws
+/// a green rim around it.
+///
+/// The photo comes from [categoryImages], one editable place. When it is
+/// missing or still loading, the card shows the category's own gradient with a
+/// faint mark, so it is never blank and never broken.
+class CategoryCard extends StatelessWidget {
+  const CategoryCard({
     super.key,
     required this.tag,
     required this.selected,
@@ -615,110 +619,160 @@ class CategoryTile extends StatelessWidget {
     final base = CategoryStyle.of(tag);
     final style = p.isDark ? base.dark : base;
 
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: categoryLabel(l, tag),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: Radii.rMd,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Gap.x2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _CategoryMedallion(style: style, selected: selected),
-              Gap.h2,
-              SizedBox(
-                // Wide enough for "Qishloq xo'jaligi" and "Строительство" to
-                // wrap onto two lines rather than being cut off.
-                width: 78,
-                child: Text(
-                  categoryLabel(l, tag),
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: selected ? style.color : p.inkSoft,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-            ],
+    return Pressable(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: M3Motion.medium1,
+        curve: M3Motion.emphasized,
+        width: 132,
+        padding: const EdgeInsets.fromLTRB(Gap.x2, Gap.x2, Gap.x2, Gap.x3),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLowest,
+          borderRadius: Radii.rXl,
+          border: Border.all(
+            color: selected ? p.give : p.hair,
+            width: selected ? 2 : 1,
           ),
+          // Soft clay lift: the card stands off the page, more so when chosen.
+          boxShadow: [
+            BoxShadow(
+              color: (selected ? p.give : const Color(0xFF12211A)).withValues(
+                alpha: selected ? 0.18 : 0.08,
+              ),
+              blurRadius: selected ? 20 : 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 168,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 140,
+                    child: _CategoryVisual(tag: tag, style: style),
+                  ),
+                  // The disc straddles the photo's bottom edge, half over the
+                  // image and half over the card body.
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Center(child: _CategoryDisc(style: style)),
+                  ),
+                ],
+              ),
+            ),
+            Gap.h2,
+            Text(
+              categoryLabel(l, tag),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: selected ? p.give : null,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                height: 1.15,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// The category symbol itself.
-///
-/// A flat pastel circle with a hairline outline symbol inside is what every
-/// marketplace ships, and it looked like a placeholder. Four things carry the
-/// weight here, and each one is doing a job:
-///
-/// * **A squircle, not a circle.** Continuous corners read as drawn rather than
-///   as the default shape a framework hands you.
-/// * **A gradient, not a flat tint.** Two stops of the same hue give the tile a
-///   light source, which is most of what separates a crafted icon from a fill.
-/// * **A solid symbol.** Material Symbols are a variable font: `fill: 1` with a
-///   heavier optical weight turns the thin outline into a real mark that holds
-///   up at 30 pixels.
-/// * **A shadow in the tile's own colour.** A grey drop shadow under a green
-///   tile looks like dirt; the hue makes it look like light.
-class _CategoryMedallion extends StatelessWidget {
-  const _CategoryMedallion({required this.style, required this.selected});
+/// The photo area of a [CategoryCard], with a coloured-gradient fallback.
+class _CategoryVisual extends StatelessWidget {
+  const _CategoryVisual({required this.tag, required this.style});
 
+  final ListingTag tag;
   final CategoryStyle style;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    // Selected fills with the category's own colour; at rest it is the pale
-    // tint lifted toward white at the top so the light falls from above.
-    final top = selected
-        ? Color.lerp(style.color, Colors.white, 0.22)!
-        : Color.lerp(style.tint, Colors.white, 0.55)!;
-    final bottom = selected ? style.color : style.tint;
+    final url = categoryImage(tag);
 
-    return AnimatedContainer(
-      duration: M3Motion.medium1,
-      curve: M3Motion.emphasized,
-      width: 60,
-      height: 60,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // The base is always painted, so a slow or failed photo reveals the
+          // category's own colour rather than a grey box.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.lerp(style.color, Colors.white, 0.35)!,
+                  style.color,
+                ],
+              ),
+            ),
+            child: Center(
+              child: CategoryMarkIcon(
+                mark: style.mark,
+                size: 56,
+                color: Colors.white.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+          if (url != null)
+            Image.network(
+              url,
+              fit: BoxFit.cover,
+              // On failure, show nothing — the gradient beneath carries it.
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
+                opacity: frame == null ? 0 : 1,
+                duration: M3Motion.medium2,
+                child: child,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The floating clay disc that carries the mark.
+class _CategoryDisc extends StatelessWidget {
+  const _CategoryDisc({required this.style});
+
+  final CategoryStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 54,
+      height: 54,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [top, bottom],
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
-        // A rim of the tile's own colour rather than a grey outline: it defines
-        // the edge on a pale page without reading as a border.
-        border: Border.all(
-          color: style.color.withValues(alpha: selected ? 0.0 : 0.14),
-        ),
+        color: theme.colorScheme.surface,
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: style.color.withValues(alpha: selected ? 0.32 : 0.14),
-            blurRadius: selected ? 16 : 10,
-            offset: Offset(0, selected ? 6 : 3),
+            color: const Color(0xFF12211A).withValues(alpha: 0.14),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Center(
-        child: CategoryMarkIcon(
-          mark: style.mark,
-          size: 30,
-          color: selected ? Colors.white : style.color,
-        ),
+        child: CategoryMarkIcon(mark: style.mark, size: 28, color: style.color),
       ),
     );
   }
 }
-
 /// The small tinted badge that marks which category a listing belongs to.
 class CategoryBadge extends StatelessWidget {
   const CategoryBadge({super.key, required this.tag, this.compact = false});
