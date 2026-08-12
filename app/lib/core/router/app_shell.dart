@@ -1,6 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -8,6 +8,8 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../theme/section_theme.dart';
+import '../theme/tokens.dart';
+import '../widgets/common.dart';
 import '../widgets/glass.dart';
 import 'web_shell.dart';
 
@@ -76,44 +78,17 @@ class AppShell extends ConsumerWidget {
       // blur has nothing to work on — glass over nothing is just a tint.
       extendBody: true,
       body: body,
-      floatingActionButton:
-          FloatingActionButton(
-                heroTag: 'create-fab',
-                tooltip: l.navCreate,
-                onPressed: () => context.push('/create'),
-                child: const Icon(Symbols.add_rounded, size: 26, weight: 600),
-              )
-              .animate()
-              .scale(
-                begin: Offset.zero,
-                end: const Offset(1, 1),
-                duration: M3Motion.medium4,
-                curve: M3Motion.emphasizedDecelerate,
-              )
-              .fadeIn(duration: M3Motion.medium2),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: GlassSurface(
-        level: GlassLevel.chrome,
-        borderRadius: BorderRadius.zero,
-        shadow: false,
-        child: NavigationBar(
-          // Transparent so the glass beneath shows: `NavigationBar` paints its
-          // own surface by default and would cover it completely.
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _go,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
-            for (final d in destinations)
-              NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.icon, fill: 1),
-                label: d.label,
-              ),
-          ],
-        ),
+      // Creating a listing is the one thing the whole app is for, so it is the
+      // centre of the bar — a raised green button, not a corner FAB — with two
+      // destinations either side of it.
+      bottomNavigationBar: _CreatorBar(
+        destinations: destinations,
+        currentIndex: navigationShell.currentIndex,
+        onDestination: _go,
+        onCreate: () {
+          HapticFeedback.mediumImpact();
+          context.push('/create');
+        },
       ),
     );
   }
@@ -124,6 +99,185 @@ class AppShell extends ConsumerWidget {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+}
+
+/// The mobile bar: two destinations, the create button, two more destinations.
+///
+/// The create button is the centre of gravity because posting is the point of
+/// the product. It is raised out of the bar so it reads as an action rather
+/// than a fifth tab, and tapping it rises the create sheet up over the app —
+/// the same vertical motion the route uses, so the button and the screen it
+/// opens feel like one gesture.
+class _CreatorBar extends StatelessWidget {
+  const _CreatorBar({
+    required this.destinations,
+    required this.currentIndex,
+    required this.onDestination,
+    required this.onCreate,
+  });
+
+  final List<({IconData icon, String label})> destinations;
+  final int currentIndex;
+  final ValueChanged<int> onDestination;
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+
+    // Split the four destinations two and two around the centre button.
+    return GlassSurface(
+      level: GlassLevel.chrome,
+      borderRadius: BorderRadius.zero,
+      shadow: false,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _Tab(
+                icon: destinations[0].icon,
+                label: destinations[0].label,
+                selected: currentIndex == 0,
+                onTap: () => onDestination(0),
+              ),
+              _Tab(
+                icon: destinations[1].icon,
+                label: destinations[1].label,
+                selected: currentIndex == 1,
+                onTap: () => onDestination(1),
+              ),
+              _CreateButton(label: l.navCreate, onTap: onCreate),
+              _Tab(
+                icon: destinations[2].icon,
+                label: destinations[2].label,
+                selected: currentIndex == 2,
+                onTap: () => onDestination(2),
+              ),
+              _Tab(
+                icon: destinations[3].icon,
+                label: destinations[3].label,
+                selected: currentIndex == 3,
+                onTap: () => onDestination(3),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Tab extends StatelessWidget {
+  const _Tab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final theme = Theme.of(context);
+    final colour = selected ? p.give : p.inkFaint;
+
+    return Expanded(
+      child: InkResponse(
+        onTap: onTap,
+        radius: 36,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: Sizes.iconLg, fill: selected ? 1 : 0, color: colour),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colour,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The raised centre button.
+class _CreateButton extends StatefulWidget {
+  const _CreateButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_CreateButton> createState() => _CreateButtonState();
+}
+
+class _CreateButtonState extends State<_CreateButton> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+
+    return SizedBox(
+      width: 76,
+      child: Center(
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _down = true),
+          onTapCancel: () => setState(() => _down = false),
+          onTapUp: (_) {
+            setState(() => _down = false);
+            widget.onTap();
+          },
+          child: Tooltip(
+            message: widget.label,
+            // Lifts above the bar so it reads as an action, not a tab.
+            child: AnimatedScale(
+              scale: _down ? 0.9 : 1,
+              duration: M3Motion.short3,
+              curve: M3Motion.standard,
+              child: Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: p.swapGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: p.give.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      spreadRadius: -2,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Symbols.add_rounded,
+                  size: 30,
+                  weight: 700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

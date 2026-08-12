@@ -251,6 +251,14 @@ class _Hero extends ConsumerWidget {
                       icon: const Icon(Symbols.notifications_rounded, color: Colors.white),
                       style: IconButton.styleFrom(backgroundColor: Colors.white24),
                     ),
+                    Gap.w2,
+                    // Profile, reachable from the top as well — a quick tap to
+                    // your own account without leaving home for the tab bar.
+                    IconButton(
+                      onPressed: () => context.go('/profile'),
+                      icon: const Icon(Symbols.account_circle_rounded, color: Colors.white, fill: 1),
+                      style: IconButton.styleFrom(backgroundColor: Colors.white24),
+                    ),
                   ],
                 ),
                 Gap.h5,
