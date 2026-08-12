@@ -5,12 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
-import '../../../core/network/api_client.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
@@ -173,7 +169,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
   List<Widget> _giveStep(L l) => [
     DropdownButtonFormField<ListingTag>(
-      value: _tag,
+      initialValue: _tag,
       decoration: InputDecoration(labelText: l.createFieldTag, filled: true, fillColor: Theme.of(context).colorScheme.surfaceContainerLow),
       items: [for (final t in ListingTag.values) DropdownMenuItem(value: t, child: Text(categoryLabel(l, t)))],
       onChanged: (v) => setState(() => _tag = v),
@@ -190,7 +186,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     _TrilingualField(label: l.createFieldQuantity, field: _quantity),
   ];
 
-  List<Widget> _takeStep(L l) => [_TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2), Gap.h4, SwitchListTile(value: _cashOk, onChanged: (v) => setState(() { _cashOk = v; if (v) _wantsCash = false; }), title: Text(l.createCashAdd), contentPadding: EdgeInsets.zero, activeColor: palette(context).give)];
+  List<Widget> _takeStep(L l) => [_TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2), Gap.h4, SwitchListTile(value: _cashOk, onChanged: (v) => setState(() { _cashOk = v; if (v) _wantsCash = false; }), title: Text(l.createCashAdd), contentPadding: EdgeInsets.zero, activeThumbColor: palette(context).give)];
 
   List<Widget> _valueStep(L l, ThemeData theme) => [TextField(controller: _value, keyboardType: TextInputType.number, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900), decoration: InputDecoration(labelText: l.createFieldValue, suffixText: 'so‘m', filled: true, fillColor: theme.colorScheme.surfaceContainerLow))];
 }
@@ -199,7 +195,11 @@ class _Trilingual {
   final controllers = {'uz': TextEditingController(), 'ru': TextEditingController(), 'en': TextEditingController()};
   bool get complete => controllers.values.every((c) => c.text.trim().isNotEmpty);
   Map<String, String> toJson() => {for (final e in controllers.entries) e.key: e.value.text.trim()};
-  void dispose() { for (final c in controllers.values) c.dispose(); }
+  void dispose() {
+    for (final c in controllers.values) {
+      c.dispose();
+    }
+  }
 }
 
 class _TrilingualField extends StatefulWidget {

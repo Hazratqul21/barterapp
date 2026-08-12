@@ -8,3 +8,13 @@ app/ios/Pods/
 app/ios/.symlinks/
 .DS_Store
 api/media/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Python bytecode (har joyda)
+__pycache__/
+*.pyc
+tools/__pycache__/

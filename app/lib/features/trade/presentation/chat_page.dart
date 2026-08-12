@@ -669,13 +669,3 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
     );
   }
 }
-
-class _Stars extends StatelessWidget {
-  const _Stars({required this.rating, this.size = Sizes.iconMd});
-  final int rating;
-  final double size;
-  @override
-  Widget build(BuildContext context) {
-    return Row(mainAxisSize: MainAxisSize.min, children: [for (var star = 1; star <= 5; star++) Icon(Symbols.star_rounded, size: size, fill: star <= rating ? 1 : 0, color: star <= rating ? palette(context).money : palette(context).inkFaint)]);
-  }
-}

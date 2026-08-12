@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -25,7 +24,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   bool _codeSent = false;
   bool _busy = false;
   String? _error;
-  String? _debugCode;
 
   @override
   void dispose() {
@@ -54,7 +52,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     if (!mounted) return;
     setState(() {
       _codeSent = true;
-      _debugCode = code;
       if (code != null) _code.text = code;
     });
   });
