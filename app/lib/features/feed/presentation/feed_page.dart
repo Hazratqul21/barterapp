@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -16,7 +15,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/listing_repository.dart';
-import '../../listing/presentation/listing_detail_page.dart';
 import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
@@ -174,21 +172,25 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           separatorBuilder: (_, _) => Gap.h4,
           itemBuilder: (context, index) {
             final listing = feed.items[index];
-            // Premium: Container Transform qo'llaymiz
-            return OpenContainer(
-              transitionDuration: M3Motion.medium4,
-              openBuilder: (context, _) => ListingDetailPage(listingId: listing.id),
-              closedElevation: 0,
-              closedShape: RoundedRectangleBorder(borderRadius: Radii.rLg),
-              closedColor: Colors.transparent,
-              closedBuilder: (context, openContainer) => ListingCardTile(
-                listing: listing,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  openContainer();
-                },
-              ),
-            ).animate().fadeIn(delay: (40 * index).ms).slideY(begin: 0.05, end: 0, curve: M3Motion.emphasizedDecelerate);
+            // Router navigation, not OpenContainer. A container transform is
+            // prettier, but it builds the detail page inside its own route —
+            // so the URL never changes, and a listing opened from the feed
+            // could not be shared or bookmarked, which is the whole reason the
+            // app runs on path URLs. It also fought the image Hero, which fired
+            // at the same time and produced two overlapping motions. The Hero
+            // flight under `heroPage` gives one clean transition from every
+            // entry point — feed, profile, a trader's listings — identically.
+            return ListingCardTile(
+              listing: listing,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/listing/${listing.id}');
+              },
+            ).animate().fadeIn(delay: (40 * index).ms).slideY(
+              begin: 0.05,
+              end: 0,
+              curve: M3Motion.emphasizedDecelerate,
+            );
           },
         ),
       ),
