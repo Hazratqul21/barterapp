@@ -57,9 +57,14 @@ docker compose up -d
 
 ### 2. Backend → http://127.0.0.1:8010
 
+> **Python 3.11 yoki undan yuqori kerak.** macOS'da `python3` — bu 3.9, ya'ni
+> `python3 -m venv` bilan qurilgan muhit o'rnatilib bo'lgach birinchi importda
+> yiqiladi. Versiyani aniq ko'rsating. Mavjudlarini ko'rish:
+> `ls /usr/local/bin/python3.* /opt/homebrew/bin/python3.*`
+
 ```bash
 cd api
-python3 -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/alembic upgrade head
 .venv/bin/python -m app.seed
@@ -67,6 +72,13 @@ python3 -m venv .venv
 ```
 
 Sinab ko'rish uchun jonli hujjatlar: **http://127.0.0.1:8010/docs**
+
+`.env` shart emas: standart qiymatlar mahalliy ishlash uchun mo'ljallangan —
+baza `docker compose` dagi manzilga, OTP kodi esa javobning o'zida qaytadi
+(`debug_code`), ya'ni SMS provayderisiz kirish mumkin. Ishlab chiqarish uchun
+`api/.env.example` ni `.env` ga nusxalang va **`JWT_SECRET` bilan `OTP_DEBUG`
+ni albatta to'ldiring** — server standart kalit bilan ishga tushishdan bosh
+tortadi.
 
 ### 3. Mijoz
 
