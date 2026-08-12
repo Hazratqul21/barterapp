@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/segmented.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -49,16 +50,18 @@ class SettingsPage extends ConsumerWidget {
                       trailing: Consumer(
                         builder: (context, ref, _) {
                           final locale = ref.watch(localeProvider);
-                          return SegmentedButton<String>(
-                            showSelectedIcon: false,
-                            segments: const [
-                              ButtonSegment(value: 'uz', label: Text('UZ')),
-                              ButtonSegment(value: 'ru', label: Text('RU')),
-                              ButtonSegment(value: 'en', label: Text('EN')),
-                            ],
-                            selected: {locale},
-                            onSelectionChanged: (set) =>
-                                ref.read(localeProvider.notifier).set(set.first),
+                          return SizedBox(
+                            width: 168,
+                            child: ConcaveSegmentedControl<String>(
+                              segments: const [
+                                (value: 'uz', label: 'UZ'),
+                                (value: 'ru', label: 'RU'),
+                                (value: 'en', label: 'EN'),
+                              ],
+                              selected: locale,
+                              onChanged: (v) =>
+                                  ref.read(localeProvider.notifier).set(v),
+                            ),
                           );
                         },
                       ),
