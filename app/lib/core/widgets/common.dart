@@ -476,28 +476,74 @@ class TraderAvatar extends StatelessWidget {
 
 /// Wraps a child with a staggered slide+fade entrance animation.
 /// Use in ListViews: `AnimatedListItem(index: index, child: yourWidget)`
-class AnimatedListItem extends StatelessWidget {
+/// A staggered fade-and-rise that plays exactly once.
+///
+/// Two bugs it exists to kill, both from the old `.animate()` version:
+///
+/// * **Unbounded stagger.** The delay was `40ms × index`, so the twentieth card
+///   waited 0.8s and the fortieth 1.6s — the list looked frozen, then twitched.
+///   The delay is now capped: the first handful ripple in, everything past that
+///   enters together, so a card recycled far down never sits on a long delay.
+/// * **Replay on rebuild.** `flutter_animate` restarts its animation every time
+///   the widget is rebuilt — a search keystroke, a tag tap, a scroll recycle —
+///   so cards re-faded constantly. Driving one controller from `initState`
+///   means the motion runs once per mount and a plain rebuild leaves it settled.
+///
+/// Recycling is still a mount, so pair it with a "seen" guard at the call site
+/// (see the feed) when scrolling back should not replay the entrance.
+class AnimatedListItem extends StatefulWidget {
   const AnimatedListItem({super.key, required this.index, required this.child});
 
   final int index;
   final Widget child;
 
   @override
+  State<AnimatedListItem> createState() => _AnimatedListItemState();
+}
+
+class _AnimatedListItemState extends State<AnimatedListItem>
+    with SingleTickerProviderStateMixin {
+  /// The stagger tops out here: past the first screenful there is nothing on
+  /// screen left to stagger against, only a delay that reads as lag.
+  static const _maxStaggerSteps = 6;
+  static const _stepMs = 45;
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: M3Motion.medium3,
+  );
+  late final Animation<double> _curved = CurvedAnimation(
+    parent: _controller,
+    curve: M3Motion.emphasizedDecelerate,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    final steps = widget.index.clamp(0, _maxStaggerSteps);
+    Future.delayed(Duration(milliseconds: _stepMs * steps), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return child
-        .animate()
-        .fadeIn(
-          delay: Duration(milliseconds: 40 * index),
-          duration: M3Motion.medium2,
-          curve: M3Motion.emphasizedDecelerate,
-        )
-        .slideY(
-          begin: 0.06,
-          end: 0,
-          delay: Duration(milliseconds: 40 * index),
-          duration: M3Motion.medium2,
-          curve: M3Motion.emphasizedDecelerate,
-        );
+    return FadeTransition(
+      opacity: _curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.06),
+          end: Offset.zero,
+        ).animate(_curved),
+        child: widget.child,
+      ),
+    );
   }
 }
 
@@ -589,6 +635,7 @@ String categoryLabel(L l, ListingTag tag) => switch (tag) {
   ListingTag.electronics => l.filterElectronics,
   ListingTag.construction => l.filterConstruction,
 };
+
 /// A category as a tall photo card — the shape from the design reference.
 ///
 /// The strip used to be small medallions. This is the richer version: a soft
@@ -672,14 +719,20 @@ class _CategoryVisual extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         // The base is always painted, so a slow or failed photo reveals the
-        // category's own colour rather than a grey box. No mark on it — the
-        // tile is a photograph, not an icon.
+        // category's own colour rather than a grey box. Kept as a soft tint,
+        // not the full saturated hue: six loud blocks inside the frosted panel
+        // read as a paint chart, and on a slow connection that is the whole
+        // section. A pale wash of the same colour stays calm while it waits and
+        // barely shows once the photograph fades in over it.
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color.lerp(style.color, Colors.white, 0.35)!, style.color],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(style.color, Colors.white, 0.74)!,
+                Color.lerp(style.color, Colors.white, 0.52)!,
+              ],
             ),
           ),
         ),

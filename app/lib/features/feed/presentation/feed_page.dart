@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
@@ -31,6 +29,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _debounce;
+
+  /// Card indices whose entrance has already played. A card animates the first
+  /// time its index is built and never again — not on recycle, not on rebuild —
+  /// so the list settles instead of flickering. Cleared when the results change
+  /// underneath it (a new search, a pull-to-refresh) so the fresh set reveals.
+  final Set<int> _revealed = <int>{};
 
   @override
   void initState() {
@@ -77,11 +81,16 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     final feed = ref.watch(feedProvider);
     final bottomPadding = MediaQuery.paddingOf(context).bottom + 80.0;
 
+    // A different query is a different list; let its cards reveal afresh rather
+    // than snapping in because their old indices were already marked seen.
+    ref.listen(feedQueryProvider, (_, _) => _revealed.clear());
+
     return Scaffold(
       body: RefreshIndicator(
         displacement: 120,
         onRefresh: () async {
           HapticFeedback.mediumImpact();
+          _revealed.clear();
           return ref.invalidate(feedProvider);
         },
         child: Center(
@@ -100,14 +109,22 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                         : _clearSearch,
                   ),
                 ),
-                const SliverToBoxAdapter(child: FeedBanner()),
+                // The header is the anchor and stays put; everything below it
+                // settles in on first load — banner, then the category panel,
+                // then the feed cards continue the same cascade downward.
+                const SliverToBoxAdapter(
+                  child: AnimatedListItem(index: 0, child: FeedBanner()),
+                ),
                 SliverToBoxAdapter(
-                  child: _Categories(
-                    selected: query.tag,
-                    onSelect: (tag) {
-                      HapticFeedback.selectionClick();
-                      ref.read(feedQueryProvider.notifier).toggleTag(tag);
-                    },
+                  child: AnimatedListItem(
+                    index: 1,
+                    child: _Categories(
+                      selected: query.tag,
+                      onSelect: (tag) {
+                        HapticFeedback.selectionClick();
+                        ref.read(feedQueryProvider.notifier).toggleTag(tag);
+                      },
+                    ),
                   ),
                 ),
                 ...switch (feed) {
@@ -206,20 +223,22 @@ class _FeedPageState extends ConsumerState<FeedPage> {
             // at the same time and produced two overlapping motions. The Hero
             // flight under `heroPage` gives one clean transition from every
             // entry point — feed, profile, a trader's listings — identically.
-            return ListingCardTile(
-                  listing: listing,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/listing/${listing.id}');
-                  },
-                )
-                .animate()
-                .fadeIn(delay: (40 * index).ms)
-                .slideY(
-                  begin: 0.05,
-                  end: 0,
-                  curve: M3Motion.emphasizedDecelerate,
-                );
+            final card = ListingCardTile(
+              listing: listing,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/listing/${listing.id}');
+              },
+            );
+            // Reveal each card once. `add` returns false once the index has
+            // been seen, so a card scrolled off and back — or the whole feed
+            // rebuilt on a search keystroke — returns settled instead of
+            // re-running the entrance, which is what used to make the list
+            // flicker as it recycled. The set resets with the feed itself.
+            final firstReveal = _revealed.add(index);
+            return firstReveal
+                ? AnimatedListItem(index: index, child: card)
+                : card;
           },
         ),
       ),
