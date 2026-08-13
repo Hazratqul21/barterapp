@@ -30,7 +30,7 @@ from app.models.review import Review
 from app.models.social import Notification, PaymentMethod, VerificationStep
 from app.models.desire import Desire
 from app.models.listing import ListingTag as Tag
-from app.models.user import User, UserType
+from app.models.user import OtpChallenge, User, UserType
 
 NOW = datetime.now(UTC)
 
@@ -520,7 +520,7 @@ async def run() -> None:
         for model in (
             Message, Conversation, OfferItem, Offer, Review, Notification,
             PaymentMethod, VerificationStep, Desire, ListingWantTranslation, ListingWant,
-            ListingPhoto, ListingTranslation, Listing, User,
+            ListingPhoto, ListingTranslation, Listing, User, OtpChallenge,
         ):
             await db.execute(delete(model))
         await db.commit()

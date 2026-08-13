@@ -107,7 +107,10 @@ class OtpChallenge(Base, UUIDPrimaryKey):
     __tablename__ = "otp_challenges"
 
     phone: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    code: Mapped[str] = mapped_column(String(6), nullable=False)
+    # The HMAC of the code, never the code itself: a database dump, a log line
+    # or a stray backup then leaks nothing usable, since the hash cannot be
+    # turned back into the six digits without the server secret.
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

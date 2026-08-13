@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -38,17 +40,44 @@ STARTER_STEPS = [
 ]
 
 
+def _hash_code(code: str) -> str:
+    """Keyed hash of a login code, so the stored value is useless if leaked."""
+    return hmac.new(
+        settings.jwt_secret.encode(), code.encode(), hashlib.sha256
+    ).hexdigest()
+
+
 @router.post("/otp/request", response_model=OtpRequestResult)
 async def request_otp(
     payload: OtpRequest, db: AsyncSession = Depends(get_db)
 ) -> OtpRequestResult:
     now = datetime.now(UTC)
+
+    # Rate limit per phone. Count the codes already asked for in the window;
+    # past the ceiling, refuse — this is what stops a caller from making the
+    # server send unlimited SMS to a number, or from farming codes to guess.
+    window_start = now - timedelta(seconds=settings.otp_rate_window_seconds)
+    recent = await db.scalar(
+        select(func.count())
+        .select_from(OtpChallenge)
+        .where(
+            OtpChallenge.phone == payload.phone,
+            OtpChallenge.created_at > window_start,
+        )
+    )
+    if (recent or 0) >= settings.otp_rate_max:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Juda ko‘p kod so‘raldi. Birozdan so‘ng qayta urining.",
+            headers={"Retry-After": str(settings.otp_rate_window_seconds)},
+        )
+
     code = f"{secrets.randbelow(1_000_000):06d}"
 
     db.add(
         OtpChallenge(
             phone=payload.phone,
-            code=code,
+            code_hash=_hash_code(code),
             created_at=now,
             expires_at=now + timedelta(seconds=settings.otp_ttl_seconds),
         )
@@ -56,7 +85,8 @@ async def request_otp(
     await db.commit()
 
     # A real SMS gateway goes here. Until then the code comes back in the
-    # response so the app can be driven end to end in development.
+    # response so the app can be driven end to end in development. Only the
+    # hash is ever stored; the plaintext lives only in this response.
     return OtpRequestResult(
         sent=True,
         expires_in=settings.otp_ttl_seconds,
@@ -92,7 +122,7 @@ async def verify_otp(
             "Juda ko‘p urinish. Yangi kod so‘rang.",
         )
 
-    if not secrets.compare_digest(challenge.code, payload.code):
+    if not secrets.compare_digest(challenge.code_hash, _hash_code(payload.code)):
         challenge.attempts += 1
         await db.commit()
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kod noto‘g‘ri.")

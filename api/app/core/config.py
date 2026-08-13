@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     otp_debug: bool = True
     otp_ttl_seconds: int = 300
 
+    # How many codes a single phone may request inside the window before the
+    # endpoint starts refusing. Without this a caller can make the server send
+    # (and pay for) unlimited SMS to any number, or grind through codes.
+    otp_rate_max: int = 5
+    otp_rate_window_seconds: int = 900
+
     cors_origins: tuple[str, ...] = (
         "http://localhost:3000",
         "http://localhost:5173",
