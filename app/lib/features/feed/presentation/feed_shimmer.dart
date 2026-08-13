@@ -6,13 +6,25 @@ class FeedShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-      itemCount: 4,
-      separatorBuilder: (_, _) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        return const _ShimmerCard();
-      },
+    // A Column, not a ListView: this skeleton is dropped into the feed's
+    // CustomScrollView through a SliverToBoxAdapter, which offers its child
+    // unbounded height. A ListView there asks a scrollable to live inside an
+    // unbounded scrollable and throws "viewport was given unbounded height".
+    // The count is fixed at four, so nothing here needs to scroll on its own —
+    // the outer scroll view already does.
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 28),
+      child: Column(
+        children: [
+          _ShimmerCard(),
+          SizedBox(height: 16),
+          _ShimmerCard(),
+          SizedBox(height: 16),
+          _ShimmerCard(),
+          SizedBox(height: 16),
+          _ShimmerCard(),
+        ],
+      ),
     );
   }
 }
