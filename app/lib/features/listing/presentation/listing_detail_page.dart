@@ -111,11 +111,21 @@ class _Content extends StatelessWidget {
         ? [if (listing.imageUrl != null) listing.imageUrl!]
         : listing.gallery;
 
+    // 50 / 50 — the photo owns the top half of the screen, the details the
+    // bottom. The card sold the barter in a glance; the detail page is where
+    // the picture is finally big enough to judge and the full description,
+    // wanted items and specs have room. Clamped so it is neither a strip on a
+    // short window nor a whole screen on a tall one.
+    final heroHeight = (MediaQuery.sizeOf(context).height * 0.5).clamp(
+      300.0,
+      520.0,
+    );
+
     return CustomScrollView(
       slivers: [
         SliverAppBar(
           pinned: true,
-          expandedHeight: 280,
+          expandedHeight: heroHeight,
           backgroundColor: BrandColors.brand900,
           foregroundColor: Colors.white,
           leading: IconButton(
