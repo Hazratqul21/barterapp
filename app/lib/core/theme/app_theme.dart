@@ -68,10 +68,18 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
   final Color inkFaint;
   final bool isDark;
 
-  LinearGradient get swapGradient => LinearGradient(
+  /// The brand gradient — the hero header, the create button, the splash.
+  ///
+  /// A straight two-stop from the bright give-green to the bright take-blue
+  /// crossed through a muddy grey-teal at the middle and read as loud rather
+  /// than rich. This is a jewel-toned three-stop instead: a deep emerald eased
+  /// through a clean teal into a deep sapphire, so give still becomes take but
+  /// the whole sweep looks like one considered colour, not two primaries meeting.
+  LinearGradient get swapGradient => const LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [giveVivid, takeVivid],
+    colors: [Color(0xFF0A7A4E), Color(0xFF0C6E78), Color(0xFF1B4CA6)],
+    stops: [0.0, 0.5, 1.0],
   );
 
   @override
@@ -214,16 +222,17 @@ abstract final class AppTheme {
     final palette = isDark ? BarterPalette.dark : BarterPalette.light;
     final textColor = isDark ? const Color(0xFFE9F0EB) : BrandColors.ink;
 
-    final scheme = ColorScheme.fromSeed(
-      seedColor: BrandColors.brand500,
-      brightness: brightness,
-    ).copyWith(
-      primary: palette.give,
-      secondary: palette.take,
-      tertiary: palette.money,
-      surface: palette.canvas,
-      outlineVariant: palette.hair,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: BrandColors.brand500,
+          brightness: brightness,
+        ).copyWith(
+          primary: palette.give,
+          secondary: palette.take,
+          tertiary: palette.money,
+          surface: palette.canvas,
+          outlineVariant: palette.hair,
+        );
 
     final typography = Typography.material2021();
     final baseTextTheme = (isDark ? typography.white : typography.black).apply(
@@ -232,7 +241,12 @@ abstract final class AppTheme {
       displayColor: textColor,
     );
 
-    TextStyle head(double size, FontWeight weight, {double spacing = 0, double height = 1.2}) => TextStyle(
+    TextStyle head(
+      double size,
+      FontWeight weight, {
+      double spacing = 0,
+      double height = 1.2,
+    }) => TextStyle(
       fontFamily: _displayFamily,
       fontSize: size,
       fontWeight: weight,
@@ -249,14 +263,51 @@ abstract final class AppTheme {
       headlineMedium: head(24, FontWeight.w700, spacing: -0.5, height: 1.22),
       headlineSmall: head(20, FontWeight.w700, spacing: -0.4, height: 1.25),
       titleLarge: head(18, FontWeight.w700, spacing: -0.3, height: 1.3),
-      titleMedium: baseTextTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.1, height: 1.35),
-      titleSmall: baseTextTheme.titleSmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0, height: 1.4),
-      bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w400, letterSpacing: 0, height: 1.5),
-      bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0.05, height: 1.5),
-      bodySmall: baseTextTheme.bodySmall?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w400, letterSpacing: 0.1, height: 1.45),
-      labelLarge: baseTextTheme.labelLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
-      labelMedium: baseTextTheme.labelMedium?.copyWith(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.2),
-      labelSmall: baseTextTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8),
+      titleMedium: baseTextTheme.titleMedium?.copyWith(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.1,
+        height: 1.35,
+      ),
+      titleSmall: baseTextTheme.titleSmall?.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+        height: 1.4,
+      ),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+        height: 1.5,
+      ),
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.05,
+        height: 1.5,
+      ),
+      bodySmall: baseTextTheme.bodySmall?.copyWith(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.1,
+        height: 1.45,
+      ),
+      labelLarge: baseTextTheme.labelLarge?.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.1,
+      ),
+      labelMedium: baseTextTheme.labelMedium?.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
+      ),
+      labelSmall: baseTextTheme.labelSmall?.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+      ),
     );
 
     final base = ThemeData(
@@ -281,7 +332,8 @@ abstract final class AppTheme {
         foregroundColor: Colors.white,
         elevation: 4,
         highlightElevation: 0, // M3 da bosilganda elevation ko'tarilmaydi
-        shape: const CircleBorder(), // SIZ xohlagan stilistika: Aylana (Circle) shakli
+        shape:
+            const CircleBorder(), // SIZ xohlagan stilistika: Aylana (Circle) shakli
         enableFeedback: true,
       ),
       cardTheme: CardThemeData(

@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -127,60 +125,57 @@ class _Photo extends StatelessWidget {
             left: Gap.x3,
             child: CategoryBadge(tag: listing.tag, compact: true),
           ),
-          // The value lives on the photo as a frosted pill, so the card body
-          // stays down to a name and one barter line. A gold dot marks premium.
-          // A solid white pill washed out over a bright photo and its dark
-          // figures fell into the image behind them; real backdrop blur keeps it
-          // legible over any subject and matches the app's liquid glass.
+          // The value on the photo. It used to be a real BackdropFilter, but a
+          // live blur on every card is one of the most expensive things to put
+          // in a scrolling list — it was a real part of why the feed did not
+          // feel smooth. This is a solid jewel-dark pill instead: legible over
+          // any photo, premium to look at, and free to scroll. The thin lit rim
+          // fakes the glass edge without a single pixel of blur.
           Positioned(
             top: Gap.x3,
             right: Gap.x3,
-            child: ClipRRect(
-              borderRadius: Radii.rFull,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withValues(alpha: 0.78),
-                    borderRadius: Radii.rFull,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      width: 0.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.14),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (listing.isPremium) ...[
-                        Icon(
-                          Symbols.star_rounded,
-                          size: 12,
-                          color: p.money,
-                          fill: 1,
-                        ),
-                        Gap.w1,
-                      ],
-                      Text(
-                        listing.value.format(locale),
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xF01A2C22), Color(0xF00E1A14)],
                 ),
+                borderRadius: Radii.rFull,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  width: 0.75,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (listing.isPremium) ...[
+                    Icon(
+                      Symbols.star_rounded,
+                      size: 12,
+                      color: p.moneyVivid,
+                      fill: 1,
+                    ),
+                    Gap.w1,
+                  ],
+                  Text(
+                    listing.value.format(locale),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
