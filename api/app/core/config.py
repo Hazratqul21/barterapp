@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # revoked) carries the long-lived session.
     access_token_minutes: int = 60
     refresh_token_days: int = 60
+    # A single-use hop for opening the WebSocket. Browsers can't set headers on a
+    # WS handshake, so the token lives in the query string — where proxies and
+    # server logs can capture it. Making that token a throwaway with a few
+    # seconds of life means a captured one is worthless before it can be replayed.
+    socket_token_seconds: int = 30
 
     # Every listing must carry all three; there is no silent fallback locale.
     supported_locales: tuple[str, ...] = ("uz", "ru", "en")

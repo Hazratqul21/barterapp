@@ -46,6 +46,14 @@ def create_refresh_token(user_id: uuid.UUID, jti: uuid.UUID) -> str:
     return _encode(str(user_id), "refresh", refresh_lifetime(), jti=str(jti))
 
 
+def create_socket_token(user_id: uuid.UUID) -> str:
+    """A few-seconds ticket for the WebSocket handshake. The long-lived access
+    token never travels in a query string; this throwaway does instead."""
+    return _encode(
+        str(user_id), "socket", timedelta(seconds=settings.socket_token_seconds)
+    )
+
+
 def decode_token(token: str, expected: str) -> uuid.UUID:
     return _decode(token, expected)["sub"]
 

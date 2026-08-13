@@ -16,8 +16,15 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+    # Production domains come from configuration. Without this the deployed web
+    # build — served from its own host, not localhost — had every request
+    # blocked by the browser, because the middleware only ever recognised the
+    # dev origins below.
+    allow_origins=list(settings.cors_origins),
     # Flutter web picks a fresh port on every run, and reaches the host as both
-    # localhost and 127.0.0.1 depending on how it was launched.
+    # localhost and 127.0.0.1 depending on how it was launched. The regex keeps
+    # development working; it deliberately covers only loopback, never a
+    # wildcard, so `allow_credentials=True` stays safe.
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],

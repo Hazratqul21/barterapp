@@ -297,14 +297,25 @@ class PeerTyping extends LiveEvent {
 /// left open for two minutes stopped receiving messages and gave no sign of it.
 /// The reader saw a conversation that had simply gone quiet.
 class LiveChannel {
-  LiveChannel(this._session, {WebSocketChannel Function(Uri)? connector})
-    : _connect = connector ?? WebSocketChannel.connect;
+  LiveChannel(
+    this._session, {
+    WebSocketChannel Function(Uri)? connector,
+    Future<String?> Function()? ticket,
+  }) : _connect = connector ?? WebSocketChannel.connect,
+       // ignore: prefer_initializing_formals — a named param can't be private.
+       _ticket = ticket;
 
   /// How a socket is opened. Injectable so the reconnect behaviour can be
   /// tested without a server — the bug this class exists to fix only appears
   /// when a connection drops, which is the one thing that is hard to arrange
   /// for real.
   final WebSocketChannel Function(Uri) _connect;
+
+  /// Fetches a throwaway ticket to put in the socket URL, so the account's
+  /// access token never travels in a query string. When absent — in tests,
+  /// which dial a fake socket that ignores the URL — the session token stands
+  /// in and nothing has to reach a server for a ticket.
+  final Future<String?> Function()? _ticket;
 
   final SessionStore _session;
   WebSocketChannel? _channel;
@@ -335,17 +346,37 @@ class LiveChannel {
     return Duration(seconds: steps[_attempt.clamp(0, steps.length - 1)]);
   }
 
+  /// Guards the window between asking for a ticket and the socket being set:
+  /// [connect] can be called again (a retry timer, a resume) while that fetch
+  /// is in flight, and two sockets must never open at once.
+  bool _opening = false;
+
   void connect() {
-    if (_closed || _channel != null) return;
-    final token = _session.accessToken;
-    if (token == null) return;
-
+    if (_closed || _channel != null || _opening) return;
     _retry?.cancel();
+    _open();
+  }
 
-    final base = defaultApiBaseUrl().replaceFirst(RegExp('^http'), 'ws');
-    final channel = _connect(Uri.parse('$base/ws?token=$token'));
-    _channel = channel;
+  Future<void> _open() async {
+    _opening = true;
+    try {
+      final token = _ticket != null ? await _ticket() : _session.accessToken;
+      if (_closed || _channel != null || token == null) return;
 
+      final base = defaultApiBaseUrl().replaceFirst(RegExp('^http'), 'ws');
+      final channel = _connect(Uri.parse('$base/ws?token=$token'));
+      _channel = channel;
+      _listen(channel);
+    } catch (_) {
+      // Couldn't get a ticket or dial — treat it as a dropped connection and
+      // back off, exactly as a mid-session failure is handled.
+      _scheduleReconnect();
+    } finally {
+      _opening = false;
+    }
+  }
+
+  void _listen(WebSocketChannel channel) {
     _socketSub = channel.stream.listen(
       (raw) {
         // A frame arrived, so whatever went wrong before is over.
@@ -422,7 +453,17 @@ class LiveChannel {
 }
 
 final liveChannelProvider = Provider<LiveChannel>((ref) {
-  final channel = LiveChannel(ref.watch(sessionStoreProvider));
+  final channel = LiveChannel(
+    ref.watch(sessionStoreProvider),
+    // A fresh ticket per dial. It rides through the api client so an expired
+    // access token is refreshed first, exactly as any other request would be.
+    ticket: () => ref
+        .read(apiClientProvider)
+        .get<String?>(
+          '/ws-ticket',
+          parse: (data) => (data as Map<String, dynamic>)['ticket'] as String?,
+        ),
+  );
   ref.onDispose(channel.dispose);
   return channel;
 });

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
-from app.core.security import current_user, decode_token
+from app.core.security import create_socket_token, current_user, decode_token
 from app.db.session import SessionLocal, get_db
 from app.models.offer import Conversation, Message, Offer
 from app.models.social import NotifyKind, NotifyTargetType
@@ -243,6 +243,13 @@ async def send_message(
     return out
 
 
+@router.get("/ws-ticket", response_model=dict)
+async def socket_ticket(me: User = Depends(current_user)) -> dict:
+    """Trade the session's access token (sent as a header, over HTTPS) for a
+    throwaway ticket to open the WebSocket with. See [live]."""
+    return {"ticket": create_socket_token(me.id)}
+
+
 @router.websocket("/ws")
 async def live(websocket: WebSocket, token: str = "") -> None:
     """
@@ -250,10 +257,12 @@ async def live(websocket: WebSocket, token: str = "") -> None:
     new messages, typing, and offer status changes.
 
     The token arrives as a query parameter because browsers cannot set headers
-    on a WebSocket handshake.
+    on a WebSocket handshake. It is a short-lived, single-purpose *socket ticket*
+    (from `/ws-ticket`), not the account's access token — a query string is a
+    place tokens leak into logs, so what leaks here expires in seconds.
     """
     try:
-        user_id = decode_token(token, "access")
+        user_id = decode_token(token, "socket")
     except HTTPException:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return

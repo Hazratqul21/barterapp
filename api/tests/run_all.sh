@@ -17,7 +17,8 @@ for t in tests/test_trade_loop.py \
          tests/test_reviews.py \
          tests/test_otp_security.py \
          tests/test_token_security.py \
-         tests/test_trade_integrity.py; do
+         tests/test_trade_integrity.py \
+         tests/test_socket_ticket.py; do
   $PY -m app.seed >/dev/null 2>&1
   printf '%-42s ' "$(basename "$t")"
   if out=$($PY "$t" 2>&1); then
