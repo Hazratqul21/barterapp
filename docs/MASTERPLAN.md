@@ -177,18 +177,25 @@ bo'yicha:
 - Bog'langan pending offerlarni deal yakunlanganda atomik cancel
 - **Fayllar:** `api/app/api/offers.py`, `api/app/services/offers.py`, test
 
-### B4 — Tarmoq/CORS/WS (o'rta)
-- `cors_origins` ni middleware'ga ulash; production domenlari env orqali
-- WebSocket uchun qisqa umrli socket-token
-- **Fayllar:** `api/app/main.py`, `api/app/core/config.py`, `api/app/api/chat.py`
+### B4 — Tarmoq/CORS/WS (o'rta)  ✅ TUGALLANDI
+- `cors_origins` middleware'ga ulandi (localhost regex dev uchun qoldi, wildcard yo'q)
+- WebSocket endi `/ws-ticket` bergan qisqa umrli (30s) bir martalik "socket"
+  chiptasini oladi; access token query stringda ketmaydi
+- Flutter `LiveChannel` har ulanishda chipta so'raydi (api client orqali)
+- **Fayllar:** `api/app/main.py`, `api/app/core/config.py`, `api/app/core/security.py`,
+  `api/app/api/chat.py`, `app/lib/features/trade/data/trade_repository.dart`
 
-### B5 — Fayl saqlash (past/o'rta)
-- Upload cleanup: orphan fayllarni o'chirish; listing o'chirilganda media
-- Production uchun S3-mos object storage + lifecycle
-- **Fayllar:** `api/app/api/uploads.py`, scheduled job
+### B5 — Fayl saqlash (past/o'rta)  ✅ TUGALLANDI
+- `services/media.py` — baza ishora qilmagan media fayllarini yig'ib, grace
+  oynasidan (6soat) eski yetimlarni o'chiradi
+- `python -m app.media_sweep [--dry-run] [--grace-hours N]` — cron/timer uchun CLI
+- (S3 object storage + lifecycle — deploy bosqichida, lokal disk uchun ekvivalent tayyor)
+- **Fayllar:** `api/app/services/media.py`, `api/app/media_sweep.py`
 
-### B6 — Har topilma uchun test
-- Har bir tuzatishga integration/security test (`api/tests/`)
+### B6 — Har topilma uchun test  ✅ TUGALLANDI
+- Har bir tuzatishga security test: `test_otp_security` (5), `test_token_security` (7),
+  `test_trade_integrity` (6), `test_socket_ticket` (7), `test_media_sweep` (10)
+- Backend to'plami: **95 tekshiruv**, hammasi yashil
 
 ---
 
