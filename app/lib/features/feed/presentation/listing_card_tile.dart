@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -43,7 +45,12 @@ class ListingCardTile extends StatelessWidget {
           children: [
             _Photo(listing: listing),
             Padding(
-              padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, Gap.x3),
+              padding: const EdgeInsets.fromLTRB(
+                Gap.x4,
+                Gap.x3,
+                Gap.x4,
+                Gap.x3,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -121,39 +128,59 @@ class _Photo extends StatelessWidget {
             child: CategoryBadge(tag: listing.tag, compact: true),
           ),
           // The value lives on the photo as a frosted pill, so the card body
-          // stays down to a name and one barter line. A gold dot marks premium
-          // without spending a second pill on it.
+          // stays down to a name and one barter line. A gold dot marks premium.
+          // A solid white pill washed out over a bright photo and its dark
+          // figures fell into the image behind them; real backdrop blur keeps it
+          // legible over any subject and matches the app's liquid glass.
           Positioned(
             top: Gap.x3,
             right: Gap.x3,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.92),
-                borderRadius: Radii.rFull,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+            child: ClipRRect(
+              borderRadius: Radii.rFull,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 6,
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (listing.isPremium) ...[
-                    Icon(Symbols.star_rounded, size: 12, color: p.money, fill: 1),
-                    Gap.w1,
-                  ],
-                  Text(
-                    listing.value.format(locale),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.78),
+                    borderRadius: Radii.rFull,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      width: 0.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.14),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (listing.isPremium) ...[
+                        Icon(
+                          Symbols.star_rounded,
+                          size: 12,
+                          color: p.money,
+                          fill: 1,
+                        ),
+                        Gap.w1,
+                      ],
+                      Text(
+                        listing.value.format(locale),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -162,7 +189,12 @@ class _Photo extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x6, Gap.x4, Gap.x2),
+              padding: const EdgeInsets.fromLTRB(
+                Gap.x4,
+                Gap.x6,
+                Gap.x4,
+                Gap.x2,
+              ),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
@@ -185,11 +217,20 @@ class _Photo extends StatelessWidget {
                   ),
                   if (listing.owner.rating != null) ...[
                     Gap.w1,
-                    const Icon(Symbols.star_rounded, size: 12, color: Colors.white, fill: 1),
+                    const Icon(
+                      Symbols.star_rounded,
+                      size: 12,
+                      color: Colors.white,
+                      fill: 1,
+                    ),
                     Gap.w1,
                     Text(
                       listing.owner.rating!.toStringAsFixed(1),
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ],
