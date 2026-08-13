@@ -16,13 +16,19 @@ from app.models.user import User
 bearer = HTTPBearer(auto_error=False)
 
 
-def _encode(subject: str, kind: str, lifetime: timedelta) -> str:
+def _encode(
+    subject: str, kind: str, lifetime: timedelta, jti: str | None = None
+) -> str:
     now = datetime.now(UTC)
-    return jwt.encode(
-        {"sub": subject, "typ": kind, "iat": now, "exp": now + lifetime},
-        settings.jwt_secret,
-        algorithm=settings.jwt_algorithm,
-    )
+    claims: dict[str, object] = {
+        "sub": subject,
+        "typ": kind,
+        "iat": now,
+        "exp": now + lifetime,
+    }
+    if jti is not None:
+        claims["jti"] = jti
+    return jwt.encode(claims, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
 def create_access_token(user_id: uuid.UUID) -> str:
@@ -31,13 +37,29 @@ def create_access_token(user_id: uuid.UUID) -> str:
     )
 
 
-def create_refresh_token(user_id: uuid.UUID) -> str:
-    return _encode(
-        str(user_id), "refresh", timedelta(days=settings.refresh_token_days)
-    )
+def refresh_lifetime() -> timedelta:
+    return timedelta(days=settings.refresh_token_days)
+
+
+def create_refresh_token(user_id: uuid.UUID, jti: uuid.UUID) -> str:
+    """The token carries the id of its own database row as `jti`."""
+    return _encode(str(user_id), "refresh", refresh_lifetime(), jti=str(jti))
 
 
 def decode_token(token: str, expected: str) -> uuid.UUID:
+    return _decode(token, expected)["sub"]
+
+
+def decode_refresh(token: str) -> tuple[uuid.UUID, uuid.UUID]:
+    """The user id and the token's own row id (jti)."""
+    payload = _decode(token, "refresh")
+    jti = payload.get("jti")
+    if jti is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token yaroqsiz.")
+    return payload["sub"], uuid.UUID(str(jti))
+
+
+def _decode(token: str, expected: str) -> dict:
     try:
         payload = jwt.decode(
             token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
@@ -51,7 +73,8 @@ def decode_token(token: str, expected: str) -> uuid.UUID:
 
     if payload.get("typ") != expected:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token turi mos emas.")
-    return uuid.UUID(payload["sub"])
+    payload["sub"] = uuid.UUID(payload["sub"])
+    return payload
 
 
 async def current_user(

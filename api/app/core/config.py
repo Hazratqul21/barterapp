@@ -20,7 +20,10 @@ class Settings(BaseSettings):
 
     jwt_secret: str = "dev-only-change-me"
     jwt_algorithm: str = "HS256"
-    access_token_minutes: int = 60 * 24
+    # Short, because a leaked access token cannot be revoked — it is only ever
+    # as dangerous as the time left on it. The refresh token (which can be
+    # revoked) carries the long-lived session.
+    access_token_minutes: int = 60
     refresh_token_days: int = 60
 
     # Every listing must carry all three; there is no silent fallback locale.

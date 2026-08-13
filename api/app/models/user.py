@@ -120,3 +120,30 @@ class OtpChallenge(Base, UUIDPrimaryKey):
         DateTime(timezone=True), nullable=False
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+
+
+class RefreshToken(Base, UUIDPrimaryKey):
+    """
+    One row per issued refresh token, so a token can be taken away.
+
+    A refresh token is a signed JWT that carries this row's id as its `jti`; the
+    signature proves it is genuine, and this row decides whether it still
+    counts. That is the whole difference between the old stateless refresh —
+    which lived sixty days no matter what — and one that a logout, a password
+    change or a theft can end. Rotation on every use plus reuse detection turns
+    a stolen-and-copied token into a self-defeating trap: the moment either copy
+    is used twice, every session for that user is dropped.
+    """
+
+    __tablename__ = "refresh_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

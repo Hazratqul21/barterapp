@@ -6,18 +6,20 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
-    decode_token,
+    current_user,
+    decode_refresh,
+    refresh_lifetime,
 )
 from app.db.session import get_db
 from app.models.social import VerificationStep
-from app.models.user import OtpChallenge, User
+from app.models.user import OtpChallenge, RefreshToken, User
 from app.schemas.user import (
     OtpRequest,
     OtpRequestResult,
@@ -157,17 +159,99 @@ async def verify_otp(
 
     await db.commit()
 
+    pair = await _issue_tokens(db, user.id)
+    await db.commit()
     return TokenPair(
-        access_token=create_access_token(user.id),
-        refresh_token=create_refresh_token(user.id),
+        access_token=pair.access_token,
+        refresh_token=pair.refresh_token,
         is_new_user=is_new,
     )
 
 
-@router.post("/refresh", response_model=TokenPair)
-async def refresh(payload: RefreshRequest) -> TokenPair:
-    user_id = decode_token(payload.refresh_token, "refresh")
+async def _issue_tokens(db: AsyncSession, user_id) -> TokenPair:
+    """Mint an access token and a fresh, tracked refresh token."""
+    now = datetime.now(UTC)
+    row = RefreshToken(
+        user_id=user_id,
+        created_at=now,
+        expires_at=now + refresh_lifetime(),
+    )
+    db.add(row)
+    await db.flush()  # assigns row.id, which becomes the token's jti
     return TokenPair(
         access_token=create_access_token(user_id),
-        refresh_token=create_refresh_token(user_id),
+        refresh_token=create_refresh_token(user_id, row.id),
     )
+
+
+@router.post("/refresh", response_model=TokenPair)
+async def refresh(
+    payload: RefreshRequest, db: AsyncSession = Depends(get_db)
+) -> TokenPair:
+    user_id, jti = decode_refresh(payload.refresh_token)
+    now = datetime.now(UTC)
+
+    row = await db.scalar(select(RefreshToken).where(RefreshToken.id == jti))
+
+    # Unknown jti: the row was swept, or the token was forged around a real
+    # signature it never had. Either way it is not a live session.
+    if row is None or row.user_id != user_id:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sessiya yaroqsiz.")
+
+    # Already revoked, yet presented again — this is the reuse signal. A
+    # rotating token is used exactly once; a second use means two copies exist,
+    # so the safe move is to end every session for the account and force a fresh
+    # sign-in.
+    if row.revoked_at is not None:
+        await db.execute(
+            update(RefreshToken)
+            .where(
+                RefreshToken.user_id == user_id,
+                RefreshToken.revoked_at.is_(None),
+            )
+            .values(revoked_at=now)
+        )
+        await db.commit()
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "Sessiyada xavfsizlik muammosi aniqlandi. Qaytadan kiring.",
+        )
+
+    if row.expires_at <= now:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "Sessiya muddati tugagan. Qaytadan kiring."
+        )
+
+    # Rotate: retire this token, hand back a new pair.
+    row.revoked_at = now
+    pair = await _issue_tokens(db, user_id)
+    await db.commit()
+    return pair
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(payload: RefreshRequest, db: AsyncSession = Depends(get_db)) -> None:
+    """End this one session. Best-effort: a token already gone is a no-op."""
+    try:
+        _, jti = decode_refresh(payload.refresh_token)
+    except HTTPException:
+        return
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.id == jti, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    await db.commit()
+
+
+@router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_all(
+    me: User = Depends(current_user), db: AsyncSession = Depends(get_db)
+) -> None:
+    """End every session for the signed-in account — a stolen-device switch."""
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == me.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    await db.commit()
