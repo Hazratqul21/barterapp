@@ -135,12 +135,66 @@ class ApiClient {
           }
           handler.next(options);
         },
+        // A 401 no longer means "signed out" on its own. The access token now
+        // lasts an hour, not a day, so an expired one is routine — the refresh
+        // token trades it for a new pair and the original request is retried
+        // once, invisibly. Only when that fails is the session actually over.
+        onError: (e, handler) async {
+          final is401 = e.response?.statusCode == 401;
+          final isAuthCall = e.requestOptions.path.contains('/auth/');
+          if (!is401 || isAuthCall || _session.refreshToken == null) {
+            return handler.next(e);
+          }
+
+          final refreshed = await _refreshOnce();
+          if (!refreshed) return handler.next(e);
+
+          try {
+            final opts = e.requestOptions;
+            opts.headers['Authorization'] = 'Bearer ${_session.accessToken}';
+            final retry = await _dio.fetch<dynamic>(opts);
+            return handler.resolve(retry);
+          } on DioException catch (retryError) {
+            return handler.next(retryError);
+          }
+        },
       ),
     );
   }
 
   final Dio _dio;
   final SessionStore _session;
+
+  /// One refresh at a time. Several requests can 401 at once when a token
+  /// expires; they all await the same exchange instead of each spending the
+  /// refresh token — which, with rotation on the server, would look like reuse
+  /// and drop every session.
+  Future<bool>? _refreshing;
+
+  Future<bool> _refreshOnce() =>
+      _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
+
+  Future<bool> _doRefresh() async {
+    final token = _session.refreshToken;
+    if (token == null) return false;
+    try {
+      // A bare client, so the request carries no stale Authorization header and
+      // cannot recurse back into this interceptor.
+      final bare = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
+      final response = await bare.post<dynamic>(
+        '/auth/refresh',
+        data: {'refresh_token': token},
+      );
+      final data = response.data as Map<String, dynamic>;
+      await _session.saveTokens(
+        data['access_token'] as String,
+        data['refresh_token'] as String,
+      );
+      return true;
+    } on DioException {
+      return false;
+    }
+  }
 
   /// The language this client asks for. Held as a field rather than read from
   /// storage per request so that switching it replaces the whole client — which
