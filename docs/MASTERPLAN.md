@@ -159,19 +159,19 @@ motion `M3Motion` tokenlaridan; 60fps (silliqlik testi bilan tasdiqlanadi).
 Manba: `docs/BACKEND_ANALYSIS.md` — 8 haqiqiy topilma. Tartib xavf darajasi
 bo'yicha:
 
-### B1 — OTP xavfsizligi (yuqori)
+### B1 — OTP xavfsizligi (yuqori)  ✅ TUGALLANDI
 - OTP so'roviga rate-limit (IP + telefon bo'yicha), `429` + retry vaqti
 - OTP kodini bazada hash (HMAC) qilib saqlash, ochiq matn emas
 - **Fayllar:** `api/app/api/auth.py`, `api/app/models/user.py`,
   `api/app/core/config.py`
 
-### B2 — Token boshqaruvi (yuqori)
+### B2 — Token boshqaruvi (yuqori)  ✅ TUGALLANDI
 - Refresh token uchun DB jadvali (jti, device, revoked-at, hash)
 - Token rotation; `POST /auth/logout` va `/auth/logout-all`
 - Access token muddatini qisqartirish (15–60 daqiqa)
 - **Fayllar:** `api/app/api/auth.py`, `api/app/core/security.py`, migratsiya
 
-### B3 — Savdo yaxlitligi (o'rta/yuqori)
+### B3 — Savdo yaxlitligi (o'rta/yuqori)  ✅ TUGALLANDI
 - `offered_listing_ids` uchun `active` status tekshiruvi
 - Parallel deal race: `SELECT ... FOR UPDATE` + atomik status yangilash
 - Bog'langan pending offerlarni deal yakunlanganda atomik cancel

@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -61,19 +61,23 @@ async def create_offer(
             status.HTTP_400_BAD_REQUEST, "O‘z e’loningizga taklif yubora olmaysiz."
         )
 
-    # You can only put up listings you actually own.
+    # You can only put up listings you actually own — and only ones still
+    # active. Without the status check a closed or already-traded listing could
+    # be offered again, so the count below now also rejects any that are not
+    # live, not just any that are not yours.
     offered = (
         await db.scalars(
             select(Listing).where(
                 Listing.id.in_(payload.offered_listing_ids),
                 Listing.owner_id == me.id,
+                Listing.status == ListingStatus.active,
             )
         )
     ).all()
     if len(offered) != len(set(payload.offered_listing_ids)):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            "Taklif qilingan e’lonlarning ba’zisi sizga tegishli emas.",
+            "Taklif qilingan e’lonlarning ba’zisi sizga tegishli emas yoki faol emas.",
         )
 
     now = datetime.now(UTC)
@@ -154,6 +158,16 @@ async def act_on_offer(
     `services/offers.TRANSITIONS`, so no screen can push the deal into a state
     the rest of the product does not understand.
     """
+    # Lock the offer row first. Two "complete" taps arriving together used to
+    # both read `pending`, both pass the transition check, and both finish the
+    # deal — one listing, two completed trades. Now the second request blocks
+    # here until the first commits, then sees the new status and is refused.
+    locked = await db.scalar(
+        select(Offer.id).where(Offer.id == offer_id).with_for_update()
+    )
+    if locked is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Taklif topilmadi.")
+
     offer = await service.load_offer(db, offer_id)
     if offer is None or me.id not in (offer.from_user_id, offer.to_user_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Taklif topilmadi.")
@@ -194,6 +208,22 @@ async def act_on_offer(
         ids = [offer.listing_id, *offered]
         for listing in (await db.scalars(select(Listing).where(Listing.id.in_(ids)))).all():
             listing.status = ListingStatus.completed
+
+        # Every other open offer that was competing for any of these listings is
+        # now dead — the goods are gone. Expire them in one atomic statement so
+        # a listing can never sit inside two live deals at once. The offers
+        # touch a listing either as the thing wanted or as something offered.
+        _open = (OfferStatus.pending, OfferStatus.talking, OfferStatus.accepted)
+        via_item = select(OfferItem.offer_id).where(OfferItem.listing_id.in_(ids))
+        await db.execute(
+            update(Offer)
+            .where(
+                Offer.id != offer.id,
+                Offer.status.in_(_open),
+                or_(Offer.listing_id.in_(ids), Offer.id.in_(via_item)),
+            )
+            .values(status=OfferStatus.expired)
+        )
 
     await db.flush()
     out = await service.present(db, offer, me.id, locale)
