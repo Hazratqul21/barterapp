@@ -302,41 +302,65 @@ class _Categories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x6, Gap.x5, Gap.x3),
-          child: Row(
-            children: [
-              Expanded(child: Text(L.of(context).feedCategories, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
-              if (selected != null) TextButton(onPressed: () => onSelect(null), child: Text(L.of(context).filterAll)),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 232,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x2),
-            itemCount: ListingTag.values.length,
-            separatorBuilder: (_, _) => Gap.w3,
-            itemBuilder: (context, index) => CategoryCard(
-              tag: ListingTag.values[index],
-              selected: selected == ListingTag.values[index],
-              onTap: () {
-                HapticFeedback.selectionClick();
-                onSelect(
-                  selected == ListingTag.values[index]
-                      ? null
-                      : ListingTag.values[index],
-                );
-              },
+    final p = palette(context);
+
+    // The whole section sits on its own rounded panel — a soft surface that
+    // separates the photo tiles from the wallpaper and gives the heading and
+    // the row one container to belong to.
+    return Container(
+      margin: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, 0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
+        borderRadius: Radii.rXl,
+        border: Border.all(color: p.hair),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x4, Gap.x4, Gap.x3),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    L.of(context).feedCategories,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (selected != null)
+                  TextButton(
+                    onPressed: () => onSelect(null),
+                    child: Text(L.of(context).filterAll),
+                  ),
+              ],
             ),
           ),
-        ),
-      ],
+          SizedBox(
+            height: 150,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(Gap.x4, 0, Gap.x4, Gap.x4),
+              itemCount: ListingTag.values.length,
+              separatorBuilder: (_, _) => Gap.w3,
+              itemBuilder: (context, index) => CategoryCard(
+                tag: ListingTag.values[index],
+                selected: selected == ListingTag.values[index],
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onSelect(
+                    selected == ListingTag.values[index]
+                        ? null
+                        : ListingTag.values[index],
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

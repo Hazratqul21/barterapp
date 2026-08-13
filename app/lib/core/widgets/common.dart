@@ -615,74 +615,42 @@ class CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
-    final theme = Theme.of(context);
     final base = CategoryStyle.of(tag);
     final style = p.isDark ? base.dark : base;
 
-    return Pressable(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: M3Motion.medium1,
-        curve: M3Motion.emphasized,
-        width: 132,
-        padding: const EdgeInsets.fromLTRB(Gap.x2, Gap.x2, Gap.x2, Gap.x3),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLowest,
-          borderRadius: Radii.rXl,
-          border: Border.all(
-            color: selected ? p.give : p.hair,
-            width: selected ? 2 : 1,
+    // Photo only — no disc, no label. The picture names the category on its
+    // own (a field, a cow, a truck), and the name is kept for a screen reader
+    // and a long-press tooltip rather than printed under every tile.
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: categoryLabel(l, tag),
+      child: Tooltip(
+        message: categoryLabel(l, tag),
+        child: Pressable(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: M3Motion.medium1,
+            curve: M3Motion.emphasized,
+            width: 118,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: Radii.rLg,
+              border: Border.all(
+                color: selected ? p.give : Colors.transparent,
+                width: 2.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (selected ? p.give : const Color(0xFF12211A))
+                      .withValues(alpha: selected ? 0.22 : 0.10),
+                  blurRadius: selected ? 18 : 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: _CategoryVisual(tag: tag, style: style),
           ),
-          // Soft clay lift: the card stands off the page, more so when chosen.
-          boxShadow: [
-            BoxShadow(
-              color: (selected ? p.give : const Color(0xFF12211A)).withValues(
-                alpha: selected ? 0.18 : 0.08,
-              ),
-              blurRadius: selected ? 20 : 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 168,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 140,
-                    child: _CategoryVisual(tag: tag, style: style),
-                  ),
-                  // The disc straddles the photo's bottom edge, half over the
-                  // image and half over the card body.
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Center(child: _CategoryDisc(style: style)),
-                  ),
-                ],
-              ),
-            ),
-            Gap.h2,
-            Text(
-              categoryLabel(l, tag),
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: selected ? p.give : null,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                height: 1.15,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -700,79 +668,54 @@ class _CategoryVisual extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = categoryImage(tag);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // The base is always painted, so a slow or failed photo reveals the
-          // category's own colour rather than a grey box.
-          DecoratedBox(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // The base is always painted, so a slow or failed photo reveals the
+        // category's own colour rather than a grey box. No mark on it — the
+        // tile is a photograph, not an icon.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color.lerp(style.color, Colors.white, 0.35)!, style.color],
+            ),
+          ),
+        ),
+        if (url != null)
+          Image.network(
+            url,
+            fit: BoxFit.cover,
+            // On failure, show nothing — the gradient beneath carries it.
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: M3Motion.medium2,
+              child: child,
+            ),
+          ),
+        // A soft dark foot so a light photo never fights the panel behind it.
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 40,
+          child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.lerp(style.color, Colors.white, 0.35)!,
-                  style.color,
-                ],
-              ),
-            ),
-            child: Center(
-              child: CategoryMarkIcon(
-                mark: style.mark,
-                size: 56,
-                color: Colors.white.withValues(alpha: 0.35),
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Color(0x33000000), Colors.transparent],
               ),
             ),
           ),
-          if (url != null)
-            Image.network(
-              url,
-              fit: BoxFit.cover,
-              // On failure, show nothing — the gradient beneath carries it.
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
-                opacity: frame == null ? 0 : 1,
-                duration: M3Motion.medium2,
-                child: child,
-              ),
-            ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// The floating clay disc that carries the mark.
-class _CategoryDisc extends StatelessWidget {
-  const _CategoryDisc({required this.style});
-
-  final CategoryStyle style;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: 54,
-      height: 54,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF12211A).withValues(alpha: 0.14),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: CategoryMarkIcon(mark: style.mark, size: 28, color: style.color),
-      ),
-    );
-  }
-}
 /// The small tinted badge that marks which category a listing belongs to.
 class CategoryBadge extends StatelessWidget {
   const CategoryBadge({super.key, required this.tag, this.compact = false});
