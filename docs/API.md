@@ -757,6 +757,57 @@ yoziladi va ilova ichidagi ro'yxatda ko'rinadi. "Matchlarni o'chirdim" —
 
 ---
 
+## 7.9 Moderator (faqat xodimlar uchun)
+
+⚠️ **Bu bo'lim oddiy mijoz uchun emas.** Moderator bayrog'i bo'lmagan
+hisobga bu endpointlar **404** qaytaradi — 403 emas. Ataylab: 403 "shu
+manzilda API bor, sizda faqat huquq yo'q" deb aytadi, bu esa keyingi hujum
+uchun xarita.
+
+Bayroq faqat serverdan beriladi: `python -m app.grant_moderator +998...`.
+Uni o'zgartiradigan endpoint **yo'q** va bo'lmaydi.
+
+### `GET /admin/reports` 🔒 → `ReportRow[]`
+
+| Parametr | Standart | Izoh |
+|---|---|---|
+| `review_status` | `open` | `open`\|`reviewed`\|`actioned`\|`dismissed`. Bo'sh — hammasi |
+| `target_type` | — | `user`\|`listing` |
+| `limit` | 50 | 1–200 |
+
+```json
+[{ "id": "uuid", "target_type": "listing", "target_id": "uuid",
+   "reason": "scam", "note": "Narxi haqiqiy emas.",
+   "review_status": "open", "created_at": "...",
+   "reporter_id": "uuid", "reporter_name": "+998901234961",
+   "target_label": "MacBook Pro 14\"", "report_count": 2 }]
+```
+
+Navbat **eskisidan** boshlanadi: uch kundan beri turgan shikoyat —
+mahsulotga eng qimmatga tushayotgani.
+
+`target_label` va `report_count` shu yerda keladi, ya'ni moderator navbatni
+qo'shimcha so'rovlarsiz o'qiydi. `report_count` — shu obyekt haqidagi jami
+shikoyat: bittasi nizo, o'ntasi naqsh.
+
+### `PATCH /admin/reports/{id}` 🔒 → `ReportRow`
+
+```json
+{ "review_status": "actioned", "resolution": "E'lon yechildi." }
+```
+
+`resolution` shikoyatchining izohini **o'chirmaydi** — ostiga qo'shiladi.
+
+### `POST /admin/listings/{id}/archive` 🔒 → `204`
+
+E'lonni majburan yechish. Egasining o'z o'chirishidan farqli: jonli taklif
+bo'lsa ham ishlaydi. Firibgar e'lon taklif kelgan bo'lsa **tezroq**
+yechilishi kerak, kechroq emas.
+
+Idempotent.
+
+---
+
 ## 8. Tasdiqlash va to'lovlar
 
 ### `GET /me/verification` 🔒

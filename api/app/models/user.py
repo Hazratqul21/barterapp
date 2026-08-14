@@ -56,6 +56,15 @@ class User(Base, UUIDPrimaryKey, Timestamps):
 
     locale: Mapped[str] = mapped_column(String(2), nullable=False, server_default="uz")
 
+    #: Whether this account may read the moderation queue and act on it.
+    #: There is deliberately no endpoint that sets this — it is granted from
+    #: the server (`python -m app.grant_moderator`). An API that can promote an
+    #: account is an API that can be tricked into promoting the wrong one, and
+    #: the whole point of the flag is that it cannot be self-served.
+    is_moderator: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+
     # Denormalised only because it is expensive to recompute per request; a nightly
     # job rebuilds it from verification_steps. Never edited by hand.
     trust_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")

@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from app.api import (
     account,
+    admin,
     auth,
     chat,
     devices,
@@ -94,6 +95,7 @@ app.include_router(uploads.router)
 app.include_router(moderation.router)
 app.include_router(devices.router)
 app.include_router(favorites.router)
+app.include_router(admin.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
 # rather than on first upload so a fresh checkout can serve `/media` without

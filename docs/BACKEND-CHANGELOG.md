@@ -25,6 +25,26 @@
 
 ## 2026-08-14
 
+### 🆕 Moderator navbati (xodimlar uchun, oddiy ilovada emas)
+
+`GET /admin/reports`, `PATCH /admin/reports/{id}`,
+`POST /admin/listings/{id}/archive`.
+
+**Nega:** shikoyat yozilardi-yu, uni hech kim ko'ra olmasdi. Ya'ni tugma
+bor edi, orqasida hech narsa yo'q.
+
+**UI da nima kerak:** ilovaning o'zida **hech narsa**. Bu alohida ichki
+panel uchun. Agar keyinchalik ilova ichiga qo'shilsa:
+- Moderator bayrog'i yo'q hisobga bu endpointlar **404** qaytaradi, 403
+  emas. Mijoz "huquq yo'q" ekranini emas, "topilmadi" ni ko'rsatsin.
+- Bayroq faqat serverdan beriladi (`python -m app.grant_moderator`). Uni
+  beradigan endpoint yo'q va bo'lmaydi.
+
+Navbat eskisidan boshlanadi. `target_label` va `report_count` javobda
+keladi, ya'ni ro'yxat qo'shimcha so'rovlarsiz o'qiladi.
+
+---
+
 ### 🆕🎨 Saqlangan e'lonlar (favorites)
 
 `POST/DELETE /listings/{id}/favorite`, `GET /favorites`.

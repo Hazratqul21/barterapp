@@ -32,6 +32,7 @@ from app.models.social import (  # noqa: E402
 )
 from app.services.push import (  # noqa: E402
     MAX_HOLD_HOURS,
+    TASHKENT_OFFSET_HOURS,
     PushMessage,
     Transport,
     deliver_pending,
@@ -235,9 +236,19 @@ async def push_checks() -> None:
 
         # --- sokin soatlar ---------------------------------------------------
 
-        setting.quiet_from = 0
-        setting.quiet_to = 23  # deyarli butun kun — hozir albatta jim
+        # Oyna joriy soatdan hisoblanadi. Qattiq yozilgan oraliq (masalan
+        # 0→23) sutkaning bir soatida jim bo'lmay qoladi va sinov kunning
+        # qaysi vaqtida yurgizilganiga qarab goh o'tib, goh yiqiladi.
+        now_local = (datetime.now(UTC).hour + TASHKENT_OFFSET_HOURS) % 24
+        setting.quiet_from = now_local
+        setting.quiet_to = (now_local + 1) % 24
         await db.commit()
+
+        check(
+            "sinov oynasi hozirni qamrab oladi",
+            in_quiet_hours(setting, datetime.now(UTC)),
+            f"{setting.quiet_from}→{setting.quiet_to}, hozir {now_local}",
+        )
 
         fresh = note_for(owner, NotifyKind.offer)
         db.add(fresh)

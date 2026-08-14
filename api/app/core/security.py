@@ -99,6 +99,19 @@ async def current_user(
     return user
 
 
+async def current_moderator(me: User = Depends(current_user)) -> User:
+    """
+    The same check, plus the flag.
+
+    404 rather than 403 on purpose: a 403 confirms the moderation API exists at
+    that path and that the caller merely lacks the flag, which is a map of what
+    to attack next. To anyone without it, the endpoints simply are not there.
+    """
+    if not me.is_moderator:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Topilmadi.")
+    return me
+
+
 async def optional_user(
     creds: HTTPAuthorizationCredentials | None = Depends(bearer),
     db: AsyncSession = Depends(get_db),
