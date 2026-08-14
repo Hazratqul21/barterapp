@@ -3,24 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/tokens.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../shared/models/models.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 
-/// Who you are, in the three fields the rest of the app reads off you.
-///
-/// This screen used to send `{"name": ...}`. `MeUpdate` has `first_name` and
-/// `last_name` and no `name` at all, and Pydantic drops unknown fields without
-/// complaining — so the request succeeded, the name was silently discarded, and
-/// every new account stayed nameless on every card in the product.
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key, required this.isOnboarding});
-
-  /// True right after a first sign-in, where there is nothing to go back to.
   final bool isOnboarding;
 
   @override
@@ -41,17 +35,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   @override
   void dispose() {
-    _firstName.dispose();
-    _lastName.dispose();
-    _handle.dispose();
+    _firstName.dispose(); _lastName.dispose(); _handle.dispose();
     super.dispose();
   }
 
-  /// Fill the form from the server copy once it arrives.
-  ///
-  /// Done in `build` off the provider rather than in `initState`: at first
-  /// sign-in `meProvider` has not resolved yet, so reading it there returned
-  /// nothing and editing an existing profile started from blank fields.
   void _seed(Me me) {
     if (_loaded) return;
     _loaded = true;
@@ -63,16 +50,13 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   }
 
   Future<void> _pickPhoto() async {
+    HapticFeedback.lightImpact();
     setState(() => _uploading = true);
     try {
       final url = await pickAndUploadPhoto(context, ref);
-      if (!mounted) return;
       if (url != null) setState(() => _avatarUrl = url);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -80,13 +64,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
+    HapticFeedback.mediumImpact();
     setState(() => _busy = true);
     try {
       await ref.read(authRepositoryProvider).updateProfile({
         'first_name': _firstName.text.trim(),
         'last_name': _lastName.text.trim(),
-        // Null clears it; an empty string would fail the server's length check.
         'handle': _handle.text.trim().isEmpty ? null : _handle.text.trim(),
         if (_region != null) 'region': _region,
         if (_avatarUrl != null) 'avatar_url': _avatarUrl,
@@ -95,10 +78,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       if (!mounted) return;
       widget.isOnboarding ? context.go('/home') : context.pop();
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -112,22 +92,14 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final meAsync = ref.watch(meProvider);
     final regionsAsync = ref.watch(regionsProvider);
 
-    meAsync.whenData((me) {
-      if (me != null) _seed(me);
-    });
+    meAsync.whenData((me) { if (me != null) _seed(me); });
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text(
-          widget.isOnboarding ? l.profileSetupTitle : l.profileEditTitle,
-        ),
-        // Nothing to go back to on a first sign-in — the account has no name
-        // yet, and a nameless trader cannot be seen on any card.
+        title: Text(widget.isOnboarding ? l.profileSetupTitle : l.profileEditTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
         automaticallyImplyLeading: !widget.isOnboarding,
       ),
-      // The wallpaper belongs on the screens with no pictures of their own,
-      // and profile setup is the first of those a new account meets — it was
-      // named in the design note and never wired up.
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -135,133 +107,87 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  Gap.x5,
-                  Gap.x5,
-                  Gap.x5,
-                  Gap.x10,
-                ),
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x3, Gap.x5, Gap.x10),
                 children: [
                   if (widget.isOnboarding) ...[
-                    Text(
-                      l.profileSetupLede,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: p.inkSoft,
-                      ),
-                    ),
+                    Text(l.profileSetupLede, style: theme.textTheme.bodyLarge?.copyWith(color: p.inkSoft)),
                     Gap.h6,
                   ],
 
-                  // Not wrapped in a Center: inside a ListView that hands the
-                  // child an unbounded height, and the Column then stretched
-                  // instead of hugging the avatar.
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      PhotoWell(
-                        url: _avatarUrl,
-                        busy: _uploading,
-                        circular: true,
-                        size: Sizes.avatarXl,
-                        onTap: _pickPhoto,
-                        onRemove: () => setState(() => _avatarUrl = null),
-                      ),
-                      Gap.h2,
-                      TextButton(
-                        onPressed: _uploading ? null : _pickPhoto,
-                        child: Text(
-                          _uploading
-                              ? l.uploading
-                              : (_avatarUrl == null
-                                    ? l.profilePhotoPick
-                                    : l.profilePhotoChange),
+                  Center(
+                    child: Column(
+                      children: [
+                        PhotoWell(url: _avatarUrl, busy: _uploading, circular: true, size: 96, onTap: _pickPhoto, onRemove: () => setState(() => _avatarUrl = null)),
+                        Gap.h2,
+                        TextButton(
+                          onPressed: _uploading ? null : _pickPhoto,
+                          child: Text(_uploading ? l.uploading : (_avatarUrl == null ? l.profilePhotoPick : l.profilePhotoChange)),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Gap.h5,
+                  Gap.h6,
 
-                  TextFormField(
-                    controller: _firstName,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.givenName],
-                    decoration: InputDecoration(labelText: l.profileFirstName),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? l.profileRequired
-                        : null,
-                  ),
+                  _M3Field(controller: _firstName, label: l.profileFirstName, icon: Symbols.person_rounded, enabled: !_busy, hint: l.profileRequired),
                   Gap.h3,
-                  TextFormField(
-                    controller: _lastName,
-                    enabled: !_busy,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.familyName],
-                    decoration: InputDecoration(labelText: l.profileLastName),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? l.profileRequired
-                        : null,
-                  ),
+                  _M3Field(controller: _lastName, label: l.profileLastName, icon: Symbols.badge_rounded, enabled: !_busy, hint: l.profileRequired),
                   Gap.h3,
 
                   regionsAsync.when(
-                    loading: () => const SkeletonBox(height: Sizes.buttonLg),
+                    loading: () => const SkeletonBox(height: 64, radius: Radii.rMd),
                     error: (_, _) => const SizedBox.shrink(),
                     data: (regions) => DropdownButtonFormField<String>(
-                      initialValue: regions.contains(_region) ? _region : null,
+                      value: regions.contains(_region) ? _region : null,
                       isExpanded: true,
                       decoration: InputDecoration(
                         labelText: l.profileRegion,
-                        helperText: l.profileRegionHint,
                         prefixIcon: const Icon(Symbols.location_on_rounded),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerLow,
                       ),
-                      items: [
-                        for (final r in regions)
-                          DropdownMenuItem(value: r, child: Text(r)),
-                      ],
-                      onChanged: _busy
-                          ? null
-                          : (v) => setState(() => _region = v),
+                      items: [for (final r in regions) DropdownMenuItem(value: r, child: Text(r))],
+                      onChanged: _busy ? null : (v) => setState(() => _region = v),
                     ),
                   ),
                   Gap.h3,
 
-                  TextFormField(
-                    controller: _handle,
-                    enabled: !_busy,
-                    decoration: InputDecoration(
-                      labelText: l.profileHandle,
-                      helperText: l.profileHandleHint,
-                      prefixIcon: const Icon(Symbols.storefront_rounded),
-                    ),
-                  ),
+                  _M3Field(controller: _handle, label: l.profileHandle, icon: Symbols.storefront_rounded, enabled: !_busy, helper: l.profileHandleHint),
 
                   Gap.h8,
                   FilledButton(
-                    onPressed: _busy || _uploading
-                        ? null
-                        : () {
-                            HapticFeedback.lightImpact();
-                            _save();
-                          },
-                    child: _busy
-                        ? const SizedBox(
-                            width: Sizes.iconLg,
-                            height: Sizes.iconLg,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(l.profileSave),
+                    onPressed: _busy || _uploading ? null : _save,
+                    child: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : Text(l.profileSave),
                   ),
                 ],
-              ),
+              ).animate().fadeIn(duration: 400.ms),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _M3Field extends StatelessWidget {
+  const _M3Field({required this.controller, required this.label, required this.icon, required this.enabled, this.hint, this.helper});
+  final TextEditingController controller; final String label; final IconData icon; final bool enabled; final String? hint; final String? helper;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      textCapitalization: TextCapitalization.words,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        helperText: helper,
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerLow,
+      ),
+      validator: hint != null ? (v) => (v == null || v.trim().isEmpty) ? hint : null : null,
     );
   }
 }

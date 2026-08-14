@@ -11,25 +11,14 @@ abstract final class BrandColors {
   static const inkSoft = Color(0xFF5A6B62);
   static const inkFaint = Color(0xFF93A099);
 
+  // M3 Tonal Base
   static const canvas = Color(0xFFFAF8F4);
   static const surface = Color(0xFFFFFFFF);
-  static const sunken = Color(0xFFF2EEE7);
   static const hair = Color(0xFFE7E2D9);
 
-  static const brand50 = Color(0xFFE3F3EA);
-  static const brand100 = Color(0xFFC6E7D4);
-  static const brand300 = Color(0xFF6BC098);
-  static const brand500 = Color(0xFF14A86B);
-  static const brand600 = Color(0xFF0E7A52);
-  static const brand900 = Color(0xFF06341F);
-
-  static const gold50 = Color(0xFFFDF2DC);
-  static const gold500 = Color(0xFFF0A82A);
-  static const gold600 = Color(0xFFB47714);
-
-  static const take50 = Color(0xFFE6EDFC);
-  static const take500 = Color(0xFF3B76F0);
-  static const take700 = Color(0xFF1D4FBF);
+  static const brand500 = Color(0xFF14A86B); // Primary Seed
+  static const take500 = Color(0xFF3B76F0);  // Secondary Seed
+  static const gold500 = Color(0xFFF0A82A);  // Tertiary Seed
 }
 
 @immutable
@@ -76,21 +65,11 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 
   @override
   BarterPalette copyWith({
-    Color? give,
-    Color? giveSoft,
-    Color? giveVivid,
-    Color? take,
-    Color? takeSoft,
-    Color? takeVivid,
-    Color? money,
-    Color? moneySoft,
-    Color? moneyVivid,
-    Color? canvas,
-    Color? sunken,
-    Color? hair,
-    Color? inkSoft,
-    Color? inkFaint,
-    bool? isDark,
+    Color? give, Color? giveSoft, Color? giveVivid,
+    Color? take, Color? takeSoft, Color? takeVivid,
+    Color? money, Color? moneySoft, Color? moneyVivid,
+    Color? canvas, Color? sunken, Color? hair,
+    Color? inkSoft, Color? inkFaint, bool? isDark,
   }) {
     return BarterPalette(
       give: give ?? this.give,
@@ -134,20 +113,20 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
   }
 
   static const light = BarterPalette(
-    give: BrandColors.brand600,
-    giveSoft: BrandColors.brand50,
-    giveVivid: BrandColors.brand500,
-    take: BrandColors.take700,
-    takeSoft: BrandColors.take50,
-    takeVivid: BrandColors.take500,
-    money: BrandColors.gold600,
-    moneySoft: BrandColors.gold50,
-    moneyVivid: BrandColors.gold500,
-    canvas: BrandColors.canvas,
-    sunken: BrandColors.sunken,
-    hair: BrandColors.hair,
-    inkSoft: BrandColors.inkSoft,
-    inkFaint: BrandColors.inkFaint,
+    give: Color(0xFF0E7A52),
+    giveSoft: Color(0xFFE3F3EA),
+    giveVivid: Color(0xFF14A86B),
+    take: Color(0xFF1D4FBF),
+    takeSoft: Color(0xFFE6EDFC),
+    takeVivid: Color(0xFF3B76F0),
+    money: Color(0xFFB47714),
+    moneySoft: Color(0xFFFDF2DC),
+    moneyVivid: Color(0xFFF0A82A),
+    canvas: Color(0xFFFAF8F4),
+    sunken: Color(0xFFF2EEE7),
+    hair: Color(0xFFE7E2D9),
+    inkSoft: Color(0xFF5A6B62),
+    inkFaint: Color(0xFF93A099),
     isDark: false,
   );
 
@@ -173,25 +152,10 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 abstract final class M3Motion {
   static const emphasized = Curves.easeInOutCubicEmphasized;
   static const emphasizedDecelerate = Cubic(0.05, 0.7, 0.1, 1.0);
-  static const emphasizedAccelerate = Cubic(0.3, 0.0, 0.8, 0.15);
   static const standard = Curves.easeInOutCubicEmphasized;
 
-  static const short1 = Duration(milliseconds: 50);
-  static const short2 = Duration(milliseconds: 100);
-  static const short3 = Duration(milliseconds: 150);
-  static const short4 = Duration(milliseconds: 200);
-  static const medium1 = Duration(milliseconds: 250);
-  static const medium2 = Duration(milliseconds: 300);
-  static const medium3 = Duration(milliseconds: 350);
   static const medium4 = Duration(milliseconds: 400);
-  static const long1 = Duration(milliseconds: 450);
-  static const long2 = Duration(milliseconds: 500);
-  static const long3 = Duration(milliseconds: 550);
-  static const long4 = Duration(milliseconds: 600);
-  static const extraLong1 = Duration(milliseconds: 700);
-  static const extraLong2 = Duration(milliseconds: 800);
-  static const extraLong3 = Duration(milliseconds: 900);
-  static const extraLong4 = Duration(milliseconds: 1000);
+  static const medium2 = Duration(milliseconds: 300);
 }
 
 abstract final class AppTheme {
@@ -211,18 +175,26 @@ abstract final class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final palette = isDark ? BarterPalette.dark : BarterPalette.light;
+    final p = isDark ? BarterPalette.dark : BarterPalette.light;
     final textColor = isDark ? const Color(0xFFE9F0EB) : BrandColors.ink;
 
+    // ── M3 Color Scheme with Surface Container Logic ──────────────────────
     final scheme = ColorScheme.fromSeed(
       seedColor: BrandColors.brand500,
       brightness: brightness,
     ).copyWith(
-      primary: palette.give,
-      secondary: palette.take,
-      tertiary: palette.money,
-      surface: palette.canvas,
-      outlineVariant: palette.hair,
+      primary: p.give,
+      onPrimary: Colors.white,
+      secondary: p.take,
+      tertiary: p.money,
+      surface: p.canvas,
+      // M3 Surface Containers (v1.2 standards)
+      surfaceContainerLowest: isDark ? const Color(0xFF080C0A) : const Color(0xFFFFFFFF),
+      surfaceContainerLow: isDark ? const Color(0xFF111713) : const Color(0xFFF7F4EE),
+      surfaceContainer: isDark ? const Color(0xFF161D19) : const Color(0xFFF2EEE7),
+      surfaceContainerHigh: isDark ? const Color(0xFF1C2420) : const Color(0xFFEBE6DD),
+      surfaceContainerHighest: isDark ? const Color(0xFF232C27) : const Color(0xFFE2DCD3),
+      outlineVariant: p.hair,
     );
 
     final typography = Typography.material2021();
@@ -232,64 +204,87 @@ abstract final class AppTheme {
       displayColor: textColor,
     );
 
-    TextStyle head(double size, FontWeight weight, {double spacing = 0, double height = 1.2}) => TextStyle(
+    TextStyle head(double size, FontWeight weight, {double spacing = 0}) => TextStyle(
       fontFamily: _displayFamily,
       fontSize: size,
       fontWeight: weight,
       letterSpacing: spacing,
-      height: height,
+      height: 1.2,
       color: textColor,
     );
 
     final textTheme = baseTextTheme.copyWith(
-      displayLarge: head(48, FontWeight.w800, spacing: -1.4, height: 1.05),
-      displayMedium: head(40, FontWeight.w800, spacing: -1.0, height: 1.08),
-      displaySmall: head(32, FontWeight.w700, spacing: -0.8, height: 1.12),
-      headlineLarge: head(28, FontWeight.w700, spacing: -0.6, height: 1.18),
-      headlineMedium: head(24, FontWeight.w700, spacing: -0.5, height: 1.22),
-      headlineSmall: head(20, FontWeight.w700, spacing: -0.4, height: 1.25),
-      titleLarge: head(18, FontWeight.w700, spacing: -0.3, height: 1.3),
-      titleMedium: baseTextTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: -0.1, height: 1.35),
-      titleSmall: baseTextTheme.titleSmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0, height: 1.4),
-      bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w400, letterSpacing: 0, height: 1.5),
-      bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0.05, height: 1.5),
-      bodySmall: baseTextTheme.bodySmall?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w400, letterSpacing: 0.1, height: 1.45),
-      labelLarge: baseTextTheme.labelLarge?.copyWith(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
-      labelMedium: baseTextTheme.labelMedium?.copyWith(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.2),
-      labelSmall: baseTextTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8),
+      headlineLarge: head(32, FontWeight.w800, spacing: -0.5),
+      headlineMedium: head(24, FontWeight.w800, spacing: -0.3),
+      headlineSmall: head(20, FontWeight.w700),
+      titleLarge: head(18, FontWeight.w700),
+      titleMedium: baseTextTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+      titleSmall: baseTextTheme.titleSmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 15, height: 1.5),
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.4),
+      labelSmall: baseTextTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5),
     );
 
-    final base = ThemeData(
+    return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       textTheme: textTheme,
       scaffoldBackgroundColor: Colors.transparent,
       pageTransitionsTheme: _transitions,
-      extensions: [palette],
+      extensions: [p],
       splashFactory: InkSparkle.splashFactory,
-    );
 
-    return base.copyWith(
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: textTheme.titleLarge?.copyWith(color: textColor),
+        scrolledUnderElevation: 0,
+        titleTextStyle: textTheme.titleLarge,
       ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: palette.give,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        highlightElevation: 0, // M3 da bosilganda elevation ko'tarilmaydi
-        shape: const CircleBorder(), // SIZ xohlagan stilistika: Aylana (Circle) shakli
-        enableFeedback: true,
-      ),
+
       cardTheme: CardThemeData(
         color: scheme.surfaceContainerLow,
         elevation: 0,
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: Radii.rLg,
-          side: BorderSide(color: palette.hair),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        ),
+      ),
+
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: p.give,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        highlightElevation: 0,
+        shape: const CircleBorder(),
+      ),
+
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: scheme.surfaceContainerLowest,
+        indicatorColor: p.giveSoft,
+        height: 72,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          textTheme.labelSmall?.copyWith(color: states.contains(WidgetState.selected) ? p.give : p.inkSoft)),
+        iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(color: states.contains(WidgetState.selected) ? p.give : p.inkSoft, size: 26)),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainer,
+        border: OutlineInputBorder(borderRadius: Radii.rMd, borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        labelStyle: textTheme.bodyMedium?.copyWith(color: p.inkSoft),
+        prefixIconColor: p.inkFaint,
+      ),
+
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
+          textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
         ),
       ),
     );

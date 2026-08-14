@@ -1,22 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
-import '../widgets/glass.dart';
 
-/// Above this the app lays itself out for a desk; below it, for a hand.
 const kWebBreakpoint = 900.0;
 
-/// The desktop chrome: a standing sidebar instead of a bar under the thumb.
-///
-/// A tab bar exists because a thumb reaches the bottom of a phone. On a laptop
-/// nothing reaches the bottom of the window, the pointer is already at the
-/// left, and there is room to show all four destinations with their names at
-/// once. Same screens, same data, same design language — a different shape for
-/// a different set of hands.
 class WebShell extends StatelessWidget {
   const WebShell({
     super.key,
@@ -33,6 +25,7 @@ class WebShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
+    final theme = Theme.of(context);
 
     final destinations = <({IconData icon, String label})>[
       (icon: Symbols.home_rounded, label: l.navHome),
@@ -44,145 +37,127 @@ class WebShell extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          // Glass, not an opaque panel. The rail is chrome sitting over the
-          // page, and the wallpaper's green corner now shows through it —
-          // which is the whole reason the wallpaper went behind the app
-          // rather than onto four screens.
-          GlassSurface(
-            level: GlassLevel.chrome,
-            borderRadius: BorderRadius.zero,
-            // Pinned to the left edge: a shadow there would only draw a dark
-            // seam against the window frame.
-            shadow: false,
-            // Liquid, not merely frosted. The rail is the tallest glass in the
-            // app and a pane that tall with no light down its edge reads as a
-            // grey strip.
-            specular: true,
-            child: Container(
-              width: 68,
-              decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: p.hair)),
-              ),
-              child: SafeArea(
-                right: false,
-                child: Column(
-                  children: [
-                    const _Brand(),
-                    const _RailDivider(),
-                    // Posting is not a destination — it is the one thing the
-                    // rail asks you to do — so it keeps the brand colour while
-                    // every navigation tile stays neutral clay.
-                    _RailButton(
-                      icon: Symbols.add_rounded,
-                      label: l.navCreate,
-                      tone: p.give,
-                      foreground: Colors.white,
-                      onTap: () => context.push('/create'),
+          // ── Premium M3 Side Rail ───────────────────────────────────────────
+          Container(
+            width: 80,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              border: Border(right: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: Gap.x6),
+                    child: BrandMark(size: 44),
+                  ),
+
+                  // Create FAB - Rail version
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Gap.x4),
+                    child: FloatingActionButton(
+                      mini: true,
+                      heroTag: 'rail-create',
+                      onPressed: () => context.push('/create'),
+                      child: const Icon(Symbols.add_rounded, size: 24),
                     ),
-                    const _RailDivider(),
-                    for (final (index, d) in destinations.indexed)
-                      _RailButton(
-                        icon: d.icon,
-                        label: d.label,
-                        selected: index == currentIndex,
-                        onTap: () => onDestination(index),
-                      ),
-                    const Spacer(),
-                    const _RailDivider(),
-                    _RailButton(
-                      icon: Symbols.settings_rounded,
-                      label: l.navSettings,
-                      onTap: () => context.push('/settings'),
+                  ),
+
+                  for (final (index, d) in destinations.indexed)
+                    _RailItem(
+                      icon: d.icon,
+                      label: d.label,
+                      selected: index == currentIndex,
+                      onTap: () => onDestination(index),
                     ),
-                    Gap.h4,
-                  ],
-                ),
+
+                  const Spacer(),
+
+                  _RailItem(
+                    icon: Symbols.settings_rounded,
+                    label: l.navSettings,
+                    onTap: () => context.push('/settings'),
+                  ),
+                  Gap.h4,
+                ],
               ),
             ),
           ),
-          // No `ColoredBox` here. It used to paint the canvas colour over this
-          // half of the window, which was harmless while the page had no
-          // wallpaper and became the reason the wallpaper was invisible
-          // everywhere except behind the rail.
-          Expanded(child: child),
+
+          Expanded(
+            child: Container(
+              color: theme.colorScheme.surface,
+              child: child,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.x2, Gap.x5, Gap.x2, 0),
-      child: Center(child: const BrandMark(size: 40)),
-    );
-  }
-}
-
-/// One tile in the rail.
-///
-/// Clay rather than a filled rectangle. The selected tile is pressed into the
-/// pane instead of being painted a colour: on a rail this narrow a coloured
-/// block is the loudest thing on the screen, and the thing it is competing
-/// with is the listing photographs.
-class _RailButton extends StatelessWidget {
-  const _RailButton({
+class _RailItem extends StatelessWidget {
+  const _RailItem({
     required this.icon,
     required this.label,
     required this.onTap,
     this.selected = false,
-    this.tone,
-    this.foreground,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool selected;
-  final Color? tone;
-  final Color? foreground;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final p = palette(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Gap.x1),
-      child: ClayTile(
-        size: 46,
-        radius: 15,
-        pressed: selected,
-        tone: tone,
-        tooltip: label,
-        onTap: onTap,
-        child: Icon(
-          icon,
-          size: Sizes.iconLg,
-          fill: selected ? 1 : 0,
-          color: foreground ?? (selected ? p.give : p.inkSoft),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Tooltip(
+        message: label,
+        preferBelow: false,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 56,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: selected ? theme.colorScheme.secondaryContainer : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  fill: selected ? 1 : 0,
+                  color: selected ? theme.colorScheme.onSecondaryContainer : p.inkSoft,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                  color: selected ? theme.colorScheme.onSurface : p.inkFaint,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-/// The hairline that groups the rail.
-///
-/// Four destinations, a create button and a settings tile in one unbroken
-/// column read as six equal choices. The rules say which of them belong
-/// together — the same job the separators in a desktop toolbar do.
-class _RailDivider extends StatelessWidget {
-  const _RailDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
-      child: Divider(height: 1, thickness: 1, color: palette(context).hair),
     );
   }
 }
