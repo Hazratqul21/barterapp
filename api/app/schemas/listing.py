@@ -97,3 +97,35 @@ class ListingCreate(ApiModel):
     cash_ok: bool = True
     latitude: float | None = None
     longitude: float | None = None
+
+
+class ListingUpdate(ApiModel):
+    """
+    An edit to a listing you own. Every field is optional: the screen sends what
+    changed, and anything left out keeps the value it already had.
+
+    The lists are the exception to "optional means untouched" in spirit but not
+    in mechanics — sending `photos` replaces the whole set rather than appending
+    to it, because that is what a photo editor with a remove button does. The
+    same holds for `wants` and `desires`. Leaving them out changes nothing.
+
+    Translated fields stay all-or-nothing per field: a title arrives in three
+    languages or not at all, so an edit can never leave the feed half-translated
+    the way a per-locale patch would.
+    """
+
+    tag: ListingTag | None = None
+    title: TranslatedText | None = None
+    description: TranslatedText | None = None
+    image_alt: TranslatedText | None = None
+    category: TranslatedText | None = None
+    condition: TranslatedText | None = None
+    quantity: TranslatedText | None = None
+    wants_summary: TranslatedText | None = None
+    wants: list[TranslatedText] | None = Field(default=None, max_length=8)
+    desires: list[DesireIn] | None = Field(default=None, max_length=8)
+    photos: list[str] | None = Field(default=None, max_length=10)
+    value: Money | None = None
+    cash_ok: bool | None = None
+    latitude: float | None = None
+    longitude: float | None = None

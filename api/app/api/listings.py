@@ -24,7 +24,14 @@ from app.models.listing import (
 )
 from app.models.user import User, UserType
 from app.schemas.common import Page
-from app.schemas.listing import DesireIn, ListingCard, ListingCreate, ListingDetail
+from app.models.offer import Offer, OfferItem, OfferStatus
+from app.schemas.listing import (
+    DesireIn,
+    ListingCard,
+    ListingCreate,
+    ListingDetail,
+    ListingUpdate,
+)
 from app.services import stats
 from app.services.matching import haversine_km, rebuild_matches
 from app.services.presenter import listing_card, listing_detail, trader_brief
@@ -310,3 +317,206 @@ async def create_listing(
     await rebuild_matches(db, me.id, force=True)
 
     return await get_listing(listing.id, locale=locale, viewer=me, db=db)
+
+
+#: An offer that is still live. A listing tangled in one of these cannot be
+#: edited out from under the person negotiating for it.
+_LIVE_OFFERS = (OfferStatus.pending, OfferStatus.talking, OfferStatus.accepted)
+
+
+async def _owned_listing(
+    listing_id: uuid.UUID, me: User, db: AsyncSession
+) -> Listing:
+    """The listing, if it is yours and still exists.
+
+    Answers 404 rather than 403 for somebody else's listing: whether a given id
+    belongs to another user is not a fact this endpoint owes a stranger.
+    """
+    listing = await db.get(Listing, listing_id)
+    if listing is None or listing.owner_id != me.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "E’lon topilmadi.")
+    return listing
+
+
+async def _live_offer_count(listing_id: uuid.UUID, db: AsyncSession) -> int:
+    """How many open offers touch this listing, as the thing wanted or offered."""
+    via_item = select(OfferItem.offer_id).where(OfferItem.listing_id == listing_id)
+    rows = await db.scalars(
+        select(Offer.id).where(
+            Offer.status.in_(_LIVE_OFFERS),
+            or_(Offer.listing_id == listing_id, Offer.id.in_(via_item)),
+        )
+    )
+    return len(rows.all())
+
+
+@router.patch("/{listing_id}", response_model=ListingDetail)
+async def update_listing(
+    listing_id: uuid.UUID,
+    payload: ListingUpdate,
+    locale: str = Depends(resolve_locale),
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ListingDetail:
+    """
+    Change a listing you own.
+
+    Until this existed a listing was write-once: a typo in the price, a photo
+    taken in the dark, a tractor that is no longer 2019 — none of it could be
+    corrected, and the only way out was to publish a second listing and leave
+    the wrong one in the feed forever.
+
+    Two things are refused rather than silently allowed. A listing already sold
+    or archived is history and stays as it was, and a listing inside a live
+    negotiation cannot be rewritten while the other side is looking at it —
+    changing the price under an open offer is the marketplace equivalent of
+    moving the goalposts mid-deal.
+    """
+    listing = await _owned_listing(listing_id, me, db)
+
+    if listing.status in (ListingStatus.completed, ListingStatus.archived):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Yakunlangan yoki arxivlangan e’lonni tahrirlab bo‘lmaydi.",
+        )
+    if await _live_offer_count(listing.id, db):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Bu e’lon ochiq taklifda turibdi. Avval taklifni yakunlang yoki rad eting.",
+        )
+
+    if payload.tag is not None:
+        listing.tag = payload.tag
+    if payload.value is not None:
+        listing.value_minor = payload.value.minor
+        listing.currency = payload.value.currency
+    if payload.cash_ok is not None:
+        listing.cash_ok = payload.cash_ok
+    if payload.latitude is not None:
+        listing.latitude = payload.latitude
+    if payload.longitude is not None:
+        listing.longitude = payload.longitude
+
+    # Translated fields are patched per language in place, so an edit that only
+    # touches the title leaves the description rows untouched.
+    translated = {
+        "title": payload.title,
+        "description": payload.description,
+        "image_alt": payload.image_alt,
+        "category": payload.category,
+        "condition": payload.condition,
+        "quantity": payload.quantity,
+        "wants_summary": payload.wants_summary,
+    }
+    if any(v is not None for v in translated.values()):
+        rows = (
+            await db.scalars(
+                select(ListingTranslation).where(
+                    ListingTranslation.listing_id == listing.id
+                )
+            )
+        ).all()
+        for row in rows:
+            for field, value in translated.items():
+                if value is not None:
+                    setattr(row, field, getattr(value, row.locale))
+
+    if payload.photos is not None:
+        for row in (
+            await db.scalars(
+                select(ListingPhoto).where(ListingPhoto.listing_id == listing.id)
+            )
+        ).all():
+            await db.delete(row)
+        await db.flush()
+        for position, url in enumerate(payload.photos):
+            db.add(ListingPhoto(listing_id=listing.id, url=url, position=position))
+
+    if payload.wants is not None:
+        for row in (
+            await db.scalars(
+                select(ListingWant).where(ListingWant.listing_id == listing.id)
+            )
+        ).all():
+            await db.delete(row)
+        await db.flush()
+        for position, want in enumerate(payload.wants):
+            row = ListingWant(listing_id=listing.id, position=position)
+            db.add(row)
+            await db.flush()
+            for code in ("uz", "ru", "en"):
+                db.add(
+                    ListingWantTranslation(
+                        want_id=row.id, locale=code, label=getattr(want, code)
+                    )
+                )
+
+    if payload.desires is not None:
+        for row in (
+            await db.scalars(select(Desire).where(Desire.listing_id == listing.id))
+        ).all():
+            await db.delete(row)
+        await db.flush()
+        for position, desire in enumerate(payload.desires):
+            db.add(
+                Desire(
+                    listing_id=listing.id,
+                    category=desire.category,
+                    min_value_minor=desire.min_value_minor,
+                    max_value_minor=desire.max_value_minor,
+                    will_add_cash=desire.will_add_cash,
+                    wants_cash=desire.wants_cash,
+                    position=position,
+                )
+            )
+
+    await db.commit()
+
+    # What this listing is willing to take may have changed, so the matches it
+    # belongs to are recomputed rather than left pointing at the old wants.
+    await rebuild_matches(db, me.id, force=True)
+
+    return await get_listing(listing.id, locale=locale, viewer=me, db=db)
+
+
+@router.delete("/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def archive_listing(
+    listing_id: uuid.UUID,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """
+    Take a listing off the marketplace.
+
+    Archived, not deleted. Offers, conversations and reviews all point at this
+    row, and a completed trade has to stay readable by both sides months later —
+    a hard delete would either cascade that history away or leave the tables
+    referring to something that is gone. Archiving takes the listing out of the
+    feed, out of search and out of matching, which is what "delete" means to
+    the person pressing it.
+
+    A listing inside a live offer is refused for the same reason an edit is: the
+    other side is mid-negotiation over it.
+    """
+    listing = await _owned_listing(listing_id, me, db)
+
+    if listing.status == ListingStatus.archived:
+        return
+    if listing.status == ListingStatus.completed:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Yakunlangan savdo tarixi — uni o‘chirib bo‘lmaydi.",
+        )
+    if await _live_offer_count(listing.id, db):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Bu e’lon ochiq taklifda turibdi. Avval taklifni yakunlang yoki rad eting.",
+        )
+
+    listing.status = ListingStatus.archived
+
+    # The matches this listing appeared in are stale the moment it leaves the
+    # feed, so they are rebuilt rather than left advertising something that can
+    # no longer be traded for.
+    await db.commit()
+    await rebuild_matches(db, me.id, force=True)
