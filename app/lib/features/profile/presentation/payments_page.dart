@@ -163,7 +163,7 @@ class _CardTile extends StatelessWidget {
                 Container(
                   width: 56, height: 36,
                   decoration: BoxDecoration(color: brandColor, borderRadius: Radii.rXs),
-                  child: Center(child: Text(card.brand.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.black))),
+                  child: Center(child: Text(card.brand.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900))),
                 ),
                 Gap.w4,
                 Expanded(
@@ -179,7 +179,7 @@ class _CardTile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: softColor, borderRadius: Radii.rFull),
-                    child: Text(l.paymentsPrimary, style: theme.textTheme.labelSmall?.copyWith(color: brandColor, fontSize: 9, fontWeight: FontWeight.black)),
+                    child: Text(l.paymentsPrimary, style: theme.textTheme.labelSmall?.copyWith(color: brandColor, fontSize: 9, fontWeight: FontWeight.w900)),
                   )
                 else
                   PopupMenuButton(

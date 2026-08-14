@@ -126,7 +126,7 @@ class _Content extends StatelessWidget {
         SliverAppBar(
           pinned: true,
           expandedHeight: heroHeight,
-          backgroundColor: BrandColors.brand900,
+          backgroundColor: BrandColors.brand500,
           foregroundColor: Colors.white,
           leading: IconButton(
             icon: Icon(context.canPop() ? Icons.arrow_back : Icons.close_rounded),

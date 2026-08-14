@@ -158,12 +158,22 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 }
 
 abstract final class M3Motion {
+  // Curves
   static const emphasized = Curves.easeInOutCubicEmphasized;
   static const emphasizedDecelerate = Cubic(0.05, 0.7, 0.1, 1.0);
+  static const emphasizedAccelerate = Cubic(0.3, 0.0, 0.8, 0.15);
   static const standard = Curves.easeInOutCubicEmphasized;
 
-  static const medium4 = Duration(milliseconds: 400);
+  // Durations (Material 3 spec)
+  static const short2 = Duration(milliseconds: 100);
+  static const short3 = Duration(milliseconds: 150);
+  static const short4 = Duration(milliseconds: 200);
+  static const medium1 = Duration(milliseconds: 250);
   static const medium2 = Duration(milliseconds: 300);
+  static const medium3 = Duration(milliseconds: 350);
+  static const medium4 = Duration(milliseconds: 400);
+  static const long1 = Duration(milliseconds: 450);
+  static const long2 = Duration(milliseconds: 500);
 }
 
 abstract final class AppTheme {

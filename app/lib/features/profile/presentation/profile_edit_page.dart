@@ -6,7 +6,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/tokens.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../shared/models/models.dart';
@@ -138,7 +137,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     loading: () => const SkeletonBox(height: 64, radius: Radii.rMd),
                     error: (_, _) => const SizedBox.shrink(),
                     data: (regions) => DropdownButtonFormField<String>(
-                      value: regions.contains(_region) ? _region : null,
+                      initialValue: regions.contains(_region) ? _region : null,
                       isExpanded: true,
                       decoration: InputDecoration(
                         labelText: l.profileRegion,

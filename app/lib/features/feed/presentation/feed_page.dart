@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart'; // M3 transitions uchun
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
@@ -13,7 +13,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/listing_repository.dart';
-import '../../listing/presentation/listing_detail_page.dart'; // Transform uchun kerak
 import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
@@ -350,7 +349,7 @@ class _Categories extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
             itemCount: ListingTag.values.length,
             separatorBuilder: (_, _) => Gap.w3,
-            itemBuilder: (context, index) => CategoryTile(
+            itemBuilder: (context, index) => CategoryCard(
               tag: ListingTag.values[index],
               selected: selected == ListingTag.values[index],
               onTap: () => onSelect(selected == ListingTag.values[index] ? null : ListingTag.values[index]),

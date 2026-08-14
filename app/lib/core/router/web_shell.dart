@@ -24,7 +24,6 @@ class WebShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final p = palette(context);
     final theme = Theme.of(context);
 
     final destinations = <({IconData icon, String label})>[
