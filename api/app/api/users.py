@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.categories import categories
 from app.core.locale import resolve_locale
 from app.core.regions import coordinates_for, region_names
 from app.core.security import current_user
@@ -36,6 +37,14 @@ class ReviewOut(ApiModel):
     author_id: uuid.UUID
     author_name: str
     author_avatar_url: str | None = None
+
+
+class CategoryOut(ApiModel):
+    #: A `ListingTag` value, so it doubles as the `tag` filter on `/listings`.
+    id: str
+    #: Already resolved to the requested language.
+    name: str
+    image_url: str
 
 
 async def _profile(db: AsyncSession, user: User) -> TraderProfile:
@@ -88,6 +97,25 @@ async def list_regions() -> list[str]:
     spelling — does not need an app release on three platforms.
     """
     return region_names()
+
+
+@router.get("/categories", response_model=list[CategoryOut], tags=["meta"])
+async def list_categories(
+    locale: str = Depends(resolve_locale),
+) -> list[CategoryOut]:
+    """
+    The six categories a listing can be filed under, already in one language.
+
+    The clients were carrying their own copy of this list because the endpoint
+    did not exist — hardcoded Uzbek names that stayed Uzbek on the Russian and
+    English builds, and photo ids that had rotted until half the strip showed a
+    broken image. Serving it puts the names next to every other translated
+    string the API owns and makes a fix a deploy rather than three releases.
+
+    An `id` here is a `ListingTag`, so it can be passed straight back as the
+    `tag` filter on `/listings`.
+    """
+    return [CategoryOut(**row) for row in categories(locale)]
 
 
 @router.patch("/me", response_model=Me)
