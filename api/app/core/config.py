@@ -52,6 +52,23 @@ class Settings(BaseSettings):
     otp_rate_max: int = 5
     otp_rate_window_seconds: int = 900
 
+    # SMS — Eskiz (notify.eskiz.uz). Bo'sh bo'lsa quruq rejim: SMS ketmaydi,
+    # matn logga yoziladi. Kalitlar faqat .env dan keladi va hech qayerda
+    # chop etilmaydi.
+    eskiz_email: str = ""
+    eskiz_password: str = ""
+    #: Tasdiqlangan alfanumerik jo'natuvchi. "4546" — Eskizning sinov nomi;
+    #: haqiqiy nom shartnoma imzolangach beriladi.
+    eskiz_sender: str = "4546"
+    #: Eskiz har bir matnni oldindan tasdiqlaydi va tasdiqlanmagani jimgina
+    #: yetkazilmaydi. Shu sababli matn shakli sozlamada — tasdiq boshqa so'z
+    #: bilan kelsa, kod emas, .env o'zgaradi.
+    eskiz_otp_template: str = "BarterApp: tasdiqlash kodi {code}. Hech kimga aytmang."
+    #: SMS yuborilmasa ro'yxatdan o'tish to'xtatilsinmi. Ishlab chiqarishda
+    #: albatta ha: aks holda odam kod kutadi, kod kelmaydi va sabab
+    #: hech qayerda ko'rinmaydi.
+    sms_required: bool = False
+
     cors_origins: tuple[str, ...] = (
         "http://localhost:3000",
         "http://localhost:5173",

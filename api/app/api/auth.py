@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
@@ -20,6 +21,7 @@ from app.core.security import (
 from app.db.session import get_db
 from app.models.social import VerificationStep
 from app.models.user import OtpChallenge, RefreshToken, User
+from app.services.sms import SmsError, get_sms, otp_text
 from app.schemas.user import (
     OtpRequest,
     OtpRequestResult,
@@ -40,6 +42,9 @@ STARTER_STEPS = [
     ("bank", "Escrow to‘lovlari uchun", 20),
     ("video", "30 soniyalik selfie video", 10),
 ]
+
+
+log = logging.getLogger("barter.auth")
 
 
 def _hash_code(code: str) -> str:
@@ -86,11 +91,27 @@ async def request_otp(
     )
     await db.commit()
 
-    # A real SMS gateway goes here. Until then the code comes back in the
-    # response so the app can be driven end to end in development. Only the
-    # hash is ever stored; the plaintext lives only in this response.
+    # Faqat hash saqlanadi; ochiq kod shu yerdan nariga chiqmaydi.
+    delivered = True
+    try:
+        await get_sms().send(payload.phone, otp_text(code))
+    except SmsError as exc:
+        # Sabab logda qoladi, foydalanuvchiga chiqmaydi: provayder xatosi
+        # unga hech narsa demaydi, lekin xizmat haqidagi ma'lumot beradi.
+        log.warning("OTP SMS yuborilmadi (%s): %s", payload.phone, exc)
+        delivered = False
+
+        if settings.sms_required:
+            # Ishlab chiqarishda jimgina davom etish eng yomon holat: odam
+            # kod kutadi, kod kelmaydi va nima bo'lgani hech qayerda
+            # ko'rinmaydi. Shuning uchun ochiq aytiladi.
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "Hozir SMS yuborib bo'lmadi. Birozdan so'ng qayta urining.",
+            ) from exc
+
     return OtpRequestResult(
-        sent=True,
+        sent=delivered,
         expires_in=settings.otp_ttl_seconds,
         debug_code=code if settings.otp_debug else None,
     )

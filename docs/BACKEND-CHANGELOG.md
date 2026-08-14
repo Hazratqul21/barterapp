@@ -25,6 +25,32 @@
 
 ## 2026-08-14
 
+### 🔧⚠️ SMS — Eskiz ulandi
+
+`POST /auth/otp/request` endi haqiqiy SMS yuboradi (kalitlar sozlanganda).
+
+**Nega:** OTP kodi HTTP javobida `debug_code` bo'lib qaytardi. Ishlab
+chiqishda bu qulay, ishlab chiqarishda esa **har kim istalgan raqamga kod
+so'rab, o'sha hisobga kira olardi**.
+
+**UI da nima kerak:**
+- ⚠️ Ishlab chiqarishda `debug_code` **`null`** bo'ladi. Mijoz uni
+  ko'rsatishga urinmasin va `null` holatini albatta hisobga olsin — bu
+  allaqachon shartnomada bor edi, lekin endi haqiqatan shunday bo'ladi.
+- 🆕 Yangi javob kodi: **`503`** — SMS yuborib bo'lmadi. "Qayta urinish"
+  tugmasi bilan ko'rsating. (`SMS_REQUIRED=true` bo'lganda.)
+- `sent: false` — kod yaratildi, lekin SMS ketmadi. `SMS_REQUIRED=false`
+  holatida shunday bo'ladi.
+
+Server tomonda: kalitlar `.env` da (`ESKIZ_EMAIL`, `ESKIZ_PASSWORD`,
+`ESKIZ_SENDER`, `ESKIZ_OTP_TEMPLATE`). Bo'sh bo'lsa quruq rejim.
+
+⚠️ **Eskiz har bir matnni oldindan tasdiqlaydi.** Tasdiqlanmagan matn xato
+bermaydi — jimgina yetkazilmaydi. Shuning uchun matn `.env` da turadi va
+kabinetdagi tasdiqlangan shakl bilan harf-baharf bir xil bo'lishi kerak.
+
+---
+
 ### 🆕 Moderator navbati (xodimlar uchun, oddiy ilovada emas)
 
 `GET /admin/reports`, `PATCH /admin/reports/{id}`,
