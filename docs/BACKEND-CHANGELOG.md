@@ -25,6 +25,28 @@
 
 ## 2026-08-14
 
+### 🆕🎨 Saqlangan e'lonlar (favorites)
+
+`POST/DELETE /listings/{id}/favorite`, `GET /favorites`.
+
+**Nega:** barterda bu istaklar ro'yxati emas — odam bir necha o'tirishda
+qarshi taklif qilishga arzigulik narsalar ro'yxatini yig'adi va shundan
+keyin savdoga kiradi. Usiz topilgan e'lon keyingi kirishda yo'qoladi.
+
+**UI da nima kerak:**
+- 🎨 Kartada va e'lon sahifasida yurak tugmasi.
+- 🎨 Pastki panelda yoki profilda "Saqlanganlar" ro'yxati.
+- ⚠️ **`ListingCard` ga `is_favorite` maydoni qo'shildi** va u lentaning
+  o'zida keladi — har karta uchun alohida so'rov yubormang. Mehmon uchun
+  doim `false`.
+- Ikkala tugma ham idempotent: ikki marta bosish xato emas, optimistik UI
+  bemalol.
+- Arxivlangan e'lonni saqlab bo'lmaydi (`404`), saqlangani ro'yxatdan
+  o'zi tushadi. Bloklangan savdogarniki ham yashiriladi va blok yechilgach
+  qaytadi — ya'ni "yo'qolib qoldi" degan shikoyat kelmasligi kerak.
+
+---
+
 ### 🆕🎨 Bildirishnoma sozlamalari va sokin soatlar
 
 `GET /notification-settings` va `PATCH /notification-settings`.

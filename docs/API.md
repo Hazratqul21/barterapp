@@ -270,6 +270,24 @@ o'zgarganda ro'yxatni noldan yuklang.
 - `distance_km` faqat ikkala tomonda koordinata bo'lsa keladi, aks holda `null`.
   Mijoz `null` bo'lsa masofani umuman ko'rsatmasin.
 
+### Saqlangan e'lonlar
+
+| Endpoint | Javob |
+|---|---|
+| `POST /listings/{id}/favorite` 🔒 | `204` |
+| `DELETE /listings/{id}/favorite` 🔒 | `204` |
+| `GET /favorites` 🔒 | `Page[ListingCard]` |
+
+Ikkalasi ham **idempotent** — ikki marta bosish xato emas.
+
+⚠️ **`ListingCard` da `is_favorite` maydoni bor** va u lentaning o'zida
+keladi. Mijoz yurakni birinchi javobdanoq to'g'ri chizadi — har karta uchun
+alohida so'rov kerak emas. Mehmon (kirmagan) uchun doim `false`.
+
+Arxivlangan yoki yakunlangan e'lonni saqlab bo'lmaydi (`404`), saqlangani esa
+ro'yxatdan tushib qoladi. Qator o'chirilmaydi — bloklangan savdogarniki ham
+shunchaki yashiriladi va blok yechilgach qaytadi.
+
 ### `GET /listings/{listing_id}` → `ListingDetail`
 
 `ListingCard` + qo'shimcha:

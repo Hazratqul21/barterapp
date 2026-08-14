@@ -2,6 +2,7 @@
 
 from app.models.desire import Desire  # noqa: F401
 from app.models.device import Device, DevicePlatform  # noqa: F401
+from app.models.favorite import Favorite  # noqa: F401
 from app.models.listing import (  # noqa: F401
     Listing,
     ListingPhoto,
@@ -25,6 +26,7 @@ __all__ = [
     "Block",
     "Conversation",
     "Desire",
+    "Favorite",
     "Device",
     "DevicePlatform",
     "Listing",

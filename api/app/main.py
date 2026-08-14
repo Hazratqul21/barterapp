@@ -12,6 +12,7 @@ from app.api import (
     auth,
     chat,
     devices,
+    favorites,
     listings,
     moderation,
     offers,
@@ -92,6 +93,7 @@ app.include_router(account.router)
 app.include_router(uploads.router)
 app.include_router(moderation.router)
 app.include_router(devices.router)
+app.include_router(favorites.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
 # rather than on first upload so a fresh checkout can serve `/media` without

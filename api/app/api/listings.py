@@ -33,6 +33,7 @@ from app.schemas.listing import (
     ListingDetail,
     ListingUpdate,
 )
+from app.api.favorites import favorite_ids
 from app.services import moderation
 from app.services import stats
 from app.services.matching import haversine_km, rebuild_matches
@@ -268,6 +269,9 @@ async def list_listings(
     rows = rows[:limit]
 
     owners = await _owners_for(db, rows)
+    saved = await favorite_ids(
+        db, viewer.id if viewer else None, [row.id for row in rows]
+    )
     items = [
         listing_card(
             row,
@@ -279,6 +283,7 @@ async def list_listings(
                 row.latitude,
                 row.longitude,
             ),
+            is_favorite=row.id in saved,
         )
         for row in rows
     ]
@@ -319,6 +324,9 @@ async def get_listing(
         rating=ratings.get(listing.owner_id, (None, 0))[0],
         deals=deals.get(listing.owner_id, 0),
     )
+    saved = await favorite_ids(
+        db, viewer.id if viewer else None, [listing.id]
+    )
     return listing_detail(
         listing,
         locale,
@@ -329,6 +337,7 @@ async def get_listing(
             listing.latitude,
             listing.longitude,
         ),
+        is_favorite=listing.id in saved,
     )
 
 

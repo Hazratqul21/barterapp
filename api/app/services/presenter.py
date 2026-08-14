@@ -48,6 +48,7 @@ def listing_card(
     owner: TraderBrief,
     *,
     distance_km: float | None = None,
+    is_favorite: bool = False,
 ) -> ListingCard:
     text = _text(listing, locale)
     return ListingCard(
@@ -63,6 +64,7 @@ def listing_card(
         is_premium=listing.is_premium,
         posted_at=listing.created_at,
         owner=owner,
+        is_favorite=is_favorite,
     )
 
 
@@ -72,9 +74,12 @@ def listing_detail(
     owner: TraderBrief,
     *,
     distance_km: float | None = None,
+    is_favorite: bool = False,
 ) -> ListingDetail:
     text = _text(listing, locale)
-    card = listing_card(listing, locale, owner, distance_km=distance_km)
+    card = listing_card(
+        listing, locale, owner, distance_km=distance_km, is_favorite=is_favorite
+    )
 
     wants: list[str] = []
     for want in listing.wants:

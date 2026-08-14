@@ -25,6 +25,10 @@ class ListingCard(ApiModel):
     is_premium: bool
     posted_at: datetime
     owner: TraderBrief
+    #: Kirgan foydalanuvchi buni saqlaganmi. Mehmon uchun doim False.
+    #: Lentaning o'zida keladi, aks holda mijoz har karta uchun alohida
+    #: so'rov yuborishga yoki yurakni noto'g'ri holatda chizishga majbur.
+    is_favorite: bool = False
 
 
 class ListingDetail(ListingCard):
