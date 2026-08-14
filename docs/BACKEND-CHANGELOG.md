@@ -25,6 +25,44 @@
 
 ## 2026-08-14
 
+### 🆕🎨 Push-bildirishnoma — qurilma ro'yxati tayyor
+
+Yangi endpointlar: `POST /devices`, `DELETE /devices/{token}`.
+
+```json
+POST /devices
+{ "token": "<FCM/APNs token>", "platform": "ios|android|web", "locale": "uz" }
+→ 204
+```
+
+**Nega:** bildirishnoma bazada bor edi, lekin ilova yopiq bo'lganda odam
+hech narsa bilmasdi. Barter'da bu jiddiy: taklif 48 soatda eskiradi, odam
+esa ilovani ochmagani uchun uni boy beradi.
+
+**UI da nima kerak:**
+- Ilova **har ishga tushganda** `POST /devices` chaqirsin. Bu xato emas —
+  aynan shu token yangilanganini serverga bildiradigan yagona yo'l.
+- Chiqishda (logout) `DELETE /devices/{token}` chaqirilsin, aks holda
+  telefondan chiqqan odam bildirishnoma olishda davom etadi.
+- 🎨 Sozlamalarda bildirishnomani o'chirish tugmasi — o'chirilganda ham
+  `DELETE /devices/{token}`.
+- Push ichida `target_type` va `target_id` keladi (`chat` / `listing` /
+  `matches` / `verification`). Mijoz shunga qarab to'g'ri ekranni ochsin —
+  hammasini lentaga olib borish bildirishnomaning ma'nosini yo'qotadi.
+- Bir hisobda bir nechta qurilma bo'lishi mumkin, hammasiga yuboriladi.
+- Token boshqa hisobga kirsa, avtomatik ko'chadi (telefon boshqa odamga
+  o'tgan holat).
+
+⚠️ **Hozircha xabar haqiqatan yuborilmaydi — logga yoziladi.** Butun navbat
+mantiqi tayyor va sinovdan o'tgan, lekin FCM/APNs transporti loyihaning
+Firebase hisobini talab qiladi, u esa hali yaratilmagan. Firebase kaliti
+paydo bo'lganda faqat bitta sinf almashtiriladi — API va mijoz kodi
+o'zgarmaydi. Ya'ni **mijoz tomonni hozirdan yozish mumkin**.
+
+Server tomonda yuborish: `python -m app.push_send` (cron'ga qo'yiladi).
+
+---
+
 ### ⚠️🎨 Xato javoblari — 500 endi `request_id` tashiydi
 
 500 javobi shu shaklga keldi:
@@ -158,8 +196,8 @@ va brauzer tarixida qoladi.
 
 ## Ochiq savollar / kutilayotgani
 
-- **Push-bildirishnoma** — backendda ishlanmoqda. Mijozdan qurilma tokenini
-  ro'yxatdan o'tkazish kerak bo'ladi; endpoint tayyor bo'lgach shu yerga
-  yoziladi.
+- **FCM/APNs transporti** — Firebase loyihasi va xizmat kaliti kerak. Bu
+  hisob va kalit egasi tomonidan yaratiladi; tayyor bo'lgach transport
+  ulanadi va push haqiqatan uchadi.
 - **Splash ekranini o'zgaruvchan qilish** — aktivni almashtirish bilan
   yangilanadigan qilish rejalashtirilgan (kod o'zgarmasin).

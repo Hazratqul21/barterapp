@@ -682,6 +682,36 @@ xato deb ko'rsatmasin — "shikoyatingiz qabul qilindi" deyaverish to'g'ri.
 
 ---
 
+## 7.8 Push-bildirishnoma uchun qurilma
+
+### `POST /devices` 🔒 → `204`
+
+```json
+{ "token": "<FCM/APNs token>", "platform": "ios|android|web", "locale": "uz" }
+```
+
+Ilova **har ishga tushganda** chaqiriladi — token yangilanganini serverga
+bildiradigan yagona yo'l shu. Takroriy chaqiruv xato emas.
+
+Allaqachon ma'lum token **yangi hisobga ko'chadi**, rad etilmaydi: telefon
+boshqa odamga o'tishi mumkin, aks holda yangi egasi eskisining
+bildirishnomalarini olib turardi.
+
+### `DELETE /devices/{token}` 🔒 → `204`
+
+Chiqishda yoki bildirishnoma o'chirilganda. Idempotent — noma'lum token ham
+`204` beradi, chunki mijoz buni chiqish paytida chaqiradi va xatoni qayta
+urinib ko'ra olmaydi. Faqat o'z qurilmangiz o'chadi.
+
+⚠️ **Hozircha push haqiqatan yuborilmaydi — logga yoziladi.** Navbat mantiqi
+to'liq ishlaydi; FCM/APNs transporti Firebase kaliti ulanganda qo'shiladi.
+Mijoz tomonni hozirdan yozish mumkin, API o'zgarmaydi.
+
+Push tarkibida `target_type` va `target_id` keladi — mijoz shunga qarab
+kerakli ekranni ochsin.
+
+---
+
 ## 8. Tasdiqlash va to'lovlar
 
 ### `GET /me/verification` 🔒

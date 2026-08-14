@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -64,12 +65,26 @@ class Notification(Base, UUIDPrimaryKey):
     )
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    #: When this row was handed to the push transport. Null means "not sent
+    #: yet", which is what makes this table its own outbox: the notification and
+    #: the business change it describes commit together, so a rolled-back trade
+    #: can never leave a push announcing it. A sender then picks up whatever is
+    #: still null, and a crash mid-send costs a retry rather than a lost alert.
+    pushed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     __table_args__ = (
         CheckConstraint(
             "(target_type = 'matches') OR (target_id IS NOT NULL)",
             name="target_id_required",
         ),
         Index("ix_notifications_feed", "user_id", "created_at"),
+        # The sender's query: everything still unsent, oldest first. Partial, so
+        # the index stays small no matter how many delivered rows pile up.
+        Index(
+            "ix_notifications_outbox",
+            "created_at",
+            postgresql_where=text("pushed_at IS NULL"),
+        ),
     )
 
 
