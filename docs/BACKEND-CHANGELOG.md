@@ -25,6 +25,38 @@
 
 ## 2026-08-14
 
+### 🆕🎨 Bildirishnoma sozlamalari va sokin soatlar
+
+`GET /notification-settings` va `PATCH /notification-settings`.
+
+```json
+{ "offers": true, "matches": true, "messages": true, "system": true,
+  "quiet_from": 22, "quiet_to": 7 }
+```
+
+**Nega:** push qo'shildi, lekin uni boshqarish imkoni yo'q edi. Sokin
+soatlarsiz ilova kechasi soat 3 da xabar yuborishi mumkin — bu odam
+bildirishnomani butunlay o'chirib qo'yishining eng tez yo'li.
+
+**UI da nima kerak:**
+- 🎨 Sozlamalarda to'rtta tugma (Takliflar · Mosliklar · Xabarlar · Tizim)
+  va sokin soatlar oralig'i tanlagichi.
+- Sozlamaga tegilmagan hisob ham `200` oladi — 404 ni kutmang.
+- `quiet_from`/`quiet_to` — **Toshkent vaqti bo'yicha soat** (0–23), sana
+  emas. Oraliq yarim tundan o'tadi: `22 → 7` kechasi degani. Tanlagich
+  buni qo'llab-quvvatlasin.
+- ⚠️ Ikkalasini birga yuboring. Faqat bittasi → `400`.
+- ⚠️ **Bu sozlamalar faqat pushni boshqaradi.** Bildirishnomaning o'zi
+  baribir yoziladi va ilova ichidagi ro'yxatda ko'rinadi. Ekran matnini
+  shunga mos yozing ("Telefonga bildirishnoma"), aks holda odam
+  o'chirib qo'yib, keyin ro'yxatda ko'rib chalkashadi.
+
+Sokin soatlarda xabar **yo'qolmaydi** — kutadi va jimlik tugagach ketadi.
+Lekin 12 soatdan oshsa tashlanadi: eskirgan "yangi taklif" xabari xabar
+emas, shovqin (taklifning o'zi 48 soatda eskiradi).
+
+---
+
 ### 🆕🎨 Push-bildirishnoma — qurilma ro'yxati tayyor
 
 Yangi endpointlar: `POST /devices`, `DELETE /devices/{token}`.

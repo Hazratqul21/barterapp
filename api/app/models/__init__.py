@@ -10,6 +10,7 @@ from app.models.listing import (  # noqa: F401
     ListingWantTranslation,
 )
 from app.models.moderation import Block, Report  # noqa: F401
+from app.models.notify_pref import NotificationSetting  # noqa: F401
 from app.models.offer import Conversation, Message, Offer, OfferItem  # noqa: F401
 from app.models.review import Review  # noqa: F401
 from app.models.social import (  # noqa: F401
@@ -34,6 +35,7 @@ __all__ = [
     "Match",
     "Message",
     "Notification",
+    "NotificationSetting",
     "Offer",
     "OfferItem",
     "OtpChallenge",

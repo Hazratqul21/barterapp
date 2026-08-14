@@ -710,6 +710,33 @@ Mijoz tomonni hozirdan yozish mumkin, API o'zgarmaydi.
 Push tarkibida `target_type` va `target_id` keladi — mijoz shunga qarab
 kerakli ekranni ochsin.
 
+### `GET /notification-settings` 🔒 → `NotificationSettingOut`
+
+```json
+{ "offers": true, "matches": true, "messages": true, "system": true,
+  "quiet_from": 22, "quiet_to": 7 }
+```
+
+Sozlamaga hech tegilmagan hisob ham **200** oladi (standart qiymatlar), 404
+emas — mijoz bir xil tugmalarni chizaveradi.
+
+### `PATCH /notification-settings` 🔒 → `NotificationSettingOut`
+
+Faqat yuborilgan maydonlar o'zgaradi.
+
+`quiet_from`/`quiet_to` — **Toshkent vaqti bo'yicha soat** (0–23). Oraliq
+yarim tundan o'tishi mumkin: `22 → 7` kechasi degani. Ikkalasi ham `null`
+bo'lsa sokin soat yo'q.
+
+| Kod | Qachon |
+|---|---|
+| `400` | Oraliqning faqat bir tomoni ko'rsatilgan |
+| `422` | Soat 0–23 dan tashqarida |
+
+⚠️ **Bu sozlamalar faqat pushni boshqaradi.** Bildirishnomaning o'zi baribir
+yoziladi va ilova ichidagi ro'yxatda ko'rinadi. "Matchlarni o'chirdim" —
+"telefonimni bezovta qilma" degani, "ularni mendan yashir" degani emas.
+
 ---
 
 ## 8. Tasdiqlash va to'lovlar

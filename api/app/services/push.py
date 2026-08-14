@@ -25,13 +25,60 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.device import Device
-from app.models.social import Notification
+from app.models.notify_pref import NotificationSetting
+from app.models.social import Notification, NotifyKind
 
 log = logging.getLogger("barter.push")
 
 #: Bir yurishda nechta bildirishnoma olinadi. Kichik, chunki har biri tashqi
 #: xizmatga chiqadi va uzoq ushlab turilgan tranzaksiya hech kimga foyda emas.
 BATCH = 100
+
+#: O'zbekiston yagona vaqt mintaqasida (UTC+5). Sokin soatlar mahalliy soat
+#: bo'yicha o'lchanadi — "ertalab 8 gacha bezovta qilma" degan qoida sanaga
+#: emas, soatga tegishli.
+TASHKENT_OFFSET_HOURS = 5
+
+#: Sokin soatlar tugashini kutayotgan xabar shu muddatdan oshsa, umuman
+#: yuborilmaydi. Ertalab uyg'onib kechagi "yangi taklif" xabarini olish —
+#: xabar emas, shovqin; taklifning o'zi 48 soatda eskiradi.
+MAX_HOLD_HOURS = 12
+
+#: `NotifyKind` va sozlamadagi ustun nomi.
+_KIND_FIELD = {
+    NotifyKind.offer: "offers",
+    NotifyKind.match: "matches",
+    NotifyKind.message: "messages",
+    NotifyKind.system: "system",
+}
+
+
+def in_quiet_hours(setting: NotificationSetting | None, now: datetime) -> bool:
+    """
+    Whether the phone should stay silent at this moment.
+
+    The window may wrap midnight — 22:00 to 07:00 is the ordinary case, and it
+    is the one a plain `start <= hour < end` comparison gets exactly backwards,
+    silencing the whole day instead of the night.
+    """
+    if setting is None or setting.quiet_from is None or setting.quiet_to is None:
+        return False
+
+    hour = (now.astimezone(UTC).hour + TASHKENT_OFFSET_HOURS) % 24
+    start, end = setting.quiet_from, setting.quiet_to
+
+    if start == end:
+        return False
+    if start < end:
+        return start <= hour < end
+    return hour >= start or hour < end
+
+
+def wants_push(setting: NotificationSetting | None, kind: NotifyKind) -> bool:
+    """Absent row means everything on — see `NotificationSetting`."""
+    if setting is None:
+        return True
+    return bool(getattr(setting, _KIND_FIELD[kind], True))
 
 
 @dataclass
@@ -55,6 +102,12 @@ class SendReport:
     #: `pushed_at` oladi — aks holda navbatda abadiy qolib, har yurishda
     #: qaytadan ko'rib chiqiladi.
     skipped: int = 0
+    #: Foydalanuvchi bu turdagi pushni o'chirib qo'ygan. Qator `pushed_at`
+    #: oladi: bu kutish emas, rad javobi.
+    muted: int = 0
+    #: Sokin soatlar tugashini kutmoqda. Belgilanmaydi — keyingi yurishda
+    #: qaytadan ko'riladi va vaqti kelganda yuboriladi.
+    held: int = 0
     failed: int = 0
     messages: list[PushMessage] = field(default_factory=list)
 
@@ -106,6 +159,23 @@ async def devices_for(
     return grouped
 
 
+async def settings_for(
+    db: AsyncSession, user_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, NotificationSetting]:
+    """Preferences for the whole batch in one query. Missing means defaults."""
+    if not user_ids:
+        return {}
+
+    rows = (
+        await db.scalars(
+            select(NotificationSetting).where(
+                NotificationSetting.user_id.in_(set(user_ids))
+            )
+        )
+    ).all()
+    return {row.user_id: row for row in rows}
+
+
 async def deliver_pending(
     db: AsyncSession,
     *,
@@ -136,10 +206,35 @@ async def deliver_pending(
     if not pending:
         return report
 
-    by_user = await devices_for(db, [n.user_id for n in pending])
+    user_ids = [n.user_id for n in pending]
+    by_user = await devices_for(db, user_ids)
+    prefs = await settings_for(db, user_ids)
     now = datetime.now(UTC)
 
     for note in pending:
+        setting = prefs.get(note.user_id)
+
+        if not wants_push(setting, note.kind):
+            report.muted += 1
+            if not dry_run:
+                note.pushed_at = now
+            continue
+
+        if in_quiet_hours(setting, now):
+            created = note.created_at
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=UTC)
+
+            if (now - created).total_seconds() < MAX_HOLD_HOURS * 3600:
+                report.held += 1
+                continue
+            # Juda uzoq kutdi. Sokin soatlar uni butunlay yutib yuborishiga
+            # yo'l qo'ymaymiz — lekin eskirgan xabarni ham yubormaymiz.
+            report.muted += 1
+            if not dry_run:
+                note.pushed_at = now
+            continue
+
         targets = by_user.get(note.user_id, [])
         if not targets:
             # Qurilmasi yo'q. Bu xato emas — odam ilovani hali telefonga
