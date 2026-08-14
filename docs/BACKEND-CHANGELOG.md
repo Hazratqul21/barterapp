@@ -23,6 +23,46 @@
 
 ---
 
+## 2026-08-15
+
+### 🆕🎨 Hodisalar — tahlil va matching uchun poydevor
+
+`POST /events` (kirish talab qilinmaydi) va moderator uchun
+`GET /admin/analytics/*`.
+
+**Nega:** hozir bizda faqat **natijalar** bor — taklif yuborildi, savdo
+yakunlandi. Yo'q narsalar esa aynan modelga kerak bo'ladiganlar: nima
+ko'rsatilib bosilmadi, nima qidirilib topilmadi, qaysi moslik rad etildi.
+
+⚠️ **Buni orqaga qaytib yig'ib bo'lmaydi.** Kod keyin ham yoziladi, model
+keyin ham o'rgatiladi, lekin bugun yozilmagan hodisa butunlay yo'qoladi.
+Shuning uchun u modeldan **oldin** qurildi va mijoz tomonda ham
+imkon qadar tez ulanishi kerak.
+
+**UI da nima kerak:**
+- 🎨 Karta ekranda **haqiqatan ko'ringanda** `listing_impression` yuboring
+  (ro'yxatga qo'shilganda emas — aks holda ko'rilmagan kartalar ham
+  sanaladi va CTR yolg'on chiqadi).
+- Hodisalarni **to'plab**, paket bilan yuboring (100 tagacha). Har biri
+  uchun alohida so'rov ilovani ham, serverni ham keraksiz yuklaydi.
+- ⚠️ **`dedupe_key` ni albatta bering** — mijoz yaratadigan noyob kalit.
+  Tarmoq uzilganda paket qayta yuboriladi; kalitsiz ko'rsatishlar ikki
+  marta sanaladi va CTR jimgina ikki barobar pasayadi.
+- `session_id` — kirmagan odam uchun ham. Ilova ochiq turganda saqlang.
+- Javobdagi `duplicates` **xato emas**, muvaffaqiyatli qayta yuborish.
+- ⚠️ `payload` ga shaxsiy ma'lumot yozmang (telefon, manzil, xabar matni).
+
+**Mijozdan kutilayotgan turlar:** `listing_impression`, `listing_dwell`,
+`filter_applied`, `match_shown`, `match_opened`, `match_dismissed`,
+`chat_opened`. Qolganini server o'zi yozadi.
+
+🎨 **UI/UX uchun alohida:** `match_shown` / `match_opened` /
+`match_dismissed` — matching algoritmi haqiqatan ishlayaptimi degan savolga
+javob beradigan yagona manba. Ularsiz "mosliklar yaxshimi" degan savolga
+bugungacha javob yo'q edi.
+
+---
+
 ## 2026-08-14
 
 ### 🔧⚠️ SMS — Eskiz ulandi

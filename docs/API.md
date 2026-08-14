@@ -808,6 +808,64 @@ Idempotent.
 
 ---
 
+## 7.10 Hodisalar (tahlil uchun)
+
+### `POST /events` → `{ "accepted": n, "duplicates": n }`
+
+**Kirish talab qilinmaydi.** Anonim ko'rish ham yoziladi — odam ro'yxatdan
+o'tishdan oldin nima izlagani mahsulot uchun eng qimmatli ma'lumot.
+
+```json
+{
+  "session_id": "mijoz yaratgan seans kaliti",
+  "platform": "ios",
+  "events": [
+    {
+      "kind": "listing_impression",
+      "target_type": "listing",
+      "target_id": "uuid",
+      "payload": { "position": 3 },
+      "dedupe_key": "noyob-kalit"
+    }
+  ]
+}
+```
+
+Paketda **100 tagacha** hodisa. Har biri uchun alohida so'rov yubormang —
+lentaning bir sahifasi 20 ta ko'rsatish beradi.
+
+⚠️ **`dedupe_key` ni albatta yuboring.** Tarmoq uzilganda mijoz paketni
+qayta yuboradi; kalitsiz o'sha ko'rsatishlar ikki marta sanaladi va CTR
+jimgina ikki barobar pasayadi — raqamlar bor bo'ladi, lekin ular yolg'on.
+Takror `duplicates` da qaytadi va bu **xato emas**.
+
+**Mijoz yuboradigan turlar** (serverdagilar avtomatik yoziladi):
+
+| Tur | Qachon |
+|---|---|
+| `listing_impression` | Karta ekranda haqiqatan ko'rindi |
+| `listing_dwell` | Ochilgan e'londa qancha turdi (`payload.seconds`) |
+| `filter_applied` | Filtr yoki saralash o'zgardi |
+| `match_shown` | Moslik kartasi ko'rindi |
+| `match_opened` | Moslik ochildi |
+| `match_dismissed` | Moslik rad etildi |
+| `chat_opened` | Suhbat ochildi |
+
+Server o'zi yozadi: `search`, `search_empty`, `listing_view`,
+`favorite_add`, `favorite_remove`, `offer_sent`, `offer_accepted`,
+`offer_declined`, `trade_completed`.
+
+⚠️ **`payload` ga shaxsiy ma'lumot yozmang** — telefon, manzil, xabar matni.
+Tahlil uchun kerak emas, sizib chiqish uchun yetarli. 20 tadan ortiq maydon
+→ `422`.
+
+### `GET /admin/analytics/...` 🔒 (moderator)
+
+`funnel` · `empty-searches` · `cold-listings` · `match-quality` ·
+`search-gaps`. Hammasida `?days=30`.
+
+---
+
 ## 8. Tasdiqlash va to'lovlar
 
 ### `GET /me/verification` 🔒

@@ -16,6 +16,8 @@ from app.models.offer import Conversation, Message, Offer, OfferItem, OfferStatu
 from app.models.social import NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.trade import OfferAction, OfferCreate, OfferOut
+from app.models.event import EventKind
+from app.services import events
 from app.services import moderation
 from app.services import offers as service
 
@@ -137,6 +139,23 @@ async def create_offer(
         avatar_url=me.avatar_url,
     )
 
+    # Niyatning eng kuchli belgisi: odam haqiqatan almashishga tayyor.
+    # Voronkaning uchinchi bosqichi va modelning asosiy ijobiy misoli.
+    await events.record(
+        db,
+        EventKind.offer_sent,
+        user_id=me.id,
+        target_type="listing",
+        target_id=wanted.id,
+        payload={
+            "tag": wanted.tag.value,
+            "offered_count": len(offered),
+            "cash_delta_minor": payload.cash_delta_minor,
+            "with_message": bool(payload.message),
+        },
+        locale=locale,
+    )
+
     await db.commit()
     return out
 
@@ -205,6 +224,33 @@ async def act_on_offer(
                 body=payload.message,
                 created_at=now,
             )
+        )
+
+    # Savdoning natijasi — modelning eng qimmatli belgisi. Qabul qilingan
+    # taklif ijobiy misol, rad etilgani esa **salbiy**: nima uchun bu ikki
+    # narsa bir-biriga to'g'ri kelmaganini boshqa hech qanday manba
+    # ko'rsatmaydi.
+    _outcome = {
+        OfferStatus.accepted: EventKind.offer_accepted,
+        OfferStatus.declined: EventKind.offer_declined,
+        OfferStatus.completed: EventKind.trade_completed,
+    }.get(new_status)
+    if _outcome is not None:
+        await events.record(
+            db,
+            _outcome,
+            user_id=me.id,
+            target_type="offer",
+            target_id=offer.id,
+            payload={
+                "listing_id": str(offer.listing_id),
+                "peer_id": str(peer_id),
+                "cash_delta_minor": offer.cash_delta_minor,
+                "age_seconds": int(
+                    (datetime.now(UTC) - offer.created_at).total_seconds()
+                ),
+            },
+            locale=locale,
         )
 
     # A completed trade closes both listings — they are no longer on the table.

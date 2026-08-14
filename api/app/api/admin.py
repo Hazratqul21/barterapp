@@ -20,6 +20,7 @@ from app.models.moderation import (
 )
 from app.models.user import User
 from app.schemas.common import ApiModel
+from app.services import analytics
 from app.services.matching import rebuild_matches
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -220,3 +221,63 @@ async def force_archive(
         listing.status = ListingStatus.archived
         await db.commit()
         await rebuild_matches(db, listing.owner_id, force=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tahlil
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/analytics/funnel")
+async def analytics_funnel(
+    days: int = Query(default=30, ge=1, le=365),
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Ko'rsatildi → ochildi → saqlandi → taklif → savdo."""
+    return await analytics.funnel(db, days=days)
+
+
+@router.get("/analytics/empty-searches")
+async def analytics_empty_searches(
+    days: int = Query(default=30, ge=1, le=365),
+    limit: int = Query(default=50, ge=1, le=200),
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """Odamlar izlab topa olmagan narsalar — bozordagi bo'shliq."""
+    return await analytics.empty_searches(db, days=days, limit=limit)
+
+
+@router.get("/analytics/cold-listings")
+async def analytics_cold_listings(
+    days: int = Query(default=30, ge=1, le=365),
+    min_impressions: int = Query(default=20, ge=1),
+    limit: int = Query(default=50, ge=1, le=200),
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """Ko'p ko'rsatilgan, lekin ochilmagan e'lonlar."""
+    return await analytics.cold_listings(
+        db, days=days, min_impressions=min_impressions, limit=limit
+    )
+
+
+@router.get("/analytics/match-quality")
+async def analytics_match_quality(
+    days: int = Query(default=30, ge=1, le=365),
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Matching algoritmi haqiqatan ishlayaptimi."""
+    return await analytics.match_quality(db, days=days)
+
+
+@router.get("/analytics/search-gaps")
+async def analytics_search_gaps(
+    days: int = Query(default=30, ge=1, le=365),
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """Qaysi turkumda qidiruv eng ko'p quruq qaytadi."""
+    return await analytics.search_gaps(db, days=days)

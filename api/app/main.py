@@ -13,6 +13,7 @@ from app.api import (
     auth,
     chat,
     devices,
+    events,
     favorites,
     listings,
     moderation,
@@ -95,6 +96,7 @@ app.include_router(uploads.router)
 app.include_router(moderation.router)
 app.include_router(devices.router)
 app.include_router(favorites.router)
+app.include_router(events.router)
 app.include_router(admin.router)
 
 # Uploaded photos are served straight off disk. The directory is created here

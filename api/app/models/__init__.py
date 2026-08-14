@@ -2,6 +2,7 @@
 
 from app.models.desire import Desire  # noqa: F401
 from app.models.device import Device, DevicePlatform  # noqa: F401
+from app.models.event import Event, EventKind  # noqa: F401
 from app.models.favorite import Favorite  # noqa: F401
 from app.models.listing import (  # noqa: F401
     Listing,
@@ -26,6 +27,8 @@ __all__ = [
     "Block",
     "Conversation",
     "Desire",
+    "Event",
+    "EventKind",
     "Favorite",
     "Device",
     "DevicePlatform",

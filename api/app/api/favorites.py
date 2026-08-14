@@ -15,7 +15,8 @@ from app.models.listing import Listing, ListingStatus
 from app.models.user import User
 from app.schemas.common import Page
 from app.schemas.listing import ListingCard
-from app.services import moderation, stats
+from app.models.event import EventKind
+from app.services import events, moderation, stats
 from app.services.matching import haversine_km
 from app.services.presenter import listing_card, trader_brief
 
@@ -73,6 +74,14 @@ async def add_favorite(
     )
     if existing is None:
         db.add(Favorite(user_id=me.id, listing_id=listing_id))
+        await events.record(
+            db,
+            EventKind.favorite_add,
+            user_id=me.id,
+            target_type="listing",
+            target_id=listing_id,
+            payload={"tag": listing.tag.value, "value_minor": listing.value_minor},
+        )
         await db.commit()
 
 
@@ -92,6 +101,16 @@ async def remove_favorite(
     )
     if existing is not None:
         await db.delete(existing)
+        # Saqlanganini olib tashlash ham ma'lumot: qiziqish so'ngani yoki
+        # taklif yuborilgani. Faqat qo'shishni yozadigan tizim odamning
+        # fikri o'zgarganini hech qachon ko'rmaydi.
+        await events.record(
+            db,
+            EventKind.favorite_remove,
+            user_id=me.id,
+            target_type="listing",
+            target_id=listing_id,
+        )
         await db.commit()
 
 

@@ -34,6 +34,8 @@ from app.schemas.listing import (
     ListingUpdate,
 )
 from app.api.favorites import favorite_ids
+from app.models.event import EventKind
+from app.services import events
 from app.services import moderation
 from app.services import stats
 from app.services.matching import haversine_km, rebuild_matches
@@ -288,6 +290,28 @@ async def list_listings(
         for row in rows
     ]
 
+    # Qidiruv natijasi yoziladi — ayniqsa **bo'sh** natija. Odam nimani
+    # izlab topa olmagani bozordagi bo'shliqni to'g'ridan-to'g'ri ko'rsatadi
+    # va uni boshqa hech qanday manbadan bilib bo'lmaydi. Faqat birinchi
+    # sahifada: keyingi sahifalar o'sha qidiruvning davomi, alohida niyat
+    # emas, va ularni ham sanash har aylantirishni yangi qidiruvga aylantirardi.
+    if q and cursor is None:
+        await events.record(
+            db,
+            EventKind.search_empty if not rows else EventKind.search,
+            user_id=viewer.id if viewer else None,
+            payload={
+                "q": q[:120],
+                "tag": tag.value if tag else None,
+                "sort": sort.value,
+                "results": len(rows),
+                "has_price_filter": min_value is not None or max_value is not None,
+                "region": region,
+            },
+            locale=locale,
+        )
+        await db.commit()
+
     next_cursor = (
         _encode_cursor(_sort_key(sort, rows[-1]), rows[-1].id)
         if has_more and rows
@@ -327,6 +351,20 @@ async def get_listing(
     saved = await favorite_ids(
         db, viewer.id if viewer else None, [listing.id]
     )
+
+    # Kartani bosib ochish — lentadagi ko'rsatishdan keyingi birinchi haqiqiy
+    # qiziqish belgisi. Voronkaning ikkinchi bosqichi shu.
+    await events.record(
+        db,
+        EventKind.listing_view,
+        user_id=viewer.id if viewer else None,
+        target_type="listing",
+        target_id=listing.id,
+        payload={"tag": listing.tag.value, "value_minor": listing.value_minor},
+        locale=locale,
+    )
+    await db.commit()
+
     return listing_detail(
         listing,
         locale,
