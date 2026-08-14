@@ -1,19 +1,19 @@
 import 'dart:async';
 
+import 'package:animations/animations.dart'; // M3 transitions uchun
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
-import '../../../core/widgets/glass.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/listing_repository.dart';
+import '../../listing/presentation/listing_detail_page.dart'; // Transform uchun kerak
 import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
@@ -79,7 +79,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     final l = L.of(context);
     final query = ref.watch(feedQueryProvider);
     final feed = ref.watch(feedProvider);
-    final bottomPadding = MediaQuery.paddingOf(context).bottom + 80.0;
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 84.0;
 
     // A different query is a different list; let its cards reveal afresh rather
     // than snapping in because their old indices were already marked seen.
@@ -104,9 +104,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                   child: _Hero(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
-                    onClear: _searchController.text.isEmpty
-                        ? null
-                        : _clearSearch,
+                    onClear: _searchController.text.isEmpty ? null : _clearSearch,
                   ),
                 ),
                 // The header is the anchor and stays put; everything below it
@@ -128,42 +126,35 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                   ),
                 ),
                 ...switch (feed) {
-                  AsyncLoading() => [
-                    const SliverToBoxAdapter(child: FeedShimmer()),
-                  ],
+                  AsyncLoading() => [const SliverToBoxAdapter(child: FeedShimmer())],
                   AsyncError(:final error) => [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: ErrorState(
-                        message: errorMessage(context, error),
-                        retryLabel: l.retry,
-                        onRetry: () => ref.invalidate(feedProvider),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: ErrorState(
+                          message: errorMessage(context, error),
+                          retryLabel: l.retry,
+                          onRetry: () => ref.invalidate(feedProvider),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
                   AsyncData(:final value) when value.items.isEmpty => [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: EmptyState(
-                        icon: Symbols.search_off_rounded,
-                        title: l.feedEmpty,
-                        hint: l.feedEmptyHint,
-                        actionLabel: query.isNarrowed ? l.clear : null,
-                        onAction: query.isNarrowed
-                            ? () {
-                                _clearSearch();
-                                ref.read(feedQueryProvider.notifier).reset();
-                              }
-                            : null,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: EmptyState(
+                          icon: Symbols.search_off_rounded,
+                          title: l.feedEmpty,
+                          hint: l.feedEmptyHint,
+                          actionLabel: query.isNarrowed ? l.clear : null,
+                          onAction: query.isNarrowed
+                              ? () {
+                                  _clearSearch();
+                                  ref.read(feedQueryProvider.notifier).reset();
+                                }
+                              : null,
+                        ),
                       ),
-                    ),
-                  ],
-                  AsyncData(:final value) => _results(
-                    l,
-                    query,
-                    value,
-                    bottomPadding,
-                  ),
+                    ],
+                  AsyncData(:final value) => _results(l, query, value, bottomPadding),
                 },
               ],
             ),
@@ -173,12 +164,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     );
   }
 
-  List<Widget> _results(
-    L l,
-    FeedQuery query,
-    FeedState feed,
-    double bottomPadding,
-  ) {
+  List<Widget> _results(L l, FeedQuery query, FeedState feed, double bottomPadding) {
     final theme = Theme.of(context);
     return [
       SliverPadding(
@@ -191,18 +177,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               Expanded(
                 child: Text(
                   l.feedHeading,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               Text(
-                query.isNarrowed
-                    ? l.feedResults(feed.items.length)
-                    : l.feedNearby(feed.items.length),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: palette(context).inkFaint,
-                ),
+                query.isNarrowed ? l.feedResults(feed.items.length) : l.feedNearby(feed.items.length),
+                style: theme.textTheme.bodySmall?.copyWith(color: palette(context).inkFaint),
               ),
             ],
           ),
@@ -247,22 +227,16 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           padding: EdgeInsets.fromLTRB(Gap.x5, Gap.x6, Gap.x5, bottomPadding),
           child: Center(
             child: feed.loadingMore
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  )
+                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5))
                 : feed.hasMore
-                ? OutlinedButton(
-                    onPressed: () => ref.read(feedProvider.notifier).loadMore(),
-                    child: Text(l.feedLoadMore),
-                  )
-                : Text(
-                    l.feedEnd,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: palette(context).inkFaint,
-                    ),
-                  ),
+                    ? OutlinedButton(
+                        onPressed: () => ref.read(feedProvider.notifier).loadMore(),
+                        child: Text(l.feedLoadMore),
+                      )
+                    : Text(
+                        l.feedEnd,
+                        style: theme.textTheme.bodySmall?.copyWith(color: palette(context).inkFaint),
+                      ),
           ),
         ),
       ),
@@ -271,11 +245,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 }
 
 class _Hero extends ConsumerWidget {
-  const _Hero({
-    required this.controller,
-    required this.onChanged,
-    required this.onClear,
-  });
+  const _Hero({required this.controller, required this.onChanged, required this.onClear});
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback? onClear;
@@ -299,64 +269,29 @@ class _Hero extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Symbols.location_on_rounded,
-                      size: 18,
-                      color: Colors.white,
-                      fill: 1,
-                    ),
+                    const Icon(Symbols.location_on_rounded, size: 18, color: Colors.white, fill: 1),
                     Gap.w1,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            l.feedTradingIn.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                          Text(
-                            me?.region ?? l.feedRegionAny,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                          Text(l.feedTradingIn.toUpperCase(), style: const TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                          Text(me?.region ?? l.feedRegionAny, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                         ],
                       ),
                     ),
                     IconButton(
-                      onPressed: () => context.push('/notifications'),
-                      icon: const Icon(
-                        Symbols.notifications_rounded,
-                        color: Colors.white,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white24,
-                      ),
-                    ),
-                    Gap.w2,
-                    // Profile, reachable from the top as well — a quick tap to
-                    // your own account without leaving home for the tab bar.
-                    IconButton(
-                      onPressed: () => context.go('/profile'),
-                      icon: const Icon(
-                        Symbols.account_circle_rounded,
-                        color: Colors.white,
-                        fill: 1,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white24,
-                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).pushNamed('/notifications');
+                      },
+                      icon: const Icon(Symbols.notifications_rounded, color: Colors.white),
+                      style: IconButton.styleFrom(backgroundColor: Colors.white24),
                     ),
                   ],
                 ),
                 Gap.h5,
-                // Premium: Google M3 Search Bar style
+                // M3 Floating Search Bar
                 Container(
                   height: 56,
                   decoration: BoxDecoration(
@@ -369,16 +304,8 @@ class _Hero extends ConsumerWidget {
                     onChanged: onChanged,
                     decoration: InputDecoration(
                       hintText: l.feedSearchHint,
-                      prefixIcon: Icon(
-                        Symbols.search_rounded,
-                        color: p.inkSoft,
-                      ),
-                      suffixIcon: onClear != null
-                          ? IconButton(
-                              icon: const Icon(Symbols.close_rounded),
-                              onPressed: onClear,
-                            )
-                          : null,
+                      prefixIcon: Icon(Symbols.search_rounded, color: p.inkSoft),
+                      suffixIcon: onClear != null ? IconButton(icon: const Icon(Symbols.close_rounded), onPressed: onClear) : null,
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -404,70 +331,34 @@ class _Categories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // The whole section sits on its own pane of frosted glass — the same
-    // liquid-glass the bars are cut from, so it reads as a real window over the
-    // wallpaper rather than a flat rectangle the colour of the page. A soft
-    // fill (0.72 alpha of the near-white surface) was invisible against the
-    // wallpaper; glass picks up the page's green and blue and lifts on a shadow.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, 0),
-      child: GlassSurface(
-        borderRadius: Radii.rXl,
-        specular: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Gap.x5,
-                Gap.x4,
-                Gap.x4,
-                Gap.x3,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      L.of(context).feedCategories,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  if (selected != null)
-                    TextButton(
-                      onPressed: () => onSelect(null),
-                      child: Text(L.of(context).filterAll),
-                    ),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 150,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(Gap.x4, 0, Gap.x4, Gap.x4),
-                itemCount: ListingTag.values.length,
-                separatorBuilder: (_, _) => Gap.w3,
-                itemBuilder: (context, index) => CategoryCard(
-                  tag: ListingTag.values[index],
-                  selected: selected == ListingTag.values[index],
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onSelect(
-                      selected == ListingTag.values[index]
-                          ? null
-                          : ListingTag.values[index],
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x6, Gap.x5, Gap.x3),
+          child: Row(
+            children: [
+              Expanded(child: Text(L.of(context).feedCategories, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+              if (selected != null) TextButton(onPressed: () => onSelect(null), child: Text(L.of(context).filterAll)),
+            ],
+          ),
         ),
-      ),
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
+            itemCount: ListingTag.values.length,
+            separatorBuilder: (_, _) => Gap.w3,
+            itemBuilder: (context, index) => CategoryTile(
+              tag: ListingTag.values[index],
+              selected: selected == ListingTag.values[index],
+              onTap: () => onSelect(selected == ListingTag.values[index] ? null : ListingTag.values[index]),
+            ),
+          ),
+        ),
+        Divider(color: palette(context).hair, height: Gap.x8, indent: Gap.x5, endIndent: Gap.x5),
+      ],
     );
   }
 }
