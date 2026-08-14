@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import time
 import uuid
+from collections import deque
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +23,50 @@ router = APIRouter(tags=["events"])
 #: xato bo'lishi mumkin, tahlil esa vaqtga tayanadi — bir kunlik siljish
 #: butun kunlik hisobotni buzadi.
 MAX_SKEW = timedelta(hours=24)
+
+#: Bir manbadan daqiqasiga nechta hodisa qabul qilinadi.
+#:
+#: Bu endpoint ataylab autentifikatsiyasiz — anonim ko'rish tahlilning
+#: yarmi. Lekin autentifikatsiyasiz yozish har kimga bazani to'ldirish
+#: imkonini beradi, va soxta hodisalar bilan to'lgan jadval bo'sh jadvaldan
+#: yomonroq: u yolg'on xulosa chiqaradi. Chegara saxiy — jadal aylantirilgan
+#: lenta daqiqasiga 200-300 ko'rsatish berishi mumkin — lekin cheksiz emas.
+RATE_MAX_EVENTS = 600
+RATE_WINDOW_SECONDS = 60
+
+
+class _RateLimiter:
+    """
+    Manba bo'yicha oynali hisoblagich.
+
+    Jarayon ichida, Redis'siz — chat Hub'i bilan bir xil sabab: bitta API
+    jarayoni bo'lganda bu to'g'ri va harakatlanuvchi qismi yo'q. Ikkinchi
+    jarayon paydo bo'lganda ichi almashtiriladi, tashqarisi o'zgarmaydi.
+    """
+
+    def __init__(self) -> None:
+        self._seen: dict[str, deque[float]] = {}
+
+    def allow(self, key: str, cost: int) -> bool:
+        now = time.monotonic()
+        window = self._seen.setdefault(key, deque())
+
+        while window and now - window[0] > RATE_WINDOW_SECONDS:
+            window.popleft()
+
+        if len(window) + cost > RATE_MAX_EVENTS:
+            return False
+
+        window.extend([now] * cost)
+
+        # Jimgina o'sib ketmasin: bo'shab qolgan kalitlar olib tashlanadi.
+        if len(self._seen) > 10_000:
+            for stale in [k for k, v in self._seen.items() if not v]:
+                del self._seen[stale]
+        return True
+
+
+_limiter = _RateLimiter()
 
 
 class EventIn(ApiModel):
@@ -66,6 +112,7 @@ class BatchResult(ApiModel):
 @router.post("/events", response_model=BatchResult)
 async def collect(
     batch: EventBatch,
+    request: Request,
     locale: str = Depends(resolve_locale),
     viewer: User | None = Depends(optional_user),
     db: AsyncSession = Depends(get_db),
@@ -81,6 +128,21 @@ async def collect(
     Paketli, chunki lentaning bir sahifasi 20 ta ko'rsatish beradi. Har biri
     uchun alohida so'rov ilovani ham, serverni ham keraksiz yuklaydi.
     """
+    # Kirgan odam o'z hisobi bo'yicha, mehmon esa manzili bo'yicha
+    # hisoblanadi. Hisob bo'yicha aniqroq: bitta uy yoki ofisdagi bir necha
+    # odam bitta tashqi manzil ortida turishi mumkin.
+    source = (
+        f"u:{viewer.id}"
+        if viewer is not None
+        else f"ip:{request.client.host if request.client else 'unknown'}"
+    )
+    if not _limiter.allow(source, len(batch.events)):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Juda ko'p hodisa yuborildi.",
+            headers={"Retry-After": str(RATE_WINDOW_SECONDS)},
+        )
+
     now = datetime.now(UTC)
     rows = []
 

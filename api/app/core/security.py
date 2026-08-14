@@ -96,6 +96,13 @@ async def current_user(
     user = await db.scalar(select(User).where(User.id == user_id))
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Foydalanuvchi topilmadi.")
+
+    # O'chirilgan hisob qatori qoladi (savdo tarixi ikkala tomonga tegishli),
+    # lekin unga kirib bo'lmaydi. Bu tekshiruvsiz o'chirishdan oldin berilgan
+    # access token o'z muddatigacha ishlayverardi — ya'ni hisob bir soat
+    # davomida hali ham tirik bo'lardi.
+    if user.deleted_at is not None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Hisob o'chirilgan.")
     return user
 
 
@@ -123,4 +130,8 @@ async def optional_user(
         user_id = decode_token(creds.credentials, "access")
     except HTTPException:
         return None
-    return await db.scalar(select(User).where(User.id == user_id))
+
+    user = await db.scalar(select(User).where(User.id == user_id))
+    # O'chirilgan hisob mehmon sifatida qaraydi, xato emas: lenta baribir
+    # kirmasdan ham ishlaydi.
+    return None if user is not None and user.deleted_at is not None else user

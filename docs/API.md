@@ -191,6 +191,31 @@ ism saqlanmaydi.
 hisob har doim 0.5 «noma'lum» ballini oladi. `latitude` aniq yuborilsa,
 u ustun turadi.
 
+### `DELETE /me` 🔒 → `204`
+
+```json
+{ "confirm": true }
+```
+
+Hisobni o'chirish. `confirm` majburiy — `false` bo'lsa `400`.
+
+**Nima bo'ladi:** ism, telefon, surat, manzil, bio va koordinatalar
+tozalanadi; barcha sessiyalar bekor qilinadi; faol e'lonlar arxivlanadi;
+ochiq takliflar `expired` bo'ladi; qurilmalar, saqlanganlar va bildirishnoma
+sozlamalari o'chiriladi.
+
+**Nima qoladi:** yakunlangan savdolar, ular haqidagi sharhlar va
+suhbatlardagi xabarlar. Bular **qarshi tomonga ham** tegishli — bir odamning
+hisobini o'chirishi birovning savdo tarixini va reytingini o'chirmaydi.
+
+Telefon raqami bo'shatiladi: o'sha raqam bilan yangi hisob ochish mumkin
+(u butunlay yangi hisob bo'ladi, eskisi tiklanmaydi).
+
+⚠️ Moderator hisobi ilova orqali o'chirilmaydi → `409`. Avval huquq
+serverdan olinadi.
+
+⚠️ Bu **qaytarib bo'lmaydigan** amal. Mijoz tasdiqlash oynasini ko'rsatsin.
+
 ### `GET /me/listings` 🔒 → `ListingCard[]`
 
 O'z e'lonlarim, **barcha statusda** (lentada faqat `active` ko'rinadi).
@@ -210,6 +235,11 @@ Faqat `active`.
    "created_at": "...", "author_id": "uuid",
    "author_name": "Dilnoza Yusupova", "author_avatar_url": "https://..." }]
 ```
+
+⚠️ **`TraderBrief` da `is_deleted` maydoni bor.** `true` bo'lsa `name` — `"—"`,
+chunki server javobni bitta tilda qaytaradi va "o'chirilgan foydalanuvchi"
+degan matn mijozda, foydalanuvchining tilida yozilishi kerak. Avatar `null`
+bo'ladi.
 
 ⚠️ Faqat **shu savdogar haqidagi** sharhlar. O'ziga yozganlari yo'q — baza
 darajasida taqiqlangan.

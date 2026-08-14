@@ -20,9 +20,13 @@ def trader_brief(user: User, *, rating: float | None, deals: int) -> TraderBrief
         user.last_seen_at is not None
         and datetime.now(UTC) - user.last_seen_at < ONLINE_WINDOW
     )
+    # O'chirilgan hisobning ismi tozalangan, ya'ni `full_name` bo'sh satr.
+    # Uni shundayligicha qaytarish qarshi tomonning ekranida ismsiz karta
+    # qoldirardi — savdo tarixi bor, kim bilan qilingani noma'lum.
     return TraderBrief(
         id=user.id,
-        name=user.full_name,
+        name="—" if user.is_deleted else user.full_name,
+        is_deleted=user.is_deleted,
         handle=user.handle,
         avatar_url=user.avatar_url,
         is_verified=user.is_verified,

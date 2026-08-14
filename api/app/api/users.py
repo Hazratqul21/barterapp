@@ -23,6 +23,7 @@ from app.schemas.common import ApiModel
 from app.schemas.listing import ListingCard
 from app.schemas.user import Me, MeUpdate, TraderProfile
 from app.services import offers as offer_service
+from app.services import account_deletion
 from app.services import stats
 from app.services.presenter import listing_card, trader_brief
 
@@ -338,3 +339,67 @@ async def trader_reviews(
         )
         for review, author in rows
     ]
+
+
+class DeleteAccountIn(ApiModel):
+    """
+    O'chirish tasdiqlanishi kerak.
+
+    Ataylab: bu qaytarib bo'lmaydigan amal va uni tasodifiy bosishdan
+    himoyalash serverning ham ishi, faqat oynaning emas. Mijoz o'z
+    tasdiqlash oynasini ko'rsatadi, server esa niyat aniq yuborilganini
+    talab qiladi.
+    """
+
+    confirm: bool = Field(description="Faqat true qabul qilinadi.")
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    payload: DeleteAccountIn,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """
+    Hisobni o'chirish.
+
+    Do'konlar buni talab qiladi (Apple 5.1.1(v), Google Play), lekin talab
+    "qatorni o'chir" degani emas — u "shaxsiy ma'lumotni olib tashla va
+    kirishni to'xtat" degani. Farqi muhim: `users.id` ga o'nlab jadval
+    CASCADE bilan bog'langan, ya'ni qator o'chirilsa yakunlangan savdolar,
+    suhbatlar va sharhlar ham ketadi — ularning yarmi esa **qarshi
+    tomonga** tegishli.
+
+    Nima bo'ladi:
+
+    - ism, telefon, surat, manzil, bio va koordinatalar tozalanadi;
+    - barcha sessiyalar bekor qilinadi, kirish imkonsiz bo'ladi;
+    - faol e'lonlar arxivlanadi, ochiq takliflar bekor qilinadi;
+    - qurilmalar, saqlanganlar va bildirishnoma sozlamalari o'chiriladi.
+
+    Nima qoladi:
+
+    - yakunlangan savdolar va ular haqidagi sharhlar — ikkala tomonning
+      tarixi va reytingi;
+    - suhbatlardagi xabarlar — qarshi tomon o'z yozishmasini yo'qotmasin.
+
+    Telefon raqami bo'shatiladi: xohlasa, o'sha raqam bilan yangi hisob
+    ochish mumkin.
+    """
+    if not payload.confirm:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "O'chirishni tasdiqlash kerak.",
+        )
+
+    if me.is_moderator:
+        # Moderator o'zini o'chira olmaydi. Bu shoshilinch tugma bosilganda
+        # navbat egasiz qolishining oldini oladi; huquq avval serverdan
+        # olinadi, keyin hisob o'chiriladi.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Moderator hisobini ilova orqali o'chirib bo'lmaydi.",
+        )
+
+    await account_deletion.delete_account(db, me)
+    await db.commit()

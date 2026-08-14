@@ -25,6 +25,10 @@ class TraderBrief(ApiModel):
     deals: int = 0
     is_online: bool = False
     last_seen_at: datetime | None = None
+    #: Hisob o'chirilganmi. Shunda `name` — "—", chunki server javobni bitta
+    #: tilda qaytaradi va "o'chirilgan foydalanuvchi" degan matn mijozda,
+    #: foydalanuvchining tilida yozilishi kerak.
+    is_deleted: bool = False
 
 
 class TraderProfile(TraderBrief):

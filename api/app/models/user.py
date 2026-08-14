@@ -6,7 +6,18 @@ from typing import TYPE_CHECKING
 
 import enum
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Enum, Float, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -87,11 +98,28 @@ class User(Base, UUIDPrimaryKey, Timestamps):
     )
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    #: Hisob o'chirilgan payt. Qator qoladi, ichidagi shaxsiy ma'lumot esa
+    #: tozalanadi.
+    #:
+    #: Qatorni butunlay o'chirish noto'g'ri bo'lardi: unga bog'liq deyarli
+    #: hamma narsa CASCADE bilan ketadi — yakunlangan savdolar, ikkala
+    #: tomonning suhbati, bu odam yozgan sharhlar va u haqidagi sharhlar.
+    #: Ularning yarmi **boshqa odamga** tegishli: birovning savdo tarixi va
+    #: reytingi mening hisobimni o'chirganim uchun yo'qolmasligi kerak.
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     listings: Mapped[list[Listing]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
 
     __table_args__ = (
+        # O'chirilganlar tirik hisoblardan ancha kam bo'ladi, shuning uchun
+        # qisman indeks: u faqat shu qatorlarni tutadi.
+        Index(
+            "ix_users_deleted",
+            "deleted_at",
+            postgresql_where=text("deleted_at IS NOT NULL"),
+        ),
         CheckConstraint(
             "trust_score BETWEEN 0 AND 100", name="trust_score_range"
         ),
@@ -105,6 +133,10 @@ class User(Base, UUIDPrimaryKey, Timestamps):
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
 
 
 class OtpChallenge(Base, UUIDPrimaryKey):

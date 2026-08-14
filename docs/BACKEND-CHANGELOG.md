@@ -25,6 +25,59 @@
 
 ## 2026-08-15
 
+### 🆕⚠️🎨 Hisobni o'chirish — `DELETE /me`
+
+```json
+DELETE /me   { "confirm": true }   → 204
+```
+
+**Nega:** [FRONTEND-AUDIT.md](FRONTEND-AUDIT.md) P0-1. Apple 5.1.1(v) va
+Google Play talab qiladi: hisob yaratadigan ilova **ilova ichida** hisobni
+o'chirish imkonini ham berishi shart. Bu eng tez rad etiladigan bandlardan
+biri.
+
+**UI da nima kerak:**
+- 🎨 Sozlamalarda "Hisobni o'chirish" — qizil, ro'yxatning oxirida.
+- 🎨 **Tasdiqlash oynasi majburiy**: bu qaytarib bo'lmaydigan amal.
+  Oynada nima yo'qolishi va nima qolishi aniq yozilsin (pastga qarang) —
+  odam nimadan voz kechayotganini bilishi kerak.
+- `confirm: true` yuborilmasa server `400` beradi.
+- O'chirilgandan keyin **darhol** kirish ekraniga chiqarish va tokenlarni
+  tozalash. Eski token 401 qaytaradi.
+- ⚠️ Moderator hisobi → `409`.
+
+**Foydalanuvchiga aytiladigan matn uchun:**
+
+| Yo'qoladi | Qoladi |
+|---|---|
+| Ism, telefon, surat, manzil | Yakunlangan savdolar |
+| Barcha e'lonlar (arxivlanadi) | Sharhlar (ikkala tomonda) |
+| Ochiq takliflar (bekor bo'ladi) | Suhbatlardagi xabarlar |
+| Saqlanganlar, qurilmalar, sozlamalar | |
+
+Telefon raqami bo'shatiladi — o'sha raqam bilan yangi hisob ochish mumkin,
+lekin eskisi **tiklanmaydi**.
+
+### ⚠️ `TraderBrief` ga `is_deleted` qo'shildi
+
+O'chirilgan hisob boshqa odamning ekranida (yakunlangan savdo, sharh,
+suhbat) hali ham ko'rinadi. Shunda `is_deleted: true` va `name` — `"—"`.
+
+🎨 Mijoz "O'chirilgan foydalanuvchi" matnini **o'z tilida** yozsin va
+avatar o'rniga neytral belgi ko'rsatsin. Server buni qila olmaydi, chunki
+javob bitta tilda qaytadi.
+
+### 🔧 `POST /events` ga chastota chegarasi
+
+Daqiqasiga 600 hodisa (kirgan odam hisobi bo'yicha, mehmon manzili
+bo'yicha). Oshsa `429` + `Retry-After`.
+
+Chegara saxiy — jadal aylantirilgan lenta daqiqasiga 200–300 ko'rsatish
+berishi mumkin — lekin mijoz `429` ni ham hisobga olsin: paketni tashlab
+yubormasin, keyingi yuborishga qo'shsin.
+
+---
+
 ### 🆕🎨 Hodisalar — tahlil va matching uchun poydevor
 
 `POST /events` (kirish talab qilinmaydi) va moderator uchun
