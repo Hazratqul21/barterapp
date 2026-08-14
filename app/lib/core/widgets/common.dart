@@ -254,29 +254,52 @@ class ErrorState extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: Gap.x8,
-          vertical: Gap.x10,
+          vertical: Gap.x6,
         ),
         child:
             Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const BrokenIllustration(),
-                    Gap.h5,
+                    Gap.h4,
                     Text(
                       message,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: p.inkSoft,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Gap.h6,
-                    OutlinedButton.icon(
-                      onPressed: onRetry,
-                      icon: const Icon(
-                        Symbols.refresh_rounded,
-                        size: Sizes.iconMd,
+                    const SizedBox(height: 4),
+                    Text(
+                      "Iltimos, qayta urinib ko'ring.",
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: p.inkFaint,
                       ),
-                      label: Text(retryLabel),
+                    ),
+                    Gap.h4,
+                    NeoButton(
+                      onTap: onRetry,
+                      width: 160,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Symbols.refresh_rounded,
+                            size: Sizes.iconMd,
+                            color: p.give,
+                          ),
+                          Gap.w2,
+                          Text(
+                            retryLabel,
+                            style: TextStyle(
+                              color: p.give,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 )
@@ -621,6 +644,76 @@ class _PressableState extends State<Pressable> {
   }
 }
 
+/// A pixel-perfect Neomorphic button that matches the background color and 
+/// extrudes using light/dark shadows. When pressed, it can simulate an inset.
+class NeoButton extends StatefulWidget {
+  const NeoButton({
+    super.key,
+    required this.child,
+    required this.onTap,
+    this.width,
+    this.height = 56.0,
+    this.borderRadius = Radii.rMd,
+  });
+
+  final Widget child;
+  final VoidCallback onTap;
+  final double? width;
+  final double height;
+  final BorderRadius borderRadius;
+
+  @override
+  State<NeoButton> createState() => _NeoButtonState();
+}
+
+class _NeoButtonState extends State<NeoButton> {
+  bool _isPressed = false;
+
+  void _setPressed(bool val) {
+    if (_isPressed != val) {
+      setState(() => _isPressed = val);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // For Neomorphism, the button surface must match the canvas background.
+    final surfaceColor = BrandColors.canvas;
+    
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: widget.borderRadius,
+          // When pressed, remove the outer shadow and slightly darken to simulate inset.
+          boxShadow: _isPressed ? [] : Shadows.neomorphicUp(surfaceColor),
+          // Optionally add an inner border when pressed to enhance the inset look
+          border: _isPressed 
+              ? Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1.5)
+              : Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+        ),
+        child: Center(
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 150),
+            opacity: _isPressed ? 0.7 : 1.0,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Categories
 // ─────────────────────────────────────────────────────────────────────────────
@@ -649,21 +742,18 @@ String categoryLabel(L l, ListingTag tag) => switch (tag) {
 class CategoryCard extends StatelessWidget {
   const CategoryCard({
     super.key,
-    required this.tag,
+    required this.category,
     required this.selected,
     required this.onTap,
   });
 
-  final ListingTag tag;
+  final CategoryModel category;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = L.of(context);
     final p = palette(context);
-    final base = CategoryStyle.of(tag);
-    final style = p.isDark ? base.dark : base;
 
     // Photo only — no disc, no label. The picture names the category on its
     // own (a field, a cow, a truck), and the name is kept for a screen reader
@@ -671,32 +761,51 @@ class CategoryCard extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: categoryLabel(l, tag),
+      label: category.name,
       child: Tooltip(
-        message: categoryLabel(l, tag),
+        message: category.name,
         child: Pressable(
           onTap: onTap,
-          child: AnimatedContainer(
-            duration: M3Motion.medium1,
-            curve: M3Motion.emphasized,
+          child: SizedBox(
             width: 118,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: Radii.rLg,
-              border: Border.all(
-                color: selected ? p.give : Colors.transparent,
-                width: 2.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (selected ? p.give : const Color(0xFF12211A))
-                      .withValues(alpha: selected ? 0.22 : 0.10),
-                  blurRadius: selected ? 18 : 12,
-                  offset: const Offset(0, 5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: M3Motion.medium1,
+                  curve: M3Motion.emphasized,
+                  height: 100, // Fixed height for image part
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: Radii.rLg,
+                    border: Border.all(
+                      color: selected ? p.give : Colors.transparent,
+                      width: 2.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (selected ? p.give : const Color(0xFF12211A))
+                            .withValues(alpha: selected ? 0.22 : 0.10),
+                        blurRadius: selected ? 18 : 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: _CategoryVisual(category: category),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  category.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: p.inkSoft,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                  ),
                 ),
               ],
             ),
-            child: _CategoryVisual(tag: tag, style: style),
           ),
         ),
       ),
@@ -706,68 +815,27 @@ class CategoryCard extends StatelessWidget {
 
 /// The photo area of a [CategoryCard], with a coloured-gradient fallback.
 class _CategoryVisual extends StatelessWidget {
-  const _CategoryVisual({required this.tag, required this.style});
+  const _CategoryVisual({required this.category});
 
-  final ListingTag tag;
-  final CategoryStyle style;
+  final CategoryModel category;
 
   @override
   Widget build(BuildContext context) {
-    final url = categoryImage(tag);
-
+    final theme = Theme.of(context);
+    
     return Stack(
       fit: StackFit.expand,
       children: [
-        // The base is always painted, so a slow or failed photo reveals the
-        // category's own colour rather than a grey box. Kept as a soft tint,
-        // not the full saturated hue: six loud blocks inside the frosted panel
-        // read as a paint chart, and on a slow connection that is the whole
-        // section. A pale wash of the same colour stays calm while it waits and
-        // barely shows once the photograph fades in over it.
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(style.color, Colors.white, 0.74)!,
-                Color.lerp(style.color, Colors.white, 0.52)!,
-              ],
-            ),
-          ),
-        ),
-        if (url != null)
-          Image.network(
-            url,
-            fit: BoxFit.cover,
-            // On failure, show nothing — the gradient beneath carries it.
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-            frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
-              opacity: frame == null ? 0 : 1,
-              duration: M3Motion.medium2,
-              child: child,
-            ),
-          ),
-        // A soft dark foot so a light photo never fights the panel behind it.
-        const Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 40,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Color(0x33000000), Colors.transparent],
-              ),
-            ),
-          ),
-        ),
+        Container(color: theme.colorScheme.surfaceContainerHigh),
+        if (category.imageUrl != null && category.imageUrl!.isNotEmpty)
+          category.imageUrl!.startsWith('http')
+              ? RemoteImage(url: category.imageUrl, semanticLabel: '')
+              : Image.asset(category.imageUrl!, fit: BoxFit.cover, excludeFromSemantics: true),
       ],
     );
   }
 }
+
 
 /// The small tinted badge that marks which category a listing belongs to.
 class CategoryBadge extends StatelessWidget {
@@ -1026,11 +1094,12 @@ class BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final arrow = size * 0.56;
+    final p = palette(context);
 
     Widget top = Icon(
       Symbols.sync_alt_rounded,
       size: arrow,
-      color: const Color(0xFF123B31),
+      color: p.give,
       weight: 700,
     );
     if (animate) {
@@ -1049,11 +1118,11 @@ class BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FCFA),
+        color: onDark ? Colors.white : Theme.of(context).colorScheme.surface,
         // Proportional, so the 40px mark in the intro corner is the same shape
         // as the 104px one on the splash rather than a rounder version of it.
         borderRadius: BorderRadius.circular(size * 0.27),
-        border: Border.all(color: const Color(0xFFD9E6DF)),
+        border: Border.all(color: p.give.withValues(alpha: 0.2)),
         boxShadow: onDark ? Shadows.raised : null,
       ),
       child: Center(child: top),

@@ -3,10 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/art/girih.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -129,10 +131,12 @@ class _Strip extends StatelessWidget {
               decoration: BoxDecoration(color: p.giveSoft),
               child: Stack(
                 children: [
-                  // The tilework again, so the strip reads as part of the app
-                  // rather than as an advert someone else placed there.
-                  Positioned.fill(
-                    child: GirihField(color: p.give, opacity: 0.07, cell: 58),
+                  // The pattern from the header SVG for the banner background
+                  const Positioned.fill(
+                    child: Opacity(
+                      opacity: 0.8,
+                      child: PanningSvgBackground(),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(Gap.x4),

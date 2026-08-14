@@ -37,6 +37,7 @@ dependencies:
   image_picker: ^1.2.3
   genkit: ^0.15.1
   http: ^1.6.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,9 @@ flutter:
   # caches it, which means the first launch on a slow connection renders in a
   # fallback face — and on no connection, always. Half this marketplace opens
   # the app on rural mobile data, so the type ships with the binary.
+  assets:
+    - assets/images/
+
   #
   # Both are variable fonts with a single weight axis: one file covers 300–900,
   # and both carry the full Cyrillic block, which is what the previous face was

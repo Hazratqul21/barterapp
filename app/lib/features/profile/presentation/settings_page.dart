@@ -12,6 +12,13 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 
+class _DarkModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool v) => state = v;
+}
+final _darkModeProvider = NotifierProvider<_DarkModeNotifier, bool>(_DarkModeNotifier.new);
+
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -20,20 +27,24 @@ class SettingsPage extends ConsumerWidget {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
+    final locale = ref.watch(localeProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l.navSettings, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-          child: ListView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(Gap.x5),
-            children: [
-              _SectionHeading(l.settingsGeneral),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Align(
+          key: ValueKey(locale),
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(Gap.x5),
+              children: [
+                _SectionHeading(l.settingsGeneral),
               Card(
                 elevation: 0,
                 color: theme.colorScheme.surfaceContainerLow,
@@ -46,29 +57,51 @@ class SettingsPage extends ConsumerWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(Gap.x4, 0, Gap.x4, Gap.x4),
-                      child: Consumer(
-                        builder: (context, ref, _) {
-                          final locale = ref.watch(localeProvider);
-                          return SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(value: 'uz', label: Text('UZ')),
-                              ButtonSegment(value: 'ru', label: Text('RU')),
-                              ButtonSegment(value: 'en', label: Text('EN')),
-                            ],
-                            selected: {locale},
-                            onSelectionChanged: (Set<String> v) {
-                              HapticFeedback.lightImpact();
-                              ref.read(localeProvider.notifier).set(v.first);
-                            },
-                            showSelectedIcon: false,
-                            style: SegmentedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              selectedBackgroundColor: p.give,
-                              selectedForegroundColor: Colors.white,
-                            ),
-                          );
+                      child: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(value: 'uz', label: Text('UZ')),
+                          ButtonSegment(value: 'ru', label: Text('RU')),
+                          ButtonSegment(value: 'en', label: Text('EN')),
+                        ],
+                        selected: {locale},
+                        onSelectionChanged: (Set<String> v) {
+                          HapticFeedback.lightImpact();
+                          ref.read(localeProvider.notifier).set(v.first);
                         },
+                        showSelectedIcon: false,
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          selectedBackgroundColor: p.give,
+                          selectedForegroundColor: Colors.white,
+                        ),
                       ),
+                    ),
+                    const _Divider(),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final isDark = ref.watch(_darkModeProvider);
+                        return ListTile(
+                          leading: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder: (child, anim) => RotationTransition(
+                              turns: child.key == const ValueKey('dark') 
+                                  ? Tween<double>(begin: 0.5, end: 1.0).animate(anim)
+                                  : Tween<double>(begin: -0.5, end: 0.0).animate(anim),
+                              child: ScaleTransition(scale: anim, child: child),
+                            ),
+                            child: Icon(
+                              isDark ? Symbols.dark_mode_rounded : Symbols.light_mode_rounded,
+                              key: ValueKey(isDark ? 'dark' : 'light'),
+                              color: p.give,
+                            ),
+                          ),
+                          title: const Text('Dark Mode'),
+                          trailing: Switch(
+                            value: isDark,
+                            onChanged: (v) => ref.read(_darkModeProvider.notifier).set(v),
+                          ),
+                        );
+                      }
                     ),
                   ],
                 ),
@@ -113,8 +146,9 @@ class SettingsPage extends ConsumerWidget {
                   },
                 ),
               ),
-            ],
-          ).animate().fadeIn(duration: M3Motion.medium2),
+              ],
+            ).animate().fadeIn(duration: M3Motion.medium2),
+          ),
         ),
       ),
     );

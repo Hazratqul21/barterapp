@@ -10,6 +10,91 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
 
+class _OtpInput extends StatefulWidget {
+  const _OtpInput({required this.controller, required this.onSubmitted, required this.enabled});
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+  final bool enabled;
+
+  @override
+  State<_OtpInput> createState() => _OtpInputState();
+}
+
+class _OtpInputState extends State<_OtpInput> {
+  final FocusNode _focusNode = FocusNode();
+  
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_update);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+  
+  @override
+  void dispose() {
+    widget.controller.removeListener(_update);
+    _focusNode.dispose();
+    super.dispose();
+  }
+  
+  void _update() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = widget.controller.text;
+    
+    return Stack(
+      children: [
+        Opacity(
+          opacity: 0,
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            enabled: widget.enabled,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            onSubmitted: widget.onSubmitted,
+            decoration: const InputDecoration(counterText: ''),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _focusNode.requestFocus(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(6, (index) {
+              final char = index < text.length ? text[index] : '';
+              final isFocused = _focusNode.hasFocus && text.length == index;
+              final isFilled = index < text.length;
+              
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 48,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isFocused ? theme.colorScheme.primary : (isFilled ? theme.colorScheme.outlineVariant : Colors.transparent),
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  char,
+                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
@@ -124,14 +209,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
                   if (_codeSent) ...[
                     Gap.h4,
-                    TextField(
+                    _OtpInput(
                       controller: _code,
                       enabled: !_busy,
-                      autofocus: true,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium?.copyWith(letterSpacing: 12, fontWeight: FontWeight.w900),
-                      decoration: InputDecoration(filled: true, fillColor: theme.colorScheme.surfaceContainerLow),
                       onSubmitted: (_) => _verify(),
                     ),
                   ],

@@ -130,7 +130,7 @@ class _CreatorBar extends StatelessWidget {
     // Split the four destinations two and two around the centre button.
     return GlassSurface(
       level: GlassLevel.chrome,
-      borderRadius: BorderRadius.zero,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       shadow: false,
       child: SafeArea(
         top: false,
@@ -199,7 +199,11 @@ class _Tab extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: Sizes.iconLg, fill: selected ? 1 : 0, color: colour),
+            AnimatedScale(
+              scale: selected ? 1.15 : 1.0,
+              duration: M3Motion.short3,
+              child: Icon(icon, size: Sizes.iconLg, fill: selected ? 1 : 0, color: colour),
+            ),
             const SizedBox(height: 3),
             Text(
               label,
@@ -247,31 +251,43 @@ class _CreateButtonState extends State<_CreateButton> {
           },
           child: Tooltip(
             message: widget.label,
-            // Lifts above the bar so it reads as an action, not a tab.
-            child: AnimatedScale(
-              scale: _down ? 0.9 : 1,
+            child: AnimatedContainer(
               duration: M3Motion.short3,
               curve: M3Motion.standard,
-              child: Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: p.swapGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: p.give.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      spreadRadius: -2,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Symbols.add_rounded,
-                  size: 30,
-                  weight: 700,
-                  color: Colors.white,
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                // Full Neomorphism requires the button to be the exact color of the background.
+                // However, since it's floating above the glass bar, we use the canvas color.
+                color: BrandColors.canvas,
+                shape: BoxShape.circle,
+                // Add the dual shadows (dark bottom-right, light top-left)
+                boxShadow: _down ? [] : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    offset: const Offset(5, 5),
+                    blurRadius: 10,
+                  ),
+                  const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-5, -5),
+                    blurRadius: 10,
+                  ),
+                ],
+                border: _down
+                    ? Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1.5)
+                    : Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+              ),
+              child: AnimatedOpacity(
+                duration: M3Motion.short3,
+                opacity: _down ? 0.7 : 1.0,
+                child: Center(
+                  child: Icon(
+                    Symbols.add_rounded,
+                    size: 30,
+                    weight: 700,
+                    color: p.give, // Brand primary Teal
+                  ),
                 ),
               ),
             ),

@@ -478,8 +478,26 @@ class _BrokenPainter extends CustomPainter {
     final unit = size.width / 160;
     final centre = Offset(size.width / 2, size.height * 0.5);
 
-    // The swap arrow, snapped in the middle. The failure is stated in the
-    // product's own vocabulary rather than a generic warning triangle.
+    // Draw rays radiating from center
+    final rayPaint = Paint()
+      ..color = p.inkFaint.withValues(alpha: 0.3)
+      ..strokeWidth = 2.0 * unit
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    for (int i = 0; i < 8; i++) {
+      if (i == 2 || i == 6) continue; // Skip vertical rays to leave room for crack
+      final angle = (i * 45) * 3.14159 / 180.0;
+      final dx = math.cos(angle);
+      final dy = math.sin(angle);
+      canvas.drawLine(
+        centre + Offset(dx * 40 * unit, dy * 40 * unit),
+        centre + Offset(dx * 65 * unit, dy * 65 * unit),
+        rayPaint,
+      );
+    }
+
+    // The swap arrow, snapped in the middle.
     final gap = 13.0 * unit;
 
     _arrow(
@@ -526,7 +544,7 @@ class BrokenIllustration extends StatelessWidget {
     return CustomPaint(
       painter: _BrokenPainter(
         palette(context),
-        Theme.of(context).colorScheme.error,
+        palette(context).give, // Use Teal instead of error red
       ),
       size: size,
     );

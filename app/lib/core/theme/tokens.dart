@@ -82,8 +82,8 @@ abstract final class Gap {
 /// Touch target heights. All three clear the 44px minimum for a fingertip;
 /// they differ in how much they ask for attention.
 abstract final class Sizes {
-  /// Secondary, inline. Text buttons and small chips.
-  static const buttonSm = 40.0;
+  /// Secondary, inline. Text buttons and small chips. M3 minimum touch target.
+  static const buttonSm = 48.0;
 
   /// The default: dialog actions, list actions, secondary CTAs.
   static const buttonMd = 48.0;
@@ -138,6 +138,28 @@ abstract final class Shadows {
       offset: const Offset(0, 10),
     ),
   ];
+
+  /// Neumorphic extruded (up) shadows for light background.
+  /// Requires the surface color to be exactly the same as the background color (e.g. Canvas).
+  static List<BoxShadow> neomorphicUp(Color surfaceColor) {
+    // For light mode (e.g., BrandColors.canvas = 0xFFFAF8F4)
+    // Dark shadow on bottom right, Light shadow on top left
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.08),
+        offset: const Offset(6, 6),
+        blurRadius: 12,
+      ),
+      const BoxShadow(
+        color: Colors.white,
+        offset: Offset(-6, -6),
+        blurRadius: 12,
+      ),
+    ];
+  }
+
+  /// Neumorphic pressed (inset) isn't natively supported by standard BoxShadow.
+  /// We will handle inset shadows using standard containers and gradients inside the `NeoButton` widget.
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

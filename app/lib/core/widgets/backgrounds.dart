@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../art/girih.dart';
 import '../theme/section_theme.dart';
@@ -39,6 +40,7 @@ class AuroraBackground extends ConsumerStatefulWidget {
 class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final ValueNotifier<double> _scrollOffset = ValueNotifier(0.0);
 
   @override
   void initState() {
@@ -52,6 +54,7 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
   @override
   void dispose() {
     _controller.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -73,19 +76,6 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
           child: Stack(
             children: [
               // Three layers, and the split between them is the whole point.
-              //
-              // The cost of a drifting wallpaper is paint, not build: the
-              // stack used to have no repaint boundaries in it, so the blooms,
-              // the lattice and the entire app shared one layer. A bloom
-              // moving a pixel marked that layer dirty, and every frame
-              // repainted the lattice's hundreds of stroked paths and the
-              // app's own painting along with it — measured at one full
-              // repaint per frame, which is what the jank was.
-              //
-              // Boundaries split them, and the drift now only transforms a
-              // layer that was painted once. The blooms sit in their own
-              // subtree so that recolouring them on a tab change cannot reach
-              // the app below.
               Positioned.fill(
                 child: _AnimatedBlooms(
                   controller: _controller,
@@ -95,19 +85,52 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
                 ),
               ),
 
-              // The lattice is hundreds of stroked star paths and never
-              // changes. Its own boundary means it is rasterised once and
-              // then only composited.
+              // The lattice with infinite panning, pulsing, and parallax.
               if (widget.pattern)
-                const Positioned.fill(
+                Positioned.fill(
                   child: RepaintBoundary(
-                    child: GirihField(opacity: 0.07, cell: 82, fade: 0.45),
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) {
+                        return ValueListenableBuilder<double>(
+                          valueListenable: _scrollOffset,
+                          builder: (context, scrollY, _) {
+                            final t = _controller.value;
+                            
+                            // 1. Infinite Panning (slow diagonal movement)
+                            final panX = math.sin(t * math.pi) * 15;
+                            final panY = math.cos(t * math.pi) * 15;
+
+                            // 2. Parallax
+                            final parallaxY = -(scrollY * 0.12);
+
+                            // 3. Pulsing Opacity
+                            final pulse = 0.04 + (math.sin(t * math.pi) * 0.03);
+
+                            return Transform.translate(
+                              offset: Offset(panX, panY + parallaxY),
+                              child: GirihField(opacity: pulse, cell: 82, fade: 0.45),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
 
               // The app on its own layer, so a drifting bloom cannot dirty it
               // and a scrolling feed cannot dirty the wallpaper.
-              Positioned.fill(child: RepaintBoundary(child: widget.child)),
+              Positioned.fill(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notif) {
+                    if (notif.metrics.axis == Axis.vertical) {
+                      _scrollOffset.value = notif.metrics.pixels;
+                    }
+                    return false; // Let the notification bubble up
+                  },
+                  child: RepaintBoundary(child: widget.child),
+                ),
+              ),
             ],
           ),
         );
@@ -286,22 +309,63 @@ class SwapBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = palette(context);
-
     return SizedBox(
       height: height,
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: DecoratedBox(
-          decoration: BoxDecoration(gradient: p.swapGradient),
-          child: const GirihField(
-            color: Colors.white,
-            opacity: 0.14,
-            cell: 64,
-            strokeWidth: 1.1,
-          ),
-        ),
+        child: const PanningSvgBackground(),
       ),
     );
   }
 }
+
+class PanningSvgBackground extends StatefulWidget {
+  const PanningSvgBackground({super.key});
+
+  @override
+  State<PanningSvgBackground> createState() => _PanningSvgBackgroundState();
+}
+
+class _PanningSvgBackgroundState extends State<PanningSvgBackground> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = Curves.easeInOutSine.transform(_controller.value);
+        // Smoothly pan left and right without jumping
+        final panX = -(t * 150.0);
+        return Transform.translate(
+          offset: Offset(panX, 0),
+          child: Transform.scale(
+            scale: 1.5,
+            child: SvgPicture.asset(
+              'assets/images/header_bg.svg',
+              fit: BoxFit.cover,
+              width: MediaQuery.of(context).size.width * 1.5,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+

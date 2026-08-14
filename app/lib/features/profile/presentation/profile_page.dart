@@ -97,100 +97,79 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with SingleTickerProv
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-              child: SingleChildScrollView(
+              child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Gap.h6,
-                    Center(child: TraderAvatar(size: Sizes.avatarLg, url: me.avatarUrl, name: me.name)),
-                    Gap.h3,
-                    Center(child: Text(me.name, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800))),
-                    if (me.handle != null)
-                      Center(child: Text('@${me.handle}', style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft))),
-                    Gap.h2,
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isVerified) ...[
-                          Icon(Symbols.verified_rounded, size: Sizes.iconSm, color: p.give, fill: 1),
-                          Gap.w1,
-                          Text(l.traderVerified, style: theme.textTheme.labelMedium?.copyWith(color: p.give)),
-                          Gap.w4,
+                slivers: [
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      Gap.h6,
+                      Center(child: TraderAvatar(size: Sizes.avatarLg, url: me.avatarUrl, name: me.name)),
+                      Gap.h3,
+                      Center(child: Text(me.name, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800))),
+                      if (me.handle != null)
+                        Center(child: Text('@${me.handle}', style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft))),
+                      Gap.h2,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isVerified) ...[
+                            Icon(Symbols.verified_rounded, size: Sizes.iconSm, color: p.give, fill: 1),
+                            Gap.w1,
+                            Text(l.traderVerified, style: theme.textTheme.labelMedium?.copyWith(color: p.give)),
+                            Gap.w4,
+                          ],
+                          if (me.rating != null) ...[
+                            Icon(Symbols.star_rounded, size: 18, color: p.money, fill: 1),
+                            Gap.w1,
+                            Text(me.rating!.toStringAsFixed(1), style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+                          ],
                         ],
-                        if (me.rating != null) ...[
-                          Icon(Symbols.star_rounded, size: 18, color: p.money, fill: 1),
-                          Gap.w1,
-                          Text(me.rating!.toStringAsFixed(1), style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
-                        ],
-                      ],
-                    ),
-                    Gap.h6,
+                      ),
+                      Gap.h6,
+                    ]),
+                  ),
 
-                    // TRUST SCORE
-                    Padding(
-                      padding: Gap.screen,
-                      child: Container(
-                        padding: const EdgeInsets.all(Gap.x4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHigh,
-                          borderRadius: Radii.rLg,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  // TRUST SCORE
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TrustScoreHeaderDelegate(me: me),
+                  ),
+
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      Gap.h4,
+                      // STATS ROW
+                      Padding(
+                        padding: Gap.screen,
+                        child: Row(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(l.profileTrustLabel, style: theme.textTheme.titleSmall),
-                                Text('${me.trustScore}/100', style: theme.textTheme.titleSmall?.copyWith(color: p.give, fontWeight: FontWeight.w800)),
-                              ],
-                            ),
-                            Gap.h2,
-                            LinearProgressIndicator(
-                              value: me.trustScore / 100,
-                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                              color: p.give,
-                              borderRadius: Radii.rFull,
-                              minHeight: 6,
-                            ),
+                            _StatCard(label: l.profileStatActive, value: '${me.activeListings}'),
+                            Gap.w2,
+                            _StatCard(label: l.profileStatCompleted, value: '${me.completedTrades}'),
+                            Gap.w2,
+                            _StatCard(label: l.profileStatCompletion, value: me.completionRate != null ? '${me.completionRate}%' : '—'),
                           ],
                         ),
                       ),
-                    ),
-                    Gap.h4,
+                      Gap.h6,
 
-                    // STATS ROW
-                    Padding(
-                      padding: Gap.screen,
-                      child: Row(
-                        children: [
-                          _StatCard(label: l.profileStatActive, value: '${me.activeListings}'),
-                          Gap.w2,
-                          _StatCard(label: l.profileStatCompleted, value: '${me.completedTrades}'),
-                          Gap.w2,
-                          _StatCard(label: l.profileStatCompletion, value: me.completionRate != null ? '${me.completionRate}%' : '—'),
-                        ],
+                      // CONTENT TABS
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: p.give,
+                        labelColor: theme.colorScheme.onSurface,
+                        unselectedLabelColor: p.inkSoft,
+                        labelStyle: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                        tabs: [Tab(text: l.profileMyListings), Tab(text: l.profileReviews)],
                       ),
-                    ),
-                    Gap.h6,
-
-                    // CONTENT TABS
-                    TabBar(
-                      controller: _tabController,
-                      indicatorColor: p.give,
-                      labelColor: theme.colorScheme.onSurface,
-                      unselectedLabelColor: p.inkSoft,
-                      labelStyle: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                      tabs: [Tab(text: l.profileMyListings), Tab(text: l.profileReviews)],
-                    ),
-                    Gap.h4,
-                    if (_tabController.index == 0) _MyListingsSection(me: me) else _MyReviewsSection(meId: me.id),
-                    const SizedBox(height: 100), // Space for FAB
-                  ],
-                ).animate().fadeIn(duration: M3Motion.medium2, curve: M3Motion.standard),
+                      Gap.h4,
+                    ]),
+                  ),
+                  if (_tabController.index == 0) _MyListingsSection(me: me) else _MyReviewsSection(meId: me.id),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)), // Space for FAB
+                ],
               ),
-            ),
+            ).animate().fadeIn(duration: M3Motion.medium2, curve: M3Motion.standard),
           );
         },
       ),
@@ -236,21 +215,22 @@ class _MyListingsSection extends ConsumerWidget {
     final listingsAsync = ref.watch(myListingsProvider);
     final l = L.of(context);
 
-    return listingsAsync.fade(
-      identity: listingsAsync.value?.length,
-      loading: () => const Center(child: Padding(padding: EdgeInsets.all(Gap.x8), child: CircularProgressIndicator())),
-      error: (e) => ErrorState(message: errorMessage(context, e), retryLabel: l.retry, onRetry: () => ref.invalidate(myListingsProvider)),
+    return listingsAsync.when(
+      loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(Gap.x8), child: CircularProgressIndicator()))),
+      error: (e, _) => SliverToBoxAdapter(child: ErrorState(message: errorMessage(context, e), retryLabel: l.retry, onRetry: () => ref.invalidate(myListingsProvider))),
       data: (listings) {
-        if (listings.isEmpty) return EmptyState(title: l.profileMyListings, hint: 'Hozircha e’lonlar yo‘q');
-        return GridView.builder(
+        if (listings.isEmpty) return SliverToBoxAdapter(child: EmptyState(title: l.profileMyListings, hint: 'Hozircha e’lonlar yo‘q'));
+        return SliverPadding(
           padding: Gap.screen,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: Gap.x4, crossAxisSpacing: Gap.x4, childAspectRatio: 0.75),
-          itemCount: listings.length,
-          itemBuilder: (context, index) => AnimatedListItem(
-            index: index,
-            child: ListingCardTile(listing: listings[index], onTap: () => context.push('/listing/${listings[index].id}')),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: Gap.x4, crossAxisSpacing: Gap.x4, childAspectRatio: 0.75),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => AnimatedListItem(
+                index: index,
+                child: ListingCardTile(listing: listings[index], onTap: () => context.push('/listing/${listings[index].id}')),
+              ),
+              childCount: listings.length,
+            ),
           ),
         );
       },
@@ -268,17 +248,22 @@ class _MyReviewsSection extends ConsumerWidget {
     final l = L.of(context);
 
     return reviewsAsync.when(
-      loading: () => const Center(child: Padding(padding: EdgeInsets.all(Gap.x8), child: CircularProgressIndicator())),
-      error: (e, _) => ErrorState(message: errorMessage(context, e), retryLabel: l.retry, onRetry: () => ref.invalidate(traderReviewsProvider(meId))),
+      loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(Gap.x8), child: CircularProgressIndicator()))),
+      error: (e, _) => SliverToBoxAdapter(child: ErrorState(message: errorMessage(context, e), retryLabel: l.retry, onRetry: () => ref.invalidate(traderReviewsProvider(meId)))),
       data: (reviews) {
-        if (reviews.isEmpty) return EmptyState(title: l.profileReviews, hint: l.profileNoReviews);
-        return ListView.separated(
+        if (reviews.isEmpty) return SliverToBoxAdapter(child: EmptyState(title: l.profileReviews, hint: l.profileNoReviews));
+        return SliverPadding(
           padding: Gap.screen,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: reviews.length,
-          separatorBuilder: (_, _) => Gap.h3,
-          itemBuilder: (context, index) => AnimatedListItem(index: index, child: _ReviewCard(review: reviews[index])),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index.isOdd) return Gap.h3;
+                final itemIndex = index ~/ 2;
+                return AnimatedListItem(index: itemIndex, child: _ReviewCard(review: reviews[itemIndex]));
+              },
+              childCount: reviews.isNotEmpty ? reviews.length * 2 - 1 : 0,
+            ),
+          ),
         );
       },
     );
@@ -342,5 +327,64 @@ class _SettingsAction extends StatelessWidget {
       padding: const EdgeInsets.only(right: Gap.x2),
       child: IconButton(tooltip: label, onPressed: () => context.push('/settings'), icon: const Icon(Symbols.settings_rounded, size: Sizes.iconLg)),
     );
+  }
+}
+
+class _TrustScoreHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _TrustScoreHeaderDelegate({required this.me});
+
+  final Me me;
+
+  @override
+  double get minExtent => 104.0;
+  @override
+  double get maxExtent => 104.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final l = L.of(context);
+    final p = palette(context);
+    final theme = Theme.of(context);
+
+    return Container(
+      color: theme.colorScheme.surface,
+      alignment: Alignment.center,
+      child: Padding(
+        padding: Gap.screen,
+        child: Container(
+          padding: const EdgeInsets.all(Gap.x4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: Radii.rLg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(l.profileTrustLabel, style: theme.textTheme.titleSmall),
+                  Text('${me.trustScore}/100', style: theme.textTheme.titleSmall?.copyWith(color: p.give, fontWeight: FontWeight.w800)),
+                ],
+              ),
+              Gap.h2,
+              LinearProgressIndicator(
+                value: me.trustScore / 100,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                color: p.give,
+                borderRadius: Radii.rFull,
+                minHeight: 6,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _TrustScoreHeaderDelegate oldDelegate) {
+    return oldDelegate.me != me;
   }
 }

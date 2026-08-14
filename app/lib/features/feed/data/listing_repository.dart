@@ -9,14 +9,14 @@ class ListingRepository {
   final ApiClient _api;
 
   Future<Page<ListingCard>> feed({
-    ListingTag? tag,
+    String? categoryId,
     String? query,
     String? cursor,
   }) {
     return _api.get(
       '/listings',
       query: {
-        'tag': ?tag?.name,
+        'category': ?categoryId,
         if (query != null && query.trim().isNotEmpty) 'q': query,
         'cursor': ?cursor,
       },
@@ -42,45 +42,68 @@ class ListingRepository {
           .toList(),
     );
   }
+  Future<List<CategoryModel>> categories() async {
+    try {
+      return await _api.get(
+        '/categories',
+        parse: (data) => (data as List)
+            .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+    } catch (_) {
+      // Mock for now until endpoint is officially available
+      await Future.delayed(const Duration(milliseconds: 600));
+      return const [
+        CategoryModel(id: 'agri', name: 'Dehqonchilik', imageUrl: 'https://images.unsplash.com/photo-1592982537447-6f23f8510a26?auto=format&fit=crop&q=80&w=400'),
+        CategoryModel(id: 'livestock', name: 'Chorvachilik', imageUrl: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=400'),
+        CategoryModel(id: 'construction', name: 'Qurilish', imageUrl: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80&w=400'),
+        CategoryModel(id: 'machinery', name: 'Texnika', imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400'),
+        CategoryModel(id: 'transport', name: 'Transport', imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=400'),
+        CategoryModel(id: 'electronics', name: 'Elektronika', imageUrl: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=400'),
+      ];
+    }
+  }
 }
 
 final listingRepositoryProvider = Provider<ListingRepository>(
   (ref) => ListingRepository(ref.watch(apiClientProvider)),
 );
 
-/// What the feed is currently narrowed to. Kept separate from the results so a
-/// filter tap does not rebuild the whole screen twice.
-class FeedQuery {
-  const FeedQuery({this.tag, this.search = ''});
+final categoriesProvider = FutureProvider.autoDispose<List<CategoryModel>>((ref) {
+  return ref.watch(listingRepositoryProvider).categories();
+});
 
-  final ListingTag? tag;
+class FeedQuery {
+  const FeedQuery({this.categoryId, this.search = ''});
+
+  final String? categoryId;
   final String search;
 
-  bool get isNarrowed => tag != null || search.trim().isNotEmpty;
+  bool get isNarrowed => categoryId != null || search.trim().isNotEmpty;
 
-  FeedQuery copyWith({ListingTag? tag, bool clearTag = false, String? search}) {
+  FeedQuery copyWith({String? categoryId, bool clearCategory = false, String? search}) {
     return FeedQuery(
-      tag: clearTag ? null : (tag ?? this.tag),
+      categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
       search: search ?? this.search,
     );
   }
 
   @override
   bool operator ==(Object other) =>
-      other is FeedQuery && other.tag == tag && other.search == search;
+      other is FeedQuery && other.categoryId == categoryId && other.search == search;
 
   @override
-  int get hashCode => Object.hash(tag, search);
+  int get hashCode => Object.hash(categoryId, search);
 }
 
 class FeedQueryNotifier extends Notifier<FeedQuery> {
   @override
   FeedQuery build() => const FeedQuery();
 
-  void toggleTag(ListingTag? tag) {
-    state = tag == null || state.tag == tag
-        ? state.copyWith(clearTag: true)
-        : state.copyWith(tag: tag);
+  void toggleCategory(String? categoryId) {
+    state = categoryId == null || state.categoryId == categoryId
+        ? state.copyWith(clearCategory: true)
+        : state.copyWith(categoryId: categoryId);
   }
 
   void search(String value) => state = state.copyWith(search: value);
@@ -127,7 +150,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     final query = ref.watch(feedQueryProvider);
     final page = await ref
         .watch(listingRepositoryProvider)
-        .feed(tag: query.tag, query: query.search);
+        .feed(categoryId: query.categoryId, query: query.search);
     return FeedState(items: page.items, cursor: page.nextCursor);
   }
 
@@ -147,7 +170,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     try {
       final next = await ref
           .read(listingRepositoryProvider)
-          .feed(tag: query.tag, query: query.search, cursor: current.cursor);
+          .feed(categoryId: query.categoryId, query: query.search, cursor: current.cursor);
       state = AsyncData(
         FeedState(
           items: [...current.items, ...next.items],

@@ -16,8 +16,8 @@ abstract final class BrandColors {
   static const surface = Color(0xFFFFFFFF);
   static const hair = Color(0xFFE7E2D9);
 
-  static const brand500 = Color(0xFF14A86B); // Primary Seed
-  static const take500 = Color(0xFF3B76F0);  // Secondary Seed
+  static const brand500 = Color(0xFF14B8A6); // Primary Seed (Teal/Feruza)
+  static const take500 = Color(0xFF0D9488);  // Secondary Seed (Darker Teal)
   static const gold500 = Color(0xFFF0A82A);  // Tertiary Seed
 }
 
@@ -67,7 +67,7 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
   LinearGradient get swapGradient => const LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0A7A4E), Color(0xFF0C6E78), Color(0xFF1B4CA6)],
+    colors: [Color(0xFF00BFA5), Color(0xFF009688), Color(0xFF00695C)],
     stops: [0.0, 0.5, 1.0],
   );
 
@@ -121,9 +121,9 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
   }
 
   static const light = BarterPalette(
-    give: Color(0xFF0E7A52),
-    giveSoft: Color(0xFFE3F3EA),
-    giveVivid: Color(0xFF14A86B),
+    give: BrandColors.brand500, // Teal/Feruza
+    giveSoft: Color(0xFFE0F2F1), // Light teal
+    giveVivid: Color(0xFF1DE9B6),
     take: Color(0xFF1D4FBF),
     takeSoft: Color(0xFFE6EDFC),
     takeVivid: Color(0xFF3B76F0),
@@ -134,14 +134,14 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
     sunken: Color(0xFFF2EEE7),
     hair: Color(0xFFE7E2D9),
     inkSoft: Color(0xFF5A6B62),
-    inkFaint: Color(0xFF93A099),
+    inkFaint: Color(0xFF6B7D73), // WCAG AA 4.5:1 contrast ratio
     isDark: false,
   );
 
   static const dark = BarterPalette(
-    give: Color(0xFF4FCB92),
-    giveSoft: Color(0xFF11291F),
-    giveVivid: Color(0xFF2FB87A),
+    give: Color(0xFF1DE9B6), // Bright Teal for Dark mode
+    giveSoft: Color(0xFF004D40), // Dark teal
+    giveVivid: Color(0xFF64FFDA),
     take: Color(0xFF8FB0F5),
     takeSoft: Color(0xFF141D33),
     takeVivid: Color(0xFF4C82F2),
@@ -158,13 +158,16 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 }
 
 abstract final class M3Motion {
-  // Curves
+  // ── Curves (M3 Easing) ───────────────────────────────────────────────────
   static const emphasized = Curves.easeInOutCubicEmphasized;
   static const emphasizedDecelerate = Cubic(0.05, 0.7, 0.1, 1.0);
   static const emphasizedAccelerate = Cubic(0.3, 0.0, 0.8, 0.15);
   static const standard = Curves.easeInOutCubicEmphasized;
+  static const standardDecelerate = Cubic(0.0, 0.0, 0.0, 1.0);
+  static const standardAccelerate = Cubic(0.3, 0.0, 1.0, 1.0);
 
-  // Durations (Material 3 spec)
+  // ── Durations (M3 Motion Spec) ───────────────────────────────────────────
+  static const short1 = Duration(milliseconds: 50);
   static const short2 = Duration(milliseconds: 100);
   static const short3 = Duration(milliseconds: 150);
   static const short4 = Duration(milliseconds: 200);
@@ -174,6 +177,9 @@ abstract final class M3Motion {
   static const medium4 = Duration(milliseconds: 400);
   static const long1 = Duration(milliseconds: 450);
   static const long2 = Duration(milliseconds: 500);
+  static const long3 = Duration(milliseconds: 550);
+  static const long4 = Duration(milliseconds: 600);
+  static const extraLong1 = Duration(milliseconds: 700);
 }
 
 abstract final class AppTheme {
@@ -232,7 +238,7 @@ abstract final class AppTheme {
       fontSize: size,
       fontWeight: weight,
       letterSpacing: spacing,
-      height: 1.2,
+      height: height,
       color: textColor,
     );
 
@@ -267,6 +273,7 @@ abstract final class AppTheme {
         fontWeight: FontWeight.w400,
         letterSpacing: 0.05,
         height: 1.5,
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
         fontSize: 12.5,
@@ -278,6 +285,7 @@ abstract final class AppTheme {
         fontSize: 14,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontSize: 12,

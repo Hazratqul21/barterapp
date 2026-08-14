@@ -229,8 +229,8 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
                             itemCount: detail.messages.length,
                             itemBuilder: (context, index) {
                               final message = detail.messages[detail.messages.length - 1 - index];
-                              return _Bubble(message: message)
-                                  .animate()
+                              return _Bubble(key: ValueKey(message.id), message: message)
+                                  .animate(key: ValueKey('anim_${message.id}'))
                                   .fadeIn(duration: 200.ms)
                                   .slideY(begin: 0.05, end: 0, curve: M3Motion.emphasizedDecelerate);
                             },
@@ -241,9 +241,26 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
                       padding: const EdgeInsets.fromLTRB(Gap.x5, 0, Gap.x5, Gap.x2),
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          l.chatTyping,
-                          style: theme.textTheme.labelSmall?.copyWith(color: p.give, fontWeight: FontWeight.w700),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l.chatTyping,
+                              style: theme.textTheme.labelSmall?.copyWith(color: p.give, fontWeight: FontWeight.w700),
+                            ),
+                            Gap.w1,
+                            for (var i = 0; i < 3; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 2),
+                                child: Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(color: p.give, shape: BoxShape.circle),
+                                ).animate(onPlay: (c) => c.repeat())
+                                 .scaleXY(begin: 0.5, end: 1.5, duration: 400.ms, delay: (i * 200).ms, curve: Curves.easeInOut)
+                                 .then(delay: 400.ms).scaleXY(begin: 1.5, end: 0.5, duration: 400.ms),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -467,7 +484,7 @@ class _Expiry extends StatelessWidget {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const _Bubble({super.key, required this.message});
   final ChatMessage message;
 
   @override
@@ -582,7 +599,7 @@ class _Composer extends StatelessWidget {
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size(52, 52),
               ),
-            ),
+            ).animate(target: sending ? 1 : 0).scaleXY(end: 0.85, duration: 150.ms).fade(end: 0.8),
           ],
         ),
       ),

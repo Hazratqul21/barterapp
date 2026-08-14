@@ -140,10 +140,23 @@ class _ThreadList extends StatelessWidget {
                 separatorBuilder: (_, _) => Gap.h3,
                 itemBuilder: (context, index) => AnimatedListItem(
                   index: index,
-                  child: _ThreadCard(
-                    thread: items[index],
-                    selected: items[index].id == selectedId,
-                    onTap: () => onSelect(items[index].id),
+                  child: Dismissible(
+                    key: ValueKey(items[index].id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: Gap.x4),
+                      color: Theme.of(context).colorScheme.error,
+                      child: const Icon(Symbols.archive_rounded, color: Colors.white),
+                    ),
+                    onDismissed: (_) {
+                      debugPrint('Archived ${items[index].id}');
+                    },
+                    child: _ThreadCard(
+                      thread: items[index],
+                      selected: items[index].id == selectedId,
+                      onTap: () => onSelect(items[index].id),
+                    ),
                   ),
                 ),
               ),
@@ -242,6 +255,14 @@ class _ThreadCard extends StatelessWidget {
                         children: [
                           Row(
                             children: [
+                              if (unread) ...[
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(color: p.money, shape: BoxShape.circle),
+                                ),
+                                Gap.w2,
+                              ],
                               Expanded(
                                 child: Text(
                                   thread.peer.displayName,

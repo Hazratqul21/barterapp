@@ -68,6 +68,26 @@ class TraderBrief {
   String get displayName => handle == null ? name : '$name · $handle';
 }
 
+class CategoryModel {
+  const CategoryModel({
+    required this.id,
+    required this.name,
+    this.imageUrl,
+  });
+
+  final String id;
+  final String name;
+  final String? imageUrl;
+
+  factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    return CategoryModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      imageUrl: json['image_url'] as String?,
+    );
+  }
+}
+
 enum ListingTag {
   agri,
   livestock,

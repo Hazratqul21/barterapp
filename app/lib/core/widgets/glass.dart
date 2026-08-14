@@ -76,8 +76,8 @@ class GlassSurface extends StatelessWidget {
   /// is a saved layer the browser composites each frame; at desktop window
   /// sizes a phone-strength blur is what turns scrolling gritty.
   double get _blur => switch (level) {
-    GlassLevel.chrome => kIsWeb ? 14 : 20,
-    GlassLevel.panel => kIsWeb ? 20 : 30,
+    GlassLevel.chrome => kIsWeb ? 16 : 26,
+    GlassLevel.panel => kIsWeb ? 24 : 36,
   };
 
   @override

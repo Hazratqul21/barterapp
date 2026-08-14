@@ -38,10 +38,13 @@ class ListingCardTile extends StatelessWidget {
         // to catch the eye and answer "I have ↔ I want" in a second, so the
         // text below is only the name and that one barter line. Everything else
         // — price detail, distance, date, specs — waits on the detail page.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _Photo(listing: listing),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: Radii.rLg,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Photo(listing: listing),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 Gap.x4,
@@ -90,6 +93,7 @@ class ListingCardTile extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../core/theme/tokens.dart';
+
 class FeedShimmer extends StatelessWidget {
   const FeedShimmer({super.key});
 
@@ -34,71 +36,103 @@ class _ShimmerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.surfaceContainerHigh;
 
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: Radii.rLg,
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 186,
-            width: double.infinity,
-            color: color,
+          SizedBox(
+            height: 236,
+            child: Stack(
+              children: [
+                Container(
+                  height: 236,
+                  width: double.infinity,
+                  color: color,
+                ),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    height: 28,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    height: 28,
+                    width: 70,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  bottom: 12,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 16,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 20,
-                  width: 200,
+                  height: 18,
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 24,
-                  width: 140,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Divider(color: color, height: 1),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Container(
-                      height: 16,
-                      width: 60,
+                      height: 20,
+                      width: 20,
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(4),
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Container(
-                      height: 12,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      height: 12,
-                      width: 80,
+                      height: 14,
+                      width: 180,
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: BorderRadius.circular(4),

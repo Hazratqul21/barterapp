@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
 import '../data/trade_repository.dart';
+import 'package:intl/intl.dart';
 
 /// Propose a swap: pick what you put up, add cash if the two sides are not
 /// level, say something.
@@ -34,7 +35,31 @@ class _OfferPageState extends ConsumerState<OfferPage> {
   bool _sending = false;
 
   @override
+  void initState() {
+    super.initState();
+    _cash.addListener(_formatCash);
+  }
+
+  void _formatCash() {
+    final text = _cash.text.replaceAll(RegExp(r'\D'), '');
+    if (text.isEmpty) {
+      if (_cash.text.isNotEmpty) _cash.text = '';
+      return;
+    }
+    final value = int.tryParse(text);
+    if (value == null) return;
+    final formatted = NumberFormat.decimalPattern('en_US').format(value).replaceAll(',', ' ');
+    if (_cash.text != formatted) {
+      _cash.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
+  }
+
+  @override
   void dispose() {
+    _cash.removeListener(_formatCash);
     _cash.dispose();
     _message.dispose();
     super.dispose();

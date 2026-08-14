@@ -10,7 +10,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/models/models.dart';
+
 import '../../auth/data/auth_repository.dart';
 import '../data/listing_repository.dart';
 import 'feed_banner.dart';
@@ -85,6 +85,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     ref.listen(feedQueryProvider, (_, _) => _revealed.clear());
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainer,
       body: RefreshIndicator(
         displacement: 120,
         onRefresh: () async {
@@ -99,62 +100,92 @@ class _FeedPageState extends ConsumerState<FeedPage> {
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
-                SliverToBoxAdapter(
-                  child: _Hero(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    onClear: _searchController.text.isEmpty ? null : _clearSearch,
+                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  pinned: false,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  automaticallyImplyLeading: false,
+                  toolbarHeight: 190,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+                  ),
+                  flexibleSpace: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+                    child: _Hero(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onClear: _searchController.text.isEmpty ? null : _clearSearch,
+                    ),
                   ),
                 ),
                 // The header is the anchor and stays put; everything below it
                 // settles in on first load — banner, then the category panel,
                 // then the feed cards continue the same cascade downward.
+                // The gap between the header and the white container
                 const SliverToBoxAdapter(
-                  child: AnimatedListItem(index: 0, child: FeedBanner()),
+                  child: SizedBox(height: 12),
                 ),
-                SliverToBoxAdapter(
-                  child: AnimatedListItem(
-                    index: 1,
-                    child: _Categories(
-                      selected: query.tag,
-                      onSelect: (tag) {
-                        HapticFeedback.selectionClick();
-                        ref.read(feedQueryProvider.notifier).toggleTag(tag);
+                DecoratedSliver(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  sliver: SliverMainAxisGroup(
+                    slivers: [
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: Gap.x4), // Add some top padding inside the container
+                      ),
+                      const SliverToBoxAdapter(
+                        child: AnimatedListItem(index: 0, child: FeedBanner()),
+                      ),
+                      SliverToBoxAdapter(
+                        child: AnimatedListItem(
+                          index: 1,
+                          child: _Categories(
+                            selected: query.categoryId,
+                            onSelect: (categoryId) {
+                              HapticFeedback.selectionClick();
+                              ref.read(feedQueryProvider.notifier).toggleCategory(categoryId);
+                            },
+                          ),
+                        ),
+                      ),
+                      ...switch (feed) {
+                        AsyncLoading() => [const SliverToBoxAdapter(child: FeedShimmer())],
+                        AsyncError(:final error) => [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: ErrorState(
+                                message: errorMessage(context, error),
+                                retryLabel: l.retry,
+                                onRetry: () => ref.invalidate(feedProvider),
+                              ),
+                            ),
+                          ],
+                        AsyncData(:final value) when value.items.isEmpty => [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: EmptyState(
+                                icon: Symbols.search_off_rounded,
+                                title: l.feedEmpty,
+                                hint: l.feedEmptyHint,
+                                actionLabel: query.isNarrowed ? l.clear : null,
+                                onAction: query.isNarrowed
+                                    ? () {
+                                        _clearSearch();
+                                        ref.read(feedQueryProvider.notifier).reset();
+                                      }
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        AsyncData(:final value) => _results(l, query, value, bottomPadding),
                       },
-                    ),
+                    ],
                   ),
                 ),
-                ...switch (feed) {
-                  AsyncLoading() => [const SliverToBoxAdapter(child: FeedShimmer())],
-                  AsyncError(:final error) => [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: ErrorState(
-                          message: errorMessage(context, error),
-                          retryLabel: l.retry,
-                          onRetry: () => ref.invalidate(feedProvider),
-                        ),
-                      ),
-                    ],
-                  AsyncData(:final value) when value.items.isEmpty => [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: EmptyState(
-                          icon: Symbols.search_off_rounded,
-                          title: l.feedEmpty,
-                          hint: l.feedEmptyHint,
-                          actionLabel: query.isNarrowed ? l.clear : null,
-                          onAction: query.isNarrowed
-                              ? () {
-                                  _clearSearch();
-                                  ref.read(feedQueryProvider.notifier).reset();
-                                }
-                              : null,
-                        ),
-                      ),
-                    ],
-                  AsyncData(:final value) => _results(l, query, value, bottomPadding),
-                },
               ],
             ),
           ),
@@ -258,7 +289,10 @@ class _Hero extends ConsumerWidget {
 
     return Stack(
       children: [
-        const SwapBanner(height: 190, borderRadius: Radii.heroBottom),
+        SwapBanner(
+          height: 190 + MediaQuery.paddingOf(context).top,
+          borderRadius: Radii.heroBottom,
+        ),
         SafeArea(
           bottom: false,
           child: Padding(
@@ -322,14 +356,16 @@ class _Hero extends ConsumerWidget {
   }
 }
 
-class _Categories extends StatelessWidget {
+class _Categories extends ConsumerWidget {
   const _Categories({required this.selected, required this.onSelect});
-  final ListingTag? selected;
-  final ValueChanged<ListingTag?> onSelect;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final categoriesAsync = ref.watch(categoriesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -343,17 +379,35 @@ class _Categories extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 110,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
-            itemCount: ListingTag.values.length,
-            separatorBuilder: (_, _) => Gap.w3,
-            itemBuilder: (context, index) => CategoryCard(
-              tag: ListingTag.values[index],
-              selected: selected == ListingTag.values[index],
-              onTap: () => onSelect(selected == ListingTag.values[index] ? null : ListingTag.values[index]),
+          height: 145,
+          child: categoriesAsync.when(
+            data: (categories) => ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
+              itemCount: categories.length,
+              separatorBuilder: (_, _) => Gap.w3,
+              itemBuilder: (context, index) => CategoryCard(
+                category: categories[index],
+                selected: selected == categories[index].id,
+                onTap: () => onSelect(selected == categories[index].id ? null : categories[index].id),
+              ),
             ),
+            loading: () => ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
+              itemCount: 4,
+              separatorBuilder: (_, _) => Gap.w3,
+              itemBuilder: (_, _) => Container(
+                width: 118,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  borderRadius: Radii.rLg,
+                ),
+              ),
+            ),
+            error: (err, stack) => Center(child: Text('Kategoriyalarni yuklashda xatolik', style: theme.textTheme.labelSmall)),
           ),
         ),
         Divider(color: palette(context).hair, height: Gap.x8, indent: Gap.x5, endIndent: Gap.x5),
