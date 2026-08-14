@@ -30,6 +30,7 @@ from app.schemas.trade import (
     MessageCreate,
     MessageOut,
 )
+from app.services import moderation
 from app.services import offers as offer_service
 from app.services import stats
 from app.services.presenter import trader_brief
@@ -198,6 +199,14 @@ async def send_message(
     thread = await db.get(Conversation, thread_id)
     if thread is None or me.id not in (thread.user_a_id, thread.user_b_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Suhbat topilmadi.")
+
+    # The thread stays readable — a block should not erase what was already
+    # said — but nothing new can be written into it from either side.
+    peer_id = await _peer_id(thread, me.id)
+    if await moderation.is_blocked(db, me.id, peer_id):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Bu suhbat cheklangan."
+        )
 
     now = datetime.now(UTC)
     message = Message(

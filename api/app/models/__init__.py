@@ -8,6 +8,7 @@ from app.models.listing import (  # noqa: F401
     ListingWant,
     ListingWantTranslation,
 )
+from app.models.moderation import Block, Report  # noqa: F401
 from app.models.offer import Conversation, Message, Offer, OfferItem  # noqa: F401
 from app.models.review import Review  # noqa: F401
 from app.models.social import (  # noqa: F401
@@ -19,6 +20,7 @@ from app.models.social import (  # noqa: F401
 from app.models.user import OtpChallenge, User, UserType  # noqa: F401
 
 __all__ = [
+    "Block",
     "Conversation",
     "Desire",
     "Listing",
@@ -33,6 +35,7 @@ __all__ = [
     "OfferItem",
     "OtpChallenge",
     "PaymentMethod",
+    "Report",
     "Review",
     "User",
     "UserType",

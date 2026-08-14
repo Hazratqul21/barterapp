@@ -33,6 +33,7 @@ from app.schemas.listing import (
     ListingDetail,
     ListingUpdate,
 )
+from app.services import moderation
 from app.services import stats
 from app.services.matching import haversine_km, rebuild_matches
 from app.services.presenter import listing_card, listing_detail, trader_brief
@@ -206,6 +207,14 @@ async def list_listings(
 
     if viewer is not None:
         query = query.where(Listing.owner_id != viewer.id)
+
+        # Both directions: the person you blocked leaves your feed, and so do
+        # you leave theirs. A one-way hide would let the blocked side keep
+        # watching everything you post, which is what the button is for.
+        hidden = await moderation.blocked_ids(db, viewer.id)
+        if hidden:
+            query = query.where(Listing.owner_id.notin_(hidden))
+
     if tag is not None:
         query = query.where(Listing.tag == tag)
 

@@ -7,7 +7,16 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
-from app.api import account, auth, chat, listings, offers, uploads, users
+from app.api import (
+    account,
+    auth,
+    chat,
+    listings,
+    moderation,
+    offers,
+    uploads,
+    users,
+)
 from app.core.config import settings
 from app.db.session import SessionLocal
 
@@ -80,6 +89,7 @@ app.include_router(offers.router)
 app.include_router(chat.router)
 app.include_router(account.router)
 app.include_router(uploads.router)
+app.include_router(moderation.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
 # rather than on first upload so a fresh checkout can serve `/media` without

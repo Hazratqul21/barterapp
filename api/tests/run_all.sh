@@ -23,7 +23,8 @@ for t in tests/test_trade_loop.py \
          tests/test_listing_edit.py \
          tests/test_categories.py \
          tests/test_health_and_errors.py \
-         tests/test_feed_search.py; do
+         tests/test_feed_search.py \
+         tests/test_moderation.py; do
   $PY -m app.seed >/dev/null 2>&1
   printf '%-42s ' "$(basename "$t")"
   if out=$($PY "$t" 2>&1); then

@@ -16,6 +16,7 @@ from app.models.offer import Conversation, Message, Offer, OfferItem, OfferStatu
 from app.models.social import NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.trade import OfferAction, OfferCreate, OfferOut
+from app.services import moderation
 from app.services import offers as service
 
 router = APIRouter(prefix="/offers", tags=["offers"])
@@ -59,6 +60,14 @@ async def create_offer(
     if wanted.owner_id == me.id:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, "O‘z e’loningizga taklif yubora olmaysiz."
+        )
+
+    # Checked in both directions. Hiding a blocked person from the feed is not
+    # enough on its own — a listing id can still be typed in, or reached from an
+    # old notification, and the offer would land in their inbox anyway.
+    if await moderation.is_blocked(db, me.id, wanted.owner_id):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Bu savdogar bilan aloqa cheklangan."
         )
 
     # You can only put up listings you actually own — and only ones still
