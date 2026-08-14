@@ -8,6 +8,10 @@ bilishi shart emas.
 - Jonli hujjatlar: `http://127.0.0.1:8010/docs` (Swagger UI, sinab ko'rish mumkin)
 - Mashina o'qishi uchun: `http://127.0.0.1:8010/openapi.json`
 
+> 📋 **Nima yangi o'zgargani** — [BACKEND-CHANGELOG.md](BACKEND-CHANGELOG.md).
+> Bu fayl "nima bor" ni, u esa "nima o'zgardi va menga nima qilish kerak" ni
+> aytadi. Ish boshlashdan oldin o'shani ko'rib chiqing.
+
 ---
 
 ## 0. Umumiy qoidalar
@@ -65,8 +69,31 @@ o'zbekchada va odam tilida. Mijoz uni o'zgartirmasdan ekranga chiqaradi.
 | 402 | Bepul e'lon kvotasi tugadi | Tarif ekranini taklif qiladi |
 | 404 | Topilmadi | «Topilmadi» holati |
 | 409 | Holat mos emas (masalan, qabul qilib bo'lmaydi) | `detail` ni ko'rsatadi |
+| 403 | Aloqa cheklangan (blok) | `detail` ni ko'rsatadi, qayta urinmaydi |
 | 422 | Validatsiya (masalan, tarjima yetishmaydi) | Maydon ostida xato |
 | 429 | Juda ko'p urinish | Kutishni aytadi |
+| 500 | Serverdagi kutilmagan xato | Pastga qarang |
+| 503 | Server vaqtincha ishlamayapti | «Qayta urinish» tugmasi |
+
+**500 alohida shaklga ega:**
+
+```json
+{
+  "detail": "Serverda kutilmagan xatolik. Birozdan so'ng urinib ko'ring.",
+  "request_id": "a9ee31a85588"
+}
+```
+
+`request_id` — server logidagi to'liq traceback shu id bilan topiladi.
+Mijoz uni xato ekranida **kichik kulrang matn** bilan ko'rsatsin (yoki
+"nusxa olish" tugmasi bersin). Foydalanuvchi skrinshot yuborsa, backendda
+sababni topish uchun shuning o'zi yetarli — aks holda "ishlamadi" degan
+xabardan hech narsa chiqmaydi.
+
+⚠️ **500 endi CORS sarlavhasi bilan keladi.** Ilgari kelmasdi, shuning
+uchun brauzerda har qanday server xatosi "CORS error" bo'lib ko'rinardi.
+Agar frontendda hali ham CORS xatosi ko'rsangiz — bu **haqiqiy** CORS
+muammosi, 500 ning niqobi emas.
 
 ---
 
@@ -196,9 +223,25 @@ darajasida taqiqlangan.
 | Parametr | Tur | Izoh |
 |---|---|---|
 | `tag` | enum | `agri`\|`livestock`\|`machinery`\|`transport`\|`electronics`\|`construction` |
-| `q` | string | Sarlavha, tavsif, kategoriya bo'yicha qidiruv |
+| `q` | string | Sarlavha, tavsif, kategoriya, `wants_summary` bo'yicha qidiruv |
+| `min_value` | int | Eng past narx, **minor birlikda** |
+| `max_value` | int | Eng yuqori narx, minor birlikda |
+| `region` | string | `GET /regions` dagi nom. Egasining viloyati bo'yicha |
+| `cash_ok` | bool | Faqat pul qo'shishga rozi (yoki rozi emas) e'lonlar |
+| `sort` | enum | `new` (standart) \| `cheap` \| `expensive` |
 | `cursor` | string | Oldingi javobdagi `next_cursor` |
 | `limit` | int | 1–50, standart 20 |
+
+⚠️ **Qidiruv barcha tillarda ishlaydi.** `Accept-Language: ru` bo'lsa ham
+o'zbekcha so'z bilan qidirsa topiladi — har bir e'lon uchta tilda saqlanadi.
+Mijoz foydalanuvchini "avval tilni to'g'rilang" deb cheklamasin.
+
+⚠️ **`sort` o'zgarsa `cursor` ni tashlab yuborish shart.** Kursor o'zi
+saralanayotgan kalitni tashiydi, shuning uchun `sort=new` dan olingan kursorni
+`sort=cheap` bilan yuborish mantiqsiz sahifa beradi. Filtr yoki saralash
+o'zgarganda ro'yxatni noldan yuklang.
+
+`min_value > max_value` bo'lsa → **400**.
 
 ```json
 {
@@ -295,6 +338,47 @@ tarjima qilingan e'lon lentaga tushmasligi kerak.
 - `latitude`/`longitude` bo'sh bo'lsa foydalanuvchi profilidan olinadi.
 - `402` qaytishi mumkin: bepul e'lon kvotasi tugagan (`free_listings_left`).
   Biznes hisoblar kvotadan ozod.
+
+### `PATCH /listings/{listing_id}` 🔒 → `ListingDetail`
+
+E'lonni tahrirlash. Barcha maydonlar ixtiyoriy — faqat yuborilganlari
+o'zgaradi. `POST /listings` dagi maydonlarning hammasi qabul qilinadi.
+
+⚠️ Ro'yxat maydonlari (`photos`, `wants`, `desires`) **butunlay
+almashtiriladi**, qo'shilmaydi. Ya'ni bitta surat qo'shish uchun mavjud
+ro'yxatga yangisini qo'shib, to'liq ro'yxatni yuboring.
+
+| Kod | Qachon |
+|---|---|
+| `404` | E'lon yo'q **yoki** sizniki emas |
+| `409` | E'lon yakunlangan/arxivlangan, **yoki** jonli taklif bor |
+
+`409` — ataylab. Kimdir sizga taklif yuborib turganda e'lon matnini
+o'zgartirish, u odam boshqa narsaga rozi bo'lgan degani. Mijoz bu holatda
+"avval takliflarni yakunlang" deb tushuntirsin.
+
+### `DELETE /listings/{listing_id}` 🔒 → `204`
+
+Yumshoq o'chirish: status `archived` bo'ladi, ma'lumot yo'qolmaydi.
+Idempotent — arxivlangan e'lonni qayta o'chirish ham `204` beradi.
+Xuddi `PATCH` kabi jonli taklif bo'lsa `409`.
+
+---
+
+## 3.5 Kategoriyalar
+
+### `GET /categories` → `CategoryOut[]`
+
+```json
+[{ "id": "agri", "name": "Qishloq xo'jaligi", "image_url": "https://..." }]
+```
+
+`name` — `Accept-Language` ga qarab uch tildan biri. `id` — `tag` enum
+qiymati, ya'ni to'g'ridan-to'g'ri `GET /listings?tag=` ga beriladi.
+
+⚠️ **Kategoriya nomlarini mijozda hardcode qilmang.** Ilgari shunday edi va
+RU/EN tillarida o'zbekcha nomlar ko'rinardi. Rasm URL'lari ham shu yerdan
+keladi — mijozdagi ro'yxat eskirsa 404 rasm chiqadi.
 
 ---
 
@@ -412,10 +496,21 @@ xabarlarni qayta yuklamasdan yangilash uchun.
 → { "body": "Kelishdik!", "photo_url": null }
 ```
 
-### `WS /ws?token=<access_token>`
+### `GET /ws-ticket` 🔒 → `{ "ticket": "..." }`
 
-⚠️ Token **query parametrda** — brauzer WebSocket handshake'ida header
-qo'ya olmaydi.
+Soketga ulanishdan **oldin** shu chaqiriladi. Qaytgan chipta bir necha
+soniyagina yashaydi va faqat soket handshake'i uchun yaroqli.
+
+### `WS /ws?token=<ticket>`
+
+⚠️ **Bu yerga access token yubormang — rad etiladi.** Ilgari shunday edi va
+bu xavfsizlik nuqsoni edi: brauzer WebSocket handshake'ida header qo'ya
+olmaydi, shuning uchun token URL'ga tushardi, URL esa server loglarida,
+proksi yozuvlarida va brauzer tarixida qoladi. Endi o'sha joyga faqat qisqa
+muddatli chipta tushadi.
+
+Ketma-ketlik: `GET /ws-ticket` → darhol `WS /ws?token=<ticket>`.
+Ulanish uzilsa chiptani **qaytadan** oling, eskisini saqlab qo'ymang.
 
 Serverdan keladigan hodisalar:
 
@@ -521,6 +616,69 @@ olib tashlaydi. Fayl nomini server beradi.
 
 Qaytgan `url` ni `POST /listings` ning `photos` massiviga yoki
 `PATCH /me` ning `avatar_url` iga qo'ying.
+
+---
+
+## 7.7 Bloklash va shikoyat
+
+### `POST /blocks/{user_id}` 🔒 → `204`
+
+Savdogarni bloklash. **Idempotent** — ikkinchi marta bosish ham `204`.
+
+Blok darhol uch joyda kuchga kiradi:
+- e'lonlari lentadan, qidiruvdan va saralangan ro'yxatdan yo'qoladi;
+- ikkala tomon bir-biriga taklif yubora olmaydi → `403`;
+- mavjud suhbatga yangi xabar yozib bo'lmaydi → `403`.
+
+⚠️ **Eski suhbat o'qiladigan bo'lib qoladi** — blok aytilgan gapni
+o'chirmaydi. Mijoz chatni ochsin, lekin yozish maydonini o'chirib qo'ysin va
+sababini yozsin. Aks holda odam xabar yozib, `403` olib, nima
+bo'layotganini tushunmaydi.
+
+⚠️ **Ta'sir ikki tomonlama, yechish esa bir tomonlama.** Sizni bloklagan
+odamni siz "unblock" qila olmaysiz — `DELETE` `204` qaytaradi, lekin hech
+narsa o'zgarmaydi. Mijoz "blokni yechdim, nega hali ham ko'rinmaydi?"
+holatiga tushmasligi uchun faqat `GET /blocks` dagilarni yechiladigan qilib
+ko'rsatsin.
+
+| Kod | Qachon |
+|---|---|
+| `400` | O'zini bloklash |
+| `404` | Bunday foydalanuvchi yo'q |
+
+### `DELETE /blocks/{user_id}` 🔒 → `204`
+
+O'z blokini yechish. Idempotent.
+
+### `GET /blocks` 🔒 → `TraderBrief[]`
+
+**Faqat o'zingiz qo'ygan bloklar.** Sizni kim bloklagani ko'rsatilmaydi —
+bu ataylab, aks holda blok qo'yish faktining o'zi ma'lumotga aylanadi.
+
+### `POST /reports` 🔒 → `ReportOut` (201)
+
+```json
+{
+  "target_type": "listing",
+  "target_id": "uuid",
+  "reason": "scam",
+  "note": "Narxi haqiqiy emas."
+}
+```
+
+`target_type`: `user` | `listing`
+`reason`: `spam` | `scam` | `offensive` | `fake` | `illegal` | `other`
+`note`: ixtiyoriy, 1000 belgigacha.
+
+⚠️ **Takroriy shikoyat xato emas.** Bir odam bir obyekt haqida ikkinchi
+marta yozsa, `201` va **birinchi shikoyatning o'zi** qaytadi. Mijoz buni
+xato deb ko'rsatmasin — "shikoyatingiz qabul qilindi" deyaverish to'g'ri.
+
+| Kod | Qachon |
+|---|---|
+| `400` | O'zi haqida shikoyat |
+| `404` | Shikoyat obyekti topilmadi |
+| `422` | Noma'lum `reason` |
 
 ---
 
