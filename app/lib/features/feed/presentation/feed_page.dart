@@ -85,7 +85,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     ref.listen(feedQueryProvider, (_, _) => _revealed.clear());
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainer,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       body: RefreshIndicator(
         displacement: 120,
         onRefresh: () async {

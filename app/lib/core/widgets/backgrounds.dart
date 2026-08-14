@@ -313,57 +313,12 @@ class SwapBanner extends StatelessWidget {
       height: height,
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: const PanningSvgBackground(),
+        child: SvgPicture.asset(
+          'assets/images/header_bg.svg',
+          fit: BoxFit.cover,
+          width: MediaQuery.of(context).size.width,
+        ),
       ),
-    );
-  }
-}
-
-class PanningSvgBackground extends StatefulWidget {
-  const PanningSvgBackground({super.key});
-
-  @override
-  State<PanningSvgBackground> createState() => _PanningSvgBackgroundState();
-}
-
-class _PanningSvgBackgroundState extends State<PanningSvgBackground> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final t = Curves.easeInOutSine.transform(_controller.value);
-        // Smoothly pan left and right without jumping
-        final panX = -(t * 150.0);
-        return Transform.translate(
-          offset: Offset(panX, 0),
-          child: Transform.scale(
-            scale: 1.5,
-            child: SvgPicture.asset(
-              'assets/images/header_bg.svg',
-              fit: BoxFit.cover,
-              width: MediaQuery.of(context).size.width * 1.5,
-            ),
-          ),
-        );
-      },
     );
   }
 }

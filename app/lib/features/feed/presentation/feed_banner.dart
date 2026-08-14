@@ -132,10 +132,14 @@ class _Strip extends StatelessWidget {
               child: Stack(
                 children: [
                   // The pattern from the header SVG for the banner background
-                  const Positioned.fill(
+                  Positioned.fill(
                     child: Opacity(
                       opacity: 0.8,
-                      child: PanningSvgBackground(),
+                      child: SvgPicture.asset(
+                        'assets/images/header_bg.svg',
+                        fit: BoxFit.cover,
+                        width: MediaQuery.of(context).size.width,
+                      ),
                     ),
                   ),
                   Padding(
