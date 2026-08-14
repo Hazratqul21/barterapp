@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import enum
 import uuid
 from datetime import UTC, datetime
 
@@ -41,18 +42,74 @@ router = APIRouter(prefix="/listings", tags=["listings"])
 PAGE_SIZE = 20
 
 
-def _encode_cursor(created_at: datetime, listing_id: uuid.UUID) -> str:
-    raw = f"{created_at.isoformat()}|{listing_id}"
+class FeedSort(str, enum.Enum):
+    """
+    How the feed is ordered. The cursor carries whichever key is sorted on, so
+    changing the order does not break paging.
+    """
+
+    new = "new"
+    cheap = "cheap"
+    expensive = "expensive"
+
+
+def _encode_cursor(key: str, listing_id: uuid.UUID) -> str:
+    raw = f"{key}|{listing_id}"
     return base64.urlsafe_b64encode(raw.encode()).decode()
 
 
-def _decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
+def _decode_cursor(cursor: str) -> tuple[str, uuid.UUID]:
     try:
         raw = base64.urlsafe_b64decode(cursor.encode()).decode()
-        stamp, listing_id = raw.split("|")
-        return datetime.fromisoformat(stamp), uuid.UUID(listing_id)
+        key, listing_id = raw.rsplit("|", 1)
+        return key, uuid.UUID(listing_id)
     except Exception:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kursor yaroqsiz.")
+
+
+def _sort_key(sort: FeedSort, listing: Listing) -> str:
+    if sort is FeedSort.new:
+        return listing.created_at.isoformat()
+    return str(listing.value_minor)
+
+
+def _paginate(query, sort: FeedSort, cursor: str | None):
+    """
+    Apply the ordering, and the seek condition when a page was already served.
+
+    Every order is a pair — the sorted column then `id` — because `created_at`
+    and `value_minor` both repeat. Without the tie-breaker two listings sharing
+    a value can swap places between requests, which shows one of them twice and
+    hides the other entirely.
+    """
+    if sort is FeedSort.new:
+        column, descending = Listing.created_at, True
+    elif sort is FeedSort.expensive:
+        column, descending = Listing.value_minor, True
+    else:
+        column, descending = Listing.value_minor, False
+
+    if cursor:
+        key, last_id = _decode_cursor(cursor)
+        try:
+            edge = (
+                datetime.fromisoformat(key) if sort is FeedSort.new else int(key)
+            )
+        except ValueError:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kursor yaroqsiz.")
+
+        if descending:
+            query = query.where(
+                or_(column < edge, (column == edge) & (Listing.id < last_id))
+            )
+        else:
+            query = query.where(
+                or_(column > edge, (column == edge) & (Listing.id > last_id))
+            )
+
+    if descending:
+        return query.order_by(column.desc(), Listing.id.desc())
+    return query.order_by(column.asc(), Listing.id.asc())
 
 
 #: How far either side of its own worth a listing will look when the owner did
@@ -114,6 +171,11 @@ async def _owners_for(
 async def list_listings(
     tag: ListingTag | None = None,
     q: str | None = Query(default=None, max_length=120),
+    min_value: int | None = Query(default=None, ge=0),
+    max_value: int | None = Query(default=None, ge=0),
+    region: str | None = Query(default=None, max_length=80),
+    cash_ok: bool | None = None,
+    sort: FeedSort = FeedSort.new,
     cursor: str | None = None,
     limit: int = Query(default=PAGE_SIZE, ge=1, le=50),
     locale: str = Depends(resolve_locale),
@@ -123,7 +185,16 @@ async def list_listings(
     """
     The discovery feed. Your own listings are excluded — they live on your
     profile, and seeing them here was one of the prototype's identity bugs.
+
+    `min_value`/`max_value` are in minor units, the same as `value.minor`
+    everywhere else, so a client never has to know a currency's exponent.
     """
+    if min_value is not None and max_value is not None and min_value > max_value:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Eng kichik narx eng kattasidan katta bo'lishi mumkin emas.",
+        )
+
     query = (
         select(Listing)
         .options(
@@ -138,28 +209,50 @@ async def list_listings(
     if tag is not None:
         query = query.where(Listing.tag == tag)
 
-    if q:
-        needle = f"%{q.lower()}%"
-        query = query.join(ListingTranslation).where(
-            ListingTranslation.locale == locale,
-            or_(
-                ListingTranslation.title.ilike(needle),
-                ListingTranslation.description.ilike(needle),
-                ListingTranslation.wants_summary.ilike(needle),
-                ListingTranslation.category.ilike(needle),
-            ),
+    if min_value is not None:
+        query = query.where(Listing.value_minor >= min_value)
+    if max_value is not None:
+        query = query.where(Listing.value_minor <= max_value)
+    if cash_ok is not None:
+        query = query.where(Listing.cash_ok == cash_ok)
+
+    if region:
+        # Listings carry coordinates but not a region name, so the filter runs
+        # through the owner. A subquery rather than a join: joining users would
+        # multiply nothing here, but it would also let a later `.distinct()`
+        # requirement creep in, and this reads as what it is — "owned by
+        # somebody in this region".
+        query = query.where(
+            Listing.owner_id.in_(select(User.id).where(User.region == region))
         )
 
-    if cursor:
-        created_at, last_id = _decode_cursor(cursor)
+    if q:
+        # Searched across every language, not just the one being read. Each
+        # listing is stored in all three, so scoping to the current locale meant
+        # a Russian reader typing an Uzbek word — which is how half the country
+        # writes a product name — got an empty feed while the listing sat right
+        # there. Matching by subquery keeps one row per listing; a join would
+        # return the same listing up to three times.
+        #
+        # `%` and `_` are wildcards to LIKE, so a search for "50%" or "_" was
+        # read as a pattern and matched everything. Escaped here, with the
+        # escape character declared on each clause.
+        safe = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        needle = f"%{safe}%"
         query = query.where(
-            or_(
-                Listing.created_at < created_at,
-                (Listing.created_at == created_at) & (Listing.id < last_id),
+            Listing.id.in_(
+                select(ListingTranslation.listing_id).where(
+                    or_(
+                        ListingTranslation.title.ilike(needle, escape="\\"),
+                        ListingTranslation.description.ilike(needle, escape="\\"),
+                        ListingTranslation.wants_summary.ilike(needle, escape="\\"),
+                        ListingTranslation.category.ilike(needle, escape="\\"),
+                    )
+                )
             )
         )
 
-    query = query.order_by(Listing.created_at.desc(), Listing.id.desc()).limit(limit + 1)
+    query = _paginate(query, sort, cursor).limit(limit + 1)
 
     rows = list((await db.scalars(query)).unique().all())
     has_more = len(rows) > limit
@@ -182,7 +275,9 @@ async def list_listings(
     ]
 
     next_cursor = (
-        _encode_cursor(rows[-1].created_at, rows[-1].id) if has_more and rows else None
+        _encode_cursor(_sort_key(sort, rows[-1]), rows[-1].id)
+        if has_more and rows
+        else None
     )
     return Page[ListingCard](items=items, next_cursor=next_cursor)
 

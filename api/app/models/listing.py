@@ -103,6 +103,9 @@ class Listing(Base, UUIDPrimaryKey, Timestamps):
     __table_args__ = (
         CheckConstraint("value_minor >= 0", name="value_non_negative"),
         Index("ix_listings_feed", "status", "tag", "created_at"),
+        # `sort=cheap|expensive` orders on value, which ix_listings_feed cannot
+        # serve. `id` is part of the key because it is the cursor's tie-breaker.
+        Index("ix_listings_price", "status", "value_minor", "id"),
     )
 
 
