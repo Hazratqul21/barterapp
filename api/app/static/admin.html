@@ -69,6 +69,7 @@
     <button data-tab="reports">Shikoyatlar</button>
     <button data-tab="push">Bildirishnoma</button>
     <button data-tab="stats">Tahlil</button>
+    <button data-tab="setup">Sozlash</button>
   </nav>
   <span style="flex:1"></span>
   <button id="out" class="act ghost hide" onclick="signOut()">Chiqish</button>
@@ -262,6 +263,80 @@
     </div>
   </section>
 
+  <!-- ── Sozlash ──────────────────────────────────────────────────── -->
+  <section id="setup" class="hide">
+    <div class="card">
+      <h2>Firebase — holat</h2>
+      <div class="stat" id="fbStat"></div>
+      <p class="hint" id="fbHint"></p>
+    </div>
+
+    <div class="card">
+      <h2>1. Server kaliti — xabar yuborish uchun</h2>
+      <p class="hint">Firebase konsolida: <b>Project settings → Service
+        accounts → Generate new private key</b>. Yuklab olingan JSON
+        faylni tanlang yoki mazmunini pastga qo'ying.</p>
+
+      <label>JSON fayl</label>
+      <input type="file" id="saFile" accept="application/json,.json"
+             onchange="readServiceAccount(event)">
+
+      <label>yoki mazmuni</label>
+      <textarea id="saText" style="min-height:120px;font-family:ui-monospace,monospace;font-size:12px"
+                placeholder='{ "type": "service_account", ... }'></textarea>
+      <p class="hint">⚠️ Kalit saqlangandan keyin <b>qayta o'qib
+        bo'lmaydi</b> — API faqat «sozlangan» deb javob beradi. Bu
+        ataylab: panelga kirgan har kim uni ko'chirib olib keta olmasin.
+        Almashtirish uchun yangisini qo'yish yetarli.</p>
+
+      <div class="bar">
+        <button class="act" onclick="saveServiceAccount()">Saqlash</button>
+        <button class="act ghost" onclick="testFirebase()">Kalitni sinash</button>
+        <button class="act danger" onclick="clearServiceAccount()">Olib tashlash</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Ilova parametrlari — xabar qabul qilish uchun</h2>
+      <p class="hint">Firebase konsolida ilovangizni tanlang →
+        <b>SDK setup and configuration</b>. Bu qiymatlar maxfiy emas.</p>
+
+      <div class="row">
+        <div><label>API key</label><input id="fcApiKey"></div>
+        <div><label>App ID</label><input id="fcAppId"></div>
+      </div>
+      <div class="row">
+        <div><label>Messaging sender ID</label><input id="fcSender"></div>
+        <div><label>Project ID</label><input id="fcProject"></div>
+      </div>
+      <div class="row">
+        <div><label>iOS bundle ID (ixtiyoriy)</label>
+          <input id="fcBundle" placeholder="uz.barterapp.barterApp"></div>
+      </div>
+
+      <div class="bar">
+        <button class="act" onclick="saveClientConfig()">Saqlash</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Buni panel qila olmaydi</h2>
+      <p class="hint" style="font-size:13px;line-height:1.7">
+        <b>APNs kaliti</b> — iOS'ga push yuborish uchun Apple Developer
+        hisobingizdan <code>.p8</code> kalit olib, uni <b>Firebase
+        konsoliga</b> yuklash kerak (Project settings → Cloud Messaging →
+        APNs Authentication Key). Bu Google va Apple o'rtasidagi bog'lanish
+        — server undan o'tmaydi.<br><br>
+        <b>Push entitlement</b> — <code>Runner.entitlements</code> ga
+        <code>aps-environment</code> qo'shilishi va ilova shu bilan qayta
+        imzolanishi kerak. Bu ilova ichiga kompilyatsiya qilinadi, ya'ni
+        yangi reliz talab qiladi.<br><br>
+        Ikkalasi bir marta qilinadi. Shundan keyin kalit almashtirish
+        faqat shu sahifadan bo'ladi.
+      </p>
+    </div>
+  </section>
+
   <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
   <section id="stats" class="hide">
     <div class="card">
@@ -352,7 +427,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'stats', 'push'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -369,7 +444,7 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'stats', 'push'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
@@ -377,6 +452,7 @@ function show(tab) {
   if (tab === 'reports') loadReports();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
+  if (tab === 'setup') loadFirebase();
 }
 
 document.querySelectorAll('#nav button').forEach(b =>
@@ -581,6 +657,87 @@ async function sendPush(dry) {
       ? `Bu xabar ${r.recipients} ta odamga tegadi. Hali yuborilmadi.`
       : `${r.queued} ta bildirishnoma navbatga qo‘yildi.`, true);
     if (!dry) loadPush();
+  } catch (e) { say(e.message); }
+}
+
+// ── Firebase sozlash ──────────────────────────────────────────────────
+
+async function loadFirebase() {
+  try {
+    const f = await api('/admin/firebase');
+    $('fbStat').innerHTML = [
+      ['Server (yuborish)', f.server_ready ? 'tayyor' : 'yo‘q'],
+      ['Ilova (qabul)', f.client_ready ? 'tayyor' : 'yo‘q'],
+      ['Loyiha', f.server_project_id || '—'],
+      ['Kalit izi', f.server_key_fingerprint || '—'],
+    ].map(([k, v]) => `<div><b style="font-size:15px">${esc(v)}</b><span>${k}</span></div>`).join('');
+
+    $('fbHint').innerHTML = f.server_ready && f.client_ready
+      ? '✅ Ikkala tomon ham sozlangan. Push yuborilganda telefonlarga boradi — ' +
+        'agar APNs kaliti va entitlement ham qilingan bo‘lsa (3-band).'
+      : '⚠️ Push hali telefonlarga bormaydi. Xabar navbatga tushadi va logga yoziladi.';
+
+    if (f.client) {
+      $('fcApiKey').value = f.client.api_key || '';
+      $('fcAppId').value = f.client.app_id || '';
+      $('fcSender').value = f.client.messaging_sender_id || '';
+      $('fcProject').value = f.client.project_id || '';
+      $('fcBundle').value = f.client.ios_bundle_id || '';
+    }
+  } catch (e) { say(e.message); }
+}
+
+function readServiceAccount(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { $('saText').value = reader.result; };
+  reader.readAsText(file);
+}
+
+async function saveServiceAccount() {
+  const text = $('saText').value.trim();
+  if (!text) { say('Fayl tanlanmadi.'); return; }
+  try {
+    await api('/admin/firebase/server', {
+      method: 'PUT', body: JSON.stringify({ service_account: text }),
+    });
+    $('saText').value = '';
+    $('saFile').value = '';
+    say('Kalit saqlandi. Keyingi yuborishdan boshlab ishlaydi.', true);
+    loadFirebase();
+  } catch (e) { say(e.message); }
+}
+
+async function testFirebase() {
+  try {
+    const r = await api('/admin/firebase/test', { method: 'POST' });
+    say(`Kalit ishlayapti. Loyiha: ${r.project_id}`, true);
+  } catch (e) { say(e.message); }
+}
+
+async function clearServiceAccount() {
+  if (!confirm('Kalit olib tashlanadi va push quruq rejimga qaytadi.')) return;
+  try {
+    await api('/admin/firebase/server', { method: 'DELETE' });
+    say('Olib tashlandi.', true); loadFirebase();
+  } catch (e) { say(e.message); }
+}
+
+async function saveClientConfig() {
+  try {
+    await api('/admin/firebase/client', {
+      method: 'PUT',
+      body: JSON.stringify({
+        api_key: $('fcApiKey').value.trim(),
+        app_id: $('fcAppId').value.trim(),
+        messaging_sender_id: $('fcSender').value.trim(),
+        project_id: $('fcProject').value.trim(),
+        ios_bundle_id: $('fcBundle').value.trim() || null,
+      }),
+    });
+    say('Saqlandi. Ilova keyingi ochilishda oladi.', true);
+    loadFirebase();
   } catch (e) { say(e.message); }
 }
 

@@ -280,3 +280,27 @@ async def deliver_pending(
         await db.commit()
 
     return report
+
+
+async def transport_for(db: AsyncSession) -> Transport:
+    """
+    Sozlangan bo'lsa haqiqiy transport, aks holda logga yozadigani.
+
+    Har yurishda bazadan o'qiladi: kalit admin paneldan qo'yilgach, keyingi
+    yurishda o'zi ishlay boshlaydi — serverni qayta ishga tushirish shart
+    emas. Aynan shuning uchun kalit `.env` da emas.
+    """
+    from app.services import settings_store
+    from app.services.fcm import FcmError, FcmTransport, ServiceAccount
+
+    raw = await settings_store.get(db, settings_store.FCM_SERVICE_ACCOUNT)
+    if not raw:
+        return LogTransport()
+
+    try:
+        return FcmTransport(ServiceAccount.parse(raw))
+    except FcmError:
+        # Buzuq kalit tufayli navbat to'xtab qolmasin: xabarlar logga
+        # yoziladi va qatorlar joyida qoladi.
+        log.exception("FCM kaliti yaroqsiz — quruq rejimga qaytildi")
+        return LogTransport()

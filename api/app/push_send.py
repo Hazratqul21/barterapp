@@ -14,12 +14,15 @@ import asyncio
 import logging
 
 from app.db.session import SessionLocal
-from app.services.push import BATCH, deliver_pending
+from app.services.push import BATCH, deliver_pending, transport_for
 
 
 async def main(*, dry_run: bool, limit: int) -> None:
     async with SessionLocal() as db:
-        report = await deliver_pending(db, limit=limit, dry_run=dry_run)
+        transport = await transport_for(db)
+        report = await deliver_pending(
+            db, transport=transport, limit=limit, dry_run=dry_run
+        )
 
     print(
         f"{'[quruq yurish] ' if dry_run else ''}"

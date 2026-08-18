@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import enum
+import json
+import logging
 import uuid
 from datetime import UTC, datetime
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import Field, field_validator
 from sqlalchemy import func, select
@@ -23,10 +26,13 @@ from app.models.moderation import (
 from app.models.social import Notification, NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.common import ApiModel
-from app.services import analytics
+from app.services import analytics, settings_store
+from app.services.fcm import FcmError, FcmTransport, ServiceAccount
 from app.services.matching import rebuild_matches
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+log = logging.getLogger("barter.admin")
 
 
 class ReportRow(ApiModel):
@@ -432,3 +438,156 @@ async def push_status(
         "by_platform": {p.value: n for p, n in by_platform},
         "queued": pending or 0,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Firebase sozlamasi
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class FirebaseClientIn(ApiModel):
+    """
+    Mijoz tomoni uchun parametrlar — Firebase konsolidagi «Web app» yoki
+    platforma sozlamalaridan.
+
+    Bular maxfiy emas: ular baribir ilova ichida bo'ladi va Google
+    hujjatlari ham ularni ochiq deb ataydi. Maxfiy bo'lgani — service
+    account kaliti, u alohida va o'qib bo'lmaydi.
+    """
+
+    api_key: str = Field(min_length=10)
+    app_id: str = Field(min_length=5)
+    messaging_sender_id: str = Field(min_length=3)
+    project_id: str = Field(min_length=3)
+    #: iOS uchun. Android'da kerak emas.
+    ios_bundle_id: str | None = None
+
+
+class FirebaseStatus(ApiModel):
+    #: Server xabar yubora oladimi.
+    server_ready: bool
+    #: Kalitning izi — qaysi kalit turganini ajratish uchun. Kalitning
+    #: o'zi hech qachon qaytarilmaydi.
+    server_key_fingerprint: str | None = None
+    server_project_id: str | None = None
+
+    #: Ilova xabar qabul qila oladimi.
+    client_ready: bool
+    client: FirebaseClientIn | None = None
+
+
+@router.get("/firebase", response_model=FirebaseStatus)
+async def firebase_status(
+    me: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> FirebaseStatus:
+    """
+    Nima sozlangan.
+
+    Service account kaliti **qaytarilmaydi** — faqat izi. Panelga kirish
+    huquqi bo'lgan hisob yoki o'g'irlangan sessiya kalitni ko'chirib olib
+    keta olmasin: uni almashtirish uchun yozish yetarli.
+    """
+    raw = await settings_store.get(db, settings_store.FCM_SERVICE_ACCOUNT)
+    project_id = None
+    if raw:
+        try:
+            project_id = ServiceAccount.parse(raw).project_id
+        except FcmError:
+            project_id = None
+
+    client_raw = await settings_store.get(db, settings_store.FIREBASE_CLIENT)
+    client = FirebaseClientIn(**json.loads(client_raw)) if client_raw else None
+
+    return FirebaseStatus(
+        server_ready=bool(raw) and project_id is not None,
+        server_key_fingerprint=settings_store.fingerprint(raw) if raw else None,
+        server_project_id=project_id,
+        client_ready=client is not None,
+        client=client,
+    )
+
+
+class ServiceAccountIn(ApiModel):
+    #: Firebase konsolidan yuklab olingan JSON faylning butun mazmuni.
+    service_account: str
+
+
+@router.put("/firebase/server", response_model=FirebaseStatus)
+async def set_service_account(
+    payload: ServiceAccountIn,
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> FirebaseStatus:
+    """
+    Server kalitini qo'yish.
+
+    Fayl saqlashdan **oldin** tekshiriladi: noto'g'ri fayl qo'yilishi eng
+    ehtimolli xato, va uni yuborishga urinilganda emas, aynan shu yerda
+    aytish kerak. Aks holda kalit qo'yilgandek ko'rinadi va nima uchun
+    hech kim xabar olmayotgani bir hafta izlanadi.
+    """
+    try:
+        account = ServiceAccount.parse(payload.service_account)
+    except FcmError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    await settings_store.put(
+        db, settings_store.FCM_SERVICE_ACCOUNT, payload.service_account
+    )
+    await db.commit()
+    log.info("FCM kaliti almashtirildi (loyiha: %s)", account.project_id)
+    return await firebase_status(me=me, db=db)
+
+
+@router.put("/firebase/client", response_model=FirebaseStatus)
+async def set_client_config(
+    payload: FirebaseClientIn,
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> FirebaseStatus:
+    """Ilova ishga tushganda oladigan parametrlar."""
+    await settings_store.put(
+        db, settings_store.FIREBASE_CLIENT, json.dumps(payload.model_dump())
+    )
+    await db.commit()
+    return await firebase_status(me=me, db=db)
+
+
+@router.delete("/firebase/server", response_model=FirebaseStatus)
+async def clear_service_account(
+    me: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> FirebaseStatus:
+    """Kalitni olib tashlash — push quruq rejimga qaytadi."""
+    await settings_store.drop(db, settings_store.FCM_SERVICE_ACCOUNT)
+    await db.commit()
+    return await firebase_status(me=me, db=db)
+
+
+@router.post("/firebase/test")
+async def firebase_test(
+    me: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Kalit haqiqatan ishlaydimi — Google'dan token so'rab ko'radi.
+
+    Xabar yubormaydi: tokenni ololsa, kalit to'g'ri va ruxsatlar joyida.
+    Bu tekshiruvni panelda bosish mumkin, ya'ni "kalit ishlayaptimi"
+    degan savolga birinchi haqiqiy push kutmasdan javob bor.
+    """
+    raw = await settings_store.get(db, settings_store.FCM_SERVICE_ACCOUNT)
+    if not raw:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kalit qo'yilmagan.")
+
+    try:
+        account = ServiceAccount.parse(raw)
+        transport = FcmTransport(account)
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            await transport._access_token(client)
+    except FcmError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, f"Google bilan aloqa bo'lmadi: {exc}"
+        ) from exc
+
+    return {"ok": True, "project_id": account.project_id}

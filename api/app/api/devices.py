@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, status
@@ -15,6 +16,7 @@ from app.models.device import Device, DevicePlatform
 from app.models.notify_pref import NotificationSetting
 from app.models.user import User
 from app.schemas.common import ApiModel
+from app.services import settings_store
 
 router = APIRouter(tags=["devices"])
 
@@ -186,3 +188,39 @@ async def update_notification_settings(
         quiet_from=row.quiet_from,
         quiet_to=row.quiet_to,
     )
+
+
+class FirebaseConfigOut(ApiModel):
+    """Ilova ishga tushganda oladigan Firebase parametrlari."""
+
+    configured: bool
+    api_key: str | None = None
+    app_id: str | None = None
+    messaging_sender_id: str | None = None
+    project_id: str | None = None
+    ios_bundle_id: str | None = None
+
+
+@router.get("/config/firebase", response_model=FirebaseConfigOut, tags=["meta"])
+async def firebase_config(db: AsyncSession = Depends(get_db)) -> FirebaseConfigOut:
+    """
+    Push uchun mijoz parametrlari.
+
+    Ilova ichiga fayl joylashtirish o'rniga shu yerdan olinadi: fayl
+    kompilyatsiya vaqtida kerak bo'ladi, ya'ni kalit almashtirilsa yangi
+    reliz chiqarish kerak bo'lardi. Bu yerdan olinsa — server sozlamasi
+    o'zgargani bilan yetarli.
+
+    Kirish talab qilinmaydi va bu to'g'ri: bu qiymatlar maxfiy emas,
+    ular baribir har bir o'rnatilgan ilova ichida bo'ladi. Maxfiy bo'lgani
+    — server kaliti, u bu yerdan hech qachon chiqmaydi.
+
+    `configured: false` bo'lsa ilova pushni o'chirib qo'yadi va oddiy
+    ishlashda davom etadi.
+    """
+    raw = await settings_store.get(db, settings_store.FIREBASE_CLIENT)
+    if not raw:
+        return FirebaseConfigOut(configured=False)
+
+    data = json.loads(raw)
+    return FirebaseConfigOut(configured=True, **data)

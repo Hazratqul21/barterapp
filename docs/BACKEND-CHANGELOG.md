@@ -25,6 +25,47 @@
 
 ## 2026-08-18
 
+### 🆕⚠️ Firebase admin paneldan sozlanadi
+
+Panelda yangi bo'lim: **Sozlash**. Ikkita qadam:
+
+1. **Server kaliti** — Firebase service account JSON. Fayl tanlanadi yoki
+   mazmuni qo'yiladi. Saqlashdan oldin tekshiriladi va `Kalitni sinash`
+   tugmasi Google'dan token so'rab, haqiqatan ishlashini tasdiqlaydi.
+2. **Ilova parametrlari** — `api_key`, `app_id`, `messaging_sender_id`,
+   `project_id`, `ios_bundle_id`.
+
+Kalit qo'yilgach transport **o'zi almashadi** — serverni qayta ishga
+tushirish shart emas.
+
+⚠️ **Kalit qaytarilmaydi.** API faqat "sozlangan/sozlanmagan" va izini
+(12 belgi) beradi. Panelga kirgan hisob yoki o'g'irlangan sessiya kalitni
+ko'chirib olib keta olmasin — almashtirish uchun yozish yetarli.
+
+**UI da nima kerak — yangi ommaviy endpoint:**
+
+```
+GET /config/firebase → { "configured": true, "api_key": "...", ... }
+```
+
+- 🎨 Ilova ishga tushganda shuni oladi va `Firebase.initializeApp(options: ...)`
+  ga beradi. Ilova ichiga `GoogleService-Info.plist` joylashtirish
+  **shart emas** — kalit almashtirilsa yangi reliz kerak bo'lmaydi.
+- `configured: false` bo'lsa push o'chirilgan holatda qoladi, ilova
+  oddiy ishlashda davom etadi.
+- Kirish talab qilinmaydi: bu qiymatlar maxfiy emas, ular baribir har bir
+  o'rnatilgan ilova ichida bo'ladi.
+
+⚠️ **Panel qila olmaydigan ikkita narsa** (panelda ham yozilgan):
+- **APNs `.p8` kaliti** — Apple Developer hisobidan olinib, Firebase
+  konsoliga yuklanadi. Bu Google va Apple o'rtasidagi bog'lanish, server
+  undan o'tmaydi.
+- **Push entitlement** (`aps-environment`) — ilova ichiga kompilyatsiya
+  qilinadi, ya'ni yangi reliz talab qiladi.
+
+Ikkalasi bir marta qilinadi; shundan keyin kalit almashtirish faqat
+paneldan bo'ladi.
+
 ### 🆕 Panel orqali bildirishnoma yuborish
 
 Panelda yangi bo'lim: **Bildirishnoma**. `POST /admin/push` va
