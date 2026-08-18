@@ -32,20 +32,25 @@ class AuthRepository {
     return tokens['is_new_user'] as bool? ?? false;
   }
 
-  Future<Me> me() =>
-      _api.get('/me', parse: (data) => Me.fromJson(data as Map<String, dynamic>));
+  Future<Me> me() => _api.get(
+    '/me',
+    parse: (data) => Me.fromJson(data as Map<String, dynamic>),
+  );
 
-  Future<Me> updateProfile(Map<String, dynamic> body) =>
-      _api.patch('/me', body: body, parse: (data) => Me.fromJson(data as Map<String, dynamic>));
+  Future<Me> updateProfile(Map<String, dynamic> body) => _api.patch(
+    '/me',
+    body: body,
+    parse: (data) => Me.fromJson(data as Map<String, dynamic>),
+  );
 
   /// The regions an account can be placed in.
   ///
   /// Fetched rather than baked into the app: picking one is also what gives the
   /// account coordinates, and distance is 30% of every match score.
-  Future<List<String>> regions() => _api.get(
-    '/regions',
-    parse: (data) => (data as List).cast<String>(),
-  );
+  Future<List<String>> regions() =>
+      _api.get('/regions', parse: (data) => (data as List).cast<String>());
+
+  Future<void> deleteAccount() => _api.delete('/me', parse: (_) {});
 
   Future<void> signOut() => _session.clear();
 }

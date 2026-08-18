@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:animations/animations.dart';
 
+import '../theme/app_theme.dart';
+import '../../shared/models/models.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/feed/presentation/feed_page.dart';
 import '../../features/listing/presentation/listing_detail_page.dart';
@@ -11,6 +14,8 @@ import '../../features/profile/presentation/profile_edit_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/profile/presentation/settings_page.dart';
 import '../../features/profile/presentation/verification_page.dart';
+import '../../features/profile/presentation/favorites_page.dart';
+import '../../features/profile/presentation/notification_settings_page.dart';
 import '../../features/trade/presentation/chat_page.dart';
 import '../../features/trade/presentation/create_listing_page.dart';
 import '../../features/trade/presentation/inbox_page.dart';
@@ -55,8 +60,19 @@ GoRouter buildRouter() {
         pageBuilder: (context, state) =>
             risingPage(key: state.pageKey, child: const SignInPage()),
       ),
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (context, state, shell) => AppShell(navigationShell: shell),
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          // Provide children to the AppShell or just manage it here?
+          // Since AppShell expects just `navigationShell`, we actually don't need
+          // to manage the children here if we just want `AppShell` to receive
+          // the animated child. But wait, `AppShell` takes `navigationShell`.
+          // We can just create an AnimatedBranchContainer here.
+          return AnimatedBranchContainer(
+            currentIndex: navigationShell.currentIndex,
+            children: children,
+          );
+        },
         branches: [
           StatefulShellBranch(
             routes: [
@@ -135,8 +151,12 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/create',
         parentNavigatorKey: _rootKey,
-        pageBuilder: (context, state) =>
-            risingPage(key: state.pageKey, child: const CreateListingPage()),
+        pageBuilder: (context, state) => risingPage(
+          key: state.pageKey,
+          child: CreateListingPage(
+            listingToEdit: state.extra as ListingDetail?,
+          ),
+        ),
       ),
       GoRoute(
         path: '/notifications',
@@ -159,15 +179,69 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/onboarding',
         parentNavigatorKey: _rootKey,
-        pageBuilder: (context, state) =>
-            risingPage(key: state.pageKey, child: const ProfileEditPage(isOnboarding: true)),
+        pageBuilder: (context, state) => risingPage(
+          key: state.pageKey,
+          child: const ProfileEditPage(isOnboarding: true),
+        ),
       ),
       GoRoute(
         path: '/settings/profile',
         parentNavigatorKey: _rootKey,
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: const ProfileEditPage(isOnboarding: false),
+        ),
+      ),
+      GoRoute(
+        path: '/profile/favorites',
+        parentNavigatorKey: _rootKey,
         pageBuilder: (context, state) =>
-            forwardPage(key: state.pageKey, child: const ProfileEditPage(isOnboarding: false)),
+            forwardPage(key: state.pageKey, child: const FavoritesPage()),
+      ),
+      GoRoute(
+        path: '/profile/notification-settings',
+        parentNavigatorKey: _rootKey,
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: const NotificationSettingsPage(),
+        ),
       ),
     ],
   );
+}
+
+class AnimatedBranchContainer extends StatelessWidget {
+  const AnimatedBranchContainer({
+    super.key,
+    required this.currentIndex,
+    required this.children,
+  });
+
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    // Unlike wrapping the whole navigationShell in PageTransitionSwitcher (which
+    // duplicates GlobalKeys), this keeps the branch children in an IndexedStack
+    // but fades between them safely, or just manages a PageTransitionSwitcher
+    // switching between the distinct children elements provided by GoRouter.
+
+    // PageTransitionSwitcher safely fades out the old child and fades in the new
+    // child. By giving each child a unique key based on its index, the switcher
+    // knows when to animate.
+    return PageTransitionSwitcher(
+      duration: M3Motion.medium2,
+      transitionBuilder: (child, animation, secondary) => FadeThroughTransition(
+        animation: animation,
+        secondaryAnimation: secondary,
+        fillColor: Colors.transparent,
+        child: child,
+      ),
+      child: KeyedSubtree(
+        key: ValueKey(currentIndex),
+        child: children[currentIndex],
+      ),
+    );
+  }
 }

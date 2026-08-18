@@ -880,4 +880,98 @@ class LUz extends L {
 
   @override
   String get paymentsOut => 'Chiqim';
+
+  @override
+  String get settingsDarkMode => 'Tungi rejim';
+
+  @override
+  String get errorLoadingCategories => 'Kategoriyalarni yuklashda xatolik';
+
+  @override
+  String get matchLabel => 'MOSLIK';
+
+  @override
+  String get okLabel => 'OK';
+
+  @override
+  String get notificationSettings => 'Bildirishnoma sozlamalari';
+
+  @override
+  String get pushNotifications => 'Push bildirishnomalar';
+
+  @override
+  String get pushNotificationsDesc =>
+      'Yangi mosliklar va xabarlar haqida bildirishnoma oling';
+
+  @override
+  String get editListing => 'E\'lonni tahrirlash';
+
+  @override
+  String get deleteListing => 'E\'lonni o\'chirish';
+
+  @override
+  String get savedListings => 'Saqlangan e\'lonlar';
+
+  @override
+  String get reportUser => 'Foydalanuvchi ustidan shikoyat';
+
+  @override
+  String get blockUser => 'Foydalanuvchini bloklash';
+
+  @override
+  String get saveChanges => 'O\'zgarishlarni saqlash';
+
+  @override
+  String get filterTitle => 'Filterlar';
+
+  @override
+  String get filterMinPrice => 'Minimal narx (so\'m)';
+
+  @override
+  String get filterMaxPrice => 'Maksimal narx (so\'m)';
+
+  @override
+  String get filterRegion => 'Hudud';
+
+  @override
+  String get filterApply => 'Qo\'llash';
+
+  @override
+  String get filterClear => 'Tozalash';
+
+  @override
+  String get errorNoImage => 'Rasm mavjud emas';
+
+  @override
+  String get errorCategoryLoad => 'Kategoriyalarni yuklashda xatolik';
+
+  @override
+  String get actionEdit => 'Tahrirlash';
+
+  @override
+  String get actionDelete => 'O\'chirish';
+
+  @override
+  String get actionCancel => 'Bekor qilish';
+
+  @override
+  String get actionOk => 'Tushunarli';
+
+  @override
+  String get actionDeleteListing => 'E\'lonni o\'chirish';
+
+  @override
+  String get actionReportUser => 'Ustidan shikoyat qilish';
+
+  @override
+  String get actionBlockUser => 'Bloklash';
+
+  @override
+  String get actionDeleteAccount => 'Hisobni o\'chirish';
+
+  @override
+  String get actionDarkMode => 'Qorong\'u rejim';
+
+  @override
+  String get emptyMyListings => 'Hozircha e\'lonlar yo\'q';
 }

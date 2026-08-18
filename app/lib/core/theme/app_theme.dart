@@ -17,8 +17,8 @@ abstract final class BrandColors {
   static const hair = Color(0xFFE7E2D9);
 
   static const brand500 = Color(0xFF14B8A6); // Primary Seed (Teal/Feruza)
-  static const take500 = Color(0xFF0D9488);  // Secondary Seed (Darker Teal)
-  static const gold500 = Color(0xFFF0A82A);  // Tertiary Seed
+  static const take500 = Color(0xFF0D9488); // Secondary Seed (Darker Teal)
+  static const gold500 = Color(0xFFF0A82A); // Tertiary Seed
 }
 
 @immutable
@@ -73,11 +73,21 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 
   @override
   BarterPalette copyWith({
-    Color? give, Color? giveSoft, Color? giveVivid,
-    Color? take, Color? takeSoft, Color? takeVivid,
-    Color? money, Color? moneySoft, Color? moneyVivid,
-    Color? canvas, Color? sunken, Color? hair,
-    Color? inkSoft, Color? inkFaint, bool? isDark,
+    Color? give,
+    Color? giveSoft,
+    Color? giveVivid,
+    Color? take,
+    Color? takeSoft,
+    Color? takeVivid,
+    Color? money,
+    Color? moneySoft,
+    Color? moneyVivid,
+    Color? canvas,
+    Color? sunken,
+    Color? hair,
+    Color? inkSoft,
+    Color? inkFaint,
+    bool? isDark,
   }) {
     return BarterPalette(
       give: give ?? this.give,
@@ -203,23 +213,34 @@ abstract final class AppTheme {
     final textColor = isDark ? const Color(0xFFE9F0EB) : BrandColors.ink;
 
     // ── M3 Color Scheme with Surface Container Logic ──────────────────────
-    final scheme = ColorScheme.fromSeed(
-      seedColor: BrandColors.brand500,
-      brightness: brightness,
-    ).copyWith(
-      primary: p.give,
-      onPrimary: Colors.white,
-      secondary: p.take,
-      tertiary: p.money,
-      surface: p.canvas,
-      // M3 Surface Containers (v1.2 standards)
-      surfaceContainerLowest: isDark ? const Color(0xFF080C0A) : const Color(0xFFFFFFFF),
-      surfaceContainerLow: isDark ? const Color(0xFF111713) : const Color(0xFFF7F4EE),
-      surfaceContainer: isDark ? const Color(0xFF161D19) : const Color(0xFFF2EEE7),
-      surfaceContainerHigh: isDark ? const Color(0xFF1C2420) : const Color(0xFFEBE6DD),
-      surfaceContainerHighest: isDark ? const Color(0xFF232C27) : const Color(0xFFE2DCD3),
-      outlineVariant: p.hair,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: BrandColors.brand500,
+          brightness: brightness,
+        ).copyWith(
+          primary: p.give,
+          onPrimary: Colors.white,
+          secondary: p.take,
+          tertiary: p.money,
+          surface: p.canvas,
+          // M3 Surface Containers (v1.2 standards)
+          surfaceContainerLowest: isDark
+              ? const Color(0xFF080C0A)
+              : const Color(0xFFFFFFFF),
+          surfaceContainerLow: isDark
+              ? const Color(0xFF111713)
+              : const Color(0xFFF7F4EE),
+          surfaceContainer: isDark
+              ? const Color(0xFF161D19)
+              : const Color(0xFFF2EEE7),
+          surfaceContainerHigh: isDark
+              ? const Color(0xFF1C2420)
+              : const Color(0xFFEBE6DD),
+          surfaceContainerHighest: isDark
+              ? const Color(0xFF232C27)
+              : const Color(0xFFE2DCD3),
+          outlineVariant: p.hair,
+        );
 
     final typography = Typography.material2021();
     final baseTextTheme = (isDark ? typography.white : typography.black).apply(
@@ -339,24 +360,44 @@ abstract final class AppTheme {
         backgroundColor: scheme.surfaceContainerLowest,
         indicatorColor: p.giveSoft,
         height: 72,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) =>
-          textTheme.labelSmall?.copyWith(color: states.contains(WidgetState.selected) ? p.give : p.inkSoft)),
-        iconTheme: WidgetStateProperty.resolveWith((states) =>
-          IconThemeData(color: states.contains(WidgetState.selected) ? p.give : p.inkSoft, size: 26)),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => textTheme.labelSmall?.copyWith(
+            color: states.contains(WidgetState.selected) ? p.give : p.inkSoft,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected) ? p.give : p.inkSoft,
+            size: 26,
+          ),
+        ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainer,
-        border: OutlineInputBorder(borderRadius: Radii.rMd, borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: Radii.rMd,
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: Radii.rMd,
+          borderSide: BorderSide(
+            color: p.give.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: Gap.x5,
+          vertical: Gap.x4,
+        ),
         labelStyle: textTheme.bodyMedium?.copyWith(color: p.inkSoft),
         prefixIconColor: p.inkFaint,
       ),
 
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
+          minimumSize: const Size(64, 56),
           shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
           textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
         ),

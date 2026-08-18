@@ -84,6 +84,22 @@ class TradeRepository {
   Future<void> dismissMatch(String id) =>
       _api.post('/matches/$id/dismiss', parse: (_) {});
 
+  Future<void> blockUser(String id) => _api.post('/blocks/$id', parse: (_) {});
+
+  Future<void> reportUser(String id, String reason) => _api.post(
+    '/reports',
+    body: {'target_id': id, 'reason': reason},
+    parse: (_) {},
+  );
+
+  Future<void> toggleFavorite(String id, bool isSaving) {
+    if (isSaving) {
+      return _api.post('/listings/$id/favorite', parse: (_) {});
+    } else {
+      return _api.delete('/listings/$id/favorite', parse: (_) {});
+    }
+  }
+
   Future<List<AppNotification>> notifications() => _api.get(
     '/notifications',
     parse: (data) => (data as List)
@@ -125,9 +141,8 @@ class TradeRepository {
   /// What this user already wrote about a deal, so the screen asks only once.
   Future<Review?> myReviewFor(String offerId) => _api.get(
     '/offers/$offerId/review',
-    parse: (data) => data == null
-        ? null
-        : Review.fromJson(data as Map<String, dynamic>),
+    parse: (data) =>
+        data == null ? null : Review.fromJson(data as Map<String, dynamic>),
   );
 
   Future<List<Review>> reviews(String userId) => _api.get(
@@ -152,7 +167,9 @@ class TradeRepository {
           return (
             trustScore: json['trust_score'] as int,
             steps: (json['steps'] as List)
-                .map((e) => VerificationStep.fromJson(e as Map<String, dynamic>))
+                .map(
+                  (e) => VerificationStep.fromJson(e as Map<String, dynamic>),
+                )
                 .toList(),
           );
         },
@@ -206,6 +223,23 @@ class TradeRepository {
     parse: (data) => ListingDetail.fromJson(data as Map<String, dynamic>),
   );
 
+  Future<ListingDetail> editListing(String id, Map<String, dynamic> body) =>
+      _api.patch(
+        '/listings/$id',
+        body: body,
+        parse: (data) => ListingDetail.fromJson(data as Map<String, dynamic>),
+      );
+
+  Future<void> deleteListing(String id) =>
+      _api.delete('/listings/$id', parse: (_) {});
+
+  Future<List<ListingCard>> getFavorites() => _api.get(
+    '/favorites',
+    parse: (data) => (data as List)
+        .map((e) => ListingCard.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
+
   Future<List<Settlement>> settlements() => _api.get(
     '/me/settlements',
     parse: (data) => (data as List)
@@ -234,21 +268,21 @@ final matchesProvider = FutureProvider.autoDispose<List<TradeMatch>>((ref) {
   return ref.watch(tradeRepositoryProvider).matches();
 });
 
-final notificationsProvider =
-    FutureProvider.autoDispose<List<AppNotification>>((ref) {
-      if (!ref.watch(authStateProvider)) return Future.value(const []);
-      return ref.watch(tradeRepositoryProvider).notifications();
-    });
+final notificationsProvider = FutureProvider.autoDispose<List<AppNotification>>(
+  (ref) {
+    if (!ref.watch(authStateProvider)) return Future.value(const []);
+    return ref.watch(tradeRepositoryProvider).notifications();
+  },
+);
 
 final myListingsProvider = FutureProvider.autoDispose<List<ListingCard>>((ref) {
   if (!ref.watch(authStateProvider)) return Future.value(const []);
   return ref.watch(tradeRepositoryProvider).myListings();
 });
 
-final traderProvider = FutureProvider.autoDispose
-    .family<TraderProfile, String>(
-      (ref, id) => ref.watch(tradeRepositoryProvider).trader(id),
-    );
+final traderProvider = FutureProvider.autoDispose.family<TraderProfile, String>(
+  (ref, id) => ref.watch(tradeRepositoryProvider).trader(id),
+);
 
 /// The review this user already left on a given offer, if any.
 final myReviewProvider = FutureProvider.autoDispose.family<Review?, String>(
@@ -265,11 +299,10 @@ final traderListingsProvider = FutureProvider.autoDispose
       (ref, id) => ref.watch(tradeRepositoryProvider).traderListings(id),
     );
 
-final settlementsProvider =
-    FutureProvider.autoDispose<List<Settlement>>((ref) {
-      if (!ref.watch(authStateProvider)) return Future.value(const []);
-      return ref.watch(tradeRepositoryProvider).settlements();
-    });
+final settlementsProvider = FutureProvider.autoDispose<List<Settlement>>((ref) {
+  if (!ref.watch(authStateProvider)) return Future.value(const []);
+  return ref.watch(tradeRepositoryProvider).settlements();
+});
 
 /// A live event from the server: a new message, or the peer typing.
 sealed class LiveEvent {

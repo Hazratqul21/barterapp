@@ -8,10 +8,8 @@ class Money {
   final int minor;
   final String currency;
 
-  factory Money.fromJson(Map<String, dynamic> json) => Money(
-    minor: json['minor'] as int,
-    currency: json['currency'] as String,
-  );
+  factory Money.fromJson(Map<String, dynamic> json) =>
+      Money(minor: json['minor'] as int, currency: json['currency'] as String);
 
   /// How the currency is written in each language.
   ///
@@ -69,11 +67,7 @@ class TraderBrief {
 }
 
 class CategoryModel {
-  const CategoryModel({
-    required this.id,
-    required this.name,
-    this.imageUrl,
-  });
+  const CategoryModel({required this.id, required this.name, this.imageUrl});
 
   final String id;
   final String name;
@@ -290,10 +284,20 @@ class Me {
 }
 
 enum OfferStatus {
-  draft, pending, talking, accepted, declined, expired, completed, disputed, refunded;
+  draft,
+  pending,
+  talking,
+  accepted,
+  declined,
+  expired,
+  completed,
+  disputed,
+  refunded;
 
-  static OfferStatus parse(String raw) =>
-      OfferStatus.values.firstWhere((s) => s.name == raw, orElse: () => pending);
+  static OfferStatus parse(String raw) => OfferStatus.values.firstWhere(
+    (s) => s.name == raw,
+    orElse: () => pending,
+  );
 
   bool get isLive => this == pending || this == talking || this == accepted;
 }
@@ -396,6 +400,7 @@ class ConversationSummary {
   final TraderBrief peer;
   final String offerId;
   final OfferStatus offerStatus;
+
   /// Titles joined with a middle dot, for anywhere that needs one string.
   final String dealSummary;
 
@@ -478,20 +483,21 @@ class AppNotification {
   final String? targetId;
   final String? avatarUrl;
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
-    id: json['id'] as String,
-    kind: json['kind'] as String,
-    title: json['title'] as String,
-    body: json['body'] as String,
-    createdAt: DateTime.parse(json['created_at'] as String),
-    isUnread: json['is_unread'] as bool? ?? false,
-    targetType: NotifyTargetType.values.firstWhere(
-      (t) => t.name == json['target_type'],
-      orElse: () => NotifyTargetType.listing,
-    ),
-    targetId: json['target_id'] as String?,
-    avatarUrl: json['avatar_url'] as String?,
-  );
+  factory AppNotification.fromJson(Map<String, dynamic> json) =>
+      AppNotification(
+        id: json['id'] as String,
+        kind: json['kind'] as String,
+        title: json['title'] as String,
+        body: json['body'] as String,
+        createdAt: DateTime.parse(json['created_at'] as String),
+        isUnread: json['is_unread'] as bool? ?? false,
+        targetType: NotifyTargetType.values.firstWhere(
+          (t) => t.name == json['target_type'],
+          orElse: () => NotifyTargetType.listing,
+        ),
+        targetId: json['target_id'] as String?,
+        avatarUrl: json['avatar_url'] as String?,
+      );
 }
 
 class TradeMatch {

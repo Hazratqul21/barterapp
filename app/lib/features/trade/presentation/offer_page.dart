@@ -48,7 +48,9 @@ class _OfferPageState extends ConsumerState<OfferPage> {
     }
     final value = int.tryParse(text);
     if (value == null) return;
-    final formatted = NumberFormat.decimalPattern('en_US').format(value).replaceAll(',', ' ');
+    final formatted = NumberFormat.decimalPattern(
+      'en_US',
+    ).format(value).replaceAll(',', ' ');
     if (_cash.text != formatted) {
       _cash.value = TextEditingValue(
         text: formatted,
@@ -144,7 +146,10 @@ class _OfferPageState extends ConsumerState<OfferPage> {
                       _WantedCard(listing: listing, locale: locale),
                       Gap.h6,
 
-                      Text(l.offerSelectItems, style: theme.textTheme.titleLarge),
+                      Text(
+                        l.offerSelectItems,
+                        style: theme.textTheme.titleLarge,
+                      ),
                       Gap.h3,
                       mine.when(
                         loading: () => const SkeletonBox(height: 140),
@@ -275,54 +280,55 @@ class _WantedCard extends StatelessWidget {
     final p = palette(context);
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(Gap.x3),
-      decoration: BoxDecoration(
-        color: p.takeSoft,
-        borderRadius: Radii.rLg,
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: Radii.rSm,
-            child: SizedBox(
-              width: 64,
-              height: 64,
-              child: RemoteImage(
-                url: listing.imageUrl,
-                semanticLabel: listing.imageAlt,
+    return BouncingClayCard(
+      clayMode: true,
+      borderRadius: Radii.rLg,
+      child: Container(
+        padding: const EdgeInsets.all(Gap.x3),
+        decoration: BoxDecoration(color: p.takeSoft, borderRadius: Radii.rLg),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: Radii.rSm,
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: RemoteImage(
+                  url: listing.imageUrl,
+                  semanticLabel: listing.imageAlt,
+                ),
               ),
             ),
-          ),
-          Gap.w3,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.offerYouWant.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(color: p.take),
-                ),
-                Gap.h1,
-                Text(
-                  listing.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
-                ),
-                Gap.h1,
-                Text(
-                  '${listing.owner.displayName} · ${listing.value.format(locale)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: p.inkSoft,
+            Gap.w3,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.offerYouWant.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(color: p.take),
                   ),
-                ),
-              ],
+                  Gap.h1,
+                  Text(
+                    listing.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Gap.h1,
+                  Text(
+                    '${listing.owner.displayName} · ${listing.value.format(locale)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: p.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -357,7 +363,9 @@ class _MyListings extends StatelessWidget {
           final item = listings[index];
           final isSelected = selected.contains(item.id);
 
-          return GestureDetector(
+          return BouncingClayCard(
+            clayMode: true,
+            borderRadius: Radii.rLg,
             onTap: () {
               HapticFeedback.selectionClick();
               onToggle(item.id);

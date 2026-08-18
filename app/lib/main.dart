@@ -7,11 +7,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_mode.dart';
 import 'core/widgets/backgrounds.dart';
 import 'l10n/app_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'core/notifications/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init failed: $e');
+  }
 
   // Real paths on the web: a listing link has no "#" in it, so it can be shared.
   usePathUrlStrategy();
@@ -37,6 +45,17 @@ class _BarterAppState extends ConsumerState<BarterApp> {
   late final _router = buildRouter();
 
   @override
+  void initState() {
+    super.initState();
+    // The language is passed in so the server knows which one to send a
+    // notification in. Without it every push would arrive in Uzbek,
+    // including to someone reading the app in Russian.
+    ref
+        .read(notificationServiceProvider)
+        .init(locale: ref.read(localeProvider));
+  }
+
+  @override
   Widget build(BuildContext context) {
     // One piece of state drives both the widgets and the Accept-Language
     // header, so the interface and the content can never end up in two
@@ -49,6 +68,7 @@ class _BarterAppState extends ConsumerState<BarterApp> {
       routerConfig: _router,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: ref.watch(darkModeProvider) ? ThemeMode.dark : ThemeMode.light,
       // The wallpaper sits under the whole app rather than being pasted onto
       // the four screens that happened to ask for it. Two consequences worth
       // the placement: every route gets it, including the ones pushed on top

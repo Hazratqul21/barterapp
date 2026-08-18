@@ -34,7 +34,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   @override
   void dispose() {
-    _firstName.dispose(); _lastName.dispose(); _handle.dispose();
+    _firstName.dispose();
+    _lastName.dispose();
+    _handle.dispose();
     super.dispose();
   }
 
@@ -55,7 +57,11 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       final url = await pickAndUploadPhoto(context, ref);
       if (url != null) setState(() => _avatarUrl = url);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      }
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -77,7 +83,11 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       if (!mounted) return;
       widget.isOnboarding ? context.go('/home') : context.pop();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -91,12 +101,19 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final meAsync = ref.watch(meProvider);
     final regionsAsync = ref.watch(regionsProvider);
 
-    meAsync.whenData((me) { if (me != null) _seed(me); });
+    meAsync.whenData((me) {
+      if (me != null) _seed(me);
+    });
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.isOnboarding ? l.profileSetupTitle : l.profileEditTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        title: Text(
+          widget.isOnboarding ? l.profileSetupTitle : l.profileEditTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         automaticallyImplyLeading: !widget.isOnboarding,
       ),
       body: SafeArea(
@@ -107,34 +124,70 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
               key: _formKey,
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x3, Gap.x5, Gap.x10),
+                padding: const EdgeInsets.fromLTRB(
+                  Gap.x5,
+                  Gap.x3,
+                  Gap.x5,
+                  Gap.x10,
+                ),
                 children: [
                   if (widget.isOnboarding) ...[
-                    Text(l.profileSetupLede, style: theme.textTheme.bodyLarge?.copyWith(color: p.inkSoft)),
+                    Text(
+                      l.profileSetupLede,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: p.inkSoft,
+                      ),
+                    ),
                     Gap.h6,
                   ],
 
                   Center(
                     child: Column(
                       children: [
-                        PhotoWell(url: _avatarUrl, busy: _uploading, circular: true, size: 96, onTap: _pickPhoto, onRemove: () => setState(() => _avatarUrl = null)),
+                        PhotoWell(
+                          url: _avatarUrl,
+                          busy: _uploading,
+                          circular: true,
+                          size: 96,
+                          onTap: _pickPhoto,
+                          onRemove: () => setState(() => _avatarUrl = null),
+                        ),
                         Gap.h2,
                         TextButton(
                           onPressed: _uploading ? null : _pickPhoto,
-                          child: Text(_uploading ? l.uploading : (_avatarUrl == null ? l.profilePhotoPick : l.profilePhotoChange)),
+                          child: Text(
+                            _uploading
+                                ? l.uploading
+                                : (_avatarUrl == null
+                                      ? l.profilePhotoPick
+                                      : l.profilePhotoChange),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Gap.h6,
 
-                  _M3Field(controller: _firstName, label: l.profileFirstName, icon: Symbols.person_rounded, enabled: !_busy, hint: l.profileRequired),
+                  _M3Field(
+                    controller: _firstName,
+                    label: l.profileFirstName,
+                    icon: Symbols.person_rounded,
+                    enabled: !_busy,
+                    hint: l.profileRequired,
+                  ),
                   Gap.h3,
-                  _M3Field(controller: _lastName, label: l.profileLastName, icon: Symbols.badge_rounded, enabled: !_busy, hint: l.profileRequired),
+                  _M3Field(
+                    controller: _lastName,
+                    label: l.profileLastName,
+                    icon: Symbols.badge_rounded,
+                    enabled: !_busy,
+                    hint: l.profileRequired,
+                  ),
                   Gap.h3,
 
                   regionsAsync.when(
-                    loading: () => const SkeletonBox(height: 64, radius: Radii.rMd),
+                    loading: () =>
+                        const SkeletonBox(height: 64, radius: Radii.rMd),
                     error: (_, _) => const SizedBox.shrink(),
                     data: (regions) => DropdownButtonFormField<String>(
                       initialValue: regions.contains(_region) ? _region : null,
@@ -145,18 +198,38 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerLow,
                       ),
-                      items: [for (final r in regions) DropdownMenuItem(value: r, child: Text(r))],
-                      onChanged: _busy ? null : (v) => setState(() => _region = v),
+                      items: [
+                        for (final r in regions)
+                          DropdownMenuItem(value: r, child: Text(r)),
+                      ],
+                      onChanged: _busy
+                          ? null
+                          : (v) => setState(() => _region = v),
                     ),
                   ),
                   Gap.h3,
 
-                  _M3Field(controller: _handle, label: l.profileHandle, icon: Symbols.storefront_rounded, enabled: !_busy, helper: l.profileHandleHint),
+                  _M3Field(
+                    controller: _handle,
+                    label: l.profileHandle,
+                    icon: Symbols.storefront_rounded,
+                    enabled: !_busy,
+                    helper: l.profileHandleHint,
+                  ),
 
                   Gap.h8,
                   FilledButton(
                     onPressed: _busy || _uploading ? null : _save,
-                    child: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) : Text(l.profileSave),
+                    child: _busy
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(l.profileSave),
                   ),
                 ],
               ).animate().fadeIn(duration: 400.ms),
@@ -169,8 +242,20 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 }
 
 class _M3Field extends StatelessWidget {
-  const _M3Field({required this.controller, required this.label, required this.icon, required this.enabled, this.hint, this.helper});
-  final TextEditingController controller; final String label; final IconData icon; final bool enabled; final String? hint; final String? helper;
+  const _M3Field({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    required this.enabled,
+    this.hint,
+    this.helper,
+  });
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final bool enabled;
+  final String? hint;
+  final String? helper;
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +271,9 @@ class _M3Field extends StatelessWidget {
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerLow,
       ),
-      validator: hint != null ? (v) => (v == null || v.trim().isEmpty) ? hint : null : null,
+      validator: hint != null
+          ? (v) => (v == null || v.trim().isEmpty) ? hint : null
+          : null,
     );
   }
 }

@@ -20,17 +20,16 @@ class ListingCardTile extends StatelessWidget {
     final p = palette(context);
     final theme = Theme.of(context);
 
-    return Pressable(
+    return BouncingClayCard(
       onTap: onTap,
-      child: Card(
+      clayMode: true,
+      borderRadius: Radii.rLg,
+      child: Container(
         clipBehavior: Clip.antiAlias,
-        elevation: 0,
-        // Premium: M3 surfaceContainerLow rangidan foydalanamiz
-        color: theme.colorScheme.surfaceContainerLow,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
           borderRadius: Radii.rLg,
-          side: BorderSide(
+          border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
           ),
         ),
@@ -38,13 +37,10 @@ class ListingCardTile extends StatelessWidget {
         // to catch the eye and answer "I have ↔ I want" in a second, so the
         // text below is only the name and that one barter line. Everything else
         // — price detail, distance, date, specs — waits on the detail page.
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: Radii.rLg,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Photo(listing: listing),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Photo(listing: listing),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 Gap.x4,
@@ -93,7 +89,6 @@ class ListingCardTile extends StatelessWidget {
               ),
             ),
           ],
-        ),
         ),
       ),
     );

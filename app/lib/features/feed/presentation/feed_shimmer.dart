@@ -40,114 +40,113 @@ class _ShimmerCard extends StatelessWidget {
     final color = theme.colorScheme.surfaceContainerHigh;
 
     return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: Radii.rLg,
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: 236,
-            child: Stack(
-              children: [
-                Container(
-                  height: 236,
-                  width: double.infinity,
-                  color: color,
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    height: 28,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    height: 28,
-                    width: 70,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  bottom: 12,
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 16,
-                        width: 120,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          clipBehavior: Clip.antiAlias,
+          elevation: 0,
+          color: theme.colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: Radii.rLg,
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 18,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 236,
+                child: Stack(
                   children: [
                     Container(
-                      height: 20,
-                      width: 20,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
+                      height: 236,
+                      width: double.infinity,
+                      color: color,
+                    ),
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        height: 28,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        height: 28,
+                        width: 70,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 16,
+                      bottom: 12,
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 16,
+                            width: 120,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Container(
-                      height: 14,
-                      width: 180,
+                      height: 18,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          height: 20,
+                          width: 20,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          height: 14,
+                          width: 180,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate(onPlay: (c) => c.repeat()).shimmer(
-          duration: 1200.ms,
-          color: Colors.white24,
-        );
+        )
+        .animate(onPlay: (c) => c.repeat())
+        .shimmer(duration: 1200.ms, color: Colors.white24);
   }
 }

@@ -109,12 +109,13 @@ CustomTransitionPage<T> heroPage<T>({
     // finishes first leaves the image flying over a settled screen.
     transitionDuration: M3Motion.medium4,
     reverseTransitionDuration: M3Motion.medium3,
-    transitionsBuilder: (context, animation, secondary, child) => FadeTransition(
-      opacity: CurvedAnimation(
-        parent: animation,
-        curve: M3Motion.emphasizedDecelerate,
-      ),
-      child: child,
-    ),
+    transitionsBuilder: (context, animation, secondary, child) =>
+        FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: M3Motion.emphasizedDecelerate,
+          ),
+          child: child,
+        ),
   );
 }

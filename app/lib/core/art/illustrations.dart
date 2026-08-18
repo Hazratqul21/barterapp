@@ -120,7 +120,13 @@ void _arrow(
 }
 
 /// A coin, for the cash that closes the gap between two unequal sides.
-void _coin(Canvas canvas, Offset centre, double radius, Color color, Color tint) {
+void _coin(
+  Canvas canvas,
+  Offset centre,
+  double radius,
+  Color color,
+  Color tint,
+) {
   canvas.drawCircle(centre, radius, _fill(tint));
   canvas.drawCircle(centre, radius, _line(color, _Ink.stroke * 0.9));
   canvas.drawCircle(centre, radius * 0.52, _line(color, _Ink.stroke * 0.7));
@@ -345,10 +351,7 @@ class _TrustPainter extends CustomPainter {
       for (var column = -1; column < 4; column++) {
         final origin =
             centre + Offset((column - 1) * 34 * unit, (row - 1) * 34 * unit);
-        canvas.drawPath(
-          eightPointStar(origin, 15 * unit, 6 * unit),
-          faint,
-        );
+        canvas.drawPath(eightPointStar(origin, 15 * unit, 6 * unit), faint);
       }
     }
     canvas.restore();
@@ -366,16 +369,12 @@ class _TrustPainter extends CustomPainter {
       (1, -0.6),
       (2, 1.57),
     ]) {
-      final at = centre + Offset(
-        92 * unit * math.cos(angle),
-        86 * unit * math.sin(angle),
-      );
+      final at =
+          centre +
+          Offset(92 * unit * math.cos(angle), 86 * unit * math.sin(angle));
       final r = (index == 1 ? 13.0 : 10.0) * unit;
       canvas.drawCircle(at, r, _fill(p.moneySoft));
-      canvas.drawPath(
-        eightPointStar(at, r * 0.72, r * 0.3),
-        _fill(p.money),
-      );
+      canvas.drawPath(eightPointStar(at, r * 0.72, r * 0.3), _fill(p.money));
     }
   }
 
@@ -486,7 +485,9 @@ class _BrokenPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     for (int i = 0; i < 8; i++) {
-      if (i == 2 || i == 6) continue; // Skip vertical rays to leave room for crack
+      if (i == 2 || i == 6) {
+        continue; // Skip vertical rays to leave room for crack
+      }
       final angle = (i * 45) * 3.14159 / 180.0;
       final dx = math.cos(angle);
       final dy = math.sin(angle);

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../art/girih.dart';
 import '../theme/section_theme.dart';
@@ -96,7 +96,7 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
                           valueListenable: _scrollOffset,
                           builder: (context, scrollY, _) {
                             final t = _controller.value;
-                            
+
                             // 1. Infinite Panning (slow diagonal movement)
                             final panX = math.sin(t * math.pi) * 15;
                             final panY = math.cos(t * math.pi) * 15;
@@ -109,11 +109,26 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
 
                             return Transform.translate(
                               offset: Offset(panX, panY + parallaxY),
-                              child: GirihField(opacity: pulse, cell: 82, fade: 0.45),
+                              child: GirihField(
+                                opacity: pulse,
+                                cell: 82,
+                                fade: 0.45,
+                              ),
                             );
                           },
                         );
                       },
+                    ),
+                  ),
+                ),
+
+              // Glassmorphism Frosting Layer (for pixel-perfect premium feel)
+              if (widget.pattern)
+                Positioned.fill(
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
+                      child: Container(color: p.canvas.withValues(alpha: 0.05)),
                     ),
                   ),
                 ),
@@ -311,13 +326,15 @@ class SwapBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
+      width: double.infinity,
       child: ClipRRect(
         borderRadius: borderRadius,
         child: ColoredBox(
           color: const Color(0xFFEAF7F7),
-          child: SvgPicture.asset(
-            'assets/images/header_bg.svg',
+          child: Image.asset(
+            'assets/images/feed_header_hero.png',
             fit: BoxFit.cover,
+            alignment: Alignment.topRight,
             width: double.infinity,
             height: height,
           ),
@@ -326,5 +343,3 @@ class SwapBanner extends StatelessWidget {
     );
   }
 }
-
-

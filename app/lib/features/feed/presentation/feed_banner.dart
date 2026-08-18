@@ -3,12 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
-import '../../../core/art/girih.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/widgets/backgrounds.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -72,13 +68,14 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
   Widget _strip(BuildContext context, _Nudge nudge) {
     final l = L.of(context);
 
-    final (title, body, action, route, icon) = switch (nudge) {
+    final (title, body, action, route, icon, bgImage) = switch (nudge) {
       _Nudge.createListing => (
         l.bannerCreateTitle,
         l.bannerCreateBody,
         l.bannerCreateAction,
         '/create',
         Symbols.add_box_rounded,
+        'assets/images/banner_create_listing.png',
       ),
       _Nudge.verify => (
         l.bannerVerifyTitle,
@@ -86,6 +83,7 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
         l.bannerVerifyAction,
         '/settings/verify',
         Symbols.verified_user_rounded,
+        'assets/images/banner_verify_profile.png',
       ),
     };
 
@@ -94,6 +92,7 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
       title: title,
       body: body,
       action: action,
+      bgImage: bgImage,
       onAction: () => context.push(route),
       onDismiss: () => setState(() => _dismissed.add(nudge)),
     );
@@ -106,6 +105,7 @@ class _Strip extends StatelessWidget {
     required this.title,
     required this.body,
     required this.action,
+    required this.bgImage,
     required this.onAction,
     required this.onDismiss,
   });
@@ -114,6 +114,7 @@ class _Strip extends StatelessWidget {
   final String title;
   final String body;
   final String action;
+  final String bgImage;
   final VoidCallback onAction;
   final VoidCallback onDismiss;
 
@@ -131,15 +132,12 @@ class _Strip extends StatelessWidget {
               decoration: BoxDecoration(color: p.giveSoft),
               child: Stack(
                 children: [
-                  // The pattern from the header SVG for the banner background
+                  // The dynamic background image
                   Positioned.fill(
-                    child: Opacity(
-                      opacity: 0.8,
-                      child: SvgPicture.asset(
-                        'assets/images/header_bg.svg',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
+                    child: Image.asset(
+                      bgImage,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
                     ),
                   ),
                   Padding(
@@ -161,10 +159,16 @@ class _Strip extends StatelessWidget {
                         ),
                         Gap.w3,
                         Expanded(
+                          flex: 4,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(title, style: theme.textTheme.titleSmall),
+                              Text(
+                                title,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
                               Gap.h1,
                               Text(
                                 body,
@@ -186,19 +190,30 @@ class _Strip extends StatelessWidget {
                             ],
                           ),
                         ),
-                        IconButton(
-                          tooltip: l.bannerDismiss,
-                          onPressed: onDismiss,
-                          icon: const Icon(
-                            Symbols.close_rounded,
-                            size: Sizes.iconMd,
-                          ),
-                          style: IconButton.styleFrom(
-                            foregroundColor: p.inkSoft,
-                            minimumSize: const Size(32, 32),
-                          ),
-                        ),
+                        const Spacer(
+                          flex: 3,
+                        ), // Keeps text away from the right-side 3D art
                       ],
+                    ),
+                  ),
+                  Positioned(
+                    top: Gap.x1,
+                    right: Gap.x1,
+                    child: IconButton(
+                      tooltip: l.bannerDismiss,
+                      onPressed: onDismiss,
+                      icon: const Icon(
+                        Symbols.close_rounded,
+                        size: Sizes.iconMd,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: theme.colorScheme.surface.withValues(
+                          alpha: 0.5,
+                        ),
+                        foregroundColor: theme.colorScheme.onSurface,
+                        minimumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
                 ],

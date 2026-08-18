@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_client.dart';
-import '../../../core/art/illustrations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -55,10 +53,22 @@ class _IntroPageState extends ConsumerState<IntroPage> {
     final p = palette(context);
     final theme = Theme.of(context);
 
-    final slides = <({Widget art, String title, String body})>[
-      (art: const _SwapArt(), title: l.introTitle1, body: l.introBody1),
-      (art: const _MatchArt(), title: l.introTitle2, body: l.introBody2),
-      (art: const _TrustArt(), title: l.introTitle3, body: l.introBody3),
+    final slides = <({String imagePath, String title, String body})>[
+      (
+        imagePath: 'assets/images/intro_swap.png',
+        title: l.introTitle1,
+        body: l.introBody1,
+      ),
+      (
+        imagePath: 'assets/images/intro_match.png',
+        title: l.introTitle2,
+        body: l.introBody2,
+      ),
+      (
+        imagePath: 'assets/images/intro_trust.png',
+        title: l.introTitle3,
+        body: l.introBody3,
+      ),
     ];
 
     final last = _page == slides.length - 1;
@@ -106,51 +116,56 @@ class _IntroPageState extends ConsumerState<IntroPage> {
                     itemCount: slides.length,
                     itemBuilder: (context, index) {
                       final slide = slides[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: Gap.x6),
-                        // Drawing and sentence read as one block, sitting a
-                        // little above centre. Splitting them with an Expanded
-                        // pushed the picture to the top of the screen and left
-                        // a gap in the middle that looked like missing content.
-                        child: Column(
-                          children: [
-                            const Spacer(flex: 3),
-                            // The drawing gives up its space before the words
-                            // do. It is a fixed 260×200 CustomPaint, and the
-                            // two `Spacer`s can only surrender what they hold:
-                            // once they are at zero the picture and the
-                            // sentence together still needed ~350px, so a
-                            // 302px-tall viewport — a small phone in
-                            // landscape, or a short window — struck the first
-                            // screen of the app with overflow stripes.
-                            //
-                            // `scaleDown` never enlarges, so the drawing keeps
-                            // its intended size wherever it fits, and shrinks
-                            // only where the alternative was clipping. It is
-                            // vector, so shrinking costs it nothing.
-                            Flexible(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: slide.art,
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final double vh = constraints.maxHeight;
+                          final double vw = constraints.maxWidth;
+                          final double targetHeight = (vh * 0.30).clamp(
+                            210.0,
+                            270.0,
+                          );
+                          final double targetWidth = vw < 300.0 ? vw : 300.0;
+
+                          return SingleChildScrollView(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: vh),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: Gap.x6,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Gap.h4,
+                                    SizedBox(
+                                      height: targetHeight,
+                                      width: targetWidth,
+                                      child: Image.asset(
+                                        slide.imagePath,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.high,
+                                      ),
+                                    ),
+                                    Gap.h8,
+                                    Text(
+                                      slide.title,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.headlineMedium,
+                                    ),
+                                    Gap.h3,
+                                    Text(
+                                      slide.body,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(color: p.inkSoft),
+                                    ),
+                                    const SizedBox(height: Gap.x8),
+                                  ],
+                                ),
                               ),
                             ),
-                            Gap.h8,
-                            Text(
-                              slide.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.headlineMedium,
-                            ),
-                            Gap.h3,
-                            Text(
-                              slide.body,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: p.inkSoft,
-                              ),
-                            ),
-                            const Spacer(flex: 4),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -193,63 +208,4 @@ class _IntroPageState extends ConsumerState<IntroPage> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Slide art
-// ─────────────────────────────────────────────────────────────────────────────
-// Three drawings from `core/art/illustrations.dart` — paths, not icons in
-// boxes and not image files. They stay sharp at any size, follow the light and
-// dark themes on their own, and add nothing to the download.
-
-/// Slide 1 — two crates changing hands, with a coin for the difference.
-class _SwapArt extends StatelessWidget {
-  const _SwapArt();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SwapIllustration()
-        .animate()
-        .fadeIn(duration: M3Motion.long1)
-        .scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1, 1),
-          duration: M3Motion.long2,
-          curve: M3Motion.emphasizedDecelerate,
-        );
-  }
-}
-
-/// Slide 2 — two halves that lock together.
-class _MatchArt extends StatelessWidget {
-  const _MatchArt();
-
-  @override
-  Widget build(BuildContext context) {
-    return const MatchIllustration()
-        .animate()
-        .fadeIn(duration: M3Motion.long1)
-        .scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1, 1),
-          duration: M3Motion.long2,
-          curve: M3Motion.emphasizedDecelerate,
-        );
-  }
-}
-
-/// Slide 3 — a shield of tilework, earned in stars.
-class _TrustArt extends StatelessWidget {
-  const _TrustArt();
-
-  @override
-  Widget build(BuildContext context) {
-    return const TrustIllustration()
-        .animate()
-        .fadeIn(duration: M3Motion.long1)
-        .scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1, 1),
-          duration: M3Motion.long2,
-          curve: M3Motion.emphasizedDecelerate,
-        );
-  }
-}
+// End of file

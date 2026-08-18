@@ -878,5 +878,98 @@ class LEn extends L {
   String get paymentsIn => 'In';
 
   @override
-  String get paymentsOut => 'Out';
+  String get paymentsOut => 'Chiqim';
+
+  @override
+  String get settingsDarkMode => 'Dark Mode';
+
+  @override
+  String get errorLoadingCategories => 'Error loading categories';
+
+  @override
+  String get matchLabel => 'MATCH';
+
+  @override
+  String get okLabel => 'OK';
+
+  @override
+  String get notificationSettings => 'Notification Settings';
+
+  @override
+  String get pushNotifications => 'Push Notifications';
+
+  @override
+  String get pushNotificationsDesc => 'Receive alerts for matches and messages';
+
+  @override
+  String get editListing => 'Edit Listing';
+
+  @override
+  String get deleteListing => 'Delete Listing';
+
+  @override
+  String get savedListings => 'Saved Listings';
+
+  @override
+  String get reportUser => 'Report User';
+
+  @override
+  String get blockUser => 'Block User';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get filterTitle => 'Filters';
+
+  @override
+  String get filterMinPrice => 'Min price (sum)';
+
+  @override
+  String get filterMaxPrice => 'Max price (sum)';
+
+  @override
+  String get filterRegion => 'Region';
+
+  @override
+  String get filterApply => 'Apply';
+
+  @override
+  String get filterClear => 'Clear';
+
+  @override
+  String get errorNoImage => 'No image available';
+
+  @override
+  String get errorCategoryLoad => 'Error loading categories';
+
+  @override
+  String get actionEdit => 'Edit';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
+  String get actionDeleteListing => 'Delete Listing';
+
+  @override
+  String get actionReportUser => 'Report User';
+
+  @override
+  String get actionBlockUser => 'Block User';
+
+  @override
+  String get actionDeleteAccount => 'Delete Account';
+
+  @override
+  String get actionDarkMode => 'Dark Mode';
+
+  @override
+  String get emptyMyListings => 'No listings yet';
 }

@@ -112,6 +112,19 @@ abstract final class Sizes {
 abstract final class Shadows {
   static const _tint = Color(0xFF0E3A28);
 
+  // --- Claymorphism Tokens ---
+  /// The soft, broad outer drop shadow pushing the element off the surface.
+  static const clayOuter = [
+    BoxShadow(color: Color(0x11000000), offset: Offset(6, 6), blurRadius: 16),
+    BoxShadow(color: Color(0x08000000), offset: Offset(-6, -6), blurRadius: 16),
+  ];
+
+  /// Outer shadow for dark mode (subtler, deeper).
+  static const clayOuterDark = [
+    BoxShadow(color: Color(0x22000000), offset: Offset(8, 8), blurRadius: 20),
+    BoxShadow(color: Color(0x0AFFFFFF), offset: Offset(-4, -4), blurRadius: 12),
+  ];
+
   /// Resting cards.
   static List<BoxShadow> get card => [
     BoxShadow(

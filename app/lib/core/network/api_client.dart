@@ -56,10 +56,11 @@ String defaultAiBaseUrl() {
 }
 
 class ApiException implements Exception {
-  ApiException(this.message, {this.statusCode});
+  ApiException(this.message, {this.statusCode, this.requestId});
 
   final String message;
   final int? statusCode;
+  final String? requestId;
 
   bool get isNetworkFailure => statusCode == null;
 
@@ -115,15 +116,14 @@ class ApiClient {
     required this.locale,
     this.onUnauthorized,
     String? baseUrl,
-  })
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl ?? defaultApiBaseUrl(),
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 15),
-          headers: {'Content-Type': 'application/json'},
-        ),
-      ) {
+  }) : _dio = Dio(
+         BaseOptions(
+           baseUrl: baseUrl ?? defaultApiBaseUrl(),
+           connectTimeout: const Duration(seconds: 10),
+           receiveTimeout: const Duration(seconds: 15),
+           headers: {'Content-Type': 'application/json'},
+         ),
+       ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -299,13 +299,25 @@ class ApiClient {
 
     // FastAPI puts a human-readable reason in `detail`; surface it rather than
     // a generic failure, because those messages are already written for users.
+    final requestId = (data is Map && data['request_id'] is String)
+        ? data['request_id'] as String
+        : e.response?.headers.value('x-request-id');
+
     if (data is Map && data['detail'] is String) {
-      return ApiException(data['detail'] as String, statusCode: status);
+      return ApiException(
+        data['detail'] as String,
+        statusCode: status,
+        requestId: requestId,
+      );
     }
     if (status != null) {
-      return ApiException('HTTP $status', statusCode: status);
+      return ApiException(
+        'HTTP $status',
+        statusCode: status,
+        requestId: requestId,
+      );
     }
-    return ApiException('network');
+    return ApiException('network', requestId: requestId);
   }
 }
 

@@ -1736,6 +1736,192 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Chiqim'**
   String get paymentsOut;
+
+  /// No description provided for @settingsDarkMode.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tungi rejim'**
+  String get settingsDarkMode;
+
+  /// No description provided for @errorLoadingCategories.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kategoriyalarni yuklashda xatolik'**
+  String get errorLoadingCategories;
+
+  /// No description provided for @matchLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'MOSLIK'**
+  String get matchLabel;
+
+  /// No description provided for @okLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'OK'**
+  String get okLabel;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bildirishnoma sozlamalari'**
+  String get notificationSettings;
+
+  /// No description provided for @pushNotifications.
+  ///
+  /// In uz, this message translates to:
+  /// **'Push bildirishnomalar'**
+  String get pushNotifications;
+
+  /// No description provided for @pushNotificationsDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi mosliklar va xabarlar haqida bildirishnoma oling'**
+  String get pushNotificationsDesc;
+
+  /// No description provided for @editListing.
+  ///
+  /// In uz, this message translates to:
+  /// **'E\'lonni tahrirlash'**
+  String get editListing;
+
+  /// No description provided for @deleteListing.
+  ///
+  /// In uz, this message translates to:
+  /// **'E\'lonni o\'chirish'**
+  String get deleteListing;
+
+  /// No description provided for @savedListings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Saqlangan e\'lonlar'**
+  String get savedListings;
+
+  /// No description provided for @reportUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchi ustidan shikoyat'**
+  String get reportUser;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchini bloklash'**
+  String get blockUser;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'zgarishlarni saqlash'**
+  String get saveChanges;
+
+  /// No description provided for @filterTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Filterlar'**
+  String get filterTitle;
+
+  /// No description provided for @filterMinPrice.
+  ///
+  /// In uz, this message translates to:
+  /// **'Minimal narx (so\'m)'**
+  String get filterMinPrice;
+
+  /// No description provided for @filterMaxPrice.
+  ///
+  /// In uz, this message translates to:
+  /// **'Maksimal narx (so\'m)'**
+  String get filterMaxPrice;
+
+  /// No description provided for @filterRegion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hudud'**
+  String get filterRegion;
+
+  /// No description provided for @filterApply.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qo\'llash'**
+  String get filterApply;
+
+  /// No description provided for @filterClear.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tozalash'**
+  String get filterClear;
+
+  /// No description provided for @errorNoImage.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rasm mavjud emas'**
+  String get errorNoImage;
+
+  /// No description provided for @errorCategoryLoad.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kategoriyalarni yuklashda xatolik'**
+  String get errorCategoryLoad;
+
+  /// No description provided for @actionEdit.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tahrirlash'**
+  String get actionEdit;
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'chirish'**
+  String get actionDelete;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get actionCancel;
+
+  /// No description provided for @actionOk.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tushunarli'**
+  String get actionOk;
+
+  /// No description provided for @actionDeleteListing.
+  ///
+  /// In uz, this message translates to:
+  /// **'E\'lonni o\'chirish'**
+  String get actionDeleteListing;
+
+  /// No description provided for @actionReportUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ustidan shikoyat qilish'**
+  String get actionReportUser;
+
+  /// No description provided for @actionBlockUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklash'**
+  String get actionBlockUser;
+
+  /// No description provided for @actionDeleteAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobni o\'chirish'**
+  String get actionDeleteAccount;
+
+  /// No description provided for @actionDarkMode.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qorong\'u rejim'**
+  String get actionDarkMode;
+
+  /// No description provided for @emptyMyListings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha e\'lonlar yo\'q'**
+  String get emptyMyListings;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -79,14 +79,15 @@ class ConcaveSegmentedControl<T> extends StatelessWidget {
                             child: AnimatedDefaultTextStyle(
                               duration: M3Motion.medium2,
                               curve: M3Motion.emphasized,
-                              style: (theme.textTheme.labelLarge ??
-                                      const TextStyle())
-                                  .copyWith(
-                                    color: i == index ? p.give : p.inkSoft,
-                                    fontWeight: i == index
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                  ),
+                              style:
+                                  (theme.textTheme.labelLarge ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        color: i == index ? p.give : p.inkSoft,
+                                        fontWeight: i == index
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                      ),
                               child: Text(segments[i].label),
                             ),
                           ),
@@ -162,7 +163,12 @@ class _ConcaveSegmentsPainter extends CustomPainter {
       path.lineTo(right, 0);
     }
     path.close();
-    canvas.drawPath(path, Paint()..color = fill..isAntiAlias = true);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = fill
+        ..isAntiAlias = true,
+    );
 
     // Every internal boundary carries the same curve, faintly, so the dividers
     // read even where the fill is nowhere near.

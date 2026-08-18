@@ -30,7 +30,8 @@ class ChatPage extends ConsumerStatefulWidget {
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver {
+class _ChatPageState extends ConsumerState<ChatPage>
+    with WidgetsBindingObserver {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   StreamSubscription<LiveEvent>? _live;
@@ -111,9 +112,15 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _act(String offerId, String action, {int? cashDeltaMinor}) async {
+  Future<void> _act(
+    String offerId,
+    String action, {
+    int? cashDeltaMinor,
+  }) async {
     try {
-      await ref.read(tradeRepositoryProvider).act(offerId, action, cashDeltaMinor: cashDeltaMinor);
+      await ref
+          .read(tradeRepositoryProvider)
+          .act(offerId, action, cashDeltaMinor: cashDeltaMinor);
       ref.invalidate(conversationProvider(widget.conversationId));
       ref.invalidate(conversationsProvider);
       ref.invalidate(matchesProvider);
@@ -125,7 +132,9 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
   Future<void> _counter(Offer offer) async {
     final l = L.of(context);
     final controller = TextEditingController(
-      text: offer.cashDeltaMinor == 0 ? '' : (offer.cashDeltaMinor.abs() ~/ 100).toString(),
+      text: offer.cashDeltaMinor == 0
+          ? ''
+          : (offer.cashDeltaMinor.abs() ~/ 100).toString(),
     );
 
     final confirmed = await showBarterPanel<bool>(
@@ -190,7 +199,8 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
             error: (e, _) => ErrorState(
               message: errorMessage(context, e),
               retryLabel: l.retry,
-              onRetry: () => ref.invalidate(conversationProvider(widget.conversationId)),
+              onRetry: () =>
+                  ref.invalidate(conversationProvider(widget.conversationId)),
             ),
             data: (detail) {
               final offer = detail.offer;
@@ -198,7 +208,10 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
                 children: [
                   if (widget.embedded)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Gap.x4,
+                        vertical: Gap.x3,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerLowest,
                         border: Border(bottom: BorderSide(color: p.hair)),
@@ -225,20 +238,36 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
                         : ListView.builder(
                             controller: _scroll,
                             reverse: true,
-                            padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Gap.x4,
+                              vertical: Gap.x4,
+                            ),
                             itemCount: detail.messages.length,
                             itemBuilder: (context, index) {
-                              final message = detail.messages[detail.messages.length - 1 - index];
-                              return _Bubble(key: ValueKey(message.id), message: message)
+                              final message = detail
+                                  .messages[detail.messages.length - 1 - index];
+                              return _Bubble(
+                                    key: ValueKey(message.id),
+                                    message: message,
+                                  )
                                   .animate(key: ValueKey('anim_${message.id}'))
                                   .fadeIn(duration: 200.ms)
-                                  .slideY(begin: 0.05, end: 0, curve: M3Motion.emphasizedDecelerate);
+                                  .slideY(
+                                    begin: 0.05,
+                                    end: 0,
+                                    curve: M3Motion.emphasizedDecelerate,
+                                  );
                             },
                           ),
                   ),
                   if (_peerTyping)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(Gap.x5, 0, Gap.x5, Gap.x2),
+                      padding: const EdgeInsets.fromLTRB(
+                        Gap.x5,
+                        0,
+                        Gap.x5,
+                        Gap.x2,
+                      ),
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Row(
@@ -246,19 +275,38 @@ class _ChatPageState extends ConsumerState<ChatPage> with WidgetsBindingObserver
                           children: [
                             Text(
                               l.chatTyping,
-                              style: theme.textTheme.labelSmall?.copyWith(color: p.give, fontWeight: FontWeight.w700),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: p.give,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             Gap.w1,
                             for (var i = 0; i < 3; i++)
                               Padding(
                                 padding: const EdgeInsets.only(right: 2),
-                                child: Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(color: p.give, shape: BoxShape.circle),
-                                ).animate(onPlay: (c) => c.repeat())
-                                 .scaleXY(begin: 0.5, end: 1.5, duration: 400.ms, delay: (i * 200).ms, curve: Curves.easeInOut)
-                                 .then(delay: 400.ms).scaleXY(begin: 1.5, end: 0.5, duration: 400.ms),
+                                child:
+                                    Container(
+                                          width: 4,
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: p.give,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )
+                                        .animate(onPlay: (c) => c.repeat())
+                                        .scaleXY(
+                                          begin: 0.5,
+                                          end: 1.5,
+                                          duration: 400.ms,
+                                          delay: (i * 200).ms,
+                                          curve: Curves.easeInOut,
+                                        )
+                                        .then(delay: 400.ms)
+                                        .scaleXY(
+                                          begin: 1.5,
+                                          end: 0.5,
+                                          duration: 400.ms,
+                                        ),
                               ),
                           ],
                         ),
@@ -323,14 +371,22 @@ class _PeerHeader extends StatelessWidget {
                       ),
                       if (peer.isVerified) ...[
                         Gap.w1,
-                        Icon(Symbols.verified_rounded, size: Sizes.iconSm, color: p.give, fill: 1),
+                        Icon(
+                          Symbols.verified_rounded,
+                          size: Sizes.iconSm,
+                          color: p.give,
+                          fill: 1,
+                        ),
                       ],
                     ],
                   ),
                   if (peer.isOnline)
                     Text(
                       l.traderOnline,
-                      style: theme.textTheme.labelSmall?.copyWith(color: p.give, letterSpacing: 0),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: p.give,
+                        letterSpacing: 0,
+                      ),
                     ),
                 ],
               ),
@@ -365,79 +421,98 @@ class _DealPanel extends ConsumerWidget {
     final locale = l.localeName;
 
     final mine = offer.offered.map((o) => o.title).join(' + ');
-    final cash = offer.cashDeltaMinor != 0 ? ' + ${offer.cash.format(locale)}' : '';
+    final cash = offer.cashDeltaMinor != 0
+        ? ' + ${offer.cash.format(locale)}'
+        : '';
     final awaitingMe = !offer.isMine;
-    final open = offer.status == OfferStatus.pending || offer.status == OfferStatus.talking;
+    final open =
+        offer.status == OfferStatus.pending ||
+        offer.status == OfferStatus.talking;
 
-    return AnimatedContainer(
-      duration: M3Motion.medium3,
-      curve: M3Motion.emphasized,
-      margin: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, 0),
-      padding: const EdgeInsets.all(Gap.x4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x3, Gap.x4, 0),
+      child: BouncingClayCard(
+        clayMode: true,
         borderRadius: Radii.rLg,
-        border: Border.all(
-          color: switch (offer.status) {
-            OfferStatus.accepted || OfferStatus.completed => p.give,
-            OfferStatus.declined => theme.colorScheme.error,
-            _ => theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          },
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+        child: AnimatedContainer(
+          duration: M3Motion.medium3,
+          curve: M3Motion.emphasized,
+          padding: const EdgeInsets.all(Gap.x4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: Radii.rLg,
+            border: Border.all(
+              color: switch (offer.status) {
+                OfferStatus.accepted || OfferStatus.completed => p.give,
+                OfferStatus.declined => theme.colorScheme.error,
+                _ => theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              },
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: _StatusLine(status: offer.status)),
-              if (open && offer.expiresAt != null) _Expiry(expiresAt: offer.expiresAt!),
+              Row(
+                children: [
+                  Expanded(child: _StatusLine(status: offer.status)),
+                  if (open && offer.expiresAt != null)
+                    _Expiry(expiresAt: offer.expiresAt!),
+                ],
+              ),
+              Gap.h3,
+              TradeSides(
+                dense: true,
+                giveCaption: offer.isMine ? l.dealYouGive : l.dealYouGet,
+                giveLabel: '$mine$cash',
+                takeCaption: offer.isMine ? l.dealYouGet : l.dealYouGive,
+                takeLabel: offer.wanted.title,
+              ),
+              if (open && awaitingMe) ...[
+                Gap.h4,
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onDecline,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.error,
+                          side: BorderSide(color: theme.colorScheme.error),
+                        ),
+                        child: Text(l.dealDecline),
+                      ),
+                    ),
+                    Gap.w2,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onCounter,
+                        child: Text(l.dealCounter),
+                      ),
+                    ),
+                    Gap.w2,
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onAccept,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, Sizes.buttonMd),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: Text(l.dealAccept),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else if (offer.status == OfferStatus.accepted) ...[
+                Gap.h4,
+                FilledButton.icon(
+                  onPressed: onComplete,
+                  icon: const Icon(Symbols.check_circle_rounded),
+                  label: Text(l.dealComplete),
+                ),
+              ] else if (offer.status == OfferStatus.completed)
+                _ReviewPrompt(offer: offer),
             ],
           ),
-          Gap.h3,
-          TradeSides(
-            dense: true,
-            giveCaption: offer.isMine ? l.dealYouGive : l.dealYouGet,
-            giveLabel: '$mine$cash',
-            takeCaption: offer.isMine ? l.dealYouGet : l.dealYouGive,
-            takeLabel: offer.wanted.title,
-          ),
-          if (open && awaitingMe) ...[
-            Gap.h4,
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onDecline,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error,
-                      side: BorderSide(color: theme.colorScheme.error),
-                    ),
-                    child: Text(l.dealDecline),
-                  ),
-                ),
-                Gap.w2,
-                Expanded(child: OutlinedButton(onPressed: onCounter, child: Text(l.dealCounter))),
-                Gap.w2,
-                Expanded(
-                  child: FilledButton(
-                    onPressed: onAccept,
-                    style: FilledButton.styleFrom(minimumSize: const Size(0, Sizes.buttonMd), padding: EdgeInsets.zero),
-                    child: Text(l.dealAccept),
-                  ),
-                ),
-              ],
-            ),
-          ] else if (offer.status == OfferStatus.accepted) ...[
-            Gap.h4,
-            FilledButton.icon(
-              onPressed: onComplete,
-              icon: const Icon(Symbols.check_circle_rounded),
-              label: Text(l.dealComplete),
-            ),
-          ] else if (offer.status == OfferStatus.completed)
-            _ReviewPrompt(offer: offer),
-        ],
+        ),
       ),
     );
   }
@@ -456,10 +531,16 @@ class _StatusLine extends StatelessWidget {
       OfferStatus.talking => (l.dealTalking, p.take),
       OfferStatus.accepted => (l.dealAccepted, p.give),
       OfferStatus.completed => (l.dealCompleted, p.give),
-      OfferStatus.declined => (l.dealDeclined, Theme.of(context).colorScheme.error),
+      OfferStatus.declined => (
+        l.dealDeclined,
+        Theme.of(context).colorScheme.error,
+      ),
       _ => (l.dealExpired, p.inkFaint),
     };
-    return Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color));
+    return Text(
+      label.toUpperCase(),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+    );
   }
 }
 
@@ -476,10 +557,19 @@ class _Expiry extends StatelessWidget {
     final (label, colour) = switch (left) {
       _ when left.isNegative => (l.dealExpired, p.inkFaint),
       _ when left.inHours < 1 => (l.chatExpiresSoon, theme.colorScheme.error),
-      _ when left.inHours < 6 => (l.chatExpiresIn(left.inHours), theme.colorScheme.error),
+      _ when left.inHours < 6 => (
+        l.chatExpiresIn(left.inHours),
+        theme.colorScheme.error,
+      ),
       _ => (l.chatExpiresIn(left.inHours), p.inkFaint),
     };
-    return Text(label, style: theme.textTheme.labelSmall?.copyWith(color: colour, letterSpacing: 0));
+    return Text(
+      label,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: colour,
+        letterSpacing: 0,
+      ),
+    );
   }
 }
 
@@ -498,10 +588,24 @@ class _Bubble extends StatelessWidget {
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: Gap.x2),
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
-        padding: const EdgeInsets.symmetric(horizontal: Gap.x4, vertical: Gap.x3),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Gap.x4,
+          vertical: Gap.x3,
+        ),
         decoration: BoxDecoration(
-          color: mine ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHigh,
+          color: mine
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surfaceContainerHigh,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(22),
             topRight: const Radius.circular(22),
@@ -510,7 +614,9 @@ class _Bubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: mine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             if (message.photoUrl != null) ...[
               ClipRRect(
@@ -522,14 +628,20 @@ class _Bubble extends StatelessWidget {
             Text(
               message.body,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: mine ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant,
+                color: mine
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
             Gap.h1,
             Text(
               DateFormat.Hm(l.localeName).format(message.createdAt.toLocal()),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: mine ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.6) : p.inkFaint,
+                color: mine
+                    ? theme.colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.6,
+                      )
+                    : p.inkFaint,
                 fontSize: 10,
               ),
             ),
@@ -583,23 +695,36 @@ class _Composer extends StatelessWidget {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: Gap.x3),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: Gap.x3,
+                      vertical: Gap.x3,
+                    ),
                   ),
                 ),
               ),
             ),
             Gap.w2,
             IconButton.filled(
-              onPressed: sending ? null : onSend,
-              icon: sending
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Symbols.send_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                minimumSize: const Size(52, 52),
-              ),
-            ).animate(target: sending ? 1 : 0).scaleXY(end: 0.85, duration: 150.ms).fade(end: 0.8),
+                  onPressed: sending ? null : onSend,
+                  icon: sending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Symbols.send_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    minimumSize: const Size(52, 52),
+                  ),
+                )
+                .animate(target: sending ? 1 : 0)
+                .scaleXY(end: 0.85, duration: 150.ms)
+                .fade(end: 0.8),
           ],
         ),
       ),
@@ -630,14 +755,24 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
     if (_body.text.trim().isEmpty) return;
     setState(() => _sending = true);
     try {
-      await ref.read(tradeRepositoryProvider).writeReview(offerId: widget.offer.id, rating: _rating, body: _body.text.trim());
+      await ref
+          .read(tradeRepositoryProvider)
+          .writeReview(
+            offerId: widget.offer.id,
+            rating: _rating,
+            body: _body.text.trim(),
+          );
       ref.invalidate(myReviewProvider(widget.offer.id));
       ref.invalidate(traderProvider(widget.offer.counterparty.id));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context).reviewThanks)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(L.of(context).reviewThanks)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -653,8 +788,22 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (review) {
-        if (review != null) return Padding(padding: const EdgeInsets.only(top: Gap.x3), child: Text(l.reviewDone, style: theme.textTheme.bodySmall));
-        if (!_open) return Padding(padding: const EdgeInsets.only(top: Gap.x3), child: OutlinedButton.icon(onPressed: () => setState(() => _open = true), icon: const Icon(Symbols.star_rounded), label: Text(l.reviewSend)));
+        if (review != null) {
+          return Padding(
+            padding: const EdgeInsets.only(top: Gap.x3),
+            child: Text(l.reviewDone, style: theme.textTheme.bodySmall),
+          );
+        }
+        if (!_open) {
+          return Padding(
+            padding: const EdgeInsets.only(top: Gap.x3),
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _open = true),
+              icon: const Icon(Symbols.star_rounded),
+              label: Text(l.reviewSend),
+            ),
+          );
+        }
         return Padding(
           padding: const EdgeInsets.only(top: Gap.x4),
           child: Column(
@@ -666,17 +815,39 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   for (var star = 1; star <= 5; star++)
-                    IconButton(onPressed: () => setState(() => _rating = star), icon: Icon(Symbols.star_rounded, size: 32, fill: star <= _rating ? 1 : 0, color: star <= _rating ? palette(context).money : palette(context).inkFaint)),
+                    IconButton(
+                      onPressed: () => setState(() => _rating = star),
+                      icon: Icon(
+                        Symbols.star_rounded,
+                        size: 32,
+                        fill: star <= _rating ? 1 : 0,
+                        color: star <= _rating
+                            ? palette(context).money
+                            : palette(context).inkFaint,
+                      ),
+                    ),
                 ],
               ),
               Gap.h3,
-              TextField(controller: _body, maxLines: 3, decoration: InputDecoration(hintText: l.reviewBody)),
+              TextField(
+                controller: _body,
+                maxLines: 3,
+                decoration: InputDecoration(hintText: l.reviewBody),
+              ),
               Gap.h3,
               Row(
                 children: [
-                  TextButton(onPressed: () => setState(() => _open = false), child: Text(l.reviewLater)),
+                  TextButton(
+                    onPressed: () => setState(() => _open = false),
+                    child: Text(l.reviewLater),
+                  ),
                   Gap.w2,
-                  Expanded(child: FilledButton(onPressed: _sending ? null : _send, child: Text(l.reviewSend))),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _sending ? null : _send,
+                      child: Text(l.reviewSend),
+                    ),
+                  ),
                 ],
               ),
             ],

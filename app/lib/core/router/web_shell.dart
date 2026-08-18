@@ -41,7 +41,13 @@ class WebShell extends StatelessWidget {
             width: 80,
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerLow,
-              border: Border(right: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+              border: Border(
+                right: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+              ),
             ),
             child: SafeArea(
               child: Column(
@@ -84,10 +90,7 @@ class WebShell extends StatelessWidget {
           ),
 
           Expanded(
-            child: Container(
-              color: theme.colorScheme.surface,
-              child: child,
-            ),
+            child: Container(color: theme.colorScheme.surface, child: child),
           ),
         ],
       ),
@@ -132,13 +135,17 @@ class _RailItem extends StatelessWidget {
                 width: 56,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: selected ? theme.colorScheme.secondaryContainer : Colors.transparent,
+                  color: selected
+                      ? theme.colorScheme.secondaryContainer
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
                   fill: selected ? 1 : 0,
-                  color: selected ? theme.colorScheme.onSecondaryContainer : p.inkSoft,
+                  color: selected
+                      ? theme.colorScheme.onSecondaryContainer
+                      : p.inkSoft,
                   size: 24,
                 ),
               ),

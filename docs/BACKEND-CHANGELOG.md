@@ -25,6 +25,45 @@
 
 ## 2026-08-18
 
+### 🆕 Panel orqali bildirishnoma yuborish
+
+Panelda yangi bo'lim: **Bildirishnoma**. `POST /admin/push` va
+`GET /admin/push/status`.
+
+Segmentlar: hammaga · e'loni borlarga · e'loni yo'qlarga · viloyat
+bo'yicha. **Sinov tugmasi** — yubormasdan nechta odamga tegishini
+ko'rsatadi.
+
+Matn **har bir odamning o'z tilida** yoziladi (`users.locale` ga qarab),
+shuning uchun uch tilda ham matn majburiy.
+
+⚠️ Bu **alohida yo'l emas** — mavjud bildirishnoma navbatiga tushadi.
+Ya'ni foydalanuvchining sozlamalari hurmat qilinadi, sokin soatlarda
+kutadi, ilova ichidagi ro'yxatda ham ko'rinadi.
+
+⚠️ **Transport hali ulanmagan** — panelda bu ochiq yozilgan. Xabar
+navbatga tushadi va logga yoziladi, telefonlarga esa bormaydi. FCM/APNs
+uchun Firebase kaliti kerak.
+
+### 🐛 Flutter: Firebase yiqilishi va `/devices` shartnomasi tuzatildi
+
+[FRONTEND-BUGS-RUNTIME.md](FRONTEND-BUGS-RUNTIME.md) R0-1, R1-1, R1-2,
+R1-3 yopildi:
+
+- `Firebase.apps.isNotEmpty` bilan himoya — konfiguratsiya yo'q bo'lsa
+  push jimgina o'chadi, ilova esa yiqilmaydi.
+- `fcm_token` → **`token`**: shartnomaga mos, ya'ni endi 422 emas.
+- Platforma haqiqiy qurilmadan aniqlanadi (`ios` qattiq yozilgan edi).
+- `onTokenRefresh` tinglanadi — OS token almashtirsa server bilib turadi.
+- `forget()` qo'shildi: chiqishda `DELETE /devices/{token}`.
+- Xatolar endi logga yoziladi, jimgina yutilmaydi.
+
+⚠️ **Firebase kaliti hali ham kerak.** Kod tayyor va yiqilmaydi, lekin
+`GoogleService-Info.plist` / `google-services.json` qo'shilmaguncha push
+o'chirilgan holatda qoladi.
+
+---
+
 ### 🆕🎨 Admin panel va boshqariladigan lenta
 
 **Panel:** `http://<server>/admin` — bitta sahifa, backend beradi.

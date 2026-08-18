@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
@@ -18,7 +19,7 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
-  static const _hold = Duration(milliseconds: 1500);
+  static const _hold = Duration(milliseconds: 5000);
   Timer? _timer;
 
   @override
@@ -53,9 +54,14 @@ class _SplashPageState extends ConsumerState<SplashPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Hero(
+              Hero(
                 tag: BrandMark.heroTag,
-                child: BrandMark(size: 112, onDark: true, animate: true),
+                child: Lottie.asset(
+                  'assets/media/swaparrows.lottie',
+                  width: 200,
+                  height: 200,
+                  repeat: false,
+                ),
               ).animate().scale(
                 begin: const Offset(0.7, 0.7),
                 end: const Offset(1, 1),
@@ -64,13 +70,20 @@ class _SplashPageState extends ConsumerState<SplashPage> {
               ),
               Gap.h6,
               Text(
-                l.appName,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                ),
-              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.3, end: 0, curve: M3Motion.emphasizedDecelerate),
+                    l.appName,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.8,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(delay: 300.ms)
+                  .slideY(
+                    begin: 0.3,
+                    end: 0,
+                    curve: M3Motion.emphasizedDecelerate,
+                  ),
             ],
           ),
         ),

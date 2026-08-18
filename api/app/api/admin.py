@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import enum
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import Field
-from sqlalchemy import select
+from pydantic import Field, field_validator
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.locale import resolve_locale
 from app.core.security import current_moderator
 from app.db.session import get_db
+from app.models.device import Device
 from app.models.listing import Listing, ListingStatus, ListingTranslation
 from app.models.moderation import (
     Report,
@@ -18,6 +20,7 @@ from app.models.moderation import (
     ReportStatus,
     ReportTargetType,
 )
+from app.models.social import Notification, NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.common import ApiModel
 from app.services import analytics
@@ -281,3 +284,151 @@ async def analytics_search_gaps(
 ) -> list[dict]:
     """Qaysi turkumda qidiruv eng ko'p quruq qaytadi."""
     return await analytics.search_gaps(db, days=days)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Push yuborish
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class Segment(str, enum.Enum):
+    """Kimga yuboriladi."""
+
+    everyone = "everyone"
+    #: E'loni bor savdogarlar — faol tomon.
+    with_listings = "with_listings"
+    #: E'loni yo'q hisoblar. Ularni qaytarish uchun.
+    without_listings = "without_listings"
+    #: Bitta viloyat. Mavsumiy yoki mahalliy xabar uchun.
+    region = "region"
+
+
+class PushIn(ApiModel):
+    title: dict[str, str]
+    body: dict[str, str]
+    segment: Segment = Segment.everyone
+    #: `segment=region` uchun viloyat nomi.
+    region: str | None = None
+
+    target_type: NotifyTargetType = NotifyTargetType.matches
+    target_id: uuid.UUID | None = None
+
+    #: Haqiqatan yubormasdan, nechta odamga tegishini ko'rsatadi.
+    dry_run: bool = False
+
+    @field_validator("title", "body")
+    @classmethod
+    def _three(cls, value: dict[str, str]) -> dict[str, str]:
+        missing = [c for c in ("uz", "ru", "en") if not value.get(c, "").strip()]
+        if missing:
+            raise ValueError(
+                f"Uch tilda ham matn kerak. Yetishmayapti: {', '.join(missing)}"
+            )
+        return value
+
+
+class PushOut(ApiModel):
+    recipients: int
+    queued: int
+    dry_run: bool
+
+
+@router.post("/push", response_model=PushOut)
+async def send_push(
+    payload: PushIn,
+    me: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> PushOut:
+    """
+    Tanlangan guruhga bildirishnoma yuborish.
+
+    To'g'ridan-to'g'ri push emas — **bildirishnoma qatori** yoziladi va u
+    mavjud navbatga (`app.push_send`) tushadi. Shu sababli u boshqa
+    hamma narsa bilan bir xil qoidalarga bo'ysunadi: foydalanuvchining
+    sozlamalari hurmat qilinadi, sokin soatlarda kutadi, qurilmasi
+    yo'qlar o'tkazib yuboriladi. Alohida yo'l qurilsa, bularning
+    hammasini ikkinchi marta yozish kerak bo'lardi — va ikkinchisi
+    birinchisidan farq qila boshlardi.
+
+    Matn **har bir odamning o'z tilida** yoziladi: `users.locale` ga
+    qarab tanlanadi. Bitta tilda yuborish uchdan ikki foydalanuvchiga
+    tushunarsiz xabar berardi.
+
+    `dry_run` — nechta odamga tegishini yozmasdan ko'rsatadi. Ommaviy
+    yuborishdan oldin buni bosish odat bo'lsin: "hammaga" degan tugma
+    qaytarib bo'lmaydigan tugma.
+    """
+    query = select(User).where(User.deleted_at.is_(None))
+
+    if payload.segment is Segment.region:
+        if not payload.region:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "Viloyat ko'rsatilmagan."
+            )
+        query = query.where(User.region == payload.region)
+
+    elif payload.segment in (Segment.with_listings, Segment.without_listings):
+        owners = select(Listing.owner_id).where(
+            Listing.status == ListingStatus.active
+        )
+        query = (
+            query.where(User.id.in_(owners))
+            if payload.segment is Segment.with_listings
+            else query.where(User.id.notin_(owners))
+        )
+
+    people = (await db.scalars(query)).all()
+
+    if payload.dry_run:
+        return PushOut(recipients=len(people), queued=0, dry_run=True)
+
+    now = datetime.now(UTC)
+    for person in people:
+        locale = person.locale if person.locale in ("uz", "ru", "en") else "uz"
+        db.add(
+            Notification(
+                user_id=person.id,
+                kind=NotifyKind.system,
+                target_type=payload.target_type,
+                target_id=payload.target_id,
+                title=payload.title[locale][:200],
+                body=payload.body[locale][:400],
+                created_at=now,
+            )
+        )
+
+    await db.commit()
+    return PushOut(recipients=len(people), queued=len(people), dry_run=False)
+
+
+@router.get("/push/status")
+async def push_status(
+    me: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Push haqiqatan ucha oladimi.
+
+    Panelda ko'rsatiladi, chunki "yubordim, lekin hech kim olmadi" degan
+    holatning eng ko'p sababi shu: transport ulanmagan yoki hech kimda
+    qurilma ro'yxatdan o'tmagan. Buni oldindan ko'rsatish yuborgandan
+    keyin izlashdan arzon.
+    """
+    devices = await db.scalar(select(func.count()).select_from(Device))
+    pending = await db.scalar(
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.pushed_at.is_(None))
+    )
+    by_platform = await db.execute(
+        select(Device.platform, func.count()).group_by(Device.platform)
+    )
+
+    return {
+        # Transport hali ulanmagan: FCM/APNs uchun Firebase kaliti kerak.
+        # Shu paytgacha xabar navbatga tushadi va logga yoziladi.
+        "transport": "log",
+        "transport_ready": False,
+        "devices": devices or 0,
+        "by_platform": {p.value: n for p, n in by_platform},
+        "queued": pending or 0,
+    }

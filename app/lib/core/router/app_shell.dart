@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,19 +49,9 @@ class AppShell extends ConsumerWidget {
 
     // Destinations are peers, not steps: nothing slides sideways between them.
     // A fade-through says "a different place" without implying a direction.
-    final body = PageTransitionSwitcher(
-      duration: M3Motion.medium2,
-      transitionBuilder: (child, animation, secondary) => FadeThroughTransition(
-        animation: animation,
-        secondaryAnimation: secondary,
-        fillColor: Colors.transparent,
-        child: child,
-      ),
-      child: KeyedSubtree(
-        key: ValueKey(navigationShell.currentIndex),
-        child: navigationShell,
-      ),
-    );
+    // The actual animation is now handled safely by StatefulShellRoute's
+    // navigatorContainerBuilder in app_router.dart.
+    final body = navigationShell;
 
     if (MediaQuery.sizeOf(context).width >= kWebBreakpoint) {
       return WebShell(
@@ -202,7 +191,12 @@ class _Tab extends StatelessWidget {
             AnimatedScale(
               scale: selected ? 1.15 : 1.0,
               duration: M3Motion.short3,
-              child: Icon(icon, size: Sizes.iconLg, fill: selected ? 1 : 0, color: colour),
+              child: Icon(
+                icon,
+                size: Sizes.iconLg,
+                fill: selected ? 1 : 0,
+                color: colour,
+              ),
             ),
             const SizedBox(height: 3),
             Text(
@@ -262,21 +256,29 @@ class _CreateButtonState extends State<_CreateButton> {
                 color: BrandColors.canvas,
                 shape: BoxShape.circle,
                 // Add the dual shadows (dark bottom-right, light top-left)
-                boxShadow: _down ? [] : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    offset: const Offset(5, 5),
-                    blurRadius: 10,
-                  ),
-                  const BoxShadow(
-                    color: Colors.white,
-                    offset: Offset(-5, -5),
-                    blurRadius: 10,
-                  ),
-                ],
+                boxShadow: _down
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          offset: const Offset(5, 5),
+                          blurRadius: 10,
+                        ),
+                        const BoxShadow(
+                          color: Colors.white,
+                          offset: Offset(-5, -5),
+                          blurRadius: 10,
+                        ),
+                      ],
                 border: _down
-                    ? Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1.5)
-                    : Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+                    ? Border.all(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        width: 1.5,
+                      )
+                    : Border.all(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        width: 1.5,
+                      ),
               ),
               child: AnimatedOpacity(
                 duration: M3Motion.short3,

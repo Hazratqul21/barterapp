@@ -40,11 +40,7 @@ Future<String?> pickAndUploadPhoto(
   final bytes = await file.readAsBytes();
   return ref
       .read(tradeRepositoryProvider)
-      .uploadPhoto(
-        bytes: bytes,
-        filename: file.name,
-        onProgress: onProgress,
-      );
+      .uploadPhoto(bytes: bytes, filename: file.name, onProgress: onProgress);
 }
 
 /// Camera or gallery. Skipped on the web, which has neither distinction nor a

@@ -195,10 +195,7 @@ class _Row extends ConsumerWidget {
     };
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Gap.x5,
-        vertical: Gap.x1,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x5, vertical: Gap.x1),
       child: Pressable(
         onTap: () async {
           if (notification.isUnread) {
@@ -296,7 +293,6 @@ class _Row extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _NotificationsShimmer extends StatelessWidget {

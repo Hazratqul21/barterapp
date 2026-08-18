@@ -877,4 +877,98 @@ class LRu extends L {
 
   @override
   String get paymentsOut => 'Списание';
+
+  @override
+  String get settingsDarkMode => 'Темная тема';
+
+  @override
+  String get errorLoadingCategories => 'Ошибка загрузки категорий';
+
+  @override
+  String get matchLabel => 'СОВПАДЕНИЕ';
+
+  @override
+  String get okLabel => 'ОК';
+
+  @override
+  String get notificationSettings => 'Настройки уведомлений';
+
+  @override
+  String get pushNotifications => 'Push уведомления';
+
+  @override
+  String get pushNotificationsDesc =>
+      'Получайте уведомления о совпадениях и сообщениях';
+
+  @override
+  String get editListing => 'Редактировать объявление';
+
+  @override
+  String get deleteListing => 'Удалить объявление';
+
+  @override
+  String get savedListings => 'Сохраненные объявления';
+
+  @override
+  String get reportUser => 'Пожаловаться на пользователя';
+
+  @override
+  String get blockUser => 'Заблокировать пользователя';
+
+  @override
+  String get saveChanges => 'Сохранить изменения';
+
+  @override
+  String get filterTitle => 'Фильтры';
+
+  @override
+  String get filterMinPrice => 'Мин. цена (сум)';
+
+  @override
+  String get filterMaxPrice => 'Макс. цена (сум)';
+
+  @override
+  String get filterRegion => 'Регион';
+
+  @override
+  String get filterApply => 'Применить';
+
+  @override
+  String get filterClear => 'Очистить';
+
+  @override
+  String get errorNoImage => 'Нет изображения';
+
+  @override
+  String get errorCategoryLoad => 'Ошибка загрузки категорий';
+
+  @override
+  String get actionEdit => 'Редактировать';
+
+  @override
+  String get actionDelete => 'Удалить';
+
+  @override
+  String get actionCancel => 'Отмена';
+
+  @override
+  String get actionOk => 'ОК';
+
+  @override
+  String get actionDeleteListing => 'Удалить объявление';
+
+  @override
+  String get actionReportUser => 'Пожаловаться на пользователя';
+
+  @override
+  String get actionBlockUser => 'Заблокировать';
+
+  @override
+  String get actionDeleteAccount => 'Удалить аккаунт';
+
+  @override
+  String get actionDarkMode => 'Темная тема';
+
+  @override
+  String get emptyMyListings => 'Пока нет объявлений';
 }

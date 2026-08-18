@@ -56,10 +56,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
             VerticalDivider(width: 1, color: p.hair),
             Expanded(
               child: _open == null
-                  ? EmptyState(
-                      title: l.inboxTitle,
-                      hint: l.inboxPickThread,
-                    )
+                  ? EmptyState(title: l.inboxTitle, hint: l.inboxPickThread)
                   : ChatPage(
                       key: ValueKey(_open),
                       conversationId: _open!,
@@ -135,7 +132,12 @@ class _ThreadList extends StatelessWidget {
           : RefreshIndicator(
               onRefresh: () async => onRetry(),
               child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(Gap.x4, Gap.x4, Gap.x4, bottomPadding),
+                padding: EdgeInsets.fromLTRB(
+                  Gap.x4,
+                  Gap.x4,
+                  Gap.x4,
+                  bottomPadding,
+                ),
                 itemCount: items.length,
                 separatorBuilder: (_, _) => Gap.h3,
                 itemBuilder: (context, index) => AnimatedListItem(
@@ -147,7 +149,10 @@ class _ThreadList extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: Gap.x4),
                       color: Theme.of(context).colorScheme.error,
-                      child: const Icon(Symbols.archive_rounded, color: Colors.white),
+                      child: const Icon(
+                        Symbols.archive_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                     onDismissed: (_) {
                       debugPrint('Archived ${items[index].id}');
@@ -185,19 +190,24 @@ class _ThreadCard extends StatelessWidget {
     final live = thread.offerStatus.isLive;
     final unread = thread.unread > 0;
 
-    return Card(
-      elevation: 0,
-      color: selected ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5) : theme.colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: Radii.rLg,
-        side: BorderSide(
-          color: selected ? p.give : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: selected ? 2 : 1,
+    return BouncingClayCard(
+      clayMode: true,
+      borderRadius: Radii.rLg,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+              : theme.colorScheme.surfaceContainerLow,
+          borderRadius: Radii.rLg,
+          border: Border.all(
+            color: selected
+                ? p.give
+                : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: selected ? 2 : 1,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: Radii.rLg,
         child: Opacity(
           opacity: live ? 1 : 0.62,
           child: Padding(
@@ -214,8 +224,15 @@ class _ThreadCard extends StatelessWidget {
                         spacing: Gap.x2,
                         children: [
                           Text(thread.gives, style: theme.textTheme.titleSmall),
-                          Icon(Symbols.swap_horiz_rounded, size: Sizes.iconMd, color: p.inkFaint),
-                          Text(thread.receives, style: theme.textTheme.titleSmall),
+                          Icon(
+                            Symbols.swap_horiz_rounded,
+                            size: Sizes.iconMd,
+                            color: p.inkFaint,
+                          ),
+                          Text(
+                            thread.receives,
+                            style: theme.textTheme.titleSmall,
+                          ),
                         ],
                       ),
                     ),
@@ -227,11 +244,17 @@ class _ThreadCard extends StatelessWidget {
                   Gap.h2,
                   Row(
                     children: [
-                      Icon(Symbols.payments_rounded, size: Sizes.iconSm, color: p.money),
+                      Icon(
+                        Symbols.payments_rounded,
+                        size: Sizes.iconSm,
+                        color: p.money,
+                      ),
                       Gap.w1,
                       Text(
                         thread.cash.format(l.localeName),
-                        style: theme.textTheme.labelLarge?.copyWith(color: p.money),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: p.money,
+                        ),
                       ),
                     ],
                   ),
@@ -259,7 +282,10 @@ class _ThreadCard extends StatelessWidget {
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: BoxDecoration(color: p.money, shape: BoxShape.circle),
+                                  decoration: BoxDecoration(
+                                    color: p.money,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
                                 Gap.w2,
                               ],
@@ -269,7 +295,9 @@ class _ThreadCard extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: unread ? FontWeight.w800 : FontWeight.w600,
+                                    fontWeight: unread
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
                                   ),
                                 ),
                               ),
@@ -277,7 +305,10 @@ class _ThreadCard extends StatelessWidget {
                                 Gap.w2,
                                 Text(
                                   timeAgo(context, thread.lastMessageAt!),
-                                  style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint, fontSize: 11),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: p.inkFaint,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ],
@@ -291,8 +322,12 @@ class _ThreadCard extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: unread ? theme.colorScheme.onSurface : p.inkSoft,
-                                    fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+                                    color: unread
+                                        ? theme.colorScheme.onSurface
+                                        : p.inkSoft,
+                                    fontWeight: unread
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
                                   ),
                                 ),
                               ),
@@ -329,13 +364,24 @@ class _StatusPill extends StatelessWidget {
       OfferStatus.talking => (l.dealTalking, p.take, p.takeSoft),
       OfferStatus.accepted => (l.dealAccepted, p.give, p.giveSoft),
       OfferStatus.completed => (l.dealCompleted, p.give, p.giveSoft),
-      OfferStatus.declined => (l.dealDeclined, Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5)),
+      OfferStatus.declined => (
+        l.dealDeclined,
+        Theme.of(context).colorScheme.error,
+        Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+      ),
       _ => (l.dealExpired, p.inkSoft, p.sunken),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Gap.x2, vertical: 2),
       decoration: BoxDecoration(color: tint, borderRadius: Radii.rFull),
-      child: Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colour, fontSize: 9, fontWeight: FontWeight.w800)),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: colour,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 }
@@ -348,8 +394,19 @@ class _UnreadBadge extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: palette(context).money, shape: BoxShape.circle),
-      child: Text('$count', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: palette(context).money,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '$count',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

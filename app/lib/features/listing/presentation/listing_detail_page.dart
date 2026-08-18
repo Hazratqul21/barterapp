@@ -10,6 +10,9 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
+import '../../trade/data/trade_repository.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../../core/analytics/analytics_service.dart';
 
 class ListingDetailPage extends ConsumerStatefulWidget {
   const ListingDetailPage({super.key, required this.listingId});
@@ -23,6 +26,27 @@ class ListingDetailPage extends ConsumerStatefulWidget {
 class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
   int _shot = 0;
   bool _saved = false;
+  late final DateTime _enteredAt;
+  late final AnalyticsService _analytics;
+
+  @override
+  void initState() {
+    super.initState();
+    _enteredAt = DateTime.now();
+    _analytics = ref.read(analyticsServiceProvider);
+  }
+
+  @override
+  void dispose() {
+    final dwellMs = DateTime.now().difference(_enteredAt).inMilliseconds;
+    _analytics.logEvent(
+      'listing_dwell',
+      targetType: 'listing',
+      targetId: widget.listingId,
+      payload: {'dwell_ms': dwellMs},
+    );
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +72,64 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
             constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
             child: _Content(
               listing: listing,
+              isMine: ref.watch(meProvider).value?.id == listing.owner.id,
               shot: _shot,
               saved: _saved,
               onShot: (i) => setState(() => _shot = i),
-              onToggleSave: () => setState(() => _saved = !_saved),
+              onToggleSave: () {
+                setState(() => _saved = !_saved);
+                ref
+                    .read(tradeRepositoryProvider)
+                    .toggleFavorite(listing.id, _saved);
+              },
+              onReport: () => ref
+                  .read(tradeRepositoryProvider)
+                  .reportUser(listing.owner.id, 'Inappropriate'),
+              onBlock: () =>
+                  ref.read(tradeRepositoryProvider).blockUser(listing.owner.id),
+              onEdit: () => context.push('/create', extra: listing),
+              onDelete: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) {
+                    final tl = L.of(ctx);
+                    return AlertDialog(
+                      title: Text(tl.actionDeleteListing),
+                      content: const Text(
+                        'Are you sure you want to delete this listing?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(tl.actionCancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: Text(tl.actionDelete),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (confirm == true) {
+                  try {
+                    await ref
+                        .read(tradeRepositoryProvider)
+                        .deleteListing(listing.id);
+                    if (context.mounted) {
+                      context.go('/home');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to delete listing'),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
             ),
           ),
         ),
@@ -71,7 +149,10 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                         HapticFeedback.lightImpact();
                         context.push('/offer/${listing.id}');
                       },
-                      icon: const Icon(Icons.swap_horiz_rounded, size: Sizes.iconMd),
+                      icon: const Icon(
+                        Icons.swap_horiz_rounded,
+                        size: Sizes.iconMd,
+                      ),
                       label: Text(l.listingOffer),
                     ),
                   ),
@@ -89,17 +170,27 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
 class _Content extends StatelessWidget {
   const _Content({
     required this.listing,
+    required this.isMine,
     required this.shot,
     required this.saved,
     required this.onShot,
     required this.onToggleSave,
+    required this.onReport,
+    required this.onBlock,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   final ListingDetail listing;
+  final bool isMine;
   final int shot;
   final bool saved;
   final ValueChanged<int> onShot;
   final VoidCallback onToggleSave;
+  final VoidCallback onReport;
+  final VoidCallback onBlock;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +220,9 @@ class _Content extends StatelessWidget {
           backgroundColor: BrandColors.brand500,
           foregroundColor: Colors.white,
           leading: IconButton(
-            icon: Icon(context.canPop() ? Icons.arrow_back : Icons.close_rounded),
+            icon: Icon(
+              context.canPop() ? Icons.arrow_back : Icons.close_rounded,
+            ),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -139,6 +232,37 @@ class _Content extends StatelessWidget {
             },
           ),
           actions: [
+            if (isMine)
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    onEdit();
+                  } else if (value == 'delete') {
+                    onDelete();
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
+                  PopupMenuItem(value: 'delete', child: Text(l.actionDelete)),
+                ],
+              )
+            else
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'report') {
+                    onReport();
+                  } else if (value == 'block') {
+                    onBlock();
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'report',
+                    child: Text(l.actionReportUser),
+                  ),
+                  PopupMenuItem(value: 'block', child: Text(l.actionBlockUser)),
+                ],
+              ),
             Padding(
               padding: const EdgeInsets.only(right: Gap.x2),
               child: TextButton(
@@ -157,7 +281,9 @@ class _Content extends StatelessWidget {
             background: Hero(
               tag: 'listing-image-${listing.id}',
               child: RemoteImage(
-                url: gallery.isEmpty ? null : gallery[shot.clamp(0, gallery.length - 1)],
+                url: gallery.isEmpty
+                    ? null
+                    : gallery[shot.clamp(0, gallery.length - 1)],
                 semanticLabel: listing.imageAlt,
               ),
             ),
@@ -189,7 +315,10 @@ class _Content extends StatelessWidget {
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: RemoteImage(url: gallery[i], semanticLabel: ''),
+                          child: RemoteImage(
+                            url: gallery[i],
+                            semanticLabel: '',
+                          ),
                         ),
                       ),
                     ),
@@ -197,10 +326,7 @@ class _Content extends StatelessWidget {
                   Gap.h5,
                 ],
 
-                Text(
-                  listing.title,
-                  style: theme.textTheme.headlineMedium,
-                ),
+                Text(listing.title, style: theme.textTheme.headlineMedium),
                 Gap.h2,
                 Wrap(
                   spacing: Gap.x3,
@@ -228,43 +354,87 @@ class _Content extends StatelessWidget {
 
                 Gap.h6,
                 _SectionLabel(l.listingAbout),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(Gap.x4),
-                    child: Text(
-                      listing.description,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
+                BouncingClayCard(
+                  clayMode: true,
+                  borderRadius: Radii.rLg,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: Radii.rLg,
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(Gap.x4),
+                      child: Text(
+                        listing.description,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: p.inkSoft,
+                        ),
+                      ),
                     ),
                   ),
                 ),
 
                 Gap.h6,
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: ExpansionTile(
-                    title: _SectionLabel(l.listingSpecs),
-                    tilePadding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-                    initiallyExpanded: true,
-                    shape: const Border(),
-                    children: [
-                      _SpecRow(l.specCategory, listing.category),
-                      _SpecRow(l.specCondition, listing.condition),
-                      _SpecRow(l.specQuantity, listing.quantity),
-                      _SpecRow(
-                        l.specPosted,
-                        formatDate(context, listing.postedAt),
+                BouncingClayCard(
+                  clayMode: true,
+                  borderRadius: Radii.rLg,
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: Radii.rLg,
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
-                      _SpecRow(l.specValue, listing.value.format(locale),
-                          last: true),
-                      Gap.h2,
-                    ],
+                    ),
+                    child: ExpansionTile(
+                      title: _SectionLabel(l.listingSpecs),
+                      tilePadding: const EdgeInsets.symmetric(
+                        horizontal: Gap.x4,
+                      ),
+                      initiallyExpanded: true,
+                      shape: const Border(),
+                      children: [
+                        _SpecRow(l.specCategory, listing.category),
+                        _SpecRow(l.specCondition, listing.condition),
+                        _SpecRow(l.specQuantity, listing.quantity),
+                        _SpecRow(
+                          l.specPosted,
+                          formatDate(context, listing.postedAt),
+                        ),
+                        _SpecRow(
+                          l.specValue,
+                          listing.value.format(locale),
+                          last: true,
+                        ),
+                        Gap.h2,
+                      ],
+                    ),
                   ),
                 ),
 
                 Gap.h6,
                 _SectionLabel(l.listingOwner),
-                Card(
-                  child: Padding(
+                BouncingClayCard(
+                  clayMode: true,
+                  borderRadius: Radii.rLg,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: Radii.rLg,
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    ),
                     padding: const EdgeInsets.all(Gap.x4),
                     child: Row(
                       children: [
@@ -328,12 +498,15 @@ class _Content extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.h4,
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.shield_outlined, size: Sizes.iconSm, color: p.give),
+                    Icon(
+                      Icons.shield_outlined,
+                      size: Sizes.iconSm,
+                      color: p.give,
+                    ),
                     Gap.w2,
                     Expanded(
                       child: Text(
@@ -365,69 +538,91 @@ class _GiveTakeCard extends StatelessWidget {
     final p = palette(context);
     final theme = Theme.of(context);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x4, Gap.x4, Gap.x4),
-            decoration: BoxDecoration(
-              border: BorderDirectional(
-                start: BorderSide(color: p.give, width: 3),
+    return BouncingClayCard(
+      clayMode: true,
+      borderRadius: Radii.rLg,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: Radii.rLg,
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.x4,
+                Gap.x4,
+                Gap.x4,
+                Gap.x4,
+              ),
+              decoration: BoxDecoration(
+                border: BorderDirectional(
+                  start: BorderSide(color: p.give, width: 3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.listingGives.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(color: p.give),
+                  ),
+                  Gap.h1,
+                  Text(listing.title, style: theme.textTheme.titleSmall),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.listingGives.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(color: p.give),
-                ),
-                Gap.h1,
-                Text(
-                  listing.title,
-                  style: theme.textTheme.titleSmall,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            color: theme.colorScheme.surfaceContainerHighest,
-            padding: const EdgeInsets.symmetric(vertical: Gap.x2),
-            child: Icon(Icons.swap_vert_rounded, size: Sizes.iconMd, color: p.give),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(Gap.x4, Gap.x4, Gap.x4, Gap.x4),
-            decoration: BoxDecoration(
-              border: BorderDirectional(
-                start: BorderSide(color: p.take, width: 3),
+            Container(
+              color: theme.colorScheme.surfaceContainerHighest,
+              padding: const EdgeInsets.symmetric(vertical: Gap.x2),
+              child: Icon(
+                Icons.swap_vert_rounded,
+                size: Sizes.iconMd,
+                color: p.give,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.listingWants.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(color: p.take),
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.x4,
+                Gap.x4,
+                Gap.x4,
+                Gap.x4,
+              ),
+              decoration: BoxDecoration(
+                border: BorderDirectional(
+                  start: BorderSide(color: p.take, width: 3),
                 ),
-                Gap.h3,
-                Wrap(
-                  spacing: Gap.x2,
-                  runSpacing: Gap.x2,
-                  children: [
-                    for (final want in listing.wants)
-                      Pill(
-                        label: want,
-                        foreground: p.take,
-                        background: p.takeSoft,
-                      ),
-                  ],
-                ),
-              ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.listingWants.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(color: p.take),
+                  ),
+                  Gap.h3,
+                  Wrap(
+                    spacing: Gap.x2,
+                    runSpacing: Gap.x2,
+                    children: [
+                      for (final want in listing.wants)
+                        Pill(
+                          label: want,
+                          foreground: p.take,
+                          background: p.takeSoft,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -444,9 +639,9 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: Gap.x2),
       child: Text(
         text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: palette(context).inkFaint,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: palette(context).inkFaint),
       ),
     );
   }

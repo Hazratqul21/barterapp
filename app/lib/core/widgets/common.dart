@@ -32,7 +32,11 @@ BarterPalette palette(BuildContext context) =>
 String errorMessage(BuildContext context, Object error) {
   final l = L.of(context);
   if (error is ApiException) {
-    return error.isNetworkFailure ? l.errorNetwork : error.message;
+    final msg = error.isNetworkFailure ? l.errorNetwork : error.message;
+    if (error.requestId != null) {
+      return '$msg\n(Request ID: ${error.requestId})';
+    }
+    return msg;
   }
   return l.errorGeneric;
 }
@@ -104,13 +108,36 @@ class RemoteImage extends StatelessWidget {
       imageUrl: url!,
       fit: fit,
       placeholder: (_, _) => placeholder,
-      errorWidget: (_, _, _) => Container(
-        color: scheme.surfaceContainerHigh,
-        child: Center(
-          child: Icon(
-            Symbols.broken_image_rounded,
-            color: p.inkFaint,
-            size: 28,
+      errorWidget: (_, _, _) => Semantics(
+        label: L.of(context).errorNoImage,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.surfaceContainerHigh, scheme.surfaceContainer],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Symbols.photo_rounded,
+                  color: p.inkFaint.withValues(alpha: 0.5),
+                  size: 32,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  L.of(context).errorNoImage,
+                  style: TextStyle(
+                    color: p.inkFaint.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -239,11 +266,13 @@ class ErrorState extends StatelessWidget {
     required this.message,
     required this.retryLabel,
     required this.onRetry,
+    this.error,
   });
 
   final String message;
   final String retryLabel;
   final VoidCallback onRetry;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +307,17 @@ class ErrorState extends StatelessWidget {
                         color: p.inkFaint,
                       ),
                     ),
+                    if (error is ApiException &&
+                        (error as ApiException).requestId != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Request ID: ${(error as ApiException).requestId}',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: p.inkFaint.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
                     Gap.h4,
                     NeoButton(
                       onTap: onRetry,
@@ -644,7 +684,7 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// A pixel-perfect Neomorphic button that matches the background color and 
+/// A pixel-perfect Neomorphic button that matches the background color and
 /// extrudes using light/dark shadows. When pressed, it can simulate an inset.
 class NeoButton extends StatefulWidget {
   const NeoButton({
@@ -679,7 +719,7 @@ class _NeoButtonState extends State<NeoButton> {
   Widget build(BuildContext context) {
     // For Neomorphism, the button surface must match the canvas background.
     final surfaceColor = BrandColors.canvas;
-    
+
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
       onTapUp: (_) => _setPressed(false),
@@ -698,9 +738,15 @@ class _NeoButtonState extends State<NeoButton> {
           // When pressed, remove the outer shadow and slightly darken to simulate inset.
           boxShadow: _isPressed ? [] : Shadows.neomorphicUp(surfaceColor),
           // Optionally add an inner border when pressed to enhance the inset look
-          border: _isPressed 
-              ? Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1.5)
-              : Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+          border: _isPressed
+              ? Border.all(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  width: 1.5,
+                )
+              : Border.all(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  width: 1.5,
+                ),
         ),
         child: Center(
           child: AnimatedOpacity(
@@ -819,23 +865,63 @@ class _CategoryVisual extends StatelessWidget {
 
   final CategoryModel category;
 
+  String? get _localImage {
+    switch (category.id) {
+      case 'agri':
+        return 'assets/images/categories/category_agri.png';
+      case 'livestock':
+        return 'assets/images/categories/category_livestock.png';
+      case 'machinery':
+        return 'assets/images/categories/category_machinery.png';
+      case 'transport':
+        return 'assets/images/categories/category_transport.png';
+      case 'electronics':
+        return 'assets/images/categories/category_electronics.png';
+      case 'construction':
+        return 'assets/images/categories/category_construction.png';
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
+    final p = palette(context);
+    final image = _localImage;
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        Container(color: theme.colorScheme.surfaceContainerHigh),
-        if (category.imageUrl != null && category.imageUrl!.isNotEmpty)
-          category.imageUrl!.startsWith('http')
-              ? RemoteImage(url: category.imageUrl, semanticLabel: '')
-              : Image.asset(category.imageUrl!, fit: BoxFit.cover, excludeFromSemantics: true),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                p.giveSoft.withValues(alpha: 0.3),
+                p.takeSoft.withValues(alpha: 0.3),
+              ],
+            ),
+          ),
+        ),
+        if (image != null)
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              excludeFromSemantics: true,
+            ),
+          )
+        else
+          Center(
+            child: Icon(Symbols.category_rounded, size: 32, color: p.inkSoft),
+          ),
       ],
     );
   }
 }
-
 
 /// The small tinted badge that marks which category a listing belongs to.
 class CategoryBadge extends StatelessWidget {
@@ -1126,6 +1212,131 @@ class BrandMark extends StatelessWidget {
         boxShadow: onDark ? Shadows.raised : null,
       ),
       child: Center(child: top),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI/UX Motion Wrappers & Claymorphism
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A button or card wrapper that shrinks slightly on press and applies
+/// Claymorphism/Glassmorphism effects.
+class BouncingClayCard extends StatefulWidget {
+  const BouncingClayCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.clayMode = false,
+    this.glassMode = false,
+    this.borderRadius,
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final bool clayMode;
+  final bool glassMode;
+  final BorderRadius? borderRadius;
+
+  @override
+  State<BouncingClayCard> createState() => _BouncingClayCardState();
+}
+
+class _BouncingClayCardState extends State<BouncingClayCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      reverseDuration: const Duration(milliseconds: 200),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    if (widget.onTap != null) _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    if (widget.onTap != null) {
+      _controller.reverse();
+      widget.onTap!();
+    }
+  }
+
+  void _onTapCancel() {
+    if (widget.onTap != null) _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    Widget content = widget.child;
+
+    if (widget.glassMode) {
+      content = Container(
+        decoration: BoxDecoration(
+          borderRadius: widget.borderRadius ?? Radii.rLg,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+        ),
+        child: content,
+      );
+    }
+
+    if (widget.clayMode) {
+      content = AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final isPressed = _controller.value > 0;
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: widget.borderRadius ?? Radii.rLg,
+              boxShadow: isPressed
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                      ),
+                    ]
+                  : (isDark ? Shadows.clayOuterDark : Shadows.clayOuter),
+            ),
+            child: child,
+          );
+        },
+        child: content,
+      );
+    }
+
+    if (widget.onTap == null) return content;
+
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      behavior: HitTestBehavior.opaque,
+      child: ScaleTransition(scale: _scale, child: content),
     );
   }
 }

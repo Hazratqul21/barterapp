@@ -87,9 +87,7 @@ class GlassSurface extends StatelessWidget {
     // Dark glass is a smoked pane, not a white one dimmed: tinting a dark
     // surface with white washes the colour out of everything behind it.
     final base = p.isDark ? const Color(0xFF141B18) : Colors.white;
-    final (nearAlpha, farAlpha) = p.isDark
-        ? (0.62, 0.44)
-        : (0.72, 0.52);
+    final (nearAlpha, farAlpha) = p.isDark ? (0.62, 0.44) : (0.72, 0.52);
 
     final rimNear = p.isDark ? 0.20 : 0.85;
     final rimFar = p.isDark ? 0.05 : 0.22;
@@ -799,17 +797,22 @@ class ClayTile extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: pressed
-              ? [
-                  Color.lerp(base, Colors.black, p.isDark ? 0.18 : 0.06)!,
-                  base,
-                ]
+              ? [Color.lerp(base, Colors.black, p.isDark ? 0.18 : 0.06)!, base]
               : [Color.lerp(base, Colors.white, p.isDark ? 0.06 : 0.65)!, base],
         ),
         boxShadow: pressed
             ? null
             : [
-                BoxShadow(color: shade, blurRadius: 10, offset: const Offset(3, 4)),
-                BoxShadow(color: lit, blurRadius: 10, offset: const Offset(-3, -4)),
+                BoxShadow(
+                  color: shade,
+                  blurRadius: 10,
+                  offset: const Offset(3, 4),
+                ),
+                BoxShadow(
+                  color: lit,
+                  blurRadius: 10,
+                  offset: const Offset(-3, -4),
+                ),
               ],
       ),
       child: SizedBox(

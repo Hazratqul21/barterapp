@@ -67,6 +67,7 @@
   <nav id="nav" class="hide">
     <button data-tab="blocks" class="on">Lenta</button>
     <button data-tab="reports">Shikoyatlar</button>
+    <button data-tab="push">Bildirishnoma</button>
     <button data-tab="stats">Tahlil</button>
   </nav>
   <span style="flex:1"></span>
@@ -212,6 +213,55 @@
     </div>
   </section>
 
+  <!-- ── Push ──────────────────────────────────────────────────────── -->
+  <section id="push" class="hide">
+    <div class="card">
+      <h2>Holat</h2>
+      <div class="stat" id="pushStat"></div>
+      <p class="hint" id="pushWarn"></p>
+    </div>
+
+    <div class="card">
+      <h2>Bildirishnoma yuborish</h2>
+
+      <div class="row">
+        <div>
+          <label>Kimga</label>
+          <select id="pSeg" onchange="segChanged()">
+            <option value="everyone">Hammaga</option>
+            <option value="with_listings">E'loni borlarga</option>
+            <option value="without_listings">E'loni yo'qlarga</option>
+            <option value="region">Viloyat bo'yicha</option>
+          </select>
+        </div>
+        <div id="pRegionBox" class="hide">
+          <label>Viloyat</label>
+          <select id="pRegion"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div><label>Sarlavha (UZ)</label><input id="pTUz" maxlength="200"></div>
+        <div><label>Sarlavha (RU)</label><input id="pTRu" maxlength="200"></div>
+        <div><label>Sarlavha (EN)</label><input id="pTEn" maxlength="200"></div>
+      </div>
+      <div class="row">
+        <div><label>Matn (UZ)</label><textarea id="pBUz" maxlength="400"></textarea></div>
+        <div><label>Matn (RU)</label><textarea id="pBRu" maxlength="400"></textarea></div>
+        <div><label>Matn (EN)</label><textarea id="pBEn" maxlength="400"></textarea></div>
+      </div>
+      <p class="hint">Har bir odam <b>o'z tilida</b> oladi — qaysi tilni
+        tanlagani serverda saqlanadi. Shuning uchun uchtasi ham majburiy.</p>
+
+      <div class="bar">
+        <button class="act ghost" onclick="sendPush(true)">Nechta odam? (sinov)</button>
+        <button class="act" onclick="sendPush(false)">Yuborish</button>
+      </div>
+      <p class="hint">Yuborishdan oldin sinovni bosing. «Hammaga» —
+        qaytarib bo'lmaydigan tugma.</p>
+    </div>
+  </section>
+
   <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
   <section id="stats" class="hide">
     <div class="card">
@@ -302,7 +352,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'stats'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'stats', 'push'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -319,13 +369,14 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'stats'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'stats', 'push'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
   if (tab === 'blocks') loadBlocks();
   if (tab === 'reports') loadReports();
   if (tab === 'stats') loadStats();
+  if (tab === 'push') loadPush();
 }
 
 document.querySelectorAll('#nav button').forEach(b =>
@@ -482,6 +533,57 @@ async function archive(listingId, reportId) {
   } catch (e) { say(e.message); }
 }
 
+// ── Push ──────────────────────────────────────────────────────────────
+
+function segChanged() {
+  $('pRegionBox').classList.toggle('hide', $('pSeg').value !== 'region');
+}
+
+async function loadPush() {
+  try {
+    const s = await api('/admin/push/status');
+    $('pushStat').innerHTML = [
+      ['Ro‘yxatdagi qurilma', s.devices],
+      ['Navbatda kutayotgan', s.queued],
+      ['iOS', s.by_platform.ios || 0],
+      ['Android', s.by_platform.android || 0],
+    ].map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
+
+    $('pushWarn').innerHTML = s.transport_ready
+      ? 'Transport ulangan — xabarlar haqiqatan yuboriladi.'
+      : '⚠️ <b>Transport hali ulanmagan.</b> Xabar navbatga tushadi va ' +
+        'logga yoziladi, lekin telefonlarga <b>bormaydi</b>. FCM/APNs uchun ' +
+        'Firebase kaliti kerak.';
+
+    if (!$('pRegion').options.length) {
+      const regions = await api('/regions');
+      $('pRegion').innerHTML = regions.map(r =>
+        `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+    }
+  } catch (e) { say(e.message); }
+}
+
+async function sendPush(dry) {
+  const body = {
+    segment: $('pSeg').value,
+    region: $('pSeg').value === 'region' ? $('pRegion').value : null,
+    title: { uz: $('pTUz').value, ru: $('pTRu').value, en: $('pTEn').value },
+    body: { uz: $('pBUz').value, ru: $('pBRu').value, en: $('pBEn').value },
+    dry_run: dry,
+  };
+  if (!dry && !confirm(
+      'Bildirishnoma yuboriladi va uni qaytarib bo‘lmaydi. Davom etamizmi?')) {
+    return;
+  }
+  try {
+    const r = await api('/admin/push', { method: 'POST', body: JSON.stringify(body) });
+    say(dry
+      ? `Bu xabar ${r.recipients} ta odamga tegadi. Hali yuborilmadi.`
+      : `${r.queued} ta bildirishnoma navbatga qo‘yildi.`, true);
+    if (!dry) loadPush();
+  } catch (e) { say(e.message); }
+}
+
 // ── Tahlil ────────────────────────────────────────────────────────────
 
 async function loadStats() {
@@ -509,6 +611,7 @@ async function loadStats() {
 // ── Boshlanish ────────────────────────────────────────────────────────
 
 resetForm();
+segChanged();
 if (TOKEN) start();
 </script>
 </body>
