@@ -4,6 +4,12 @@ from app.models.desire import Desire  # noqa: F401
 from app.models.device import Device, DevicePlatform  # noqa: F401
 from app.models.event import Event, EventKind  # noqa: F401
 from app.models.favorite import Favorite  # noqa: F401
+from app.models.feed_block import (  # noqa: F401
+    BlockAction,
+    BlockKind,
+    FeedBlock,
+    FeedBlockText,
+)
 from app.models.listing import (  # noqa: F401
     Listing,
     ListingPhoto,
@@ -29,7 +35,11 @@ __all__ = [
     "Desire",
     "Event",
     "EventKind",
+    "BlockAction",
+    "BlockKind",
     "Favorite",
+    "FeedBlock",
+    "FeedBlockText",
     "Device",
     "DevicePlatform",
     "Listing",

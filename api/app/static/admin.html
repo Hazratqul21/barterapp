@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BarterApp — Admin</title>
+<style>
+  :root{
+    --bg:#F7F6F3; --card:#FFFFFF; --ink:#12211B; --soft:#5C6B64; --faint:#94A29B;
+    --line:#E4E7E5; --give:#0D9488; --take:#1D4FBF; --money:#B47714; --bad:#B91C1C;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0F1613; --card:#18211D; --ink:#EDF2EF; --soft:#9FB0A8;
+           --faint:#6C7D75; --line:#26312C; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--ink)}
+  header{position:sticky;top:0;z-index:10;background:var(--card);
+         border-bottom:1px solid var(--line);padding:14px 20px;
+         display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:800}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav button{background:none;border:0;padding:8px 14px;border-radius:999px;
+             cursor:pointer;color:var(--soft);font:inherit;font-weight:600}
+  nav button.on{background:var(--give);color:#fff}
+  main{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:18px;margin-bottom:16px}
+  h2{font-size:15px;margin:0 0 14px;font-weight:800}
+  label{display:block;font-size:12px;color:var(--soft);margin:12px 0 4px;font-weight:600}
+  input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);
+        border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+  textarea{min-height:60px;resize:vertical}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 14px}
+  button.act{background:var(--give);color:#fff;border:0;padding:10px 18px;
+             border-radius:10px;cursor:pointer;font:inherit;font-weight:700}
+  button.ghost{background:none;border:1px solid var(--line);color:var(--soft)}
+  button.danger{background:var(--bad)}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+     color:var(--faint);padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;
+        font-weight:700;background:var(--line);color:var(--soft)}
+  .pill.live{background:#DCFCE7;color:#15803D}
+  .pill.off{background:#FEE2E2;color:#B91C1C}
+  .msg{padding:11px 14px;border-radius:10px;margin-bottom:14px;font-size:14px;display:none}
+  .msg.err{background:#FEE2E2;color:#B91C1C;display:block}
+  .msg.ok{background:#DCFCE7;color:#15803D;display:block}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+  .stat div{background:var(--bg);border-radius:10px;padding:14px}
+  .stat b{display:block;font-size:22px;font-weight:800}
+  .stat span{font-size:12px;color:var(--soft)}
+  .hint{font-size:12px;color:var(--faint);margin-top:4px}
+  .hide{display:none}
+  code{font-size:12px;background:var(--bg);padding:1px 5px;border-radius:5px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BarterApp · Admin</h1>
+  <nav id="nav" class="hide">
+    <button data-tab="blocks" class="on">Lenta</button>
+    <button data-tab="reports">Shikoyatlar</button>
+    <button data-tab="stats">Tahlil</button>
+  </nav>
+  <span style="flex:1"></span>
+  <button id="out" class="act ghost hide" onclick="signOut()">Chiqish</button>
+</header>
+
+<main>
+  <div id="msg" class="msg"></div>
+
+  <!-- ── Kirish ─────────────────────────────────────────────────────── -->
+  <section id="login" class="card" style="max-width:400px;margin:40px auto">
+    <h2>Moderator sifatida kirish</h2>
+    <label>Telefon raqami</label>
+    <input id="phone" placeholder="+998901234567" autocomplete="tel">
+    <div id="codeBox" class="hide">
+      <label>SMS kodi</label>
+      <input id="code" inputmode="numeric" placeholder="000000">
+    </div>
+    <div class="bar">
+      <button class="act" id="loginBtn" onclick="doLogin()">Kod olish</button>
+    </div>
+    <p class="hint">Moderator huquqi serverdan beriladi:
+      <code>python -m app.grant_moderator +998...</code></p>
+  </section>
+
+  <!-- ── Lenta bo'laklari ───────────────────────────────────────────── -->
+  <section id="blocks" class="hide">
+    <div class="card">
+      <h2 id="formTitle">Yangi bo'lak</h2>
+      <input type="hidden" id="bId">
+      <div class="row">
+        <div>
+          <label>Turi</label>
+          <select id="bKind" onchange="kindChanged()">
+            <option value="banner">Banner (rasm + matn)</option>
+            <option value="promo_listings">Tanlangan e'lonlar</option>
+            <option value="notice">Xabar chizig'i</option>
+          </select>
+        </div>
+        <div>
+          <label>Joyi (slot)</label>
+          <select id="bSlot">
+            <option value="feed_top">Lenta tepasi</option>
+            <option value="feed_after_categories">Kategoriyalardan keyin</option>
+            <option value="feed_middle">Lenta o'rtasi</option>
+          </select>
+        </div>
+        <div>
+          <label>Tartib (kichigi tepada)</label>
+          <input id="bPos" type="number" value="0">
+        </div>
+        <div>
+          <label>Holati</label>
+          <select id="bActive">
+            <option value="true">Yoqilgan</option>
+            <option value="false">O'chirilgan</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div><label>Sarlavha (UZ)</label><input id="tUz"></div>
+        <div><label>Sarlavha (RU)</label><input id="tRu"></div>
+        <div><label>Sarlavha (EN)</label><input id="tEn"></div>
+      </div>
+      <div class="row">
+        <div><label>Tavsif (UZ)</label><input id="sUz"></div>
+        <div><label>Tavsif (RU)</label><input id="sRu"></div>
+        <div><label>Tavsif (EN)</label><input id="sEn"></div>
+      </div>
+      <div class="row">
+        <div><label>Tugma matni (UZ)</label><input id="cUz"></div>
+        <div><label>Tugma matni (RU)</label><input id="cRu"></div>
+        <div><label>Tugma matni (EN)</label><input id="cEn"></div>
+      </div>
+
+      <div class="row">
+        <div><label>Rasm havolasi</label><input id="bImg" placeholder="https://..."></div>
+        <div><label>Fon rangi</label><input id="bBg" placeholder="#0D9488"></div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Bosilganda</label>
+          <select id="bAction" onchange="actionChanged()">
+            <option value="none">Hech nima</option>
+            <option value="open_listing">E'lonni ochish</option>
+            <option value="open_search">Qidiruvni ochish</option>
+            <option value="open_category">Kategoriyani ochish</option>
+            <option value="open_url">Havolani ochish</option>
+          </select>
+        </div>
+        <div id="avBox" class="hide">
+          <label id="avLabel">Qiymat</label>
+          <input id="bActionValue">
+        </div>
+      </div>
+
+      <div id="listBox" class="hide">
+        <label>E'lon ID'lari — har biri yangi qatorda, tartibi saqlanadi</label>
+        <textarea id="bListings" placeholder="uuid&#10;uuid"></textarea>
+        <p class="hint">Faqat faol e'lonlar ko'rsatiladi. Arxivlangani
+          o'z-o'zidan tushib qoladi; hammasi tushsa, bo'lak umuman
+          ko'rinmaydi.</p>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Boshlanishi (ixtiyoriy)</label>
+          <input id="bFrom" type="datetime-local">
+        </div>
+        <div>
+          <label>Tugashi (ixtiyoriy)</label>
+          <input id="bTo" type="datetime-local">
+        </div>
+      </div>
+      <p class="hint">Vaqt ko'rsatilsa, bo'lak o'z vaqtida o'zi paydo
+        bo'ladi va o'zi yo'qoladi — yarim tunda tugma bosish shart emas.</p>
+
+      <div class="bar">
+        <button class="act" onclick="saveBlock()">Saqlash</button>
+        <button class="act ghost" onclick="resetForm()">Tozalash</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Mavjud bo'laklar</h2>
+      <table><thead><tr>
+        <th>Sarlavha</th><th>Turi</th><th>Joyi</th><th>Tartib</th>
+        <th>Holati</th><th></th>
+      </tr></thead><tbody id="blockRows"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ── Shikoyatlar ────────────────────────────────────────────────── -->
+  <section id="reports" class="hide">
+    <div class="card">
+      <h2>Ochiq shikoyatlar — eskisidan boshlab</h2>
+      <table><thead><tr>
+        <th>Nima haqida</th><th>Sabab</th><th>Izoh</th>
+        <th>Soni</th><th>Kim</th><th></th>
+      </tr></thead><tbody id="reportRows"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
+  <section id="stats" class="hide">
+    <div class="card">
+      <h2>Voronka (30 kun)</h2>
+      <div class="stat" id="funnel"></div>
+    </div>
+    <div class="card">
+      <h2>Topilmagan qidiruvlar — bozordagi bo'shliq</h2>
+      <table><thead><tr><th>So'rov</th><th>Necha marta</th><th>Necha kishi</th></tr></thead>
+      <tbody id="emptyRows"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Sovuq e'lonlar — ko'rsatilgan, ochilmagan</h2>
+      <table><thead><tr><th>E'lon</th><th>Ko'rsatildi</th><th>Ochildi</th><th>CTR</th></tr></thead>
+      <tbody id="coldRows"></tbody></table>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = location.origin;
+let TOKEN = localStorage.getItem('barter_admin_token') || '';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function say(text, ok) {
+  const m = $('msg');
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'ok' : 'err');
+  if (ok) setTimeout(() => { m.className = 'msg'; }, 3000);
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept-Language': 'uz',
+      ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  if (res.status === 401) { signOut(); throw new Error('Sessiya tugadi.'); }
+  if (res.status === 404 && path.startsWith('/admin')) {
+    throw new Error('Moderator huquqi yo‘q.');
+  }
+  if (!res.ok) {
+    let detail = 'Xatolik ' + res.status;
+    try { const b = await res.json(); if (b.detail) detail = b.detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ── Kirish ────────────────────────────────────────────────────────────
+
+let codeSent = false;
+
+async function doLogin() {
+  const phone = $('phone').value.trim();
+  try {
+    if (!codeSent) {
+      const r = await api('/auth/otp/request', {
+        method: 'POST', body: JSON.stringify({ phone }),
+      });
+      codeSent = true;
+      $('codeBox').classList.remove('hide');
+      $('loginBtn').textContent = 'Kirish';
+      if (r.debug_code) { $('code').value = r.debug_code; }
+      say('Kod yuborildi.', true);
+    } else {
+      const r = await api('/auth/otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({ phone, code: $('code').value.trim() }),
+      });
+      TOKEN = r.access_token;
+      localStorage.setItem('barter_admin_token', TOKEN);
+      await start();
+    }
+  } catch (e) { say(e.message); }
+}
+
+function signOut() {
+  TOKEN = '';
+  localStorage.removeItem('barter_admin_token');
+  $('login').classList.remove('hide');
+  $('nav').classList.add('hide');
+  $('out').classList.add('hide');
+  ['blocks', 'reports', 'stats'].forEach(t => $(t).classList.add('hide'));
+}
+
+async function start() {
+  try {
+    await api('/admin/feed-blocks');
+  } catch (e) {
+    say(e.message);
+    return;
+  }
+  $('login').classList.add('hide');
+  $('nav').classList.remove('hide');
+  $('out').classList.remove('hide');
+  show('blocks');
+}
+
+function show(tab) {
+  ['blocks', 'reports', 'stats'].forEach(t => $(t).classList.add('hide'));
+  $(tab).classList.remove('hide');
+  document.querySelectorAll('#nav button').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'blocks') loadBlocks();
+  if (tab === 'reports') loadReports();
+  if (tab === 'stats') loadStats();
+}
+
+document.querySelectorAll('#nav button').forEach(b =>
+  b.onclick = () => show(b.dataset.tab));
+
+// ── Lenta bo'laklari ──────────────────────────────────────────────────
+
+function kindChanged() {
+  $('listBox').classList.toggle('hide', $('bKind').value !== 'promo_listings');
+}
+
+function actionChanged() {
+  const v = $('bAction').value;
+  $('avBox').classList.toggle('hide', v === 'none');
+  $('avLabel').textContent = {
+    open_listing: 'E‘lon ID', open_search: 'Qidiruv matni',
+    open_category: 'Kategoriya kodi (agri, livestock, ...)',
+    open_url: 'To‘liq havola',
+  }[v] || 'Qiymat';
+}
+
+function resetForm() {
+  ['bId','tUz','tRu','tEn','sUz','sRu','sEn','cUz','cRu','cEn',
+   'bImg','bBg','bActionValue','bListings','bFrom','bTo'].forEach(i => $(i).value = '');
+  $('bPos').value = 0;
+  $('bKind').value = 'banner';
+  $('bSlot').value = 'feed_top';
+  $('bActive').value = 'true';
+  $('bAction').value = 'none';
+  $('formTitle').textContent = 'Yangi bo‘lak';
+  kindChanged(); actionChanged();
+}
+
+async function loadBlocks() {
+  try {
+    const rows = await api('/admin/feed-blocks');
+    $('blockRows').innerHTML = rows.length ? rows.map(b => `
+      <tr>
+        <td><b>${esc(b.title.uz)}</b><br><span class="pill">${esc(b.id.slice(0,8))}</span></td>
+        <td>${esc(b.kind)}</td>
+        <td>${esc(b.slot)}</td>
+        <td>${b.position}</td>
+        <td><span class="pill ${b.is_active ? 'live' : 'off'}">${
+          b.is_active ? 'yoqilgan' : "o'chirilgan"}</span></td>
+        <td style="white-space:nowrap">
+          <button class="act ghost" onclick='editBlock(${JSON.stringify(JSON.stringify(b))})'>Tahrir</button>
+          <button class="act danger" onclick="delBlock('${b.id}')">O'chirish</button>
+        </td>
+      </tr>`).join('') :
+      '<tr><td colspan="6" style="color:var(--faint)">Hali bo‘lak yo‘q.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+function editBlock(json) {
+  const b = JSON.parse(json);
+  $('bId').value = b.id;
+  $('bKind').value = b.kind;
+  $('bSlot').value = b.slot;
+  $('bPos').value = b.position;
+  $('bActive').value = String(b.is_active);
+  $('tUz').value = b.title.uz; $('tRu').value = b.title.ru; $('tEn').value = b.title.en;
+  const sub = b.subtitle || {}, cta = b.cta || {};
+  $('sUz').value = sub.uz || ''; $('sRu').value = sub.ru || ''; $('sEn').value = sub.en || '';
+  $('cUz').value = cta.uz || ''; $('cRu').value = cta.ru || ''; $('cEn').value = cta.en || '';
+  $('bImg').value = b.image_url || '';
+  $('bBg').value = b.background || '';
+  $('bAction').value = b.action;
+  $('bActionValue').value = b.action_value || '';
+  $('bListings').value = (b.listing_ids || []).join('\n');
+  $('bFrom').value = b.starts_at ? b.starts_at.slice(0, 16) : '';
+  $('bTo').value = b.ends_at ? b.ends_at.slice(0, 16) : '';
+  $('formTitle').textContent = 'Bo‘lakni tahrirlash';
+  kindChanged(); actionChanged();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function saveBlock() {
+  const id = $('bId').value;
+  const body = {
+    kind: $('bKind').value,
+    slot: $('bSlot').value,
+    position: Number($('bPos').value) || 0,
+    is_active: $('bActive').value === 'true',
+    title: { uz: $('tUz').value, ru: $('tRu').value, en: $('tEn').value },
+    subtitle: { uz: $('sUz').value || null, ru: $('sRu').value || null, en: $('sEn').value || null },
+    cta: { uz: $('cUz').value || null, ru: $('cRu').value || null, en: $('cEn').value || null },
+    image_url: $('bImg').value || null,
+    background: $('bBg').value || null,
+    action: $('bAction').value,
+    action_value: $('bActionValue').value || null,
+    listing_ids: $('bListings').value.split('\n').map(s => s.trim()).filter(Boolean),
+    starts_at: $('bFrom').value ? new Date($('bFrom').value).toISOString() : null,
+    ends_at: $('bTo').value ? new Date($('bTo').value).toISOString() : null,
+  };
+  if (!body.title.uz || !body.title.ru || !body.title.en) {
+    say('Uch tilda ham sarlavha kerak — yarim tarjima lentaga chiqmasin.');
+    return;
+  }
+  try {
+    await api(id ? '/admin/feed-blocks/' + id : '/admin/feed-blocks',
+      { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+    say('Saqlandi. O‘zgarish darhol kuchga kirdi.', true);
+    resetForm(); loadBlocks();
+  } catch (e) { say(e.message); }
+}
+
+async function delBlock(id) {
+  if (!confirm('Bu bo‘lak butunlay o‘chiriladi. Davom etamizmi?')) return;
+  try {
+    await api('/admin/feed-blocks/' + id, { method: 'DELETE' });
+    say('O‘chirildi.', true); loadBlocks();
+  } catch (e) { say(e.message); }
+}
+
+// ── Shikoyatlar ───────────────────────────────────────────────────────
+
+async function loadReports() {
+  try {
+    const rows = await api('/admin/reports');
+    $('reportRows').innerHTML = rows.length ? rows.map(r => `
+      <tr>
+        <td><b>${esc(r.target_label || '—')}</b><br>
+            <span class="pill">${esc(r.target_type)}</span></td>
+        <td>${esc(r.reason)}</td>
+        <td style="max-width:260px">${esc(r.note || '')}</td>
+        <td>${r.report_count}</td>
+        <td>${esc(r.reporter_name)}</td>
+        <td style="white-space:nowrap">
+          ${r.target_type === 'listing'
+            ? `<button class="act danger" onclick="archive('${r.target_id}','${r.id}')">E'lonni yechish</button>`
+            : ''}
+          <button class="act ghost" onclick="decide('${r.id}','dismissed')">Rad etish</button>
+        </td>
+      </tr>`).join('') :
+      '<tr><td colspan="6" style="color:var(--faint)">Ochiq shikoyat yo‘q.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+async function decide(id, status) {
+  try {
+    await api('/admin/reports/' + id, {
+      method: 'PATCH',
+      body: JSON.stringify({ review_status: status, resolution: 'Admin paneldan' }),
+    });
+    say('Bajarildi.', true); loadReports();
+  } catch (e) { say(e.message); }
+}
+
+async function archive(listingId, reportId) {
+  if (!confirm('E‘lon lentadan olib tashlanadi.')) return;
+  try {
+    await api('/admin/listings/' + listingId + '/archive', { method: 'POST' });
+    await decide(reportId, 'actioned');
+  } catch (e) { say(e.message); }
+}
+
+// ── Tahlil ────────────────────────────────────────────────────────────
+
+async function loadStats() {
+  try {
+    const f = await api('/admin/analytics/funnel?days=30');
+    $('funnel').innerHTML = [
+      ['Ko‘rsatildi', f.impressions], ['Ochildi', f.views],
+      ['Saqlandi', f.favorites], ['Taklif', f.offers],
+      ['Qabul', f.accepted], ['Yakunlandi', f.completed],
+    ].map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
+
+    const empty = await api('/admin/analytics/empty-searches?days=30');
+    $('emptyRows').innerHTML = empty.length ? empty.map(e =>
+      `<tr><td><b>${esc(e.q)}</b></td><td>${e.times}</td><td>${e.people}</td></tr>`
+    ).join('') : '<tr><td colspan="3" style="color:var(--faint)">Ma‘lumot yo‘q.</td></tr>';
+
+    const cold = await api('/admin/analytics/cold-listings?days=30&min_impressions=5');
+    $('coldRows').innerHTML = cold.length ? cold.map(c =>
+      `<tr><td><span class="pill">${esc(c.listing_id.slice(0,8))}</span></td>
+        <td>${c.impressions}</td><td>${c.views}</td><td>${c.ctr}%</td></tr>`
+    ).join('') : '<tr><td colspan="4" style="color:var(--faint)">Ma‘lumot yo‘q.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+// ── Boshlanish ────────────────────────────────────────────────────────
+
+resetForm();
+if (TOKEN) start();
+</script>
+</body>
+</html>

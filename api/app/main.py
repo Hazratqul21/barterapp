@@ -1,9 +1,10 @@
 import logging
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
@@ -15,6 +16,7 @@ from app.api import (
     devices,
     events,
     favorites,
+    feed_blocks,
     listings,
     moderation,
     offers,
@@ -97,6 +99,7 @@ app.include_router(moderation.router)
 app.include_router(devices.router)
 app.include_router(favorites.router)
 app.include_router(events.router)
+app.include_router(feed_blocks.router)
 app.include_router(admin.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
@@ -108,6 +111,20 @@ app.mount(
     StaticFiles(directory=settings.media_root),
     name="media",
 )
+
+
+#: Admin paneli — bitta HTML sahifa, backend beradi.
+#:
+#: Alohida frontend loyihasi emas: panel faqat moderatorlar uchun, sahifa
+#: bitta, va uni alohida qurish, joylashtirish va yangilash kerak bo'lsa
+#: u har doim API'dan orqada qolardi. Shu yerda turgani esa API bilan
+#: birga deploy bo'ladi va hech qachon eskirmaydi.
+_ADMIN_PAGE = Path(__file__).resolve().parent / "static" / "admin.html"
+
+
+@app.get("/admin", include_in_schema=False)
+async def admin_panel() -> FileResponse:
+    return FileResponse(_ADMIN_PAGE, media_type="text/html")
 
 
 @app.get("/health", tags=["meta"])

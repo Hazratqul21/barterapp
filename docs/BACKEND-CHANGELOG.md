@@ -23,6 +23,54 @@
 
 ---
 
+## 2026-08-18
+
+### 🆕🎨 Admin panel va boshqariladigan lenta
+
+**Panel:** `http://<server>/admin` — bitta sahifa, backend beradi.
+Moderator telefon raqami bilan kiradi (huquq `python -m app.grant_moderator`
+orqali beriladi). Panelda: lenta bo'laklari, shikoyatlar navbati, tahlil.
+
+**Yangi ommaviy endpoint:** `GET /feed-blocks?slot=...`
+**Admin CRUD:** `GET/POST/PATCH/DELETE /admin/feed-blocks`
+
+**Nega:** banner va tanlangan e'lonlar mijoz kodiga qattiq yozilgan edi.
+Bayram banneri almashtirish yoki mavsumiy e'lonni tepaga chiqarish uchun
+**uch platformaga yangi reliz** kerak bo'lardi — App Store ko'rigi bilan
+bir hafta. Mavsum esa bir haftada o'tib ketadi.
+
+**Bo'lak turlari:**
+
+| `kind` | Nima |
+|---|---|
+| `banner` | Rasm + sarlavha + tugma |
+| `promo_listings` | Tahririyat tanlagan e'lonlar qatori |
+| `notice` | Matnli chiziq (ogohlantirish, tabrik) |
+
+**Joylar (`slot`):** `feed_top`, `feed_after_categories`, `feed_middle`.
+
+**UI da nima kerak:**
+- 🎨 Lenta yuklanganda `GET /feed-blocks` chaqirilsin va bo'laklar
+  `slot` bo'yicha joylashtirilsin, `position` bo'yicha tartiblansin.
+- `promo_listings` uchun e'lonlar **javobning ichida** to'ldirilgan
+  holda keladi — alohida so'rov yubormang.
+- `action` + `action_value` bosilganda qayerga borishni aytadi:
+  `open_listing` (id), `open_search` (matn), `open_category` (tag kodi),
+  `open_url` (havola), `none` (bosilmaydi).
+- `background` — `#RRGGBB`. Rasm yuklanmaguncha shu ko'rinadi.
+- ⚠️ Server **faqat ko'rinishi kerak bo'lganlarini** qaytaradi.
+  O'chirilgani, vaqti kelmagani va muddati o'tgani umuman kelmaydi —
+  mijoz qo'shimcha filtr qilmasin.
+- ⚠️ Ichi bo'shab qolgan `promo_listings` (e'lonlari arxivlangan) umuman
+  qaytmaydi, shuning uchun bo'sh qator chizilmaydi.
+
+**Rejalashtirish:** `starts_at` / `ends_at` ko'rsatilsa, bo'lak o'z
+vaqtida o'zi paydo bo'ladi va o'zi yo'qoladi. Filtr **serverda**, chunki
+mijozdagi soat xato bo'lishi mumkin va bayram banneri bir kun erta
+chiqib ketishi mumkin emas.
+
+---
+
 ## 2026-08-15
 
 ### 🆕⚠️🎨 Hisobni o'chirish — `DELETE /me`
