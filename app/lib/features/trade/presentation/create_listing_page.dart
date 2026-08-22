@@ -336,6 +336,24 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   ];
 
   List<Widget> _takeStep(L l) => [
+    DropdownButtonFormField<ListingTag>(
+      initialValue: _wantTag,
+      decoration: InputDecoration(
+        labelText: 'Preferred Category (Optional)',
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      ),
+      items: [
+        const DropdownMenuItem(
+          value: null,
+          child: Text('Any'),
+        ),
+        for (final t in ListingTag.values)
+          DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
+      ],
+      onChanged: (v) => setState(() => _wantTag = v),
+    ),
+    Gap.h4,
     _TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2),
     Gap.h4,
     SwitchListTile(
@@ -347,6 +365,16 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       title: Text(l.createCashAdd),
       contentPadding: EdgeInsets.zero,
       activeThumbColor: palette(context).give,
+    ),
+    SwitchListTile(
+      value: _wantsCash,
+      onChanged: (v) => setState(() {
+        _wantsCash = v;
+        if (v) _cashOk = false;
+      }),
+      title: const Text('I prefer cash for this item'),
+      contentPadding: EdgeInsets.zero,
+      activeThumbColor: palette(context).take,
     ),
   ];
 

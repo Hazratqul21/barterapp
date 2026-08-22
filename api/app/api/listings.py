@@ -5,12 +5,13 @@ import enum
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
+from app.core.ratelimit import listings as listing_limit, source
 from app.core.security import current_user, optional_user
 from app.db.session import get_db
 from app.models.desire import Desire
@@ -382,6 +383,7 @@ async def get_listing(
 @router.post("", response_model=ListingDetail, status_code=status.HTTP_201_CREATED)
 async def create_listing(
     payload: ListingCreate,
+    request: Request,
     locale: str = Depends(resolve_locale),
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
@@ -395,6 +397,8 @@ async def create_listing(
     subscription billing is still to be built — better to let a paying segment
     work than to block it behind an unfinished payment flow.
     """
+    listing_limit.check(source(request, me))
+
     if me.user_type != UserType.business and me.free_listings_left <= 0:
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,

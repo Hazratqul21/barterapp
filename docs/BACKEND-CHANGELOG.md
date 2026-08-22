@@ -23,6 +23,31 @@
 
 ---
 
+## 2026-08-22
+
+### 🔧 Xavfsizlik: chastota chegaralari va so'rov hajmi
+
+Auditda ikkita haqiqiy nuqson topildi va tuzatildi.
+
+**Cheklanmagan yuklash.** `/uploads` da chegara yo'q edi — bitta hisob
+soniyada o'nlab surat yuklab, diskni to'ldira olardi. Endi soatiga 60 ta.
+Shu bilan birga chegara qo'yilganlar: e'lon joylash (30/soat), taklif
+(30/soat), xabar (120/daqiqa), shikoyat (20/soat).
+
+**So'rov tanasi o'qilib, keyin rad etilardi.** 40 MB yuborilsa server uni
+to'liq qabul qilib, keyin 12 MB chegarasi bo'yicha 413 qaytarardi — ya'ni
+rad etilgan so'rov ham to'liq xotira va diskni band qilardi. Endi
+`Content-Length` bo'yicha **o'qishdan oldin** rad etiladi (16 MB).
+
+**UI da nima kerak:** `429` javobini hisobga oling — `Retry-After`
+sarlavhasi bor. Foydalanuvchiga "birozdan so'ng urinib ko'ring" deb
+ko'rsating, so'rovni jimgina tashlab yubormang.
+
+Chegaralar saxiy: oddiy foydalanish ularga yaqinlashmaydi. Maqsad —
+avtomatlashtirilgan suiiste'mol.
+
+---
+
 ## 2026-08-18
 
 ### 🆕⚠️ Firebase admin paneldan sozlanadi

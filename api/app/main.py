@@ -37,6 +37,34 @@ app = FastAPI(
     ),
 )
 
+#: Eng katta so'rov tanasi. Surat chegarasi 12 MB, qolgan hamma narsa —
+#: JSON, ya'ni ancha kichik. Zaxira bilan 16 MB.
+MAX_BODY_BYTES = 16 * 1024 * 1024
+
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next) -> Response:
+    """
+    Juda katta so'rovni o'qishdan **oldin** rad etadi.
+
+    Ilgari 40 MB yuborilsa, server uni to'liq qabul qilib, keyin 12 MB
+    chegarasi bo'yicha 413 qaytarardi — ya'ni rad etilgan so'rov ham
+    to'liq xotira va diskni band qilardi. Cheklanmagan hujumchi uchun bu
+    tekin resurs sarfi edi.
+
+    `Content-Length` ga qaraladi. U yolg'on bo'lishi mumkin, lekin
+    ASGI serverining o'z chegarasi ikkinchi qator himoya bo'lib qoladi;
+    bu yerdagi tekshiruv esa oddiy holatni arzon to'xtatadi.
+    """
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > MAX_BODY_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={"detail": "So'rov juda katta."},
+        )
+    return await call_next(request)
+
+
 @app.middleware("http")
 async def catch_unhandled(request: Request, call_next) -> Response:
     """

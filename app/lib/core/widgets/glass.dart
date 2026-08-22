@@ -92,8 +92,9 @@ class GlassSurface extends StatelessWidget {
     final rimNear = p.isDark ? 0.20 : 0.85;
     final rimFar = p.isDark ? 0.05 : 0.22;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return RepaintBoundary(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
         borderRadius: borderRadius,
         boxShadow: shadow
             ? [
@@ -173,7 +174,7 @@ class GlassSurface extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

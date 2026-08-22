@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.ratelimit import reports as report_limit, source
 from app.core.security import current_user
 from app.db.session import get_db
 from app.models.listing import Listing
@@ -116,6 +117,7 @@ async def list_blocks(
 @router.post("/reports", response_model=ReportOut, status_code=status.HTTP_201_CREATED)
 async def file_report(
     payload: ReportIn,
+    request: Request,
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ReportOut:
@@ -126,6 +128,8 @@ async def file_report(
     about nothing, and reporting yourself is refused — it is always either a
     mistake or an attempt to test the endpoint.
     """
+    report_limit.check(source(request, me))
+
     if payload.target_type is ReportTargetType.user:
         if payload.target_id == me.id:
             raise HTTPException(

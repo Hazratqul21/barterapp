@@ -9,6 +9,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Request,
     WebSocket,
     WebSocketDisconnect,
     status,
@@ -18,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
+from app.core.ratelimit import messages as message_limit, source
 from app.core.security import create_socket_token, current_user, decode_token
 from app.db.session import SessionLocal, get_db
 from app.models.offer import Conversation, Message, Offer
@@ -193,9 +195,12 @@ async def read_conversation(
 async def send_message(
     thread_id: uuid.UUID,
     payload: MessageCreate,
+    request: Request,
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MessageOut:
+    message_limit.check(source(request, me))
+
     thread = await db.get(Conversation, thread_id)
     if thread is None or me.id not in (thread.user_a_id, thread.user_b_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Suhbat topilmadi.")

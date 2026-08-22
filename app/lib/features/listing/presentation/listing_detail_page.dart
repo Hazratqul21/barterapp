@@ -122,8 +122,8 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Failed to delete listing'),
+                        SnackBar(
+                          content: Text(l.errorGeneric),
                         ),
                       );
                     }
@@ -135,32 +135,54 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
         ),
       ),
       bottomNavigationBar: async.maybeWhen(
-        data: (listing) => SafeArea(
-          minimum: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x3),
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        context.push('/offer/${listing.id}');
-                      },
-                      icon: const Icon(
-                        Icons.swap_horiz_rounded,
-                        size: Sizes.iconMd,
+        data: (listing) {
+          final isMine = ref.watch(meProvider).value?.id == listing.owner.id;
+          return SafeArea(
+            minimum: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x3),
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+                child: Row(
+                  children: [
+                    if (isMine)
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/create', extra: listing);
+                          },
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            size: Sizes.iconMd,
+                          ),
+                          label: Text(l.actionEdit),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.secondary,
+                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/offer/${listing.id}');
+                          },
+                          icon: const Icon(
+                            Icons.swap_horiz_rounded,
+                            size: Sizes.iconMd,
+                          ),
+                          label: Text(l.listingOffer),
+                        ),
                       ),
-                      label: Text(l.listingOffer),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
         orElse: () => const SizedBox.shrink(),
       ),
     );
@@ -263,19 +285,20 @@ class _Content extends StatelessWidget {
                   PopupMenuItem(value: 'block', child: Text(l.actionBlockUser)),
                 ],
               ),
-            Padding(
-              padding: const EdgeInsets.only(right: Gap.x2),
-              child: TextButton(
-                onPressed: onToggleSave,
-                style: TextButton.styleFrom(
-                  backgroundColor: saved
-                      ? BrandColors.gold500
-                      : Colors.black.withValues(alpha: 0.35),
-                  foregroundColor: Colors.white,
+            if (!isMine)
+              Padding(
+                padding: const EdgeInsets.only(right: Gap.x2),
+                child: TextButton(
+                  onPressed: onToggleSave,
+                  style: TextButton.styleFrom(
+                    backgroundColor: saved
+                        ? BrandColors.gold500
+                        : Colors.black.withValues(alpha: 0.35),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(saved ? l.listingSaved : l.listingSave),
                 ),
-                child: Text(saved ? l.listingSaved : l.listingSave),
               ),
-            ),
           ],
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(

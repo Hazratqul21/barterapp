@@ -664,21 +664,24 @@ class _PressableState extends State<Pressable> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _set(true),
-      onTapUp: (_) => _set(false),
-      onTapCancel: () => _set(false),
-      onTap: () {
-        HapticFeedback.selectionClick();
-        widget.onTap();
-      },
-      child: AnimatedScale(
-        // Small enough to feel rather than to watch. Anything deeper reads as
-        // the card falling away from the finger.
-        scale: _down ? 0.977 : 1,
-        duration: _down ? M3Motion.short2 : M3Motion.medium1,
-        curve: M3Motion.emphasizedDecelerate,
-        child: widget.child,
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTapDown: (_) => _set(true),
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
+        child: AnimatedScale(
+          // Small enough to feel rather than to watch. Anything deeper reads as
+          // the card falling away from the finger.
+          scale: _down ? 0.977 : 1,
+          duration: _down ? M3Motion.short2 : M3Motion.medium1,
+          curve: M3Motion.emphasizedDecelerate,
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -1329,14 +1332,16 @@ class _BouncingClayCardState extends State<BouncingClayCard>
       );
     }
 
-    if (widget.onTap == null) return content;
+    if (widget.onTap == null) return RepaintBoundary(child: content);
 
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      behavior: HitTestBehavior.opaque,
-      child: ScaleTransition(scale: _scale, child: content),
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTapDown: _onTapDown,
+        onTapUp: _onTapUp,
+        onTapCancel: _onTapCancel,
+        behavior: HitTestBehavior.opaque,
+        child: ScaleTransition(scale: _scale, child: content),
+      ),
     );
   }
 }

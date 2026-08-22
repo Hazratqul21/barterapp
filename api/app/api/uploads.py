@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from PIL import Image, UnidentifiedImageError
 
 from app.core.config import settings
+from app.core.ratelimit import source, uploads as upload_limit
 from app.core.security import current_user
 from app.models.user import User
 from app.schemas.common import ApiModel
@@ -88,6 +89,10 @@ async def upload_photo(
     and for nobody else: the person with a spare laptop photographs it, they do
     not host it somewhere first.
     """
+    # Chegara faylni o'qishdan OLDIN: aks holda cheklangan foydalanuvchi
+    # ham har urinishida serverga o'nlab megabayt o'qitib turardi.
+    upload_limit.check(source(request, me))
+
     raw = await file.read()
     if not raw:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Fayl bo‘sh.")

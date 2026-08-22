@@ -3,12 +3,13 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
+from app.core.ratelimit import offers as offer_limit, source
 from app.core.security import current_user
 from app.db.session import get_db
 from app.models.listing import Listing, ListingStatus
@@ -52,10 +53,13 @@ async def list_offers(
 @router.post("", response_model=OfferOut, status_code=status.HTTP_201_CREATED)
 async def create_offer(
     payload: OfferCreate,
+    request: Request,
     locale: str = Depends(resolve_locale),
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> OfferOut:
+    offer_limit.check(source(request, me))
+
     wanted = await db.get(Listing, payload.listing_id)
     if wanted is None or wanted.status != ListingStatus.active:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "E’lon topilmadi yoki yopilgan.")
