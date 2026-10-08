@@ -405,7 +405,7 @@ class _TraderReviews extends ConsumerWidget {
                                     const Icon(
                                       Symbols.star_rounded,
                                       size: 14,
-                                      color: Color(0xFFF0A82A),
+                                      color: BrandColors.gold500,
                                       fill: 1,
                                     ),
                                     Gap.w1,

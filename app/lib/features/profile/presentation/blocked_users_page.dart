@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../trade/data/trade_repository.dart';
+import '../../../core/theme/haptics.dart';
 
-final blockedUsersProvider = FutureProvider.autoDispose<List<TraderBrief>>((ref) {
+final blockedUsersProvider = FutureProvider.autoDispose<List<TraderBrief>>((
+  ref,
+) {
   return ref.watch(tradeRepositoryProvider).getBlockedUsers();
 });
 
@@ -46,26 +48,30 @@ class BlockedUsersPage extends ConsumerWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: Radii.rMd,
                   side: BorderSide(
-                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                 ),
                 tileColor: theme.colorScheme.surfaceContainerLow,
                 leading: CircleAvatar(
-                  backgroundImage: u.avatarUrl != null ? NetworkImage(u.avatarUrl!) : null,
+                  backgroundImage: u.avatarUrl != null
+                      ? NetworkImage(u.avatarUrl!)
+                      : null,
                   child: u.avatarUrl == null ? const Icon(Icons.person) : null,
                 ),
                 title: Text(u.name, style: theme.textTheme.titleMedium),
                 trailing: TextButton(
                   onPressed: () async {
-                    HapticFeedback.lightImpact();
+                    Haptics.light();
                     try {
                       await ref.read(tradeRepositoryProvider).unblockUser(u.id);
                       ref.invalidate(blockedUsersProvider);
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l.errorGeneric)),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(l.errorGeneric)));
                       }
                     }
                   },
@@ -77,7 +83,10 @@ class BlockedUsersPage extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text(l.errorGeneric, style: TextStyle(color: theme.colorScheme.error)),
+          child: Text(
+            l.errorGeneric,
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
         ),
       ),
     );

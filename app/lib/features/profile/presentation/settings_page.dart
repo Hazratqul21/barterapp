@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -13,6 +12,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -86,7 +86,7 @@ class SettingsPage extends ConsumerWidget {
                             ],
                             selected: {locale},
                             onSelectionChanged: (Set<String> v) {
-                              HapticFeedback.lightImpact();
+                              Haptics.light();
                               ref.read(localeProvider.notifier).set(v.first);
                             },
                             showSelectedIcon: false,
@@ -221,7 +221,7 @@ class SettingsPage extends ConsumerWidget {
                     icon: const Icon(Symbols.logout_rounded),
                     label: Text(l.authSignOut),
                     onPressed: () {
-                      HapticFeedback.mediumImpact();
+                      Haptics.success();
                       ref.read(authStateProvider.notifier).signOut();
                       context.go('/home');
                     },
@@ -239,7 +239,7 @@ class SettingsPage extends ConsumerWidget {
                     icon: const Icon(Symbols.delete_forever_rounded),
                     label: Text(l.actionDeleteAccount),
                     onPressed: () async {
-                      HapticFeedback.heavyImpact();
+                      Haptics.warning();
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) {
@@ -319,7 +319,7 @@ class _SettingsTile extends StatelessWidget {
         color: palette(context).inkFaint,
       ),
       onTap: () {
-        HapticFeedback.lightImpact();
+        Haptics.light();
         onTap();
       },
     ),

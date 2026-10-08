@@ -72,10 +72,13 @@ Bular uchala tilda bir xil ishlaydi va uchta tarjimani tejaydi.
 
 | Rol | Shrift | Vazn |
 |---|---|---|
-| Sarlavha, narx, bo'lim nomi | **Rubik** | 700 / 800 |
-| Matn, interfeys, tugma | **Manrope** | 400 / 500 / 600 |
+| Hammasi: sarlavha, narx, matn, tugma | **Manrope** | 400–800 |
 
-**Ikkalasi ham ilovaga o'rnatilgan** (`app/assets/fonts/`), internetdan
+Rubik olib tashlandi (dizayn v2, D1): ilova uni ishlatmas edi, ikki geometrik
+sans bir-birini to'ldirmaydi, va APK/web paketidan 360 KB tushdi. Narxlar
+`AppText.price` — tabular raqamlar, 700.
+
+**Shrift ilovaga o'rnatilgan** (`app/assets/fonts/`), internetdan
 yuklanmaydi. Bozorning yarmi qishloq mobil internetida ochadi.
 
 ### Nega almashtirildi
@@ -85,10 +88,10 @@ Ilova Plus Jakarta Sans'da qurilgan edi. Uning Google Fonts to'plamlari:
 ishlatiladigan tarixiy harflarni** saqlaydi, А–Я ni emas. Ya'ni har bir ruscha
 ekran tizim shriftiga tushib ketardi.
 
-Rubik va Manrope — o'zgaruvchan shriftlar, bitta fayl 300–900 vaznni qoplaydi,
-ikkalasi ham to'liq kirill blokini saqlaydi (`fontTools` bilan tekshirilgan).
+Manrope — o'zgaruvchan shrift, bitta fayl 200–800 vaznni qoplaydi,
+to'liq kirill blokini saqlaydi (`fontTools` bilan tekshirilgan).
 
-⚠️ Tarjimalarda `‘` (U+2018) ishlatiladi, `ʻ` (U+02BB) emas. Ikkala shrift ham
+⚠️ Tarjimalarda `‘` (U+2018) ishlatiladi, `ʻ` (U+02BB) emas. Manrope
 birinchisini qoplaydi, ikkinchisini yo'q. Bir xil bo'lib qolsin.
 
 ### Shkala

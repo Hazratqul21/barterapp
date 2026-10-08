@@ -195,25 +195,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                 padding: const EdgeInsets.all(Gap.x4),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF5D3FD3), Color(0xFF9D65FF)],
+                                    colors: [
+                                      BrandColors.premiumStart,
+                                      BrandColors.premiumEnd,
+                                    ],
                                   ),
                                   borderRadius: Radii.rLg,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.verified_user_rounded, color: Colors.white, size: 32),
+                                    const Icon(
+                                      Icons.verified_user_rounded,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
                                     Gap.h2,
                                     Text(
                                       l.profileVerifyAccount,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     Text(
                                       l.profileVerifyDesc,
-                                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: Colors.white70),
                                     ),
                                   ],
                                 ),

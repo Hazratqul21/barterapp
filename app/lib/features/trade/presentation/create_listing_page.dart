@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../core/theme/haptics.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
@@ -432,7 +432,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                           onPressed: !_stepComplete || _busy
                               ? null
                               : () {
-                                  HapticFeedback.mediumImpact();
+                                  Haptics.success();
                                   last ? _publish() : _edit(() => _step++);
                                 },
                           child: _busy
