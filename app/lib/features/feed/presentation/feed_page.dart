@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -28,6 +29,7 @@ class FeedPage extends ConsumerStatefulWidget {
 
 class _FeedPageState extends ConsumerState<FeedPage> {
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
   final _scrollController = ScrollController();
   Timer? _debounce;
   final _seen = <String>{};
@@ -48,6 +50,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     _debounce?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -119,281 +122,315 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     final theme = Theme.of(context);
     final query = ref.watch(feedQueryProvider);
     final feed = ref.watch(feedProvider);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        bottom: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                  child: Column(
-                    children: [
-                      AnimatedSize(
-                        duration: Motion.standard.durationOf(context),
-                        curve: Motion.standard.curve,
-                        alignment: Alignment.topCenter,
-                        child: _collapsed
-                            ? const SizedBox(width: double.infinity)
-                            : Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
-                                  children: [
-                                    const BrandMark(size: 32),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton.icon(
-                                          onPressed: _filters,
-                                          icon: const Icon(
-                                            Symbols.location_on_rounded,
-                                            size: 18,
-                                          ),
-                                          label: Text(
-                                            query.region ?? l.feedRegionAny,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+    // "/" jumps to search, as on most web marketplaces. Ignored while
+    // typing, since a focused text field consumes the key first.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.slash): () =>
+            _searchFocus.requestFocus(),
+      },
+      // Shortcuts only hear keys from focus inside them; without this, a
+      // fresh page has no focus and "/" goes nowhere.
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          backgroundColor: theme.colorScheme.surface,
+          body: SafeArea(
+            bottom: false,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      child: Column(
+                        children: [
+                          AnimatedSize(
+                            duration: Motion.standard.durationOf(context),
+                            curve: Motion.standard.curve,
+                            alignment: Alignment.topCenter,
+                            child: _collapsed
+                                ? const SizedBox(width: double.infinity)
+                                : Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Row(
+                                      children: [
+                                        const BrandMark(size: 32),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: TextButton.icon(
+                                              onPressed: _filters,
+                                              icon: const Icon(
+                                                Symbols.location_on_rounded,
+                                                size: 18,
+                                              ),
+                                              label: Text(
+                                                query.region ?? l.feedRegionAny,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
+                                        IconButton(
+                                          tooltip: l.feedNotifications,
+                                          onPressed: () =>
+                                              context.push('/notifications'),
+                                          icon: const Icon(
+                                            Symbols.notifications_rounded,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      tooltip: l.feedNotifications,
-                                      onPressed: () =>
-                                          context.push('/notifications'),
-                                      icon: const Icon(
-                                        Symbols.notifications_rounded,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: _search,
-                              onSubmitted: (value) {
-                                _search(value, immediate: true);
-                                FocusScope.of(context).unfocus();
-                              },
-                              textInputAction: TextInputAction.search,
-                              maxLength: 120,
-                              decoration: InputDecoration(
-                                counterText: '',
-                                hintText: l.feedSearchHint,
-                                prefixIcon: const Icon(Symbols.search_rounded),
-                                suffixIcon: _searchController.text.isEmpty
-                                    ? null
-                                    : IconButton(
-                                        tooltip: l.clear,
-                                        onPressed: _clearSearch,
-                                        icon: const Icon(Symbols.close_rounded),
-                                      ),
-                                filled: true,
-                                fillColor:
-                                    theme.colorScheme.surfaceContainerLow,
-                                border: OutlineInputBorder(
-                                  borderRadius: Radii.rSm,
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: Radii.rSm,
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                              ),
-                            ),
+                                  ),
                           ),
-                          if (_collapsed)
-                            IconButton(
-                              tooltip: l.feedNotifications,
-                              onPressed: () => context.push('/notifications'),
-                              icon: const Icon(Symbols.notifications_rounded),
-                            ),
-                          const SizedBox(width: 10),
-                          Badge(
-                            isLabelVisible: query.isNarrowed,
-                            child: IconButton.filledTonal(
-                              tooltip: l.filterTitle,
-                              onPressed: _filters,
-                              style: IconButton.styleFrom(
-                                minimumSize: const Size(52, 52),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: Radii.rSm,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  focusNode: _searchFocus,
+                                  onChanged: _search,
+                                  onSubmitted: (value) {
+                                    _search(value, immediate: true);
+                                    FocusScope.of(context).unfocus();
+                                  },
+                                  textInputAction: TextInputAction.search,
+                                  maxLength: 120,
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    hintText: l.feedSearchHint,
+                                    prefixIcon: const Icon(
+                                      Symbols.search_rounded,
+                                    ),
+                                    suffixIcon: _searchController.text.isEmpty
+                                        ? null
+                                        : IconButton(
+                                            tooltip: l.clear,
+                                            onPressed: _clearSearch,
+                                            icon: const Icon(
+                                              Symbols.close_rounded,
+                                            ),
+                                          ),
+                                    filled: true,
+                                    fillColor:
+                                        theme.colorScheme.surfaceContainerLow,
+                                    border: OutlineInputBorder(
+                                      borderRadius: Radii.rSm,
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: Radii.rSm,
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              icon: const Icon(Symbols.tune_rounded),
-                            ),
+                              if (_collapsed)
+                                IconButton(
+                                  tooltip: l.feedNotifications,
+                                  onPressed: () =>
+                                      context.push('/notifications'),
+                                  icon: const Icon(
+                                    Symbols.notifications_rounded,
+                                  ),
+                                ),
+                              const SizedBox(width: 10),
+                              Badge(
+                                isLabelVisible: query.isNarrowed,
+                                child: IconButton.filledTonal(
+                                  tooltip: l.filterTitle,
+                                  onPressed: _filters,
+                                  style: IconButton.styleFrom(
+                                    minimumSize: const Size(52, 52),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: Radii.rSm,
+                                    ),
+                                  ),
+                                  icon: const Icon(Symbols.tune_rounded),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      Haptics.light();
-                      ref.invalidate(feedProvider);
-                      try {
-                        await ref.read(feedProvider.future);
-                      } catch (_) {
-                        // The feed displays the error and its retry action.
-                      }
-                    },
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: _Categories(
-                            selected: query.categoryId,
-                            onSelect: (id) => ref
-                                .read(feedQueryProvider.notifier)
-                                .toggleCategory(id),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: FeedBanner()),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l.feedHeading,
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          Haptics.light();
+                          ref.invalidate(feedProvider);
+                          try {
+                            await ref.read(feedProvider.future);
+                          } catch (_) {
+                            // The feed displays the error and its retry action.
+                          }
+                        },
+                        child: CustomScrollView(
+                          controller: _scrollController,
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: _Categories(
+                                selected: query.categoryId,
+                                onSelect: (id) => ref
+                                    .read(feedQueryProvider.notifier)
+                                    .toggleCategory(id),
+                              ),
+                            ),
+                            const SliverToBoxAdapter(child: FeedBanner()),
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  24,
+                                  20,
+                                  16,
                                 ),
-                                if (query.isNarrowed)
-                                  TextButton(
-                                    onPressed: () {
-                                      _clearSearch();
-                                      ref
-                                          .read(feedQueryProvider.notifier)
-                                          .reset();
-                                    },
-                                    child: Text(l.filterClear),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SliverToBoxAdapter(child: _ActiveFilters(query: query)),
-                        ...switch (feed) {
-                          AsyncLoading() => [
-                            const SliverToBoxAdapter(child: FeedShimmer()),
-                          ],
-                          AsyncError(:final error) => [
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: ErrorState(
-                                message: errorMessage(context, error),
-                                retryLabel: l.retry,
-                                onRetry: () => ref.invalidate(feedProvider),
-                              ),
-                            ),
-                          ],
-                          AsyncData(:final value) when value.items.isEmpty => [
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: EmptyState(
-                                icon: Symbols.search_off_rounded,
-                                title: l.feedEmpty,
-                                hint: l.feedEmptyHint,
-                              ),
-                            ),
-                          ],
-                          AsyncData(:final value) => [
-                            SliverPadding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              sliver: SliverLayoutBuilder(
-                                builder: (context, constraints) {
-                                  return SliverGrid.builder(
-                                    gridDelegate: ListingGrid.delegate(
-                                      constraints.crossAxisExtent,
-                                      MediaQuery.textScalerOf(context),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        l.feedHeading,
+                                        style: theme.textTheme.titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
                                     ),
-                                    itemCount: value.items.length,
-                                    itemBuilder: (context, index) {
-                                      final listing = value.items[index];
-                                      if (_seen.add(listing.id)) {
-                                        Future.microtask(() {
-                                          if (!mounted) return;
+                                    if (query.isNarrowed)
+                                      TextButton(
+                                        onPressed: () {
+                                          _clearSearch();
                                           ref
-                                              .read(analyticsServiceProvider)
-                                              .logEvent(
-                                                'listing_impression',
-                                                targetType: 'listing',
-                                                targetId: listing.id,
-                                              );
-                                        });
-                                      }
-                                      return ListingCardTile(
-                                        listing: listing,
-                                        onFavorite: () =>
-                                            _toggleFavorite(listing),
-                                        onTap: () => context.push(
-                                          '/listing/${listing.id}',
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
+                                              .read(feedQueryProvider.notifier)
+                                              .reset();
+                                        },
+                                        child: Text(l.filterClear),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                             SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Center(
-                                  child: value.loadingMore
-                                      ? const CircularProgressIndicator()
-                                      : value.hasMore
-                                      ? OutlinedButton(
-                                          onPressed: () => ref
-                                              .read(feedProvider.notifier)
-                                              .loadMore(retry: true),
-                                          child: Text(
-                                            value.loadMoreError != null
-                                                ? l.retry
-                                                : l.feedLoadMore,
-                                          ),
-                                        )
-                                      : Text(
-                                          l.feedEnd,
-                                          style: theme.textTheme.bodySmall,
-                                        ),
+                              child: _ActiveFilters(query: query),
+                            ),
+                            ...switch (feed) {
+                              AsyncLoading() => [
+                                const SliverToBoxAdapter(child: FeedShimmer()),
+                              ],
+                              AsyncError(:final error) => [
+                                SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: ErrorState(
+                                    message: errorMessage(context, error),
+                                    retryLabel: l.retry,
+                                    onRetry: () => ref.invalidate(feedProvider),
+                                  ),
                                 ),
+                              ],
+                              AsyncData(:final value)
+                                  when value.items.isEmpty =>
+                                [
+                                  SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: EmptyState(
+                                      icon: Symbols.search_off_rounded,
+                                      title: l.feedEmpty,
+                                      hint: l.feedEmptyHint,
+                                    ),
+                                  ),
+                                ],
+                              AsyncData(:final value) => [
+                                SliverPadding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  sliver: SliverLayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return SliverGrid.builder(
+                                        gridDelegate: ListingGrid.delegate(
+                                          constraints.crossAxisExtent,
+                                          MediaQuery.textScalerOf(context),
+                                        ),
+                                        itemCount: value.items.length,
+                                        itemBuilder: (context, index) {
+                                          final listing = value.items[index];
+                                          if (_seen.add(listing.id)) {
+                                            Future.microtask(() {
+                                              if (!mounted) return;
+                                              ref
+                                                  .read(
+                                                    analyticsServiceProvider,
+                                                  )
+                                                  .logEvent(
+                                                    'listing_impression',
+                                                    targetType: 'listing',
+                                                    targetId: listing.id,
+                                                  );
+                                            });
+                                          }
+                                          return ListingCardTile(
+                                            listing: listing,
+                                            onFavorite: () =>
+                                                _toggleFavorite(listing),
+                                            onTap: () => context.push(
+                                              '/listing/${listing.id}',
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Center(
+                                      child: value.loadingMore
+                                          ? const CircularProgressIndicator()
+                                          : value.hasMore
+                                          ? OutlinedButton(
+                                              onPressed: () => ref
+                                                  .read(feedProvider.notifier)
+                                                  .loadMore(retry: true),
+                                              child: Text(
+                                                value.loadMoreError != null
+                                                    ? l.retry
+                                                    : l.feedLoadMore,
+                                              ),
+                                            )
+                                          : Text(
+                                              l.feedEnd,
+                                              style: theme.textTheme.bodySmall,
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            },
+                            SliverToBoxAdapter(
+                              child: SizedBox(
+                                height:
+                                    16 + MediaQuery.paddingOf(context).bottom,
                               ),
                             ),
                           ],
-                        },
-                        SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 16 + MediaQuery.paddingOf(context).bottom,
-                          ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

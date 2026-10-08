@@ -132,4 +132,27 @@ void main() {
       matchesGoldenFile('goldens/listing_detail_phone.png'),
     );
   });
+
+  testWidgets('viewer: arrows page through photos, Escape closes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _pump(tester, _listing());
+
+    await tester.tap(find.byType(PageView));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 3'), findsNWidgets(2));
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 3'), findsWidgets);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    // Back on the listing, on the photo last viewed.
+    expect(find.byType(PhotoCounter), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
+  });
 }

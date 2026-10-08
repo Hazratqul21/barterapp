@@ -6,27 +6,30 @@ import '../../auth/data/auth_repository.dart';
 import '../../../shared/models/models.dart';
 import '../../../core/theme/tokens.dart';
 
-final notificationSettingsProvider = FutureProvider.autoDispose<NotificationSettings>((ref) {
-  return ref.watch(authRepositoryProvider).getNotificationSettings();
-});
+final notificationSettingsProvider =
+    FutureProvider.autoDispose<NotificationSettings>((ref) {
+      return ref.watch(authRepositoryProvider).getNotificationSettings();
+    });
 
 class NotificationSettingsPage extends ConsumerStatefulWidget {
   const NotificationSettingsPage({super.key});
 
   @override
-  ConsumerState<NotificationSettingsPage> createState() => _NotificationSettingsPageState();
+  ConsumerState<NotificationSettingsPage> createState() =>
+      _NotificationSettingsPageState();
 }
 
-class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsPage> {
+class _NotificationSettingsPageState
+    extends ConsumerState<NotificationSettingsPage> {
   Future<void> _update(Map<String, dynamic> data) async {
     try {
       await ref.read(authRepositoryProvider).updateNotificationSettings(data);
       ref.invalidate(notificationSettingsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(L.of(context).errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(L.of(context).errorGeneric)));
       }
     }
   }
@@ -38,7 +41,10 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
     final asyncSettings = ref.watch(notificationSettingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.notificationSettings), backgroundColor: Colors.transparent),
+      appBar: AppBar(
+        title: Text(l.notificationSettings),
+        backgroundColor: Colors.transparent,
+      ),
       body: asyncSettings.when(
         data: (settings) => ListView(
           padding: const EdgeInsets.all(Gap.x4),
@@ -79,15 +85,21 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
               onTap: () async {
                 final TimeOfDay? from = await showTimePicker(
                   context: context,
-                  initialTime: TimeOfDay(hour: settings.quietFrom ?? 22, minute: 0),
+                  initialTime: TimeOfDay(
+                    hour: settings.quietFrom ?? 22,
+                    minute: 0,
+                  ),
                   helpText: l.notifQuietHoursStart,
                 );
                 if (from == null) return;
-                
+
                 if (context.mounted) {
                   final TimeOfDay? to = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay(hour: settings.quietTo ?? 7, minute: 0),
+                    initialTime: TimeOfDay(
+                      hour: settings.quietTo ?? 7,
+                      minute: 0,
+                    ),
                     helpText: l.notifQuietHoursEnd,
                   );
                   if (to != null) {
@@ -98,13 +110,19 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
             ),
             if (settings.quietFrom != null || settings.quietTo != null)
               TextButton(
-                onPressed: () => _update({'quiet_from': null, 'quiet_to': null}),
+                onPressed: () =>
+                    _update({'quiet_from': null, 'quiet_to': null}),
                 child: Text(l.notifQuietHoursDisable),
               ),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text(l.errorGeneric, style: TextStyle(color: theme.colorScheme.error))),
+        error: (e, st) => Center(
+          child: Text(
+            l.errorGeneric,
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+        ),
       ),
     );
   }
