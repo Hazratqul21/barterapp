@@ -37,6 +37,17 @@ flutter run
 flutter run -d web-server --web-port=8086 --web-hostname=127.0.0.1
 ```
 
+### Production rejimi
+
+Serverda `APP_ENV=production` qo‘ying. Bu rejimda API quyidagilardan biri bo‘lsa **ishga tushmaydi** va barcha muammolarni bitta xabarda chiqaradi:
+
+- `OTP_DEBUG=true` (kod javobda qaytadi);
+- `JWT_SECRET` standart yoki 32 belgidan qisqa;
+- `ESKIZ_EMAIL`/`ESKIZ_PASSWORD` bo‘sh yoki `SMS_REQUIRED=false`;
+- `CORS_ORIGINS` bo‘sh, `*` bor, `https` emas yoki `localhost`/`127.0.0.1`.
+
+Productionda localhost uchun CORS regex ham o‘chadi. Tekshiruv: `api/tests/test_config_guard.py`.
+
 Android emulator default API manzili `10.0.2.2:8010`, iOS simulator/web `127.0.0.1:8010`. Real telefon yoki release build uchun tegishli `API_BASE_URL` qiymatini `--dart-define` orqali bering.
 
 ## Tekshiruvlar
