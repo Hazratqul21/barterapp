@@ -364,5 +364,12 @@
   "matchReasonNearby": "Nearby",
   "matchReasonVerified": "Verified trader",
   "createFieldDistrict": "District (optional)",
-  "specRegion": "Location"
+  "specRegion": "Location",
+  "inboxArchive": "Archive",
+  "inboxArchived": "Archived",
+  "inboxArchivedDone": "Chat archived",
+  "inboxUndo": "Undo",
+  "inboxUnarchive": "Unarchive",
+  "inboxArchivedEmpty": "No archived chats",
+  "inboxArchivedHint": "A new message in an archived chat brings it back to the inbox."
 }

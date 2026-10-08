@@ -1163,4 +1163,26 @@ class LUz extends L {
 
   @override
   String get specRegion => 'Joylashuvi';
+
+  @override
+  String get inboxArchive => 'Arxivlash';
+
+  @override
+  String get inboxArchived => 'Arxiv';
+
+  @override
+  String get inboxArchivedDone => 'Suhbat arxivlandi';
+
+  @override
+  String get inboxUndo => 'Bekor qilish';
+
+  @override
+  String get inboxUnarchive => 'Arxivdan chiqarish';
+
+  @override
+  String get inboxArchivedEmpty => 'Arxiv bo‘sh';
+
+  @override
+  String get inboxArchivedHint =>
+      'Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi.';
 }

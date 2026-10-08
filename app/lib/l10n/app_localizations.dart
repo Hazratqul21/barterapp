@@ -2282,6 +2282,48 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Joylashuvi'**
   String get specRegion;
+
+  /// No description provided for @inboxArchive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivlash'**
+  String get inboxArchive;
+
+  /// No description provided for @inboxArchived.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxiv'**
+  String get inboxArchived;
+
+  /// No description provided for @inboxArchivedDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suhbat arxivlandi'**
+  String get inboxArchivedDone;
+
+  /// No description provided for @inboxUndo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get inboxUndo;
+
+  /// No description provided for @inboxUnarchive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivdan chiqarish'**
+  String get inboxUnarchive;
+
+  /// No description provided for @inboxArchivedEmpty.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxiv bo‘sh'**
+  String get inboxArchivedEmpty;
+
+  /// No description provided for @inboxArchivedHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi.'**
+  String get inboxArchivedHint;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

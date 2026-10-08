@@ -438,11 +438,15 @@ class ConversationSummary {
     this.lastMessage,
     this.lastMessageAt,
     this.unread = 0,
+    this.archived = false,
   });
 
   final String id;
   final TraderBrief peer;
   final String offerId;
+
+  /// Put aside by me; comes back on its own when a new message arrives.
+  final bool archived;
   final OfferStatus offerStatus;
 
   /// Titles joined with a middle dot, for anywhere that needs one string.
@@ -471,6 +475,7 @@ class ConversationSummary {
         gives: json['gives'] as String? ?? '',
         receives: json['receives'] as String? ?? '',
         cash: Money.fromJson(json['cash'] as Map<String, dynamic>),
+        archived: json['archived'] as bool? ?? false,
         lastMessage: json['last_message'] as String?,
         lastMessageAt: json['last_message_at'] == null
             ? null

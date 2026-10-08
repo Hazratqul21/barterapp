@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -22,6 +23,44 @@ class InboxPage extends ConsumerStatefulWidget {
 
 class _InboxPageState extends ConsumerState<InboxPage> {
   String? _open;
+
+  /// Archive with an undo. The row leaves at once; the server call follows,
+  /// and a failure puts it back with the reason.
+  Future<void> _archive(
+    BuildContext context,
+    ConversationSummary thread,
+  ) async {
+    final l = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(tradeRepositoryProvider);
+    Haptics.light();
+    try {
+      await repo.archiveConversation(thread.id);
+    } catch (e) {
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(errorMessage(context, e))),
+        );
+      }
+    }
+    ref.invalidate(conversationsProvider);
+    ref.invalidate(archivedConversationsProvider);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l.inboxArchivedDone),
+          action: SnackBarAction(
+            label: l.inboxUndo,
+            onPressed: () async {
+              await repo.unarchiveConversation(thread.id);
+              ref.invalidate(conversationsProvider);
+              ref.invalidate(archivedConversationsProvider);
+            },
+          ),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +92,8 @@ class _InboxPageState extends ConsumerState<InboxPage> {
                     setState(() => _open = id);
                   },
                   onRetry: () => ref.invalidate(conversationsProvider),
+                  onSwipe: (thread) => _archive(context, thread),
+                  swipeLabel: l.inboxArchive,
                 ),
               ),
             ),
@@ -76,6 +117,18 @@ class _InboxPageState extends ConsumerState<InboxPage> {
         title: Text(l.inboxTitle),
         actions: [
           IconButton(
+            tooltip: l.inboxArchived,
+            icon: const Icon(Symbols.inventory_2_rounded),
+            onPressed: () {
+              Haptics.light();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ArchivedChatsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
             tooltip: l.notificationsTitle,
             icon: const Icon(Symbols.notifications_rounded),
             onPressed: () {
@@ -97,6 +150,8 @@ class _InboxPageState extends ConsumerState<InboxPage> {
               context.push('/chat/$id');
             },
             onRetry: () => ref.invalidate(conversationsProvider),
+            onSwipe: (thread) => _archive(context, thread),
+            swipeLabel: l.inboxArchive,
           ),
         ),
       ),
@@ -104,12 +159,17 @@ class _InboxPageState extends ConsumerState<InboxPage> {
   }
 }
 
-class _ThreadList extends ConsumerWidget {
+class _ThreadList extends StatefulWidget {
   const _ThreadList({
     required this.threads,
     required this.selectedId,
     required this.onSelect,
     required this.onRetry,
+    this.onSwipe,
+    this.swipeIcon = Symbols.archive_rounded,
+    this.swipeLabel,
+    this.emptyTitle,
+    this.emptyHint,
   });
 
   final AsyncValue<List<ConversationSummary>> threads;
@@ -117,8 +177,41 @@ class _ThreadList extends ConsumerWidget {
   final ValueChanged<String> onSelect;
   final VoidCallback onRetry;
 
+  /// Swipe a row away (archive in the inbox, unarchive in the archive).
+  final ValueChanged<ConversationSummary>? onSwipe;
+  final IconData swipeIcon;
+  final String? swipeLabel;
+  final String? emptyTitle;
+  final String? emptyHint;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<_ThreadList> createState() => _ThreadListState();
+}
+
+class _ThreadListState extends State<_ThreadList> {
+  /// Rows swiped away, hidden until the next server answer arrives. A
+  /// Dismissible must leave the tree the moment it is dismissed; waiting for
+  /// the refetch left it there and threw.
+  final _gone = <String>{};
+
+  @override
+  void didUpdateWidget(_ThreadList old) {
+    super.didUpdateWidget(old);
+    // Only a fresh server answer resets it — not the "refreshing" state,
+    // which still carries the old list (and would flash the row back).
+    if (!widget.threads.isLoading &&
+        !identical(old.threads.value, widget.threads.value)) {
+      _gone.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final threads = widget.threads;
+    final selectedId = widget.selectedId;
+    final onSelect = widget.onSelect;
+    final onRetry = widget.onRetry;
+    final onSwipe = widget.onSwipe;
     final l = L.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom + Gap.x14;
 
@@ -130,29 +223,68 @@ class _ThreadList extends ConsumerWidget {
         retryLabel: l.retry,
         onRetry: onRetry,
       ),
-      data: (items) => items.isEmpty
-          ? EmptyState(title: l.inboxEmpty, hint: l.inboxEmptyHint)
-          : RefreshIndicator(
-              onRefresh: () async => onRetry(),
-              child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  Gap.x4,
-                  Gap.x4,
-                  Gap.x4,
-                  bottomPadding,
-                ),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => Gap.h3,
-                itemBuilder: (context, index) => AnimatedListItem(
-                  index: index,
-                  child: _ThreadCard(
-                    thread: items[index],
-                    selected: items[index].id == selectedId,
-                    onTap: () => onSelect(items[index].id),
+      data: (all) {
+        final items = [
+          for (final t in all)
+            if (!_gone.contains(t.id)) t,
+        ];
+        return items.isEmpty
+            ? EmptyState(
+                title: widget.emptyTitle ?? l.inboxEmpty,
+                hint: widget.emptyHint ?? l.inboxEmptyHint,
+              )
+            : RefreshIndicator(
+                onRefresh: () async => onRetry(),
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    Gap.x4,
+                    Gap.x4,
+                    Gap.x4,
+                    bottomPadding,
                   ),
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => Gap.h3,
+                  itemBuilder: (context, index) {
+                    final thread = items[index];
+                    final card = _ThreadCard(
+                      thread: thread,
+                      selected: thread.id == selectedId,
+                      onTap: () => onSelect(thread.id),
+                    );
+                    return AnimatedListItem(
+                      index: index,
+                      child: onSwipe == null
+                          ? card
+                          : Semantics(
+                              // Swipe has no screen-reader equivalent on its
+                              // own; the custom action is the accessible path.
+                              customSemanticsActions: {
+                                CustomSemanticsAction(
+                                  label: widget.swipeLabel ?? '',
+                                ): () {
+                                  setState(() => _gone.add(thread.id));
+                                  onSwipe(thread);
+                                },
+                              },
+                              child: Dismissible(
+                                key: ValueKey('swipe-${thread.id}'),
+                                direction: DismissDirection.endToStart,
+                                background: _SwipeBackground(
+                                  icon: widget.swipeIcon,
+                                  label: widget.swipeLabel ?? '',
+                                ),
+                                onDismissed: (_) {
+                                  setState(() => _gone.add(thread.id));
+                                  onSwipe(thread);
+                                },
+                                child: card,
+                              ),
+                            ),
+                    );
+                  },
                 ),
-              ),
-            ),
+              );
+      },
     );
   }
 }
@@ -422,6 +554,79 @@ class _InboxShimmer extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeBackground extends StatelessWidget {
+  const _SwipeBackground({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x5),
+      decoration: ShapeDecoration(
+        color: scheme.secondaryContainer,
+        shape: const RoundedSuperellipseBorder(borderRadius: Radii.rLg),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: scheme.onSecondaryContainer,
+            ),
+          ),
+          Gap.w2,
+          Icon(icon, color: scheme.onSecondaryContainer),
+        ],
+      ),
+    );
+  }
+}
+
+/// Threads put aside. Swipe one back, or open it — a new message brings it
+/// back to the inbox on its own.
+class ArchivedChatsPage extends ConsumerWidget {
+  const ArchivedChatsPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(l.inboxArchived)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+          child: _ThreadList(
+            threads: ref.watch(archivedConversationsProvider),
+            selectedId: null,
+            onSelect: (id) {
+              Haptics.light();
+              context.push('/chat/$id');
+            },
+            onRetry: () => ref.invalidate(archivedConversationsProvider),
+            onSwipe: (thread) async {
+              Haptics.light();
+              await ref
+                  .read(tradeRepositoryProvider)
+                  .unarchiveConversation(thread.id);
+              ref.invalidate(archivedConversationsProvider);
+              ref.invalidate(conversationsProvider);
+            },
+            swipeIcon: Symbols.unarchive_rounded,
+            swipeLabel: l.inboxUnarchive,
+            emptyTitle: l.inboxArchivedEmpty,
+            emptyHint: l.inboxArchivedHint,
           ),
         ),
       ),
