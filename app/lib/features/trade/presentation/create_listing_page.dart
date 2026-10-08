@@ -266,8 +266,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   }
 
   void _reorderPhoto(int oldIndex, int newIndex) {
+    // onReorderItem already adjusts newIndex for the removed item.
     setState(() {
-      if (newIndex > oldIndex) newIndex--;
       _photos.insert(newIndex, _photos.removeAt(oldIndex));
     });
     _changed();
@@ -474,7 +474,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(top: 6, right: 6),
               itemCount: _photos.length,
-              onReorder: _reorderPhoto,
+              onReorderItem: _reorderPhoto,
               itemBuilder: (context, index) {
                 final slot = _photos[index];
                 return Padding(
