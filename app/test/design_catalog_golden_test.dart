@@ -24,12 +24,6 @@ void main() {
       );
     await manrope.load();
 
-    // Anti-aliasing differs by a few pixels between machines; a real token
-    // change moves far more than this.
-    final previous = goldenFileComparator as LocalFileComparator;
-    goldenFileComparator = _TolerantComparator(
-      Uri.parse('${previous.basedir}design_catalog_golden_test.dart'),
-    );
   });
 
   for (final (name, dark, scale) in [
@@ -64,26 +58,5 @@ void main() {
         matchesGoldenFile('goldens/design_catalog_$name.png'),
       );
     });
-  }
-}
-
-class _TolerantComparator extends LocalFileComparator {
-  _TolerantComparator(super.testFile);
-
-  static const _maxDiff = 0.005; // 0.5% of pixels
-
-  @override
-  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
-    final result = await GoldenFileComparator.compareLists(
-      imageBytes,
-      await getGoldenBytes(golden),
-    );
-    if (result.passed || result.diffPercent <= _maxDiff) {
-      result.dispose();
-      return true;
-    }
-    final error = await generateFailureOutput(result, golden, basedir);
-    result.dispose();
-    throw FlutterError(error);
   }
 }
