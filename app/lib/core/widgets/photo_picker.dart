@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,6 +23,30 @@ Future<String?> pickAndUploadPhoto(
   WidgetRef ref, {
   void Function(int sent, int total)? onProgress,
 }) async {
+  final photo = await pickPhoto(context);
+  if (photo == null) return null;
+
+  return ref
+      .read(tradeRepositoryProvider)
+      .uploadPhoto(
+        bytes: photo.bytes,
+        filename: photo.filename,
+        onProgress: onProgress,
+      );
+}
+
+/// A photo on the device, not yet uploaded.
+class PickedPhoto {
+  const PickedPhoto(this.bytes, this.filename);
+
+  final Uint8List bytes;
+  final String filename;
+}
+
+/// Only the picking half, for callers that show their own upload progress
+/// and retry — the bytes are kept so a failed upload can be sent again
+/// without asking the person to find the photo a second time.
+Future<PickedPhoto?> pickPhoto(BuildContext context) async {
   final source = await _chooseSource(context);
   if (source == null) return null;
 
@@ -37,10 +61,7 @@ Future<String?> pickAndUploadPhoto(
   );
   if (file == null) return null;
 
-  final bytes = await file.readAsBytes();
-  return ref
-      .read(tradeRepositoryProvider)
-      .uploadPhoto(bytes: bytes, filename: file.name, onProgress: onProgress);
+  return PickedPhoto(await file.readAsBytes(), file.name);
 }
 
 /// Camera or gallery. Skipped on the web, which has neither distinction nor a

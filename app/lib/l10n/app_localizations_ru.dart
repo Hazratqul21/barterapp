@@ -1090,4 +1090,31 @@ class LRu extends L {
 
   @override
   String get userBlocked => 'Пользователь заблокирован';
+
+  @override
+  String get draftFoundTitle => 'Найден черновик';
+
+  @override
+  String get draftFoundBody =>
+      'Ваше незаконченное объявление сохранено. Продолжить?';
+
+  @override
+  String get draftContinue => 'Продолжить';
+
+  @override
+  String get draftDiscard => 'Начать заново';
+
+  @override
+  String get draftPhotosExpired =>
+      'Фото в черновике устарели — добавьте их заново.';
+
+  @override
+  String get photoCover => 'Обложка';
+
+  @override
+  String get photoUploadFailed => 'Не загрузилось';
+
+  @override
+  String get photoReorderHint =>
+      'Чтобы изменить порядок, нажмите и перетащите фото. Первое показывается в ленте.';
 }
