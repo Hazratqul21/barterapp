@@ -15,6 +15,7 @@ import '../theme/app_theme.dart';
 import '../theme/category_images.dart';
 import '../theme/tokens.dart';
 import '../theme/haptics.dart';
+import '../theme/motion.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -807,52 +808,63 @@ class CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
-
-    final colors = Theme.of(context).colorScheme;
-    final icon = switch (category.id) {
-      'agri' => Symbols.grass_rounded,
-      'livestock' => Symbols.pets_rounded,
-      'machinery' => Symbols.agriculture_rounded,
-      'transport' => Symbols.local_shipping_rounded,
-      'electronics' => Symbols.devices_rounded,
-      'construction' => Symbols.construction_rounded,
-      _ => Symbols.category_rounded,
-    };
+    final theme = Theme.of(context);
+    final tag = ListingTag.values.asNameMap()[category.id];
+    // Each category wears its own colour: a tinted medallion and its mark.
+    // v1 drew every category as a grey icon in a beige box on a beige page.
+    final style = tag == null
+        ? null
+        : (p.isDark ? CategoryStyle.of(tag).dark : CategoryStyle.of(tag));
+    final accent = style?.color ?? p.give;
     return Semantics(
       button: true,
       selected: selected,
-      child: Material(
-        color: selected ? colors.primaryContainer : colors.surfaceContainerLow,
-        borderRadius: Radii.rSm,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: Radii.rSm,
-          child: Container(
-            width: 112,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: Radii.rSm,
-              border: Border.all(color: selected ? colors.primary : p.hair),
-            ),
+      child: InkWell(
+        onTap: () {
+          Haptics.selection();
+          onTap();
+        },
+        customBorder: const RoundedSuperellipseBorder(borderRadius: Radii.rMd),
+        child: SizedBox(
+          width: 76,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  size: 28,
-                  color: selected ? colors.primary : p.inkSoft,
+                AnimatedContainer(
+                  duration: Motion.fast.durationOf(context),
+                  curve: Motion.fast.curve,
+                  width: 56,
+                  height: 56,
+                  decoration: ShapeDecoration(
+                    color: style?.tint ?? p.giveSoft,
+                    shape: RoundedSuperellipseBorder(
+                      borderRadius: Radii.rLg,
+                      side: BorderSide(
+                        color: selected ? accent : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: style == null
+                      ? Icon(Symbols.category_rounded, color: accent, size: 26)
+                      : CategoryMarkIcon(
+                          mark: style.mark,
+                          color: style.color,
+                          size: 30,
+                        ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   category.name,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: selected
-                        ? colors.onPrimaryContainer
-                        : colors.onSurface,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: selected ? accent : theme.colorScheme.onSurface,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    height: 1.2,
                   ),
                 ),
               ],

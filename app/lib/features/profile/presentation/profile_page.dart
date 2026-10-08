@@ -386,22 +386,22 @@ class _MyListingsSection extends ConsumerWidget {
         }
         return SliverPadding(
           padding: Gap.screen,
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: Gap.x4,
-              crossAxisSpacing: Gap.x4,
-              childAspectRatio: 0.75,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => AnimatedListItem(
-                index: index,
-                child: ListingCardTile(
-                  listing: listings[index],
-                  onTap: () => context.push('/listing/${listings[index].id}'),
-                ),
+          sliver: SliverLayoutBuilder(
+            builder: (context, constraints) => SliverGrid(
+              gridDelegate: ListingGrid.delegate(
+                constraints.crossAxisExtent,
+                MediaQuery.textScalerOf(context),
               ),
-              childCount: listings.length,
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => AnimatedListItem(
+                  index: index,
+                  child: ListingCardTile(
+                    listing: listings[index],
+                    onTap: () => context.push('/listing/${listings[index].id}'),
+                  ),
+                ),
+                childCount: listings.length,
+              ),
             ),
           ),
         );

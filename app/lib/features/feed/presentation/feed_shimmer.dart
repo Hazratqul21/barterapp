@@ -3,30 +3,43 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import 'listing_card_tile.dart';
 
+/// The feed while it loads: the same grid and card shape as the real thing,
+/// so nothing jumps when the listings arrive.
 class FeedShimmer extends StatelessWidget {
   const FeedShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // A Column, not a ListView: this skeleton is dropped into the feed's
-    // CustomScrollView through a SliverToBoxAdapter, which offers its child
-    // unbounded height. A ListView there asks a scrollable to live inside an
-    // unbounded scrollable and throws "viewport was given unbounded height".
-    // The count is fixed at four, so nothing here needs to scroll on its own —
-    // the outer scroll view already does.
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 28),
-      child: Column(
-        children: [
-          _ShimmerCard(),
-          SizedBox(height: 16),
-          _ShimmerCard(),
-          SizedBox(height: 16),
-          _ShimmerCard(),
-          SizedBox(height: 16),
-          _ShimmerCard(),
-        ],
+    // Rows of plain widgets, not a GridView: this skeleton sits in the feed's
+    // CustomScrollView through a SliverToBoxAdapter, which offers unbounded
+    // height — a nested scrollable there throws. Two rows are enough to fill
+    // the first screen.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+          final columns = ListingGrid.columnsFor(width, scale);
+          final cardWidth =
+              (width - ListingGrid.spacing * (columns - 1)) / columns;
+          final height = cardWidth + ListingCardTile.textBlockHeight(scale);
+          Widget row() => Row(
+            children: [
+              for (var i = 0; i < columns; i++) ...[
+                if (i > 0) const SizedBox(width: ListingGrid.spacing),
+                SizedBox(
+                  width: cardWidth,
+                  height: height,
+                  child: const _ShimmerCard(),
+                ),
+              ],
+            ],
+          );
+          return Column(children: [row(), Gap.h4, row()]);
+        },
       ),
     );
   }
@@ -37,109 +50,43 @@ class _ShimmerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.surfaceContainerHigh;
+    final colors = Theme.of(context).colorScheme;
+    final bone = colors.surfaceContainerHigh;
 
-    final skeleton = Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: Radii.rLg,
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+    Widget line(double widthFactor, double height) => FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: Container(
+        height: height,
+        decoration: ShapeDecoration(
+          color: bone,
+          shape: const RoundedSuperellipseBorder(borderRadius: Radii.rXs),
         ),
       ),
+    );
+
+    final skeleton = Material(
+      color: colors.surfaceContainerLowest,
+      shape: RoundedSuperellipseBorder(
+        borderRadius: Radii.rLg,
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AspectRatio(
-            aspectRatio: 1.4,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Container(color: color),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    height: 28,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    height: 28,
-                    width: 70,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  bottom: 12,
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 16,
-                        width: MediaQuery.sizeOf(context).width * 0.3,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: ColoredBox(color: bone)),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 18,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      height: 20,
-                      width: 20,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Container(
-                        height: 14,
-                        width: MediaQuery.sizeOf(context).width * 0.45,
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                line(0.55, 16),
+                Gap.h2,
+                line(0.95, 12),
+                Gap.h1,
+                line(0.7, 12),
+                Gap.h2,
+                line(0.6, 16),
               ],
             ),
           ),
