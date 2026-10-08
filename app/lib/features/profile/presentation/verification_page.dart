@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -163,8 +164,10 @@ class _TrustDial extends StatelessWidget {
     return Center(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: score / 100),
-        duration: const Duration(milliseconds: 1500),
-        curve: Curves.elasticOut,
+        // Trust is read as data, not a celebration. Let it settle quickly
+        // without an overshoot that could make the score feel imprecise.
+        duration: M3Motion.medium1,
+        curve: M3Motion.standardDecelerate,
         builder: (context, value, _) => SizedBox(
           width: 180,
           height: 180,

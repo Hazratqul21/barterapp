@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 
 import '../../../core/network/api_client.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -19,13 +16,15 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
-  static const _hold = Duration(milliseconds: 5000);
+  // Prevent a one-frame flash while routing, but never keep someone here just
+  // to finish decorative motion.
+  static const _minimumDisplay = Duration(milliseconds: 900);
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(_hold, _leave);
+    _timer = Timer(_minimumDisplay, _leave);
   }
 
   @override
@@ -49,41 +48,24 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(gradient: p.swapGradient),
+        color: p.canvas,
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Hero(
+              const Hero(
                 tag: BrandMark.heroTag,
-                child: Lottie.asset(
-                  'assets/media/swaparrows.lottie',
-                  width: 200,
-                  height: 200,
-                  repeat: false,
-                ),
-              ).animate().scale(
-                begin: const Offset(0.7, 0.7),
-                end: const Offset(1, 1),
-                duration: 600.ms,
-                curve: M3Motion.emphasizedDecelerate,
+                child: BrandMark(size: 100, animate: true),
               ),
               Gap.h6,
               Text(
-                    l.appName,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(delay: 300.ms)
-                  .slideY(
-                    begin: 0.3,
-                    end: 0,
-                    curve: M3Motion.emphasizedDecelerate,
-                  ),
+                l.appName,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
+                ),
+              ),
             ],
           ),
         ),

@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/legal_links.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
 
@@ -53,11 +54,14 @@ class _OtpInputState extends State<_OtpInput> {
       children: [
         Opacity(
           opacity: 0,
+          alwaysIncludeSemantics: true,
           child: TextField(
             controller: widget.controller,
             focusNode: _focusNode,
             enabled: widget.enabled,
             keyboardType: TextInputType.number,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             maxLength: 6,
             onSubmitted: widget.onSubmitted,
             decoration: const InputDecoration(counterText: ''),
@@ -65,38 +69,40 @@ class _OtpInputState extends State<_OtpInput> {
         ),
         GestureDetector(
           onTap: () => _focusNode.requestFocus(),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(6, (index) {
-              final char = index < text.length ? text[index] : '';
-              final isFocused = _focusNode.hasFocus && text.length == index;
-              final isFilled = index < text.length;
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(6, (index) {
+                final char = index < text.length ? text[index] : '';
+                final isFocused = _focusNode.hasFocus && text.length == index;
+                final isFilled = index < text.length;
 
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 48,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isFocused
-                        ? theme.colorScheme.primary
-                        : (isFilled
-                              ? theme.colorScheme.outlineVariant
-                              : Colors.transparent),
-                    width: 2,
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: ((constraints.maxWidth - 30) / 6).clamp(24.0, 48.0),
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isFocused
+                          ? theme.colorScheme.primary
+                          : (isFilled
+                                ? theme.colorScheme.outlineVariant
+                                : Colors.transparent),
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Text(
-                  char,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                  child: Text(
+                    char,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         ),
       ],
@@ -255,16 +261,18 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             _codeSent ? _verify() : _sendCode();
                           },
                     child: _busy
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                             ),
                           )
                         : Text(_codeSent ? l.authVerify : l.authSendCode),
                   ),
+                  Gap.h4,
+                  const LegalLinks(),
                 ],
               ),
             ),

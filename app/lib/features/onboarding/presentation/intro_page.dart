@@ -144,6 +144,7 @@ class _IntroPageState extends ConsumerState<IntroPage> {
                                         slide.imagePath,
                                         fit: BoxFit.contain,
                                         filterQuality: FilterQuality.high,
+                                        semanticLabel: slide.title,
                                       ),
                                     ),
                                     Gap.h8,

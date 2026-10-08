@@ -1,8 +1,8 @@
-# BarterApp — Foydalanish shartlari
+# MAB — Foydalanish shartlari
 
 **Kuchga kirgan sana:** {{KUCHGA_KIRISH_SANASI}}
 
-BarterApp'dan foydalanish orqali siz ushbu shartlarga rozilik bildirasiz.
+MAB'dan foydalanish orqali siz ushbu shartlarga rozilik bildirasiz.
 Rozi bo'lmasangiz, Xizmatdan foydalanmang.
 
 ---
@@ -12,7 +12,7 @@ Rozi bo'lmasangiz, Xizmatdan foydalanmang.
 Xizmatni **{{KOMPANIYA_NOMI}}** ({{HUQUQIY_MANZIL}}, STIR {{STIR}})
 taqdim etadi.
 
-**BarterApp — bu e'lonlar maydoni.** Foydalanuvchilar bir-biri bilan
+**MAB — bu e'lonlar maydoni.** Foydalanuvchilar bir-biri bilan
 naqd pulsiz ayirboshlash uchun e'lon joylaydi va o'zaro kelishadi.
 
 ⚠️ **Muhim:** biz savdoning **tomoni emasmiz**. Biz sotmaymiz, sotib

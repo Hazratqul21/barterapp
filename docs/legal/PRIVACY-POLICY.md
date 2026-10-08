@@ -1,9 +1,9 @@
-# BarterApp — Maxfiylik siyosati
+# MAB — Maxfiylik siyosati
 
 **Kuchga kirgan sana:** {{KUCHGA_KIRISH_SANASI}}
 **Oxirgi yangilanish:** {{KUCHGA_KIRISH_SANASI}}
 
-Bu siyosat **BarterApp** mobil ilovasi va veb-sayti (birgalikda — «Xizmat»)
+Bu siyosat **MAB** mobil ilovasi va veb-sayti (birgalikda — «Xizmat»)
 qanday ma'lumot yig'ishini, uni nima uchun ishlatishini va siz uni qanday
 boshqarishingiz mumkinligini tushuntiradi.
 
@@ -314,11 +314,11 @@ so'raymiz.
 
 ---
 
-## BarterApp hisobini o'chirish
+## MAB hisobini o'chirish
 
 ### Eng tez yo'l — ilovaning o'zidan
 
-1. BarterApp ilovasini oching
+1. MAB ilovasini oching
 2. **Profil** → **Sozlamalar**
 3. Pastga tushing → **Hisobni o'chirish**
 4. Tasdiqlang

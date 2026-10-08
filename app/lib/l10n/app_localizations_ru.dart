@@ -9,7 +9,7 @@ class LRu extends L {
   LRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appName => 'BarterApp';
+  String get appName => 'MAB';
 
   @override
   String get back => 'Назад';
@@ -971,4 +971,123 @@ class LRu extends L {
 
   @override
   String get emptyMyListings => 'Пока нет объявлений';
+
+  @override
+  String get blockedTitle => 'Заблокированные';
+
+  @override
+  String get blockedEmpty => 'Нет заблокированных пользователей';
+
+  @override
+  String get blockedUnblock => 'Разблокировать';
+
+  @override
+  String get notifOffers => 'Предложения';
+
+  @override
+  String get notifOffersDesc => 'Уведомление при новом предложении';
+
+  @override
+  String get notifMatches => 'Совпадения (Matches)';
+
+  @override
+  String get notifMatchesDesc => 'Уведомление, когда найден нужный предмет';
+
+  @override
+  String get notifMessages => 'Сообщения';
+
+  @override
+  String get notifMessagesDesc => 'Уведомление при новом сообщении';
+
+  @override
+  String get notifSystem => 'Системные сообщения';
+
+  @override
+  String get notifSystemDesc => 'Важные системные уведомления';
+
+  @override
+  String get notifQuietHours => 'Тихие часы';
+
+  @override
+  String get notifOff => 'Отключено';
+
+  @override
+  String get notifQuietHoursStart => 'Начало тихих часов';
+
+  @override
+  String get notifQuietHoursEnd => 'Конец тихих часов';
+
+  @override
+  String get notifQuietHoursDisable => 'Отключить тихие часы';
+
+  @override
+  String get favSavedListings => 'Сохраненные объявления';
+
+  @override
+  String get favNoSavedListings => 'Пока нет сохраненных';
+
+  @override
+  String get legalTitle => 'ПРАВОВАЯ ИНФОРМАЦИЯ';
+
+  @override
+  String get legalPrivacy => 'Политика конфиденциальности';
+
+  @override
+  String get legalTerms => 'Условия использования';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Вы уверены, что хотите удалить свой аккаунт? Это действие нельзя отменить, и ваши данные будут безвозвратно удалены.';
+
+  @override
+  String get profileVerifyAccount => 'Подтвердите свой аккаунт';
+
+  @override
+  String get profileVerifyDesc =>
+      'Подтвердите свою личность для повышения доверия.';
+
+  @override
+  String get actionReportReasonInappropriate => 'Неприемлемо';
+
+  @override
+  String get actionDeleteListingConfirm =>
+      'Вы уверены, что хотите удалить это объявление?';
+
+  @override
+  String get createPreferredCategory =>
+      'Предпочтительная категория (Необязательно)';
+
+  @override
+  String get createPreferCash => 'Я предпочитаю наличные за этот товар';
+
+  @override
+  String get currencySom => 'сум';
+
+  @override
+  String get filterSort => 'Сортировка';
+
+  @override
+  String get sortNewest => 'Сначала новые';
+
+  @override
+  String get sortCheapest => 'По возрастанию стоимости';
+
+  @override
+  String get sortExpensive => 'По убыванию стоимости';
+
+  @override
+  String get filterInvalidPrice => 'Введите корректную неотрицательную сумму';
+
+  @override
+  String get filterInvalidRange =>
+      'Минимальная сумма не должна превышать максимальную.';
+
+  @override
+  String get navPost => 'Подать';
+
+  @override
+  String get reportSent => 'Жалоба отправлена модератору';
+
+  @override
+  String get userBlocked => 'Пользователь заблокирован';
 }

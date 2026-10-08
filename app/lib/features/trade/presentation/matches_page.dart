@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/router/web_shell.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -99,14 +97,10 @@ class MatchesPage extends ConsumerWidget {
                               Gap.h4,
                               if (columns == 1)
                                 for (final (index, match) in items.indexed) ...[
-                                  _MatchCard(match: match)
-                                      .animate()
-                                      .fadeIn(delay: (100 * index).ms)
-                                      .slideY(
-                                        begin: 0.1,
-                                        end: 0,
-                                        curve: M3Motion.emphasizedDecelerate,
-                                      ),
+                                  AnimatedListItem(
+                                    index: index,
+                                    child: _MatchCard(match: match),
+                                  ),
                                   Gap.h4,
                                 ]
                               else
@@ -121,14 +115,10 @@ class MatchesPage extends ConsumerWidget {
                                                 Gap.x5 * 2 -
                                                 Gap.x4 * (columns - 1)) /
                                             columns,
-                                        child: _MatchCard(match: match)
-                                            .animate()
-                                            .fadeIn(delay: (100 * index).ms)
-                                            .scale(
-                                              begin: const Offset(0.95, 0.95),
-                                              curve:
-                                                  M3Motion.emphasizedDecelerate,
-                                            ),
+                                        child: AnimatedListItem(
+                                          index: index,
+                                          child: _MatchCard(match: match),
+                                        ),
                                       ),
                                   ],
                                 ),
@@ -402,6 +392,7 @@ class _Score extends StatelessWidget {
   final int score;
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
     final strong = score >= 75;
@@ -429,7 +420,7 @@ class _Score extends StatelessWidget {
             ),
           ),
           Text(
-            'MATCH',
+            l.matchLabel.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
               color: colour,
               fontSize: 9,

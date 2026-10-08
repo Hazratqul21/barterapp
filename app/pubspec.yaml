@@ -61,6 +61,7 @@ flutter:
   # fallback face — and on no connection, always. Half this marketplace opens
   # the app on rural mobile data, so the type ships with the binary.
   assets:
+    - assets/brand/
     - assets/images/
     - assets/images/categories/
     - assets/media/

@@ -15,77 +15,27 @@ class ListingRepository {
     double? minPrice,
     double? maxPrice,
     String? region,
+    String? sortBy,
   }) async {
     try {
       return await _api.get(
         '/listings',
         query: {
-          'category': ?categoryId,
+          'tag': ?categoryId,
           if (query != null && query.trim().isNotEmpty) 'q': query,
           'cursor': ?cursor,
-          'min_price': ?minPrice?.toString(),
-          'max_price': ?maxPrice?.toString(),
+          if (minPrice != null)
+            'min_value': (minPrice * 100).round().toString(),
+          if (maxPrice != null)
+            'max_value': (maxPrice * 100).round().toString(),
           if (region != null && region.trim().isNotEmpty) 'region': region,
+          if (sortBy != null && sortBy.trim().isNotEmpty) 'sort': sortBy,
         },
         parse: (data) =>
             Page.fromJson(data as Map<String, dynamic>, ListingCard.fromJson),
       );
     } catch (_) {
-      await Future.delayed(const Duration(milliseconds: 600));
-      return Page<ListingCard>(
-        items: [
-          ListingCard(
-            id: 'mock-1',
-            tag: ListingTag.agri,
-            title: 'Zo\'r traktor',
-            imageAlt: 'Traktor',
-            wantsSummary: 'Chorvaga almashaman',
-            value: const Money(minor: 1500000000, currency: 'UZS'),
-            cashOk: true,
-            isPremium: true,
-            postedAt: DateTime.now(),
-            owner: const TraderBrief(
-              id: 't-1',
-              name: 'Alisher',
-              isVerified: true,
-              avatarUrl: 'https://i.pravatar.cc/150?u=1',
-            ),
-          ),
-          ListingCard(
-            id: 'mock-2',
-            tag: ListingTag.livestock,
-            title: 'Sog\'lom sigir',
-            imageAlt: 'Sigir',
-            wantsSummary: 'Pul yoki texnika',
-            value: const Money(minor: 500000000, currency: 'UZS'),
-            cashOk: true,
-            isPremium: false,
-            postedAt: DateTime.now().subtract(const Duration(hours: 2)),
-            owner: const TraderBrief(
-              id: 't-2',
-              name: 'Vali',
-              isVerified: false,
-              avatarUrl: 'https://i.pravatar.cc/150?u=2',
-            ),
-          ),
-          ListingCard(
-            id: 'mock-3',
-            tag: ListingTag.electronics,
-            title: 'Noutbuk MacBook',
-            imageAlt: 'Macbook',
-            wantsSummary: 'Telefon',
-            value: const Money(minor: 800000000, currency: 'UZS'),
-            cashOk: false,
-            isPremium: false,
-            postedAt: DateTime.now().subtract(const Duration(hours: 5)),
-            owner: const TraderBrief(
-              id: 't-3',
-              name: 'Jasur',
-              isVerified: true,
-            ),
-          ),
-        ],
-      );
+      rethrow;
     }
   }
 
@@ -114,46 +64,7 @@ class ListingRepository {
             .toList(),
       );
     } catch (_) {
-      // Mock for now until endpoint is officially available
-      await Future.delayed(const Duration(milliseconds: 600));
-      return const [
-        CategoryModel(
-          id: 'agri',
-          name: 'Dehqonchilik',
-          imageUrl:
-              'https://images.unsplash.com/photo-1592982537447-6f23f8510a26?auto=format&fit=crop&q=80&w=400',
-        ),
-        CategoryModel(
-          id: 'livestock',
-          name: 'Chorvachilik',
-          imageUrl:
-              'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=400',
-        ),
-        CategoryModel(
-          id: 'construction',
-          name: 'Qurilish',
-          imageUrl:
-              'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&q=80&w=400',
-        ),
-        CategoryModel(
-          id: 'machinery',
-          name: 'Texnika',
-          imageUrl:
-              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400',
-        ),
-        CategoryModel(
-          id: 'transport',
-          name: 'Transport',
-          imageUrl:
-              'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=400',
-        ),
-        CategoryModel(
-          id: 'electronics',
-          name: 'Elektronika',
-          imageUrl:
-              'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=400',
-        ),
-      ];
+      rethrow;
     }
   }
 }
@@ -175,6 +86,7 @@ class FeedQuery {
     this.minPrice,
     this.maxPrice,
     this.region,
+    this.sortBy = 'new',
   });
 
   final String? categoryId;
@@ -182,13 +94,15 @@ class FeedQuery {
   final double? minPrice;
   final double? maxPrice;
   final String? region;
+  final String sortBy;
 
   bool get isNarrowed =>
       categoryId != null ||
       search.trim().isNotEmpty ||
       minPrice != null ||
       maxPrice != null ||
-      region != null;
+      region != null ||
+      sortBy != 'new';
 
   FeedQuery copyWith({
     String? categoryId,
@@ -200,6 +114,7 @@ class FeedQuery {
     bool clearMaxPrice = false,
     String? region,
     bool clearRegion = false,
+    String? sortBy,
   }) {
     return FeedQuery(
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
@@ -207,6 +122,7 @@ class FeedQuery {
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
       region: clearRegion ? null : (region ?? this.region),
+      sortBy: sortBy ?? this.sortBy,
     );
   }
 
@@ -217,11 +133,12 @@ class FeedQuery {
       other.search == search &&
       other.minPrice == minPrice &&
       other.maxPrice == maxPrice &&
-      other.region == region;
+      other.region == region &&
+      other.sortBy == sortBy;
 
   @override
   int get hashCode =>
-      Object.hash(categoryId, search, minPrice, maxPrice, region);
+      Object.hash(categoryId, search, minPrice, maxPrice, region, sortBy);
 }
 
 class FeedQueryNotifier extends Notifier<FeedQuery> {
@@ -236,7 +153,12 @@ class FeedQueryNotifier extends Notifier<FeedQuery> {
 
   void search(String value) => state = state.copyWith(search: value);
 
-  void setFilters({double? minPrice, double? maxPrice, String? region}) {
+  void setFilters({
+    double? minPrice,
+    double? maxPrice,
+    String? region,
+    String? sortBy,
+  }) {
     state = state.copyWith(
       minPrice: minPrice,
       clearMinPrice: minPrice == null,
@@ -244,6 +166,7 @@ class FeedQueryNotifier extends Notifier<FeedQuery> {
       clearMaxPrice: maxPrice == null,
       region: region,
       clearRegion: region == null,
+      sortBy: sortBy,
     );
   }
 
@@ -263,6 +186,7 @@ class FeedState {
     this.items = const [],
     this.cursor,
     this.loadingMore = false,
+    this.loadMoreError,
   });
 
   final List<ListingCard> items;
@@ -271,6 +195,7 @@ class FeedState {
   final String? cursor;
 
   final bool loadingMore;
+  final Object? loadMoreError;
 
   bool get hasMore => cursor != null;
 }
@@ -282,10 +207,12 @@ class FeedState {
 /// promise is "somebody out there wants what you have", stopping at twenty is
 /// the difference between finding them and not.
 class FeedNotifier extends AsyncNotifier<FeedState> {
+  int _generation = 0;
   @override
   Future<FeedState> build() async {
     // Re-runs whenever the filter or the language changes, which is exactly
     // when the accumulated pages stop being valid.
+    _generation++;
     final query = ref.watch(feedQueryProvider);
     final page = await ref
         .watch(listingRepositoryProvider)
@@ -295,13 +222,21 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
           minPrice: query.minPrice,
           maxPrice: query.maxPrice,
           region: query.region,
+          sortBy: query.sortBy,
         );
     return FeedState(items: page.items, cursor: page.nextCursor);
   }
 
-  Future<void> loadMore() async {
+  Future<void> loadMore({bool retry = false}) async {
     final current = state.value;
-    if (current == null || !current.hasMore || current.loadingMore) return;
+    if (state.isLoading ||
+        current == null ||
+        !current.hasMore ||
+        current.loadingMore ||
+        (current.loadMoreError != null && !retry)) {
+      return;
+    }
+    final generation = _generation;
 
     state = AsyncData(
       FeedState(
@@ -322,19 +257,27 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
             minPrice: query.minPrice,
             maxPrice: query.maxPrice,
             region: query.region,
+            sortBy: query.sortBy,
           );
+      if (!ref.mounted || generation != _generation) return;
+      final ids = current.items.map((item) => item.id).toSet();
       state = AsyncData(
         FeedState(
-          items: [...current.items, ...next.items],
+          items: [
+            ...current.items,
+            ...next.items.where((item) => ids.add(item.id)),
+          ],
           cursor: next.nextCursor,
         ),
       );
-    } catch (_) {
-      // Keep what is already on screen; the footer offers another try. Replacing
-      // a loaded feed with an error page because page three failed would throw
-      // away two pages the reader was in the middle of.
+    } catch (error) {
+      if (!ref.mounted || generation != _generation) return;
       state = AsyncData(
-        FeedState(items: current.items, cursor: current.cursor),
+        FeedState(
+          items: current.items,
+          cursor: current.cursor,
+          loadMoreError: error,
+        ),
       );
     }
   }

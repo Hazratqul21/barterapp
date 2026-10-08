@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../core/widgets/legal_links.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
@@ -103,23 +103,7 @@ class SettingsPage extends ConsumerWidget {
                             final isDark = ref.watch(darkModeProvider);
                             return ListTile(
                               leading: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 400),
-                                transitionBuilder: (child, anim) =>
-                                    RotationTransition(
-                                      turns: child.key == const ValueKey('dark')
-                                          ? Tween<double>(
-                                              begin: 0.5,
-                                              end: 1.0,
-                                            ).animate(anim)
-                                          : Tween<double>(
-                                              begin: -0.5,
-                                              end: 0.0,
-                                            ).animate(anim),
-                                      child: ScaleTransition(
-                                        scale: anim,
-                                        child: child,
-                                      ),
-                                    ),
+                                duration: M3Motion.short3,
                                 child: Icon(
                                   isDark
                                       ? Symbols.dark_mode_rounded
@@ -180,12 +164,18 @@ class SettingsPage extends ConsumerWidget {
                           title: l.paymentsTitle,
                           onTap: () => context.push('/settings/payments'),
                         ),
+                        const _Divider(),
+                        _SettingsTile(
+                          icon: Symbols.block_rounded,
+                          title: l.blockedTitle,
+                          onTap: () => context.push('/settings/blocks'),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 Gap.h6,
-                const _SectionHeading('LEGAL'), // TODO: localize
+                _SectionHeading(l.legalTitle),
                 BouncingClayCard(
                   clayMode: true,
                   borderRadius: Radii.rLg,
@@ -203,17 +193,14 @@ class SettingsPage extends ConsumerWidget {
                       children: [
                         _SettingsTile(
                           icon: Symbols.policy_rounded,
-                          title: 'Privacy Policy', // TODO: localize
-                          onTap: () => launchUrl(
-                            Uri.parse('https://example.com/privacy'),
-                          ),
+                          title: l.legalPrivacy,
+                          onTap: () => openLegalLink(context, privacyPolicyUrl),
                         ),
                         const _Divider(),
                         _SettingsTile(
                           icon: Symbols.description_rounded,
-                          title: 'Terms of Service', // TODO: localize
-                          onTap: () =>
-                              launchUrl(Uri.parse('https://example.com/terms')),
+                          title: l.legalTerms,
+                          onTap: () => openLegalLink(context, termsOfUseUrl),
                         ),
                       ],
                     ),
@@ -259,9 +246,7 @@ class SettingsPage extends ConsumerWidget {
                           final tl = L.of(ctx);
                           return AlertDialog(
                             title: Text(tl.actionDeleteAccount),
-                            content: const Text(
-                              'Are you sure you want to delete your account? This action cannot be undone and your data will be permanently deleted.',
-                            ), // TODO: localize
+                            content: Text(tl.deleteAccountConfirm),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -324,17 +309,20 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, size: 22, color: palette(context).inkSoft),
-    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-    trailing: Icon(
-      Symbols.chevron_right_rounded,
-      color: palette(context).inkFaint,
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: ListTile(
+      leading: Icon(icon, size: 22, color: palette(context).inkSoft),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      trailing: Icon(
+        Symbols.chevron_right_rounded,
+        color: palette(context).inkFaint,
+      ),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
     ),
-    onTap: () {
-      HapticFeedback.lightImpact();
-      onTap();
-    },
   );
 }
 

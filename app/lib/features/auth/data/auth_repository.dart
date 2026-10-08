@@ -50,7 +50,14 @@ class AuthRepository {
   Future<List<String>> regions() =>
       _api.get('/regions', parse: (data) => (data as List).cast<String>());
 
-  Future<void> deleteAccount() => _api.delete('/me', parse: (_) {});
+  Future<void> deleteAccount() => _api.delete('/me', body: {'confirm': true}, parse: (_) {});
+
+
+  Future<NotificationSettings> getNotificationSettings() =>
+      _api.get('/notification-settings', parse: (data) => NotificationSettings.fromJson(data));
+
+  Future<NotificationSettings> updateNotificationSettings(Map<String, dynamic> data) =>
+      _api.patch('/notification-settings', body: data, parse: (d) => NotificationSettings.fromJson(d));
 
   Future<void> signOut() => _session.clear();
 }

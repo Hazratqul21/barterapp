@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +9,7 @@ import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode.dart';
-import 'core/widgets/backgrounds.dart';
+import 'core/widgets/device_frame.dart';
 import 'l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/notifications/notification_service.dart';
@@ -18,7 +19,7 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint('Firebase init failed: $e');
+    if (kDebugMode) debugPrint('Firebase init failed: $e');
   }
 
   // Real paths on the web: a listing link has no "#" in it, so it can be shared.
@@ -63,25 +64,19 @@ class _BarterAppState extends ConsumerState<BarterApp> {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
-      title: 'BarterApp',
+      title: 'MAB',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ref.watch(darkModeProvider) ? ThemeMode.dark : ThemeMode.light,
-      // The wallpaper sits under the whole app rather than being pasted onto
-      // the four screens that happened to ask for it. Two consequences worth
-      // the placement: every route gets it, including the ones pushed on top
-      // of the shell, and it does not rebuild when the route changes — pages
-      // slide over a background that stays where it is, which is what makes
-      // the app feel like one surface instead of a stack of screens.
-      builder: (context, child) => AuroraBackground(
-        // Just under full: strong enough that the green and blue corners are
-        // visible as a wallpaper — and that the frosted chrome has something
-        // worth blurring — while still sitting behind photographs without
-        // tinting them.
-        intensity: 1.15,
-        child: child ?? const SizedBox.shrink(),
+      // Ordinary routes share a quiet, opaque canvas. Decorative aurora is
+      // opt-in for the few picture-free sheets that actually benefit from it;
+      // keeping it out of the app root avoids a permanent animated layer under
+      // every scrollable route.
+      builder: (context, child) => ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: DeviceFrame(child: child ?? const SizedBox.shrink()),
       ),
       locale: Locale(locale),
       supportedLocales: L.supportedLocales,

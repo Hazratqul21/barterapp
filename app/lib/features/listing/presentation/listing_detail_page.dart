@@ -10,6 +10,7 @@ import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
+import '../../profile/presentation/favorites_page.dart';
 import '../../trade/data/trade_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/analytics/analytics_service.dart';
@@ -25,7 +26,8 @@ class ListingDetailPage extends ConsumerStatefulWidget {
 
 class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
   int _shot = 0;
-  bool _saved = false;
+  bool? _saved;
+  bool _saving = false;
   late final DateTime _enteredAt;
   late final AnalyticsService _analytics;
 
@@ -46,6 +48,89 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
       payload: {'dwell_ms': dwellMs},
     );
     super.dispose();
+  }
+
+  Future<void> _toggleSave(ListingDetail listing) async {
+    if (_saving) return;
+    if (!ref.read(authStateProvider)) {
+      context.push('/signin');
+      return;
+    }
+    final previous = _saved ?? listing.isFavorite;
+    setState(() {
+      _saving = true;
+      _saved = !previous;
+    });
+    try {
+      await ref
+          .read(tradeRepositoryProvider)
+          .toggleFavorite(listing.id, !previous);
+      if (!mounted) return;
+      ref.invalidate(favoritesProvider);
+      ref.invalidate(feedProvider);
+      ref.invalidate(listingDetailProvider(listing.id));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saved = previous);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage(context, error))));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _moderate(ListingDetail listing, {required bool block}) async {
+    if (!ref.read(authStateProvider)) {
+      context.push('/signin');
+      return;
+    }
+    final l = L.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(block ? l.actionBlockUser : l.actionReportUser),
+        content: Text(
+          block ? listing.owner.name : l.actionReportReasonInappropriate,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(block ? l.actionBlockUser : l.actionReportUser),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final repository = ref.read(tradeRepositoryProvider);
+      if (block) {
+        await repository.blockUser(listing.owner.id);
+      } else {
+        await repository.reportUser(
+          listing.owner.id,
+          l.actionReportReasonInappropriate,
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(block ? l.userBlocked : l.reportSent)),
+      );
+      if (block) {
+        ref.invalidate(feedProvider);
+        ref.invalidate(favoritesProvider);
+        context.go('/home');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage(context, error))));
+    }
   }
 
   @override
@@ -74,19 +159,11 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
               listing: listing,
               isMine: ref.watch(meProvider).value?.id == listing.owner.id,
               shot: _shot,
-              saved: _saved,
+              saved: _saved ?? listing.isFavorite,
               onShot: (i) => setState(() => _shot = i),
-              onToggleSave: () {
-                setState(() => _saved = !_saved);
-                ref
-                    .read(tradeRepositoryProvider)
-                    .toggleFavorite(listing.id, _saved);
-              },
-              onReport: () => ref
-                  .read(tradeRepositoryProvider)
-                  .reportUser(listing.owner.id, 'Inappropriate'),
-              onBlock: () =>
-                  ref.read(tradeRepositoryProvider).blockUser(listing.owner.id),
+              onToggleSave: () => _toggleSave(listing),
+              onReport: () => _moderate(listing, block: false),
+              onBlock: () => _moderate(listing, block: true),
               onEdit: () => context.push('/create', extra: listing),
               onDelete: () async {
                 final confirm = await showDialog<bool>(
@@ -95,9 +172,7 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                     final tl = L.of(ctx);
                     return AlertDialog(
                       title: Text(tl.actionDeleteListing),
-                      content: const Text(
-                        'Are you sure you want to delete this listing?',
-                      ),
+                      content: Text(tl.actionDeleteListingConfirm),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(ctx).pop(false),
@@ -121,11 +196,9 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l.errorGeneric),
-                        ),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l.errorGeneric)));
                     }
                   }
                 }
@@ -158,8 +231,12 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                           ),
                           label: Text(l.actionEdit),
                           style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.secondary,
-                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.secondary,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onSecondary,
                           ),
                         ),
                       )
@@ -242,6 +319,9 @@ class _Content extends StatelessWidget {
           backgroundColor: BrandColors.brand500,
           foregroundColor: Colors.white,
           leading: IconButton(
+            tooltip: context.canPop()
+                ? MaterialLocalizations.of(context).backButtonTooltip
+                : MaterialLocalizations.of(context).closeButtonTooltip,
             icon: Icon(
               context.canPop() ? Icons.arrow_back : Icons.close_rounded,
             ),
@@ -303,11 +383,23 @@ class _Content extends StatelessWidget {
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(
               tag: 'listing-image-${listing.id}',
-              child: RemoteImage(
-                url: gallery.isEmpty
-                    ? null
-                    : gallery[shot.clamp(0, gallery.length - 1)],
-                semanticLabel: listing.imageAlt,
+              child: AnimatedSwitcher(
+                duration: M3Motion.short4,
+                switchInCurve: M3Motion.standardDecelerate,
+                switchOutCurve: M3Motion.standardAccelerate,
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: RemoteImage(
+                  key: ValueKey(
+                    gallery.isEmpty
+                        ? ''
+                        : gallery[shot.clamp(0, gallery.length - 1)],
+                  ),
+                  url: gallery.isEmpty
+                      ? null
+                      : gallery[shot.clamp(0, gallery.length - 1)],
+                  semanticLabel: listing.imageAlt,
+                ),
               ),
             ),
           ),

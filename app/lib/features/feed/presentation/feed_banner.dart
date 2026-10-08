@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -125,109 +124,46 @@ class _Strip extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-          padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, 0),
-          child: ClipRRect(
-            borderRadius: Radii.rLg,
-            child: Container(
-              decoration: BoxDecoration(color: p.giveSoft),
-              child: Stack(
-                children: [
-                  // The dynamic background image
-                  Positioned.fill(
-                    child: Image.asset(
-                      bgImage,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.centerRight,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(Gap.x4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(Gap.x2),
-                          decoration: BoxDecoration(
-                            color: p.give,
-                            borderRadius: Radii.rSm,
-                          ),
-                          child: Icon(
-                            icon,
-                            size: Sizes.iconLg,
-                            color: Colors.white,
-                          ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Material(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: Radii.rMd,
+        child: InkWell(
+          onTap: onAction,
+          borderRadius: Radii.rMd,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: p.give),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(title, style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 4),
+                      Text(
+                        action,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: p.give,
                         ),
-                        Gap.w3,
-                        Expanded(
-                          flex: 4,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              Gap.h1,
-                              Text(
-                                body,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: p.inkSoft,
-                                ),
-                              ),
-                              Gap.h2,
-                              FilledButton(
-                                onPressed: onAction,
-                                style: FilledButton.styleFrom(
-                                  minimumSize: const Size(0, Sizes.buttonSm),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: Gap.x4,
-                                  ),
-                                ),
-                                child: Text(action),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(
-                          flex: 3,
-                        ), // Keeps text away from the right-side 3D art
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: Gap.x1,
-                    right: Gap.x1,
-                    child: IconButton(
-                      tooltip: l.bannerDismiss,
-                      onPressed: onDismiss,
-                      icon: const Icon(
-                        Symbols.close_rounded,
-                        size: Sizes.iconMd,
                       ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.surface.withValues(
-                          alpha: 0.5,
-                        ),
-                        foregroundColor: theme.colorScheme.onSurface,
-                        minimumSize: const Size(32, 32),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                IconButton(
+                  tooltip: l.bannerDismiss,
+                  onPressed: onDismiss,
+                  icon: const Icon(Symbols.close_rounded, size: 20),
+                ),
+              ],
             ),
           ),
-        )
-        .animate()
-        .fadeIn(duration: M3Motion.medium3)
-        .slideY(
-          begin: -0.15,
-          end: 0,
-          duration: M3Motion.medium4,
-          curve: M3Motion.emphasizedDecelerate,
-        );
+        ),
+      ),
+    );
   }
 }

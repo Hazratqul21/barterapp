@@ -9,7 +9,7 @@ class LUz extends L {
   LUz([String locale = 'uz']) : super(locale);
 
   @override
-  String get appName => 'BarterApp';
+  String get appName => 'MAB';
 
   @override
   String get back => 'Orqaga';
@@ -974,4 +974,123 @@ class LUz extends L {
 
   @override
   String get emptyMyListings => 'Hozircha e\'lonlar yo\'q';
+
+  @override
+  String get blockedTitle => 'Bloklanganlar';
+
+  @override
+  String get blockedEmpty => 'Bloklangan foydalanuvchilar yo\'q';
+
+  @override
+  String get blockedUnblock => 'Blokdan chiqarish';
+
+  @override
+  String get notifOffers => 'Takliflar';
+
+  @override
+  String get notifOffersDesc => 'Yangi taklif kelganda bildirishnoma';
+
+  @override
+  String get notifMatches => 'Mosliklar (Matches)';
+
+  @override
+  String get notifMatchesDesc =>
+      'Qidirayotgan buyumingiz topilganda bildirishnoma';
+
+  @override
+  String get notifMessages => 'Xabarlar';
+
+  @override
+  String get notifMessagesDesc => 'Yangi xabar kelganda bildirishnoma';
+
+  @override
+  String get notifSystem => 'Tizim xabarlari';
+
+  @override
+  String get notifSystemDesc => 'Muhim tizim bildirishnomalari';
+
+  @override
+  String get notifQuietHours => 'Sokin soatlar';
+
+  @override
+  String get notifOff => 'O\'chirilgan';
+
+  @override
+  String get notifQuietHoursStart => 'Sokin soatlar boshlanishi';
+
+  @override
+  String get notifQuietHoursEnd => 'Sokin soatlar tugashi';
+
+  @override
+  String get notifQuietHoursDisable => 'Sokin soatlarni o\'chirish';
+
+  @override
+  String get favSavedListings => 'Saqlangan e\'lonlar';
+
+  @override
+  String get favNoSavedListings => 'Hozircha saqlangan e\'lonlar yo\'q';
+
+  @override
+  String get legalTitle => 'HUQUQIY';
+
+  @override
+  String get legalPrivacy => 'Maxfiylik siyosati';
+
+  @override
+  String get legalTerms => 'Foydalanish shartlari';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Haqiqatan ham hisobingizni o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi va ma\'lumotlaringiz butunlay o\'chiriladi.';
+
+  @override
+  String get profileVerifyAccount => 'Hisobingizni tasdiqlang';
+
+  @override
+  String get profileVerifyDesc =>
+      'Ishonchni oshirish uchun shaxsingizni tasdiqlang.';
+
+  @override
+  String get actionReportReasonInappropriate => 'Nomaqbul';
+
+  @override
+  String get actionDeleteListingConfirm =>
+      'Ushbu e’lonni o‘chirib tashlashni xohlaysizmi?';
+
+  @override
+  String get createPreferredCategory => 'Afzal toifa (Ixtiyoriy)';
+
+  @override
+  String get createPreferCash => 'Ushbu narsa uchun naqd pulni afzal ko‘raman';
+
+  @override
+  String get currencySom => 'so‘m';
+
+  @override
+  String get filterSort => 'Saralash';
+
+  @override
+  String get sortNewest => 'Eng yangilari';
+
+  @override
+  String get sortCheapest => 'Arzonidan qimmatiga';
+
+  @override
+  String get sortExpensive => 'Qimmatidan arzoniga';
+
+  @override
+  String get filterInvalidPrice => 'To‘g‘ri, musbat narx kiriting';
+
+  @override
+  String get filterInvalidRange =>
+      'Eng kam narx eng yuqori narxdan katta bo‘lmasin.';
+
+  @override
+  String get navPost => 'E’lon';
+
+  @override
+  String get reportSent => 'Shikoyatingiz moderatorga yuborildi';
+
+  @override
+  String get userBlocked => 'Foydalanuvchi bloklandi';
 }

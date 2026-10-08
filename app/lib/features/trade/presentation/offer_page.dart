@@ -190,7 +190,7 @@ class _OfferPageState extends ConsumerState<OfferPage> {
                         decoration: InputDecoration(
                           labelText: l.offerAddCash,
                           helperText: l.offerAddCashHint,
-                          suffixText: 'so‘m',
+                          suffixText: l.currencySom,
                           prefixIcon: const Icon(Symbols.payments_rounded),
                         ),
                       ),
@@ -372,7 +372,7 @@ class _MyListings extends StatelessWidget {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              width: 132,
+              width: (MediaQuery.sizeOf(context).width * 0.35).clamp(80.0, 132.0),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 borderRadius: Radii.rLg,

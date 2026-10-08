@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../network/api_client.dart';
@@ -43,7 +44,7 @@ class AnalyticsService {
         '/events',
         body: {
           'session_id': _sessionId,
-          'platform': 'ios',
+          'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
           'events': eventsToFlush,
         },
         parse: (data) => data,

@@ -206,7 +206,9 @@ class _Row extends ConsumerWidget {
           }
           if (context.mounted) _follow(context);
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: M3Motion.short3,
+          curve: M3Motion.standardDecelerate,
           padding: const EdgeInsets.all(Gap.x3),
           decoration: BoxDecoration(
             // Unread rows sit on a surface; read ones fade into the page.
@@ -274,9 +276,12 @@ class _Row extends ConsumerWidget {
                       color: p.inkFaint,
                     ),
                   ),
-                  if (notification.isUnread) ...[
-                    Gap.h2,
-                    Container(
+                  Gap.h2,
+                  AnimatedOpacity(
+                    opacity: notification.isUnread ? 1 : 0,
+                    duration: M3Motion.short3,
+                    curve: M3Motion.standardDecelerate,
+                    child: Container(
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
@@ -284,7 +289,7 @@ class _Row extends ConsumerWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ],

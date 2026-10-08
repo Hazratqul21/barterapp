@@ -153,7 +153,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: l.dealCounterCash,
-              suffixText: 'so‘m',
+              suffixText: l.currencySom,
               prefixIcon: const Icon(Symbols.payments_rounded),
             ),
           ),
@@ -284,29 +284,11 @@ class _ChatPageState extends ConsumerState<ChatPage>
                             for (var i = 0; i < 3; i++)
                               Padding(
                                 padding: const EdgeInsets.only(right: 2),
-                                child:
-                                    Container(
-                                          width: 4,
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            color: p.give,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        )
-                                        .animate(onPlay: (c) => c.repeat())
-                                        .scaleXY(
-                                          begin: 0.5,
-                                          end: 1.5,
-                                          duration: 400.ms,
-                                          delay: (i * 200).ms,
-                                          curve: Curves.easeInOut,
-                                        )
-                                        .then(delay: 400.ms)
-                                        .scaleXY(
-                                          begin: 1.5,
-                                          end: 0.5,
-                                          duration: 400.ms,
-                                        ),
+                                child: _TypingDot(
+                                  color: p.give,
+                                  index: i,
+                                  reduceMotion: shouldReduceMotion(context),
+                                ),
                               ),
                           ],
                         ),
@@ -325,6 +307,41 @@ class _ChatPageState extends ConsumerState<ChatPage>
         ),
       ),
     );
+  }
+}
+
+class _TypingDot extends StatelessWidget {
+  const _TypingDot({
+    required this.color,
+    required this.index,
+    required this.reduceMotion,
+  });
+
+  final Color color;
+  final int index;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = Container(
+      width: 4,
+      height: 4,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+
+    if (reduceMotion) return dot;
+
+    return dot
+        .animate(onPlay: (controller) => controller.repeat())
+        .fade(
+          begin: 0.4,
+          end: 1,
+          duration: 400.ms,
+          delay: (index * 160).ms,
+          curve: Curves.easeInOut,
+        )
+        .then(delay: 400.ms)
+        .fade(begin: 1, end: 0.4, duration: 400.ms, curve: Curves.easeInOut);
   }
 }
 
@@ -435,8 +452,8 @@ class _DealPanel extends ConsumerWidget {
         clayMode: true,
         borderRadius: Radii.rLg,
         child: AnimatedContainer(
-          duration: M3Motion.medium3,
-          curve: M3Motion.emphasized,
+          duration: M3Motion.short3,
+          curve: M3Motion.standard,
           padding: const EdgeInsets.all(Gap.x4),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
@@ -537,9 +554,17 @@ class _StatusLine extends StatelessWidget {
       ),
       _ => (l.dealExpired, p.inkFaint),
     };
-    return Text(
-      label.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+    return AnimatedSwitcher(
+      duration: M3Motion.short3,
+      switchInCurve: M3Motion.standardDecelerate,
+      switchOutCurve: M3Motion.standardAccelerate,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: Text(
+        label.toUpperCase(),
+        key: ValueKey(status),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+      ),
     );
   }
 }

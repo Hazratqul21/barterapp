@@ -16,7 +16,9 @@ abstract final class BrandColors {
   static const surface = Color(0xFFFFFFFF);
   static const hair = Color(0xFFE7E2D9);
 
-  static const brand500 = Color(0xFF14B8A6); // Primary Seed (Teal/Feruza)
+  static const brand500 = Color(
+    0xFF007D73,
+  ); // Accessible MAB teal for text/CTAs.
   static const take500 = Color(0xFF0D9488); // Secondary Seed (Darker Teal)
   static const gold500 = Color(0xFFF0A82A); // Tertiary Seed
 }
@@ -59,16 +61,14 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 
   /// The brand gradient — the hero header, the create button, the splash.
   ///
-  /// A straight two-stop from the bright give-green to the bright take-blue
-  /// crossed through a muddy grey-teal at the middle and read as loud rather
-  /// than rich. This is a jewel-toned three-stop instead: a deep emerald eased
-  /// through a clean teal into a deep sapphire, so give still becomes take but
-  /// the whole sweep looks like one considered colour, not two primaries meeting.
-  LinearGradient get swapGradient => const LinearGradient(
+  /// Give moves into take: a restrained green-to-blue sweep, not a generic
+  /// teal wash. Keeping the end on [take] makes the barter relationship clear
+  /// wherever this is used (the hero and the create action).
+  LinearGradient get swapGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF00BFA5), Color(0xFF009688), Color(0xFF00695C)],
-    stops: [0.0, 0.5, 1.0],
+    colors: [give, Color.lerp(give, take, 0.45)!, take],
+    stops: const [0.0, 0.48, 1.0],
   );
 
   @override
@@ -193,7 +193,7 @@ abstract final class M3Motion {
 }
 
 abstract final class AppTheme {
-  static const _displayFamily = 'Rubik';
+  static const _displayFamily = 'Manrope';
   static const _bodyFamily = 'Manrope';
 
   static const _transitions = PageTransitionsTheme(
@@ -219,7 +219,13 @@ abstract final class AppTheme {
           brightness: brightness,
         ).copyWith(
           primary: p.give,
-          onPrimary: Colors.white,
+          primaryContainer: isDark
+              ? const Color(0xFF163C35)
+              : const Color(0xFFE6F3EF),
+          onPrimaryContainer: isDark
+              ? const Color(0xFFBCECDF)
+              : const Color(0xFF164B40),
+          onPrimary: isDark ? const Color(0xFF08251F) : Colors.white,
           secondary: p.take,
           tertiary: p.money,
           surface: p.canvas,
@@ -350,7 +356,7 @@ abstract final class AppTheme {
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: p.give,
-        foregroundColor: Colors.white,
+        foregroundColor: scheme.onPrimary,
         elevation: 3,
         highlightElevation: 0,
         shape: const CircleBorder(),

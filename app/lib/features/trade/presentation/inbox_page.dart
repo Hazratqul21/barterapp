@@ -41,16 +41,19 @@ class _InboxPageState extends ConsumerState<InboxPage> {
       return Scaffold(
         body: Row(
           children: [
-            SizedBox(
-              width: 380,
-              child: _ThreadList(
-                threads: threads,
-                selectedId: _open,
-                onSelect: (id) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _open = id);
-                },
-                onRetry: () => ref.invalidate(conversationsProvider),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: SizedBox(
+                width: MediaQuery.sizeOf(context).width * 0.35,
+                child: _ThreadList(
+                  threads: threads,
+                  selectedId: _open,
+                  onSelect: (id) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _open = id);
+                  },
+                  onRetry: () => ref.invalidate(conversationsProvider),
+                ),
               ),
             ),
             VerticalDivider(width: 1, color: p.hair),
@@ -101,7 +104,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
   }
 }
 
-class _ThreadList extends StatelessWidget {
+class _ThreadList extends ConsumerWidget {
   const _ThreadList({
     required this.threads,
     required this.selectedId,
@@ -115,7 +118,7 @@ class _ThreadList extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom + Gap.x14;
 
@@ -142,26 +145,10 @@ class _ThreadList extends StatelessWidget {
                 separatorBuilder: (_, _) => Gap.h3,
                 itemBuilder: (context, index) => AnimatedListItem(
                   index: index,
-                  child: Dismissible(
-                    key: ValueKey(items[index].id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: Gap.x4),
-                      color: Theme.of(context).colorScheme.error,
-                      child: const Icon(
-                        Symbols.archive_rounded,
-                        color: Colors.white,
-                      ),
-                    ),
-                    onDismissed: (_) {
-                      debugPrint('Archived ${items[index].id}');
-                    },
-                    child: _ThreadCard(
-                      thread: items[index],
-                      selected: items[index].id == selectedId,
-                      onTap: () => onSelect(items[index].id),
-                    ),
+                  child: _ThreadCard(
+                    thread: items[index],
+                    selected: items[index].id == selectedId,
+                    onTap: () => onSelect(items[index].id),
                   ),
                 ),
               ),

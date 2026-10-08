@@ -1,61 +1,60 @@
-# BarterApp: Premium Exchange Platform
+# MAB — barter platformasi
 
-Naqd pulsiz ayirboshlash platformasi — fermer xo'jaliklari, ustaxonalar va xususiy shaxslar uchun. Ilova Google Material 3 (v1.2) standartlari asosida yuqori sifatli (Premium) darajaga olib chiqilgan.
+Naqd pulsiz ayirboshlash: Flutter (iOS, Android, web), FastAPI va PostgreSQL.
 
 ```
-barter-platform/
-├── docs/                 ← HUJJATLAR (Yangi: DESIGN_ROADMAP.md)
-├── api/                  FastAPI (Backend)
-└── app/                  Flutter (Frontend — iOS & Android)
+app/          Flutter interfeysi
+api/          FastAPI backend
+ai_backend/   Ixtiyoriy AI yordamchi xizmati
+docs/         Auditlar, reliz talablari va hujjatlar
 ```
 
----
+## Joriy holat
 
-## 🚀 Bugungi Texnik va Vizual Yangilanishlar (Change Log)
+Interfeys va API integratsiyasida tuzatishlar bor. Production reliz hali alohida tekshiruvlarni talab qiladi; lokal build muvaffaqiyati barcha xizmatlar tayyorligini bildirmaydi.
 
-Bugun loyiha ustida Senior Developer darajasida tahlil o'tkazildi va ilova **"Google-Quality"** darajasiga olib chiqildi. Asosiy o'zgarishlar:
+- [2026-10-08 audit: tuzatilgan xatolar, testlar va ustuvor ishlar](docs/MARKETPLACE-AUDIT-2026-10-08.md)
+- [Reliz konfiguratsiyasi va tashqi xizmatlar](docs/MAB-RELEASE-READINESS.md)
+- [Ekran rasmlari va tekshiruv loglari](artifacts/marketplace-audit/)
 
-### 1. 🛠 Kritik Texnik Tuzatishlar
-*   **Syntax Fix:** `TradeRepository` faylidagi build jarayonini to'xtatib qo'ygan noto'g'ri `?` operatori (null-safety xatosi) bartaraf etildi.
-*   **API Automation:** Android emulyatori (`10.0.2.2`) va iOS simulyatori (`127.0.0.1`) uchun API bazaviy manzillari platformaga qarab avtomatik tanlanadigan qilindi.
+## Lokal ishga tushirish
 
-### 2. 🎨 Material 3 (v1.2) Premium Dizayn
-*   **Tonal Surface System:** Barcha ekranlar "Surface Container" tizimiga o'tkazildi. Bu qatlamlar o'rtasidagi ierarxiyani soyalar bilan emas, tonal ranglar bilan ajratib ko'rsatadi (Google Keep uslubi).
-*   **Global FAB Styling:** Barcha "Floating Action Buttons" Google standartidagi aylana (Circle) shakliga va dinamik brand-ranglariga o'tkazildi.
-*   **Modern Search Bar:** Qidiruv maydoni "Floating Pill" dizayniga keltirildi va M3 SearchBar standartlariga moslandi.
-*   **Typography Hierarchy:** `Rubik` (sarlavhalar) va `Manrope` (matnlar) fontlari M3 ierarxiyasiga qat'iy bog'landi.
-
-### 3. 🎬 Premium Motion va Animatsiyalar
-*   **Container Transform:** E'lon kartasidan detallar sahifasiga o'tishda silliq "kengayish" animatsiyasi joriy etildi (OpenContainer).
-*   **Staggered List Animations:** Barcha asosiy ro'yxatlar (Feed, Chat, Matches, Inbox) elementlari ochilganda birin-ketin "suzib" kiradigan qilindi.
-*   **Haptic Feedback:** iOS (Taptic Engine) va Android uchun interaktiv amallarda (Like, Send, FAB) nozik sezgir vibratsiya signallari qo'shildi.
-
-### 4. 📱 Multi-platform Optimization
-*   **iOS Safe Area Management:** iPhone notch va home indicator hududlarida kontent kesilib qolmasligi uchun dinamik padding tizimi o'rnatildi.
-*   **Adaptive Physics:** iOS uchun native `BouncingScrollPhysics` barcha listlarda majburiy qilindi.
-*   **Privacy Descriptions:** iOS `Info.plist`da Kamera va Galereya ruxsatnomalari o'zbek tilida professional darajada yozildi.
-
----
-
-## 🏗 Ishga tushirish (Run)
-
-### 1. Backend & Baza
-```bash
-docker compose up -d
-cd api && .venv/bin/uvicorn app.main:app --port 8010 --reload
+```sh
+docker compose up -d db
+cd api
+# .env.example asosida lokal .env tayyorlang; kuchli JWT_SECRET kiriting.
+.venv/bin/uvicorn app.main:app --port 8010 --reload
 ```
 
-### 2. Frontend (App)
-```bash
+Boshqa terminalda:
+
+```sh
 cd app
 flutter pub get
 flutter gen-l10n
 flutter run
+# Web:
+flutter run -d web-server --web-port=8086 --web-hostname=127.0.0.1
 ```
 
----
+Android emulator default API manzili `10.0.2.2:8010`, iOS simulator/web `127.0.0.1:8010`. Real telefon yoki release build uchun tegishli `API_BASE_URL` qiymatini `--dart-define` orqali bering.
 
-## 📈 Kelgusi rejalar (Roadmap)
-Batafsil ma'lumot loyiha ildizidagi **[docs/DESIGN_ROADMAP.md](docs/DESIGN_ROADMAP.md)** faylida keltirilgan. Unda 100% "Google darajasi"ga erishish uchun so'nggi bosqichlar (Variable Fonts, Predictive Back) belgilab olingan.
+## Tekshiruvlar
 
-**Status:** Loyiha hozirda build-ready va bozorga chiqishga tayyor holatda. ✅
+```sh
+cd app
+flutter analyze
+flutter test
+flutter build ios --simulator --debug
+flutter build apk --debug --target-platform android-arm64
+flutter build web --debug
+```
+
+Ishlayotgan lokal backendda qidiruv/filtr testi:
+
+```sh
+cd api
+.venv/bin/python tests/test_feed_search.py
+```
+
+`api/tests/run_all.sh` har ssenariy oldidan bazani seed qiladi. Mavjud ma’lumotli bazada ishlatmang; buning uchun alohida test bazasi kerak.

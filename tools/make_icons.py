@@ -108,4 +108,5 @@ def write_all(root: Path):
 
 
 if __name__ == "__main__":
-    write_all(Path(__file__).resolve().parents[1])
+    from build_mab_assets import main
+    main()

@@ -33,7 +33,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Suratni galereyangizga saqlash uchun ruxsat kerak.</string>
 	<key>CFBundleDisplayName</key>
-	<string>BarterApp</string>
+	<string>MAB</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -41,7 +41,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>BarterApp</string>
+	<string>MAB</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

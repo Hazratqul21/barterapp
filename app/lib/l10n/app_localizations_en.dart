@@ -9,7 +9,7 @@ class LEn extends L {
   LEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'BarterApp';
+  String get appName => 'MAB';
 
   @override
   String get back => 'Back';
@@ -878,7 +878,7 @@ class LEn extends L {
   String get paymentsIn => 'In';
 
   @override
-  String get paymentsOut => 'Chiqim';
+  String get paymentsOut => 'Outgoing';
 
   @override
   String get settingsDarkMode => 'Dark Mode';
@@ -972,4 +972,121 @@ class LEn extends L {
 
   @override
   String get emptyMyListings => 'No listings yet';
+
+  @override
+  String get blockedTitle => 'Blocked Users';
+
+  @override
+  String get blockedEmpty => 'No blocked users';
+
+  @override
+  String get blockedUnblock => 'Unblock';
+
+  @override
+  String get notifOffers => 'Offers';
+
+  @override
+  String get notifOffersDesc => 'Notification on new offer';
+
+  @override
+  String get notifMatches => 'Matches';
+
+  @override
+  String get notifMatchesDesc => 'Notification when looking item is found';
+
+  @override
+  String get notifMessages => 'Messages';
+
+  @override
+  String get notifMessagesDesc => 'Notification on new message';
+
+  @override
+  String get notifSystem => 'System messages';
+
+  @override
+  String get notifSystemDesc => 'Important system notifications';
+
+  @override
+  String get notifQuietHours => 'Quiet hours';
+
+  @override
+  String get notifOff => 'Disabled';
+
+  @override
+  String get notifQuietHoursStart => 'Quiet hours start';
+
+  @override
+  String get notifQuietHoursEnd => 'Quiet hours end';
+
+  @override
+  String get notifQuietHoursDisable => 'Disable quiet hours';
+
+  @override
+  String get favSavedListings => 'Saved Listings';
+
+  @override
+  String get favNoSavedListings => 'No saved listings yet';
+
+  @override
+  String get legalTitle => 'LEGAL';
+
+  @override
+  String get legalPrivacy => 'Privacy Policy';
+
+  @override
+  String get legalTerms => 'Terms of Use';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Are you sure you want to delete your account? This action cannot be undone and your data will be permanently deleted.';
+
+  @override
+  String get profileVerifyAccount => 'Verify your account';
+
+  @override
+  String get profileVerifyDesc => 'Verify your identity to increase trust.';
+
+  @override
+  String get actionReportReasonInappropriate => 'Inappropriate';
+
+  @override
+  String get actionDeleteListingConfirm =>
+      'Are you sure you want to delete this listing?';
+
+  @override
+  String get createPreferredCategory => 'Preferred Category (Optional)';
+
+  @override
+  String get createPreferCash => 'I prefer cash for this item';
+
+  @override
+  String get currencySom => 'so‘m';
+
+  @override
+  String get filterSort => 'Sort by';
+
+  @override
+  String get sortNewest => 'Newest first';
+
+  @override
+  String get sortCheapest => 'Value: low to high';
+
+  @override
+  String get sortExpensive => 'Value: high to low';
+
+  @override
+  String get filterInvalidPrice => 'Enter a valid, non-negative value';
+
+  @override
+  String get filterInvalidRange =>
+      'Minimum value must not exceed maximum value.';
+
+  @override
+  String get navPost => 'Post';
+
+  @override
+  String get reportSent => 'Your report was sent to moderation';
+
+  @override
+  String get userBlocked => 'User blocked';
 }

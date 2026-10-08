@@ -86,9 +86,23 @@ class TradeRepository {
 
   Future<void> blockUser(String id) => _api.post('/blocks/$id', parse: (_) {});
 
+  Future<void> unblockUser(String id) =>
+      _api.delete('/blocks/$id', parse: (_) {});
+
+  Future<List<TraderBrief>> getBlockedUsers() => _api.get(
+    '/blocks',
+    parse: (data) =>
+        (data as List).map((x) => TraderBrief.fromJson(x)).toList(),
+  );
+
   Future<void> reportUser(String id, String reason) => _api.post(
     '/reports',
-    body: {'target_id': id, 'reason': reason},
+    body: {
+      'target_type': 'user',
+      'target_id': id,
+      'reason': 'other',
+      'note': reason,
+    },
     parse: (_) {},
   );
 
@@ -235,7 +249,8 @@ class TradeRepository {
 
   Future<List<ListingCard>> getFavorites() => _api.get(
     '/favorites',
-    parse: (data) => (data as List)
+    query: {'limit': 50},
+    parse: (data) => ((data as Map<String, dynamic>)['items'] as List)
         .map((e) => ListingCard.fromJson(e as Map<String, dynamic>))
         .toList(),
   );

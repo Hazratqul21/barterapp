@@ -111,70 +111,74 @@ class GlassSurface extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  base.withValues(alpha: nearAlpha),
-                  base.withValues(alpha: farAlpha),
-                ],
+        child: kIsWeb
+            ? _buildContent(base, nearAlpha, farAlpha, rimNear, rimFar, p.isDark)
+            : BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
+                child: _buildContent(base, nearAlpha, farAlpha, rimNear, rimFar, p.isDark),
               ),
-            ),
-            child: Stack(
-              children: [
-                if (specular)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: borderRadius,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withValues(
-                                alpha: p.isDark ? 0.10 : 0.55,
-                              ),
-                              Colors.white.withValues(alpha: 0),
-                              Colors.white.withValues(alpha: 0),
-                              Colors.white.withValues(
-                                alpha: p.isDark ? 0.04 : 0.18,
-                              ),
-                            ],
-                            // The band sits in the upper third and fades out
-                            // well before the middle, so it lights the edge
-                            // rather than washing the whole pane.
-                            stops: const [0.0, 0.28, 0.72, 1.0],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                child,
-                // The rim goes last so it is never covered by content, and
-                // takes no hits so it cannot swallow a tap.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: _RimPainter(
-                        borderRadius: borderRadius,
-                        near: Colors.white.withValues(alpha: rimNear),
-                        far: Colors.white.withValues(alpha: rimFar),
-                      ),
+      ),
+    ));
+  }
+
+  Widget _buildContent(
+    Color base,
+    double nearAlpha,
+    double farAlpha,
+    double rimNear,
+    double rimFar,
+    bool isDark,
+  ) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            base.withValues(alpha: nearAlpha),
+            base.withValues(alpha: farAlpha),
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          if (specular)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: isDark ? 0.10 : 0.55),
+                        Colors.white.withValues(alpha: 0),
+                        Colors.white.withValues(alpha: 0),
+                        Colors.white.withValues(alpha: isDark ? 0.04 : 0.18),
+                      ],
+                      stops: const [0.0, 0.28, 0.72, 1.0],
                     ),
                   ),
                 ),
-              ],
+              ),
+            ),
+          child,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _RimPainter(
+                  borderRadius: borderRadius,
+                  near: Colors.white.withValues(alpha: rimNear),
+                  far: Colors.white.withValues(alpha: rimFar),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
-    ));
+    );
   }
 }
 

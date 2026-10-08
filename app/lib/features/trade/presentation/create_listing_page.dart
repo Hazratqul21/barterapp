@@ -339,14 +339,14 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     DropdownButtonFormField<ListingTag>(
       initialValue: _wantTag,
       decoration: InputDecoration(
-        labelText: 'Preferred Category (Optional)',
+        labelText: l.createPreferredCategory,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
       items: [
-        const DropdownMenuItem(
+        DropdownMenuItem(
           value: null,
-          child: Text('Any'),
+          child: Text(l.createWantAny),
         ),
         for (final t in ListingTag.values)
           DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
@@ -372,7 +372,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         _wantsCash = v;
         if (v) _cashOk = false;
       }),
-      title: const Text('I prefer cash for this item'),
+      title: Text(l.createPreferCash),
       contentPadding: EdgeInsets.zero,
       activeThumbColor: palette(context).take,
     ),
@@ -387,7 +387,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       ),
       decoration: InputDecoration(
         labelText: l.createFieldValue,
-        suffixText: 'so‘m',
+        suffixText: l.currencySom,
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerLow,
       ),

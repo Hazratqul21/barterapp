@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/common.dart';
 
 class FeedShimmer extends StatelessWidget {
   const FeedShimmer({super.key});
@@ -39,113 +40,116 @@ class _ShimmerCard extends StatelessWidget {
     final theme = Theme.of(context);
     final color = theme.colorScheme.surfaceContainerHigh;
 
-    return Card(
-          clipBehavior: Clip.antiAlias,
-          elevation: 0,
-          color: theme.colorScheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: Radii.rLg,
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+    final skeleton = Card(
+      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: Radii.rLg,
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AspectRatio(
+            aspectRatio: 1.4,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(color: color),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    height: 28,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    height: 28,
+                    width: 70,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  bottom: 12,
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 16,
+                        width: MediaQuery.sizeOf(context).width * 0.3,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 236,
-                child: Stack(
-                  children: [
-                    Container(
-                      height: 236,
-                      width: double.infinity,
-                      color: color,
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        height: 28,
-                        width: 80,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        height: 28,
-                        width: 70,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 16,
-                      bottom: 12,
-                      child: Row(
-                        children: [
-                          Container(
-                            height: 16,
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 18,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 4),
+                Row(
                   children: [
                     Container(
-                      height: 18,
-                      width: double.infinity,
+                      height: 20,
+                      width: 20,
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(4),
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          height: 20,
-                          width: 20,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Container(
+                        height: 14,
+                        width: MediaQuery.sizeOf(context).width * 0.45,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          height: 14,
-                          width: 180,
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        )
+        ],
+      ),
+    );
+
+    if (shouldReduceMotion(context)) return skeleton;
+
+    return skeleton
         .animate(onPlay: (c) => c.repeat())
         .shimmer(duration: 1200.ms, color: Colors.white24);
   }

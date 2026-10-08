@@ -23,6 +23,15 @@ import '../theme/tokens.dart';
 BarterPalette palette(BuildContext context) =>
     Theme.of(context).extension<BarterPalette>()!;
 
+/// Whether the platform asks the app to avoid non-essential motion.
+///
+/// Keep this policy in one place so wallpapers, loading placeholders and small
+/// status affordances all respond consistently to the same accessibility
+/// settings.
+bool shouldReduceMotion(BuildContext context) =>
+    MediaQuery.disableAnimationsOf(context) ||
+    MediaQuery.accessibleNavigationOf(context);
+
 /// Turn any thrown object into a sentence worth showing someone.
 ///
 /// The server already writes its refusals in plain Uzbek — "Faqat taklif kelgan
@@ -573,7 +582,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: M3Motion.medium3,
+    duration: M3Motion.medium1,
   );
   late final Animation<double> _curved = CurvedAnimation(
     parent: _controller,
@@ -597,6 +606,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
 
   @override
   Widget build(BuildContext context) {
+    if (shouldReduceMotion(context)) return widget.child;
     return FadeTransition(
       opacity: _curved,
       child: SlideTransition(
@@ -678,8 +688,8 @@ class _PressableState extends State<Pressable> {
           // Small enough to feel rather than to watch. Anything deeper reads as
           // the card falling away from the finger.
           scale: _down ? 0.977 : 1,
-          duration: _down ? M3Motion.short2 : M3Motion.medium1,
-          curve: M3Motion.emphasizedDecelerate,
+          duration: _down ? M3Motion.short2 : M3Motion.short3,
+          curve: M3Motion.standardDecelerate,
           child: widget.child,
         ),
       ),
@@ -687,8 +697,7 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// A pixel-perfect Neomorphic button that matches the background color and
-/// extrudes using light/dark shadows. When pressed, it can simulate an inset.
+/// A quiet tonal button for secondary recovery actions.
 class NeoButton extends StatefulWidget {
   const NeoButton({
     super.key,
@@ -720,8 +729,8 @@ class _NeoButtonState extends State<NeoButton> {
 
   @override
   Widget build(BuildContext context) {
-    // For Neomorphism, the button surface must match the canvas background.
-    final surfaceColor = BrandColors.canvas;
+    final theme = Theme.of(context);
+    final p = palette(context);
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -731,31 +740,26 @@ class _NeoButtonState extends State<NeoButton> {
         HapticFeedback.selectionClick();
         widget.onTap();
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: widget.borderRadius,
-          // When pressed, remove the outer shadow and slightly darken to simulate inset.
-          boxShadow: _isPressed ? [] : Shadows.neomorphicUp(surfaceColor),
-          // Optionally add an inner border when pressed to enhance the inset look
-          border: _isPressed
-              ? Border.all(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  width: 1.5,
-                )
-              : Border.all(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  width: 1.5,
-                ),
-        ),
-        child: Center(
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 150),
-            opacity: _isPressed ? 0.7 : 1.0,
-            child: widget.child,
+      child: AnimatedScale(
+        scale: _isPressed && !MediaQuery.disableAnimationsOf(context)
+            ? 0.98
+            : 1,
+        duration: M3Motion.short2,
+        curve: M3Motion.emphasizedDecelerate,
+        child: Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: widget.borderRadius,
+            border: Border.all(color: p.hair),
+          ),
+          child: Center(
+            child: AnimatedOpacity(
+              duration: M3Motion.short2,
+              opacity: _isPressed ? 0.72 : 1.0,
+              child: widget.child,
+            ),
           ),
         ),
       ),
@@ -804,43 +808,39 @@ class CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = palette(context);
 
-    // Photo only — no disc, no label. The picture names the category on its
-    // own (a field, a cow, a truck), and the name is kept for a screen reader
-    // and a long-press tooltip rather than printed under every tile.
+    final colors = Theme.of(context).colorScheme;
+    final icon = switch (category.id) {
+      'agri' => Symbols.grass_rounded,
+      'livestock' => Symbols.pets_rounded,
+      'machinery' => Symbols.agriculture_rounded,
+      'transport' => Symbols.local_shipping_rounded,
+      'electronics' => Symbols.devices_rounded,
+      'construction' => Symbols.construction_rounded,
+      _ => Symbols.category_rounded,
+    };
     return Semantics(
       button: true,
       selected: selected,
-      label: category.name,
-      child: Tooltip(
-        message: category.name,
-        child: Pressable(
+      child: Material(
+        color: selected ? colors.primaryContainer : colors.surfaceContainerLow,
+        borderRadius: Radii.rSm,
+        child: InkWell(
           onTap: onTap,
-          child: SizedBox(
-            width: 118,
+          borderRadius: Radii.rSm,
+          child: Container(
+            width: 112,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: Radii.rSm,
+              border: Border.all(color: selected ? colors.primary : p.hair),
+            ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedContainer(
-                  duration: M3Motion.medium1,
-                  curve: M3Motion.emphasized,
-                  height: 100, // Fixed height for image part
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: Radii.rLg,
-                    border: Border.all(
-                      color: selected ? p.give : Colors.transparent,
-                      width: 2.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (selected ? p.give : const Color(0xFF12211A))
-                            .withValues(alpha: selected ? 0.22 : 0.10),
-                        blurRadius: selected ? 18 : 12,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: _CategoryVisual(category: category),
+                Icon(
+                  icon,
+                  size: 28,
+                  color: selected ? colors.primary : p.inkSoft,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -848,9 +848,11 @@ class CategoryCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: p.inkSoft,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: selected
+                        ? colors.onPrimaryContainer
+                        : colors.onSurface,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ],
@@ -858,70 +860,6 @@ class CategoryCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// The photo area of a [CategoryCard], with a coloured-gradient fallback.
-class _CategoryVisual extends StatelessWidget {
-  const _CategoryVisual({required this.category});
-
-  final CategoryModel category;
-
-  String? get _localImage {
-    switch (category.id) {
-      case 'agri':
-        return 'assets/images/categories/category_agri.png';
-      case 'livestock':
-        return 'assets/images/categories/category_livestock.png';
-      case 'machinery':
-        return 'assets/images/categories/category_machinery.png';
-      case 'transport':
-        return 'assets/images/categories/category_transport.png';
-      case 'electronics':
-        return 'assets/images/categories/category_electronics.png';
-      case 'construction':
-        return 'assets/images/categories/category_construction.png';
-      default:
-        return null;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p = palette(context);
-    final image = _localImage;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                p.giveSoft.withValues(alpha: 0.3),
-                p.takeSoft.withValues(alpha: 0.3),
-              ],
-            ),
-          ),
-        ),
-        if (image != null)
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Image.asset(
-              image,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-              excludeFromSemantics: true,
-            ),
-          )
-        else
-          Center(
-            child: Icon(Symbols.category_rounded, size: 32, color: p.inkSoft),
-          ),
-      ],
     );
   }
 }
@@ -1077,11 +1015,15 @@ class SkeletonBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
-    return Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(color: p.sunken, borderRadius: radius),
-        )
+    final skeleton = Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(color: p.sunken, borderRadius: radius),
+    );
+
+    if (shouldReduceMotion(context)) return skeleton;
+
+    return skeleton
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
           duration: const Duration(milliseconds: 1200),
@@ -1182,49 +1124,29 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final arrow = size * 0.56;
-    final p = palette(context);
-
-    Widget top = Icon(
-      Symbols.sync_alt_rounded,
-      size: arrow,
-      color: p.give,
-      weight: 700,
+    Widget top = Image.asset(
+      'assets/brand/mab-logo.png',
+      fit: BoxFit.contain,
+      semanticLabel: 'MAB',
+      filterQuality: FilterQuality.high,
     );
-    if (animate) {
-      top = top
-          .animate()
-          .fadeIn(duration: M3Motion.medium2)
-          .slideX(
-            begin: -0.9,
-            end: 0,
-            duration: M3Motion.long1,
-            curve: M3Motion.emphasizedDecelerate,
-          );
+    if (animate && !shouldReduceMotion(context)) {
+      top = top.animate().fadeIn(duration: M3Motion.short4);
     }
-
-    return Container(
-      width: size,
+    return SizedBox(
+      width: size * 2.5,
       height: size,
-      decoration: BoxDecoration(
-        color: onDark ? Colors.white : Theme.of(context).colorScheme.surface,
-        // Proportional, so the 40px mark in the intro corner is the same shape
-        // as the 104px one on the splash rather than a rounder version of it.
-        borderRadius: BorderRadius.circular(size * 0.27),
-        border: Border.all(color: p.give.withValues(alpha: 0.2)),
-        boxShadow: onDark ? Shadows.raised : null,
-      ),
       child: Center(child: top),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UI/UX Motion Wrappers & Claymorphism
+// UI/UX Motion Wrappers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// A button or card wrapper that shrinks slightly on press and applies
-/// Claymorphism/Glassmorphism effects.
+/// A press-only card wrapper. Content surfaces own their tonal treatment; this
+/// wrapper deliberately never mutates decoration or shadows during scrolling.
 class BouncingClayCard extends StatefulWidget {
   const BouncingClayCard({
     super.key,
@@ -1237,7 +1159,11 @@ class BouncingClayCard extends StatefulWidget {
 
   final Widget child;
   final VoidCallback? onTap;
+
+  /// Kept for source compatibility. Routine cards now use tonal surfaces.
   final bool clayMode;
+
+  /// Kept for source compatibility. Glass is reserved for app chrome.
   final bool glassMode;
   final BorderRadius? borderRadius;
 
@@ -1245,102 +1171,31 @@ class BouncingClayCard extends StatefulWidget {
   State<BouncingClayCard> createState() => _BouncingClayCardState();
 }
 
-class _BouncingClayCardState extends State<BouncingClayCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
+class _BouncingClayCardState extends State<BouncingClayCard> {
+  bool _down = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-      reverseDuration: const Duration(milliseconds: 200),
-    );
-    _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeOutCubic,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) {
-    if (widget.onTap != null) _controller.forward();
-  }
-
-  void _onTapUp(TapUpDetails details) {
-    if (widget.onTap != null) {
-      _controller.reverse();
-      widget.onTap!();
-    }
-  }
-
-  void _onTapCancel() {
-    if (widget.onTap != null) _controller.reverse();
+  void _setDown(bool value) {
+    if (_down != value) setState(() => _down = value);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    Widget content = widget.child;
-
-    if (widget.glassMode) {
-      content = Container(
-        decoration: BoxDecoration(
-          borderRadius: widget.borderRadius ?? Radii.rLg,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-        ),
-        child: content,
-      );
-    }
-
-    if (widget.clayMode) {
-      content = AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final isPressed = _controller.value > 0;
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: widget.borderRadius ?? Radii.rLg,
-              boxShadow: isPressed
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                      ),
-                    ]
-                  : (isDark ? Shadows.clayOuterDark : Shadows.clayOuter),
-            ),
-            child: child,
-          );
-        },
-        child: content,
-      );
-    }
-
-    if (widget.onTap == null) return RepaintBoundary(child: content);
+    if (widget.onTap == null) return RepaintBoundary(child: widget.child);
 
     return RepaintBoundary(
-      child: GestureDetector(
-        onTapDown: _onTapDown,
-        onTapUp: _onTapUp,
-        onTapCancel: _onTapCancel,
-        behavior: HitTestBehavior.opaque,
-        child: ScaleTransition(scale: _scale, child: content),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: widget.borderRadius ?? Radii.rLg,
+          onHighlightChanged: _setDown,
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: _down && !shouldReduceMotion(context) ? 0.98 : 1,
+            duration: M3Motion.short2,
+            curve: M3Motion.emphasizedDecelerate,
+            child: widget.child,
+          ),
+        ),
       ),
     );
   }

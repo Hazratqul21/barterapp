@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/art/girih.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
@@ -137,18 +135,14 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
                     : Column(
                         children: [
                           for (var i = 0; i < rows.length; i++)
-                            _CardTile(
-                                  card: rows[i],
-                                  onPrimary: () => _makePrimary(rows[i].id),
-                                  onRemove: () => _removeCard(rows[i].id),
-                                )
-                                .animate()
-                                .fadeIn(delay: (100 * i).ms)
-                                .slideX(
-                                  begin: 0.1,
-                                  end: 0,
-                                  curve: M3Motion.emphasizedDecelerate,
-                                ),
+                            AnimatedListItem(
+                              index: i,
+                              child: _CardTile(
+                                card: rows[i],
+                                onPrimary: () => _makePrimary(rows[i].id),
+                                onRemove: () => _removeCard(rows[i].id),
+                              ),
+                            ),
                         ],
                       ),
               ),
@@ -177,9 +171,10 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
                     : Column(
                         children: [
                           for (var i = 0; i < rows.length; i++)
-                            _SettlementTile(
-                              settlement: rows[i],
-                            ).animate().fadeIn(delay: (50 * i).ms),
+                            AnimatedListItem(
+                              index: i,
+                              child: _SettlementTile(settlement: rows[i]),
+                            ),
                         ],
                       ),
               ),

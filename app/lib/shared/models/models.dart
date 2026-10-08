@@ -108,6 +108,7 @@ class ListingCard {
     required this.owner,
     this.imageUrl,
     this.distanceKm,
+    this.isFavorite = false,
   });
 
   final String id;
@@ -118,6 +119,7 @@ class ListingCard {
   final String wantsSummary;
   final Money value;
   final double? distanceKm;
+  final bool isFavorite;
   final bool cashOk;
   final bool isPremium;
   final DateTime postedAt;
@@ -128,12 +130,13 @@ class ListingCard {
     tag: ListingTag.parse(json['tag'] as String),
     title: json['title'] as String,
     imageUrl: json['image_url'] as String?,
-    imageAlt: json['image_alt'] as String,
-    wantsSummary: json['wants_summary'] as String,
+    imageAlt: json['image_alt'] as String? ?? '',
+    wantsSummary: json['wants_summary'] as String? ?? '',
     value: Money.fromJson(json['value'] as Map<String, dynamic>),
     distanceKm: (json['distance_km'] as num?)?.toDouble(),
-    cashOk: json['cash_ok'] as bool,
-    isPremium: json['is_premium'] as bool,
+    cashOk: json['cash_ok'] as bool? ?? false,
+    isPremium: json['is_premium'] as bool? ?? false,
+    isFavorite: json['is_favorite'] as bool? ?? false,
     postedAt: DateTime.parse(json['posted_at'] as String),
     owner: TraderBrief.fromJson(json['owner'] as Map<String, dynamic>),
   );
@@ -159,6 +162,7 @@ class ListingDetail extends ListingCard {
     required this.wants,
     super.imageUrl,
     super.distanceKm,
+    super.isFavorite,
   });
 
   final String description;
@@ -181,6 +185,7 @@ class ListingDetail extends ListingCard {
       distanceKm: card.distanceKm,
       cashOk: card.cashOk,
       isPremium: card.isPremium,
+      isFavorite: card.isFavorite,
       postedAt: card.postedAt,
       owner: card.owner,
       description: json['description'] as String,
@@ -655,4 +660,41 @@ class Settlement {
     settledAt: DateTime.parse(json['settled_at'] as String),
     outgoing: json['outgoing'] as bool,
   );
+}
+
+class NotificationSettings {
+  final bool offers;
+  final bool matches;
+  final bool messages;
+  final bool system;
+  final int? quietFrom;
+  final int? quietTo;
+
+  const NotificationSettings({
+    required this.offers,
+    required this.matches,
+    required this.messages,
+    required this.system,
+    this.quietFrom,
+    this.quietTo,
+  });
+
+  factory NotificationSettings.fromJson(Map<String, dynamic> json) =>
+      NotificationSettings(
+        offers: json['offers'] as bool? ?? true,
+        matches: json['matches'] as bool? ?? true,
+        messages: json['messages'] as bool? ?? true,
+        system: json['system'] as bool? ?? true,
+        quietFrom: json['quiet_from'] as int?,
+        quietTo: json['quiet_to'] as int?,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'offers': offers,
+    'matches': matches,
+    'messages': messages,
+    'system': system,
+    'quiet_from': quietFrom,
+    'quiet_to': quietTo,
+  };
 }

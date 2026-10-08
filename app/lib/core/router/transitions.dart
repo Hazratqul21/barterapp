@@ -6,13 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'dart:io' show Platform;
 
 import '../theme/app_theme.dart';
+import '../widgets/common.dart' show shouldReduceMotion;
 
 bool get _isApple => !kIsWeb && (Platform.isIOS || Platform.isMacOS);
 
-Page<T> forwardPage<T>({
-  required LocalKey key,
-  required Widget child,
-}) {
+Page<T> forwardPage<T>({required LocalKey key, required Widget child}) {
   if (_isApple) return CupertinoPage<T>(key: key, child: child);
 
   return CustomTransitionPage<T>(
@@ -21,6 +19,7 @@ Page<T> forwardPage<T>({
     transitionDuration: M3Motion.medium4,
     reverseTransitionDuration: M3Motion.medium2,
     transitionsBuilder: (context, animation, secondary, child) {
+      if (shouldReduceMotion(context)) return child;
       return SharedAxisTransition(
         animation: animation,
         secondaryAnimation: secondary,
@@ -32,10 +31,7 @@ Page<T> forwardPage<T>({
   );
 }
 
-Page<T> risingPage<T>({
-  required LocalKey key,
-  required Widget child,
-}) {
+Page<T> risingPage<T>({required LocalKey key, required Widget child}) {
   // Rising (bottom sheet style) can use fullscreenDialog on iOS for the native modal feel.
   if (_isApple) {
     return CupertinoPage<T>(key: key, child: child, fullscreenDialog: true);
@@ -47,6 +43,7 @@ Page<T> risingPage<T>({
     transitionDuration: M3Motion.medium4,
     reverseTransitionDuration: M3Motion.medium2,
     transitionsBuilder: (context, animation, secondary, child) {
+      if (shouldReduceMotion(context)) return child;
       return SharedAxisTransition(
         animation: animation,
         secondaryAnimation: secondary,
@@ -58,15 +55,13 @@ Page<T> risingPage<T>({
   );
 }
 
-Page<T> fadePage<T>({
-  required LocalKey key,
-  required Widget child,
-}) {
+Page<T> fadePage<T>({required LocalKey key, required Widget child}) {
   return CustomTransitionPage<T>(
     key: key,
     child: child,
     transitionDuration: M3Motion.medium3,
     transitionsBuilder: (context, animation, secondary, child) {
+      if (shouldReduceMotion(context)) return child;
       return FadeThroughTransition(
         animation: animation,
         secondaryAnimation: secondary,
@@ -77,10 +72,7 @@ Page<T> fadePage<T>({
   );
 }
 
-Page<T> heroPage<T>({
-  required LocalKey key,
-  required Widget child,
-}) {
+Page<T> heroPage<T>({required LocalKey key, required Widget child}) {
   // Hero transitions must use CustomTransitionPage to prevent conflicting slide animations
   return CustomTransitionPage<T>(
     key: key,

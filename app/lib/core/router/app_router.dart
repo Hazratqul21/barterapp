@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:animations/animations.dart';
 
-import '../theme/app_theme.dart';
 import '../../shared/models/models.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
 import '../../features/feed/presentation/feed_page.dart';
@@ -16,6 +14,7 @@ import '../../features/profile/presentation/settings_page.dart';
 import '../../features/profile/presentation/verification_page.dart';
 import '../../features/profile/presentation/favorites_page.dart';
 import '../../features/profile/presentation/notification_settings_page.dart';
+import '../../features/profile/presentation/blocked_users_page.dart';
 import '../../features/trade/presentation/chat_page.dart';
 import '../../features/trade/presentation/create_listing_page.dart';
 import '../../features/trade/presentation/inbox_page.dart';
@@ -37,6 +36,39 @@ GoRouter buildRouter() {
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/',
+    errorPageBuilder: (context, state) => MaterialPage(
+      key: state.pageKey,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('404')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.explore_off_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Sahifa topilmadi',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                state.uri.toString(),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => GoRouter.of(context).go('/'),
+                child: const Text('Bosh sahifaga'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
     routes: [
       // Outside the shell: no tab bar should be visible while the app is still
       // deciding where the person belongs.
@@ -177,6 +209,12 @@ GoRouter buildRouter() {
             forwardPage(key: state.pageKey, child: const PaymentsPage()),
       ),
       GoRoute(
+        path: '/settings/blocks',
+        parentNavigatorKey: _rootKey,
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const BlockedUsersPage()),
+      ),
+      GoRoute(
         path: '/onboarding',
         parentNavigatorKey: _rootKey,
         pageBuilder: (context, state) => risingPage(
@@ -222,26 +260,14 @@ class AnimatedBranchContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Unlike wrapping the whole navigationShell in PageTransitionSwitcher (which
-    // duplicates GlobalKeys), this keeps the branch children in an IndexedStack
-    // but fades between them safely, or just manages a PageTransitionSwitcher
-    // switching between the distinct children elements provided by GoRouter.
-
-    // PageTransitionSwitcher safely fades out the old child and fades in the new
-    // child. By giving each child a unique key based on its index, the switcher
-    // knows when to animate.
-    return PageTransitionSwitcher(
-      duration: M3Motion.medium2,
-      transitionBuilder: (child, animation, secondary) => FadeThroughTransition(
-        animation: animation,
-        secondaryAnimation: secondary,
-        fillColor: Colors.transparent,
-        child: child,
-      ),
-      child: KeyedSubtree(
-        key: ValueKey(currentIndex),
-        child: children[currentIndex],
-      ),
+    // Retain every mounted navigator and its scroll/form state. Inactive
+    // branches must not run decorative animation tickers in the background.
+    return IndexedStack(
+      index: currentIndex,
+      children: [
+        for (var i = 0; i < children.length; i++)
+          TickerMode(enabled: i == currentIndex, child: children[i]),
+      ],
     );
   }
 }

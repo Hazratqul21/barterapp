@@ -102,7 +102,7 @@ abstract class L {
   /// No description provided for @appName.
   ///
   /// In uz, this message translates to:
-  /// **'BarterApp'**
+  /// **'MAB'**
   String get appName;
 
   /// No description provided for @back.
@@ -1922,6 +1922,234 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Hozircha e\'lonlar yo\'q'**
   String get emptyMyListings;
+
+  /// No description provided for @blockedTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklanganlar'**
+  String get blockedTitle;
+
+  /// No description provided for @blockedEmpty.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklangan foydalanuvchilar yo\'q'**
+  String get blockedEmpty;
+
+  /// No description provided for @blockedUnblock.
+  ///
+  /// In uz, this message translates to:
+  /// **'Blokdan chiqarish'**
+  String get blockedUnblock;
+
+  /// No description provided for @notifOffers.
+  ///
+  /// In uz, this message translates to:
+  /// **'Takliflar'**
+  String get notifOffers;
+
+  /// No description provided for @notifOffersDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi taklif kelganda bildirishnoma'**
+  String get notifOffersDesc;
+
+  /// No description provided for @notifMatches.
+  ///
+  /// In uz, this message translates to:
+  /// **'Mosliklar (Matches)'**
+  String get notifMatches;
+
+  /// No description provided for @notifMatchesDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qidirayotgan buyumingiz topilganda bildirishnoma'**
+  String get notifMatchesDesc;
+
+  /// No description provided for @notifMessages.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabarlar'**
+  String get notifMessages;
+
+  /// No description provided for @notifMessagesDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi xabar kelganda bildirishnoma'**
+  String get notifMessagesDesc;
+
+  /// No description provided for @notifSystem.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tizim xabarlari'**
+  String get notifSystem;
+
+  /// No description provided for @notifSystemDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Muhim tizim bildirishnomalari'**
+  String get notifSystemDesc;
+
+  /// No description provided for @notifQuietHours.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sokin soatlar'**
+  String get notifQuietHours;
+
+  /// No description provided for @notifOff.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'chirilgan'**
+  String get notifOff;
+
+  /// No description provided for @notifQuietHoursStart.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sokin soatlar boshlanishi'**
+  String get notifQuietHoursStart;
+
+  /// No description provided for @notifQuietHoursEnd.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sokin soatlar tugashi'**
+  String get notifQuietHoursEnd;
+
+  /// No description provided for @notifQuietHoursDisable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sokin soatlarni o\'chirish'**
+  String get notifQuietHoursDisable;
+
+  /// No description provided for @favSavedListings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Saqlangan e\'lonlar'**
+  String get favSavedListings;
+
+  /// No description provided for @favNoSavedListings.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha saqlangan e\'lonlar yo\'q'**
+  String get favNoSavedListings;
+
+  /// No description provided for @legalTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'HUQUQIY'**
+  String get legalTitle;
+
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In uz, this message translates to:
+  /// **'Maxfiylik siyosati'**
+  String get legalPrivacy;
+
+  /// No description provided for @legalTerms.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanish shartlari'**
+  String get legalTerms;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Haqiqatan ham hisobingizni o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi va ma\'lumotlaringiz butunlay o\'chiriladi.'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @profileVerifyAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingizni tasdiqlang'**
+  String get profileVerifyAccount;
+
+  /// No description provided for @profileVerifyDesc.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ishonchni oshirish uchun shaxsingizni tasdiqlang.'**
+  String get profileVerifyDesc;
+
+  /// No description provided for @actionReportReasonInappropriate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nomaqbul'**
+  String get actionReportReasonInappropriate;
+
+  /// No description provided for @actionDeleteListingConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ushbu e’lonni o‘chirib tashlashni xohlaysizmi?'**
+  String get actionDeleteListingConfirm;
+
+  /// No description provided for @createPreferredCategory.
+  ///
+  /// In uz, this message translates to:
+  /// **'Afzal toifa (Ixtiyoriy)'**
+  String get createPreferredCategory;
+
+  /// No description provided for @createPreferCash.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ushbu narsa uchun naqd pulni afzal ko‘raman'**
+  String get createPreferCash;
+
+  /// No description provided for @currencySom.
+  ///
+  /// In uz, this message translates to:
+  /// **'so‘m'**
+  String get currencySom;
+
+  /// No description provided for @filterSort.
+  ///
+  /// In uz, this message translates to:
+  /// **'Saralash'**
+  String get filterSort;
+
+  /// No description provided for @sortNewest.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eng yangilari'**
+  String get sortNewest;
+
+  /// No description provided for @sortCheapest.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arzonidan qimmatiga'**
+  String get sortCheapest;
+
+  /// No description provided for @sortExpensive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qimmatidan arzoniga'**
+  String get sortExpensive;
+
+  /// No description provided for @filterInvalidPrice.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘g‘ri, musbat narx kiriting'**
+  String get filterInvalidPrice;
+
+  /// No description provided for @filterInvalidRange.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eng kam narx eng yuqori narxdan katta bo‘lmasin.'**
+  String get filterInvalidRange;
+
+  /// No description provided for @navPost.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon'**
+  String get navPost;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shikoyatingiz moderatorga yuborildi'**
+  String get reportSent;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchi bloklandi'**
+  String get userBlocked;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

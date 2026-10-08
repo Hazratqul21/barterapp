@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +39,7 @@ class AuroraBackground extends ConsumerStatefulWidget {
 class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  final ValueNotifier<double> _scrollOffset = ValueNotifier(0.0);
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -48,13 +47,23 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 15),
-    )..repeat(reverse: true);
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = shouldReduceMotion(context);
+    if (_reduceMotion) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -82,70 +91,26 @@ class _AuroraBackgroundState extends ConsumerState<AuroraBackground>
                   diameter: diameter,
                   alpha: alpha,
                   aura: aura,
+                  animate: !_reduceMotion,
                 ),
               ),
 
-              // The lattice with infinite panning, pulsing, and parallax.
+              // A static lattice gives picture-free sheets their identity
+              // without adding another moving layer behind their content.
               if (widget.pattern)
                 Positioned.fill(
                   child: RepaintBoundary(
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, _) {
-                        return ValueListenableBuilder<double>(
-                          valueListenable: _scrollOffset,
-                          builder: (context, scrollY, _) {
-                            final t = _controller.value;
-
-                            // 1. Infinite Panning (slow diagonal movement)
-                            final panX = math.sin(t * math.pi) * 15;
-                            final panY = math.cos(t * math.pi) * 15;
-
-                            // 2. Parallax
-                            final parallaxY = -(scrollY * 0.12);
-
-                            // 3. Pulsing Opacity
-                            final pulse = 0.04 + (math.sin(t * math.pi) * 0.03);
-
-                            return Transform.translate(
-                              offset: Offset(panX, panY + parallaxY),
-                              child: GirihField(
-                                opacity: pulse,
-                                cell: 82,
-                                fade: 0.45,
-                              ),
-                            );
-                          },
-                        );
-                      },
+                    child: const GirihField(
+                      opacity: 0.05,
+                      cell: 82,
+                      fade: 0.45,
                     ),
                   ),
                 ),
 
-              // Glassmorphism Frosting Layer (for pixel-perfect premium feel)
-              if (widget.pattern)
-                Positioned.fill(
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0),
-                      child: Container(color: p.canvas.withValues(alpha: 0.05)),
-                    ),
-                  ),
-                ),
-
-              // The app on its own layer, so a drifting bloom cannot dirty it
-              // and a scrolling feed cannot dirty the wallpaper.
-              Positioned.fill(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notif) {
-                    if (notif.metrics.axis == Axis.vertical) {
-                      _scrollOffset.value = notif.metrics.pixels;
-                    }
-                    return false; // Let the notification bubble up
-                  },
-                  child: RepaintBoundary(child: widget.child),
-                ),
-              ),
+              // The app stays in a sibling repaint boundary so decorative
+              // changes cannot repaint its content.
+              Positioned.fill(child: RepaintBoundary(child: widget.child)),
             ],
           ),
         );
@@ -168,12 +133,14 @@ class _AnimatedBlooms extends StatelessWidget {
     required this.diameter,
     required this.alpha,
     required this.aura,
+    required this.animate,
   });
 
   final Animation<double> controller;
   final double diameter;
   final double alpha;
   final ({Color a, Color b}) aura;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +151,17 @@ class _AnimatedBlooms extends StatelessWidget {
     const dur = Duration(milliseconds: 620);
     const curve = Curves.easeInOutCubic;
 
+    if (!animate) {
+      return _BloomPair(
+        controller: controller,
+        diameter: diameter,
+        alpha: alpha,
+        colorA: aura.a,
+        colorB: aura.b,
+        animate: false,
+      );
+    }
+
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(end: aura.a),
       duration: dur,
@@ -192,33 +170,55 @@ class _AnimatedBlooms extends StatelessWidget {
         tween: ColorTween(end: aura.b),
         duration: dur,
         curve: curve,
-        builder: (context, colorB, _) => Stack(
-          children: [
-            _Drift(
-              controller: controller,
-              diameter: diameter,
-              alignment: Alignment.topLeft,
-              bloom: _Bloom(
-                diameter: diameter,
-                color: colorA ?? aura.a,
-                alpha: alpha,
-              ),
-            ),
-            _Drift(
-              controller: controller,
-              diameter: diameter,
-              alignment: Alignment.bottomRight,
-              bloom: _Bloom(
-                diameter: diameter,
-                color: colorB ?? aura.b,
-                alpha: alpha * 0.85,
-              ),
-            ),
-          ],
+        builder: (context, colorB, _) => _BloomPair(
+          controller: controller,
+          diameter: diameter,
+          alpha: alpha,
+          colorA: colorA ?? aura.a,
+          colorB: colorB ?? aura.b,
+          animate: true,
         ),
       ),
     );
   }
+}
+
+class _BloomPair extends StatelessWidget {
+  const _BloomPair({
+    required this.controller,
+    required this.diameter,
+    required this.alpha,
+    required this.colorA,
+    required this.colorB,
+    required this.animate,
+  });
+
+  final Animation<double> controller;
+  final double diameter;
+  final double alpha;
+  final Color colorA;
+  final Color colorB;
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      _Drift(
+        controller: controller,
+        diameter: diameter,
+        alignment: Alignment.topLeft,
+        animate: animate,
+        bloom: _Bloom(diameter: diameter, color: colorA, alpha: alpha),
+      ),
+      _Drift(
+        controller: controller,
+        diameter: diameter,
+        alignment: Alignment.bottomRight,
+        animate: animate,
+        bloom: _Bloom(diameter: diameter, color: colorB, alpha: alpha * 0.85),
+      ),
+    ],
+  );
 }
 
 /// One bloom, drifting.
@@ -233,6 +233,7 @@ class _Drift extends StatelessWidget {
     required this.diameter,
     required this.alignment,
     required this.bloom,
+    required this.animate,
   });
 
   final Animation<double> controller;
@@ -242,6 +243,7 @@ class _Drift extends StatelessWidget {
   final Alignment alignment;
 
   final Widget bloom;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
@@ -253,20 +255,22 @@ class _Drift extends StatelessWidget {
       bottom: fromTop ? null : -diameter * 0.44,
       right: fromTop ? null : -diameter * 0.30,
       child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: controller,
-          child: bloom,
-          builder: (context, child) {
-            final t = math.sin(controller.value * math.pi);
-            final shift = t * 30 * (fromTop ? 1 : -1);
-            final scale = fromTop ? 1.0 + t * 0.1 : 1.1 - t * 0.1;
+        child: animate
+            ? AnimatedBuilder(
+                animation: controller,
+                child: bloom,
+                builder: (context, child) {
+                  final t = math.sin(controller.value * math.pi);
+                  final shift = t * 30 * (fromTop ? 1 : -1);
+                  final scale = fromTop ? 1.0 + t * 0.1 : 1.1 - t * 0.1;
 
-            return Transform.translate(
-              offset: Offset(-shift, shift),
-              child: Transform.scale(scale: scale, child: child),
-            );
-          },
-        ),
+                  return Transform.translate(
+                    offset: Offset(-shift, shift),
+                    child: Transform.scale(scale: scale, child: child),
+                  );
+                },
+              )
+            : bloom,
       ),
     );
   }

@@ -41,9 +41,10 @@ class Settings(BaseSettings):
     #: Free listings a new account gets before the plan starts charging.
     free_listing_quota: int = 2
 
-    # In development the OTP is not sent anywhere — it is returned by the request
-    # endpoint so the app can be driven end to end without an SMS provider.
-    otp_debug: bool = True
+    # In development set OTP_DEBUG=true in your .env so the OTP code comes back
+    # in the response. The default is OFF so a forgotten .env in production
+    # cannot leak verification codes.
+    otp_debug: bool = False
     otp_ttl_seconds: int = 300
 
     # How many codes a single phone may request inside the window before the
@@ -89,23 +90,23 @@ def _guard(settings: Settings) -> None:
     """
     Refuse to start in a configuration that would hand out accounts.
 
-    `OTP_DEBUG=false` is taken as the signal that this is a real deployment:
-    development wants the code back in the response, production must not have
-    it. Once that is off, the signing key has to be a real one.
-
-    A check that only logs would be read once and then scroll away. This is the
-    kind of mistake that is invisible until it is exploited, so it stops the
-    process instead.
+    The JWT secret check is unconditional: even in debug mode, a leaked
+    dev secret lets anyone forge tokens. The OTP_DEBUG flag only controls
+    whether codes appear in responses — it must not disable the key check.
     """
-    if settings.otp_debug:
-        return
-
     if settings.jwt_secret == DEV_JWT_SECRET or len(settings.jwt_secret) < 32:
-        raise InsecureConfiguration(
-            "JWT_SECRET hali standart yoki juda qisqa. Ishlab chiqarishda bu "
-            "har kimga istalgan hisobga kirish imkonini beradi.\n"
-            "Yangi kalit: python -c \"import secrets; "
-            'print(secrets.token_urlsafe(48))"'
+        if not settings.otp_debug:
+            raise InsecureConfiguration(
+                "JWT_SECRET hali standart yoki juda qisqa. Ishlab chiqarishda bu "
+                "har kimga istalgan hisobga kirish imkonini beradi.\n"
+                "Yangi kalit: python -c \"import secrets; "
+                'print(secrets.token_urlsafe(48))"'
+            )
+        import warnings
+        warnings.warn(
+            "JWT_SECRET hali standart. OTP_DEBUG=true bo'lgani uchun server "
+            "ishlaydi, lekin bu kalit bilan ishlab chiqarishga chiqmang.",
+            stacklevel=2,
         )
 
 

@@ -193,6 +193,9 @@ class ApiClient {
       return true;
     } on DioException {
       return false;
+    } catch (e) {
+      // P3-3: Token save fail fallback (e.g. out of storage)
+      return false;
     }
   }
 
@@ -281,10 +284,11 @@ class ApiClient {
 
   Future<T> delete<T>(
     String path, {
+    Object? body,
     required T Function(dynamic data) parse,
   }) async {
     try {
-      final response = await _dio.delete<dynamic>(path);
+      final response = await _dio.delete<dynamic>(path, data: body);
       return parse(response.data);
     } on DioException catch (e) {
       throw _translate(e);

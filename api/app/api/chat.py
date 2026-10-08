@@ -301,7 +301,11 @@ async def live(websocket: WebSocket, token: str = "") -> None:
                 continue
 
             async with SessionLocal() as db:
-                thread = await db.get(Conversation, uuid.UUID(thread_id))
+                try:
+                    conv_uuid = uuid.UUID(thread_id)
+                except ValueError:
+                    continue
+                thread = await db.get(Conversation, conv_uuid)
                 if thread is None or user_id not in (
                     thread.user_a_id,
                     thread.user_b_id,

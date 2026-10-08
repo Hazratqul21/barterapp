@@ -42,10 +42,12 @@ class NotificationService {
 
   Future<void> init({String locale = 'uz'}) async {
     if (!_configured) {
-      debugPrint(
-        'Push o‘chirilgan: Firebase sozlanmagan '
-        '(GoogleService-Info.plist / google-services.json yo‘q).',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'Push o‘chirilgan: Firebase sozlanmagan '
+          '(GoogleService-Info.plist / google-services.json yo‘q).',
+        );
+      }
       return;
     }
 
@@ -69,7 +71,7 @@ class NotificationService {
       // person quietly stops receiving anything.
       messaging.onTokenRefresh.listen((fresh) => _register(fresh, locale));
     } catch (e) {
-      debugPrint('Push sozlanmadi: $e');
+      if (kDebugMode) debugPrint('Push sozlanmadi: $e');
     }
   }
 
@@ -83,7 +85,7 @@ class NotificationService {
     } catch (e) {
       // Logged rather than ignored: a silent failure here is why push looked
       // wired up for weeks while no device was ever registered.
-      debugPrint('Qurilmani ro‘yxatdan o‘tkazib bo‘lmadi: $e');
+      if (kDebugMode) debugPrint('Qurilmani ro‘yxatdan o‘tkazib bo‘lmadi: $e');
     }
   }
 
@@ -97,7 +99,7 @@ class NotificationService {
       await _apiClient.delete<dynamic>('/devices/$token', parse: (data) => data);
       await FirebaseMessaging.instance.deleteToken();
     } catch (e) {
-      debugPrint('Qurilmani o‘chirib bo‘lmadi: $e');
+      if (kDebugMode) debugPrint('Qurilmani o‘chirib bo‘lmadi: $e');
     }
   }
 }

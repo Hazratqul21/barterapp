@@ -25,8 +25,9 @@ abstract final class Radii {
   /// Inputs and buttons — the things a finger lands on.
   static const md = 16.0;
 
-  /// Cards.
-  static const lg = 24.0;
+  /// Cards. This is deliberately quieter than sheets, while inputs and
+  /// buttons retain the tighter 16px [md] radius.
+  static const lg = 20.0;
 
   /// Bottom sheets, dialogs, the hero's bottom edge.
   static const xl = 28.0;
@@ -107,23 +108,10 @@ abstract final class Sizes {
   static const contentMax = 720.0;
 }
 
-/// Shadows are soft and green-tinted rather than grey, so a raised card reads
-/// as lifted off a warm page instead of stamped onto a cold one.
+/// Shadows are reserved for genuinely elevated elements. Routine content uses
+/// tonal surfaces and a hairline, which keeps attention on the primary action.
 abstract final class Shadows {
   static const _tint = Color(0xFF0E3A28);
-
-  // --- Claymorphism Tokens ---
-  /// The soft, broad outer drop shadow pushing the element off the surface.
-  static const clayOuter = [
-    BoxShadow(color: Color(0x11000000), offset: Offset(6, 6), blurRadius: 16),
-    BoxShadow(color: Color(0x08000000), offset: Offset(-6, -6), blurRadius: 16),
-  ];
-
-  /// Outer shadow for dark mode (subtler, deeper).
-  static const clayOuterDark = [
-    BoxShadow(color: Color(0x22000000), offset: Offset(8, 8), blurRadius: 20),
-    BoxShadow(color: Color(0x0AFFFFFF), offset: Offset(-4, -4), blurRadius: 12),
-  ];
 
   /// Resting cards.
   static List<BoxShadow> get card => [
@@ -151,28 +139,6 @@ abstract final class Shadows {
       offset: const Offset(0, 10),
     ),
   ];
-
-  /// Neumorphic extruded (up) shadows for light background.
-  /// Requires the surface color to be exactly the same as the background color (e.g. Canvas).
-  static List<BoxShadow> neomorphicUp(Color surfaceColor) {
-    // For light mode (e.g., BrandColors.canvas = 0xFFFAF8F4)
-    // Dark shadow on bottom right, Light shadow on top left
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.08),
-        offset: const Offset(6, 6),
-        blurRadius: 12,
-      ),
-      const BoxShadow(
-        color: Colors.white,
-        offset: Offset(-6, -6),
-        blurRadius: 12,
-      ),
-    ];
-  }
-
-  /// Neumorphic pressed (inset) isn't natively supported by standard BoxShadow.
-  /// We will handle inset shadows using standard containers and gradients inside the `NeoButton` widget.
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
