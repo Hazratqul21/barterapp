@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/haptics.dart';
+import '../../../core/theme/motion.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 
@@ -68,47 +70,71 @@ class _PhotoViewerState extends State<_PhotoViewer> {
 
   void _close() => Navigator.of(context).pop(_index);
 
+  void _go(int delta) {
+    final next = (_index + delta).clamp(0, widget.photos.length - 1);
+    if (next == _index) return;
+    _pages.animateToPage(
+      next,
+      duration: Motion.standard.durationOf(context),
+      curve: Motion.standard.curve,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final material = MaterialLocalizations.of(context);
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pages,
-            physics: _zoomed
-                ? const NeverScrollableScrollPhysics()
-                : const PageScrollPhysics(),
-            itemCount: widget.photos.length,
-            onPageChanged: (i) {
-              Haptics.selection();
-              setState(() => _index = i);
-            },
-            itemBuilder: (context, i) => _ZoomablePhoto(
-              url: widget.photos[i],
-              semanticLabel: widget.semanticLabel,
-              onZoomChanged: (zoomed) => setState(() => _zoomed = zoomed),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(Gap.x2),
-              child: Row(
-                children: [
-                  IconButton.filledTonal(
-                    tooltip: material.closeButtonTooltip,
-                    onPressed: _close,
-                    icon: const Icon(Symbols.close_rounded),
-                  ),
-                  const Spacer(),
-                  if (widget.photos.length > 1)
-                    PhotoCounter(index: _index, count: widget.photos.length),
-                ],
+    // Keyboard on the web and desktop: arrows page, Escape closes.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () => _go(1),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _go(-1),
+        const SingleActivator(LogicalKeyboardKey.escape): _close,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              PageView.builder(
+                controller: _pages,
+                physics: _zoomed
+                    ? const NeverScrollableScrollPhysics()
+                    : const PageScrollPhysics(),
+                itemCount: widget.photos.length,
+                onPageChanged: (i) {
+                  Haptics.selection();
+                  setState(() => _index = i);
+                },
+                itemBuilder: (context, i) => _ZoomablePhoto(
+                  url: widget.photos[i],
+                  semanticLabel: widget.semanticLabel,
+                  onZoomChanged: (zoomed) => setState(() => _zoomed = zoomed),
+                ),
               ),
-            ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(Gap.x2),
+                  child: Row(
+                    children: [
+                      IconButton.filledTonal(
+                        tooltip: material.closeButtonTooltip,
+                        onPressed: _close,
+                        icon: const Icon(Symbols.close_rounded),
+                      ),
+                      const Spacer(),
+                      if (widget.photos.length > 1)
+                        PhotoCounter(
+                          index: _index,
+                          count: widget.photos.length,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

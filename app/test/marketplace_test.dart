@@ -209,6 +209,14 @@ void main() {
     expect(query.sortBy, 'cheap');
     expect(find.byType(InputChip), findsNWidgets(2));
 
+    // "/" jumps to search on the web.
+    await tester.sendKeyEvent(LogicalKeyboardKey.slash);
+    await tester.pump();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).focusNode?.hasFocus,
+      isTrue,
+    );
+
     // Unmount, dispose the container (its providers own timers), and let
     // anything left run out before the binding checks for pending timers.
     await tester.pumpWidget(const SizedBox());

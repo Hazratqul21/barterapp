@@ -785,9 +785,15 @@ class _GalleryState extends State<_Gallery> {
   @override
   void didUpdateWidget(_Gallery old) {
     super.didUpdateWidget(old);
-    if (_pages.hasClients && _pages.page?.round() != widget.index) {
-      _pages.jumpToPage(widget.index);
-    }
+    // After the frame: jumping during build would fire onPageChanged, which
+    // sets state on the page that is building this one.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          _pages.hasClients &&
+          _pages.page?.round() != widget.index) {
+        _pages.jumpToPage(widget.index);
+      }
+    });
   }
 
   @override
@@ -818,6 +824,7 @@ class _GalleryState extends State<_Gallery> {
           controller: _pages,
           itemCount: widget.photos.length,
           onPageChanged: (i) {
+            if (i == widget.index) return;
             Haptics.selection();
             widget.onIndex(i);
           },

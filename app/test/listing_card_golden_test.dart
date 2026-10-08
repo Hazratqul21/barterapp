@@ -5,6 +5,7 @@ import 'package:barter_app/features/feed/presentation/listing_card_tile.dart';
 import 'package:barter_app/l10n/app_localizations.dart';
 import 'package:barter_app/shared/models/models.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -139,4 +140,65 @@ void main() {
       );
     });
   }
+
+  testWidgets('pointer hover lifts the card; keyboard focus rings it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        locale: const Locale('uz'),
+        supportedLocales: L.supportedLocales,
+        localizationsDelegates: const [
+          L.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200 + ListingCardTile.textBlockHeight(1),
+              child: ListingCardTile(listing: _cards.first, onTap: () {}),
+            ),
+          ),
+        ),
+      ),
+    );
+    ShapeDecoration deco() =>
+        tester
+                .widget<AnimatedContainer>(
+                  find.descendant(
+                    of: find.byType(ListingCardTile),
+                    matching: find.byType(AnimatedContainer),
+                  ),
+                )
+                .decoration!
+            as ShapeDecoration;
+
+    expect(deco().shadows, isEmpty);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.byType(ListingCardTile)));
+    await tester.pumpAndSettle();
+    expect(deco().shadows, isNotEmpty);
+
+    await mouse.moveTo(Offset.zero);
+    await tester.pumpAndSettle();
+    expect(deco().shadows, isEmpty);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    final material = tester.widget<Material>(
+      find
+          .descendant(
+            of: find.byType(ListingCardTile),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect((material.shape! as RoundedSuperellipseBorder).side.width, 2);
+  });
 }
