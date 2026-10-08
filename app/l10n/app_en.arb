@@ -362,5 +362,7 @@
   "matchReasonNamedCategory": "Category you asked for",
   "matchReasonValueClose": "Similar value",
   "matchReasonNearby": "Nearby",
-  "matchReasonVerified": "Verified trader"
+  "matchReasonVerified": "Verified trader",
+  "createFieldDistrict": "District (optional)",
+  "specRegion": "Location"
 }

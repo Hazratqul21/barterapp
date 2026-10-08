@@ -96,7 +96,9 @@ class _ListingCardTileState extends State<ListingCardTile> {
 
     final meta = [
       if (listing.distanceKm != null)
-        '${listing.distanceKm!.toStringAsFixed(listing.distanceKm! < 10 ? 1 : 0)} km',
+        '${listing.distanceKm!.toStringAsFixed(listing.distanceKm! < 10 ? 1 : 0)} km'
+      else if (listing.region != null)
+        listing.region!,
       DateFormat.MMMd(locale).format(listing.postedAt.toLocal()),
     ].join(' · ');
 

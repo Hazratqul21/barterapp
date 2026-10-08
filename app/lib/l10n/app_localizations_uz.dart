@@ -1157,4 +1157,10 @@ class LUz extends L {
 
   @override
   String get matchReasonVerified => 'Tasdiqlangan savdogar';
+
+  @override
+  String get createFieldDistrict => 'Tuman (ixtiyoriy)';
+
+  @override
+  String get specRegion => 'Joylashuvi';
 }

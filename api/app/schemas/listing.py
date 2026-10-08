@@ -25,6 +25,9 @@ class ListingCard(ApiModel):
     is_premium: bool
     posted_at: datetime
     owner: TraderBrief
+    #: Where the goods are (the listing's own, not the owner's).
+    region: str | None = None
+    district: str | None = None
     #: Kirgan foydalanuvchi buni saqlaganmi. Mehmon uchun doim False.
     #: Lentaning o'zida keladi, aks holda mijoz har karta uchun alohida
     #: so'rov yuborishga yoki yurakni noto'g'ri holatda chizishga majbur.
@@ -101,6 +104,9 @@ class ListingCreate(ApiModel):
     cash_ok: bool = True
     latitude: float | None = None
     longitude: float | None = None
+    #: Defaults to the owner's region. One of `/regions`.
+    region: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
 
 
 class ListingUpdate(ApiModel):
@@ -128,6 +134,8 @@ class ListingUpdate(ApiModel):
     wants_summary: TranslatedText | None = None
     wants: list[TranslatedText] | None = Field(default=None, max_length=8)
     desires: list[DesireIn] | None = Field(default=None, max_length=8)
+    region: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
     photos: list[str] | None = Field(default=None, max_length=10)
     value: Money | None = None
     cash_ok: bool | None = None

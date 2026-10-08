@@ -1154,4 +1154,10 @@ class LRu extends L {
 
   @override
   String get matchReasonVerified => 'Проверенный продавец';
+
+  @override
+  String get createFieldDistrict => 'Район (необязательно)';
+
+  @override
+  String get specRegion => 'Местоположение';
 }

@@ -66,16 +66,19 @@ _ALIASES: dict[str, str] = {
 }
 
 
-def coordinates_for(region: str | None) -> tuple[float, float] | None:
-    """The capital's coordinates for a region name, or None if it is unknown."""
+def canonical_region(region: str | None) -> str | None:
+    """The canonical spelling of a region name, or None if it is unknown."""
     if not region:
         return None
-
     if region in REGION_CENTROIDS:
-        return REGION_CENTROIDS[region]
-
+        return region
     folded = region.strip().lower().replace("‘", "'")
-    canonical = _ALIASES.get(folded) or _ALIASES.get(folded.replace("'", ""))
+    return _ALIASES.get(folded) or _ALIASES.get(folded.replace("'", ""))
+
+
+def coordinates_for(region: str | None) -> tuple[float, float] | None:
+    """The capital's coordinates for a region name, or None if it is unknown."""
+    canonical = canonical_region(region)
     return REGION_CENTROIDS.get(canonical) if canonical else None
 
 

@@ -1153,4 +1153,10 @@ class LEn extends L {
 
   @override
   String get matchReasonVerified => 'Verified trader';
+
+  @override
+  String get createFieldDistrict => 'District (optional)';
+
+  @override
+  String get specRegion => 'Location';
 }

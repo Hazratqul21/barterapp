@@ -83,6 +83,11 @@ class Listing(Base, UUIDPrimaryKey, Timestamps):
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
 
+    #: Where the goods are, chosen per listing — not the owner's current
+    #: region, which moved every old listing whenever the owner moved.
+    region: Mapped[str | None] = mapped_column(String(120))
+    district: Mapped[str | None] = mapped_column(String(120))
+
     owner: Mapped[User] = relationship(back_populates="listings")
     translations: Mapped[list[ListingTranslation]] = relationship(
         back_populates="listing", cascade="all, delete-orphan", lazy="selectin"

@@ -109,6 +109,8 @@ class ListingCard {
     this.imageUrl,
     this.distanceKm,
     this.isFavorite = false,
+    this.region,
+    this.district,
   });
 
   final String id;
@@ -124,6 +126,17 @@ class ListingCard {
   final bool isPremium;
   final DateTime postedAt;
   final TraderBrief owner;
+
+  /// Where the goods are — the listing's own region, not the owner's.
+  final String? region;
+  final String? district;
+
+  /// "Buxoro, G‘ijduvon", or just the region, or null.
+  String? get place => switch ((region, district)) {
+    (final r?, final d?) when d.isNotEmpty => '$r, $d',
+    (final r?, _) => r,
+    _ => null,
+  };
 
   /// The same card with the viewer's saved state changed — for an optimistic
   /// heart tap, before the server confirms.
@@ -141,6 +154,8 @@ class ListingCard {
     isFavorite: value,
     postedAt: postedAt,
     owner: owner,
+    region: region,
+    district: district,
   );
 
   factory ListingCard.fromJson(Map<String, dynamic> json) => ListingCard(
@@ -157,6 +172,8 @@ class ListingCard {
     isFavorite: json['is_favorite'] as bool? ?? false,
     postedAt: DateTime.parse(json['posted_at'] as String),
     owner: TraderBrief.fromJson(json['owner'] as Map<String, dynamic>),
+    region: json['region'] as String?,
+    district: json['district'] as String?,
   );
 }
 
@@ -181,6 +198,8 @@ class ListingDetail extends ListingCard {
     super.imageUrl,
     super.distanceKm,
     super.isFavorite,
+    super.region,
+    super.district,
   });
 
   final String description;
@@ -206,6 +225,8 @@ class ListingDetail extends ListingCard {
       isFavorite: card.isFavorite,
       postedAt: card.postedAt,
       owner: card.owner,
+      region: card.region,
+      district: card.district,
       description: json['description'] as String,
       category: json['category'] as String,
       condition: json['condition'] as String,
