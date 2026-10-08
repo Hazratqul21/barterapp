@@ -75,6 +75,8 @@ class ConversationSummary(ApiModel):
     #: The top-up that goes with the deal, so the row can render it in the
     #: reader's language rather than receiving it pre-formatted.
     cash: Money
+    #: Hidden from my inbox until a new message arrives.
+    archived: bool = False
     last_message: str | None = None
     last_message_at: datetime | None = None
     unread: int = 0

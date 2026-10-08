@@ -447,5 +447,12 @@
   "matchReasonNearby": "Yaqin atrofda",
   "matchReasonVerified": "Tasdiqlangan savdogar",
   "createFieldDistrict": "Tuman (ixtiyoriy)",
-  "specRegion": "Joylashuvi"
+  "specRegion": "Joylashuvi",
+  "inboxArchive": "Arxivlash",
+  "inboxArchived": "Arxiv",
+  "inboxArchivedDone": "Suhbat arxivlandi",
+  "inboxUndo": "Bekor qilish",
+  "inboxUnarchive": "Arxivdan chiqarish",
+  "inboxArchivedEmpty": "Arxiv bo‘sh",
+  "inboxArchivedHint": "Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi."
 }

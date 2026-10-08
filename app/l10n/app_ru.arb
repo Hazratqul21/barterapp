@@ -363,5 +363,12 @@
   "matchReasonNearby": "Рядом",
   "matchReasonVerified": "Проверенный продавец",
   "createFieldDistrict": "Район (необязательно)",
-  "specRegion": "Местоположение"
+  "specRegion": "Местоположение",
+  "inboxArchive": "В архив",
+  "inboxArchived": "Архив",
+  "inboxArchivedDone": "Чат перенесён в архив",
+  "inboxUndo": "Отменить",
+  "inboxUnarchive": "Вернуть из архива",
+  "inboxArchivedEmpty": "Архив пуст",
+  "inboxArchivedHint": "Если в архивный чат придёт новое сообщение, он сам вернётся во входящие."
 }

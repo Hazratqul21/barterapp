@@ -1160,4 +1160,26 @@ class LRu extends L {
 
   @override
   String get specRegion => 'Местоположение';
+
+  @override
+  String get inboxArchive => 'В архив';
+
+  @override
+  String get inboxArchived => 'Архив';
+
+  @override
+  String get inboxArchivedDone => 'Чат перенесён в архив';
+
+  @override
+  String get inboxUndo => 'Отменить';
+
+  @override
+  String get inboxUnarchive => 'Вернуть из архива';
+
+  @override
+  String get inboxArchivedEmpty => 'Архив пуст';
+
+  @override
+  String get inboxArchivedHint =>
+      'Если в архивный чат придёт новое сообщение, он сам вернётся во входящие.';
 }

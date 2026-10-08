@@ -108,9 +108,30 @@ class Conversation(Base, UUIDPrimaryKey, Timestamps):
     )
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    #: Per participant: archiving hides the thread from *my* inbox only.
+    archived_by_a_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    archived_by_b_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     messages: Mapped[list[Message]] = relationship(
         back_populates="conversation", cascade="all, delete-orphan"
     )
+
+    def archived_for(self, user_id: uuid.UUID) -> bool:
+        stamp = (
+            self.archived_by_a_at if user_id == self.user_a_id else self.archived_by_b_at
+        )
+        return stamp is not None
+
+    def set_archived(self, user_id: uuid.UUID, at: datetime | None) -> None:
+        if user_id == self.user_a_id:
+            self.archived_by_a_at = at
+        else:
+            self.archived_by_b_at = at
+
+    def wake(self) -> None:
+        """A new message brings the thread back for both sides."""
+        self.archived_by_a_at = None
+        self.archived_by_b_at = None
 
     __table_args__ = (
         UniqueConstraint("offer_id", name="uq_conversation_offer"),

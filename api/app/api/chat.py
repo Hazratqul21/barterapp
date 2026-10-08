@@ -111,6 +111,7 @@ async def _summary(
         gives=offer_service.sides(out)[0],
         receives=offer_service.sides(out)[1],
         cash=Money(minor=offer.cash_delta_minor, currency=offer.currency),
+        archived=thread.archived_for(me.id),
         last_message=last.body if last else None,
         last_message_at=last.created_at if last else None,
         unread=unread,
@@ -119,20 +120,63 @@ async def _summary(
 
 @router.get("/conversations", response_model=list[ConversationSummary])
 async def list_conversations(
+    archived: bool = False,
     locale: str = Depends(resolve_locale),
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[ConversationSummary]:
+    """The inbox, or with `?archived=true` the threads I put aside."""
+    mine_a = Conversation.user_a_id == me.id
+    mine_b = Conversation.user_b_id == me.id
+    put_aside = (mine_a & Conversation.archived_by_a_at.is_not(None)) | (
+        mine_b & Conversation.archived_by_b_at.is_not(None)
+    )
     threads = (
         await db.scalars(
             select(Conversation)
-            .where(
-                (Conversation.user_a_id == me.id) | (Conversation.user_b_id == me.id)
-            )
+            .where(mine_a | mine_b, put_aside if archived else ~put_aside)
             .order_by(Conversation.last_message_at.desc().nullslast())
         )
     ).all()
     return [await _summary(db, thread, me, locale) for thread in threads]
+
+
+async def _own_thread(
+    db: AsyncSession, thread_id: uuid.UUID, me: User
+) -> Conversation:
+    thread = await db.get(Conversation, thread_id)
+    if thread is None or me.id not in (thread.user_a_id, thread.user_b_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Suhbat topilmadi.")
+    return thread
+
+
+@router.post(
+    "/conversations/{thread_id}/archive", status_code=status.HTTP_204_NO_CONTENT
+)
+async def archive_conversation(
+    thread_id: uuid.UUID,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Put a thread aside — for me only. Idempotent."""
+    thread = await _own_thread(db, thread_id, me)
+    if not thread.archived_for(me.id):
+        thread.set_archived(me.id, datetime.now(UTC))
+        await db.commit()
+
+
+@router.delete(
+    "/conversations/{thread_id}/archive", status_code=status.HTTP_204_NO_CONTENT
+)
+async def unarchive_conversation(
+    thread_id: uuid.UUID,
+    me: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    thread = await _own_thread(db, thread_id, me)
+    if thread.archived_for(me.id):
+        thread.set_archived(me.id, None)
+        await db.commit()
 
 
 @router.get("/conversations/{thread_id}", response_model=ConversationDetail)
@@ -223,6 +267,7 @@ async def send_message(
     )
     db.add(message)
     thread.last_message_at = now
+    thread.wake()
 
     peer = await _peer_id(thread, me.id)
     await offer_service.notify(

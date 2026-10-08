@@ -221,6 +221,9 @@ async def act_on_offer(
     now = datetime.now(UTC)
 
     if payload.message and thread_id:
+        thread = await db.get(Conversation, thread_id)
+        if thread is not None:
+            thread.wake()
         db.add(
             Message(
                 conversation_id=thread_id,

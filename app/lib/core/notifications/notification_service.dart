@@ -96,7 +96,10 @@ class NotificationService {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
-      await _apiClient.delete<dynamic>('/devices/$token', parse: (data) => data);
+      await _apiClient.delete<dynamic>(
+        '/devices/$token',
+        parse: (data) => data,
+      );
       await FirebaseMessaging.instance.deleteToken();
     } catch (e) {
       if (kDebugMode) debugPrint('Qurilmani o‘chirib bo‘lmadi: $e');

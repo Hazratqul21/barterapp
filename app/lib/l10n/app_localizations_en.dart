@@ -1159,4 +1159,26 @@ class LEn extends L {
 
   @override
   String get specRegion => 'Location';
+
+  @override
+  String get inboxArchive => 'Archive';
+
+  @override
+  String get inboxArchived => 'Archived';
+
+  @override
+  String get inboxArchivedDone => 'Chat archived';
+
+  @override
+  String get inboxUndo => 'Undo';
+
+  @override
+  String get inboxUnarchive => 'Unarchive';
+
+  @override
+  String get inboxArchivedEmpty => 'No archived chats';
+
+  @override
+  String get inboxArchivedHint =>
+      'A new message in an archived chat brings it back to the inbox.';
 }
