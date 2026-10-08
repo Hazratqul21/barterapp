@@ -439,5 +439,11 @@
   "createShortTake": "Olaman",
   "createShortValue": "Qiymat",
   "createPreviewTitle": "Lentada shunday ko‘rinadi",
-  "traderNew": "Yangi a’zo"
+  "traderNew": "Yangi a’zo",
+  "matchMutual": "O‘zaro moslik",
+  "matchMutualHint": "U ham sizning narsangizni izlamoqda — ikkovingiz to‘g‘ridan-to‘g‘ri almasha olasiz.",
+  "matchReasonNamedCategory": "Siz izlagan toifa",
+  "matchReasonValueClose": "Qiymatlar yaqin",
+  "matchReasonNearby": "Yaqin atrofda",
+  "matchReasonVerified": "Tasdiqlangan savdogar"
 }

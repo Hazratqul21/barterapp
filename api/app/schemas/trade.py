@@ -107,6 +107,11 @@ class MatchOut(ApiModel):
     id: uuid.UUID
     score: int
     reason: str
+    #: Each side wants what the other has.
+    mutual: bool = False
+    #: Stable codes (matching.REASONS) for the client to translate.
+    reason_codes: list[str] = []
+    rules_version: str = "v0"
     mine: ListingCard
     theirs: ListingCard
     owner: TraderBrief

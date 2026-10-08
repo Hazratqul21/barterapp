@@ -355,5 +355,11 @@
   "createShortTake": "Хочу",
   "createShortValue": "Цена",
   "createPreviewTitle": "Так объявление выглядит в ленте",
-  "traderNew": "Новый участник"
+  "traderNew": "Новый участник",
+  "matchMutual": "Взаимное совпадение",
+  "matchMutualHint": "Ему тоже нужно то, что есть у вас, — можно обменяться напрямую.",
+  "matchReasonNamedCategory": "Нужная вам категория",
+  "matchReasonValueClose": "Близкая стоимость",
+  "matchReasonNearby": "Рядом",
+  "matchReasonVerified": "Проверенный продавец"
 }

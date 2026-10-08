@@ -2234,6 +2234,42 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Yangi a’zo'**
   String get traderNew;
+
+  /// No description provided for @matchMutual.
+  ///
+  /// In uz, this message translates to:
+  /// **'O‘zaro moslik'**
+  String get matchMutual;
+
+  /// No description provided for @matchMutualHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'U ham sizning narsangizni izlamoqda — ikkovingiz to‘g‘ridan-to‘g‘ri almasha olasiz.'**
+  String get matchMutualHint;
+
+  /// No description provided for @matchReasonNamedCategory.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz izlagan toifa'**
+  String get matchReasonNamedCategory;
+
+  /// No description provided for @matchReasonValueClose.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qiymatlar yaqin'**
+  String get matchReasonValueClose;
+
+  /// No description provided for @matchReasonNearby.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yaqin atrofda'**
+  String get matchReasonNearby;
+
+  /// No description provided for @matchReasonVerified.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlangan savdogar'**
+  String get matchReasonVerified;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

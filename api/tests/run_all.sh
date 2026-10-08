@@ -11,6 +11,7 @@ PY=.venv/bin/python
 fail=0
 for t in tests/test_config_guard.py \
          tests/test_trade_loop.py \
+         tests/test_matching_mutual.py \
          tests/test_uploads_and_desires.py \
          tests/test_profile_and_regions.py \
          tests/test_create_listing.py \

@@ -531,11 +531,21 @@ class TradeMatch {
     required this.mine,
     required this.theirs,
     required this.owner,
+    this.mutual = false,
+    this.reasonCodes = const [],
   });
 
   final String id;
   final int score;
   final String reason;
+
+  /// Each side wants what the other has — the pair can swap directly.
+  final bool mutual;
+
+  /// Stable codes from the server (`mutual`, `named_category`, …); the
+  /// client translates them. Unknown codes are ignored, so the server can add
+  /// reasons without breaking older apps.
+  final List<String> reasonCodes;
   final ListingCard mine;
   final ListingCard theirs;
   final TraderBrief owner;
@@ -547,6 +557,8 @@ class TradeMatch {
     mine: ListingCard.fromJson(json['mine'] as Map<String, dynamic>),
     theirs: ListingCard.fromJson(json['theirs'] as Map<String, dynamic>),
     owner: TraderBrief.fromJson(json['owner'] as Map<String, dynamic>),
+    mutual: json['mutual'] as bool? ?? false,
+    reasonCodes: (json['reason_codes'] as List? ?? const []).cast<String>(),
   );
 }
 

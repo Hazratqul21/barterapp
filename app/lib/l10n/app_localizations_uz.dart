@@ -1138,4 +1138,23 @@ class LUz extends L {
 
   @override
   String get traderNew => 'Yangi a’zo';
+
+  @override
+  String get matchMutual => 'O‘zaro moslik';
+
+  @override
+  String get matchMutualHint =>
+      'U ham sizning narsangizni izlamoqda — ikkovingiz to‘g‘ridan-to‘g‘ri almasha olasiz.';
+
+  @override
+  String get matchReasonNamedCategory => 'Siz izlagan toifa';
+
+  @override
+  String get matchReasonValueClose => 'Qiymatlar yaqin';
+
+  @override
+  String get matchReasonNearby => 'Yaqin atrofda';
+
+  @override
+  String get matchReasonVerified => 'Tasdiqlangan savdogar';
 }

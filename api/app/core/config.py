@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     #: hech qayerda ko'rinmaydi.
     sms_required: bool = False
 
+    #: F01: also check the reverse direction (do they want what I have?) and
+    #: rank two-way fits first. Off restores the one-way matcher.
+    matching_mutual: bool = True
+
     cors_origins: tuple[str, ...] = (
         "http://localhost:3000",
         "http://localhost:5173",

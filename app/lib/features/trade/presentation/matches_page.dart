@@ -179,13 +179,14 @@ class _MatchCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (match.mutual) ...[_MutualBanner(), Gap.h3],
               Row(
                 children: [
                   _Score(score: match.score),
                   Gap.w3,
                   Expanded(
                     child: Text(
-                      match.reason,
+                      match.mutual ? l.matchMutualHint : match.reason,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: p.inkSoft,
                         height: 1.3,
@@ -194,6 +195,21 @@ class _MatchCard extends ConsumerWidget {
                   ),
                 ],
               ),
+              if (_reasonLabels(l, match.reasonCodes).isNotEmpty) ...[
+                Gap.h3,
+                Wrap(
+                  spacing: Gap.x2,
+                  runSpacing: Gap.x2,
+                  children: [
+                    for (final label in _reasonLabels(l, match.reasonCodes))
+                      Pill(
+                        label: label,
+                        foreground: p.inkSoft,
+                        background: theme.colorScheme.surfaceContainerHigh,
+                      ),
+                  ],
+                ),
+              ],
               Gap.h4,
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,6 +477,54 @@ class _MatchesShimmer extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Reason codes the client knows, in display order. "mutual" has its own
+/// banner, so it is not repeated as a chip.
+List<String> _reasonLabels(L l, List<String> codes) => [
+  for (final code in codes)
+    ?switch (code) {
+      'named_category' => l.matchReasonNamedCategory,
+      'value_close' => l.matchReasonValueClose,
+      'nearby' => l.matchReasonNearby,
+      'verified' => l.matchReasonVerified,
+      _ => null,
+    },
+];
+
+/// The two-way fit, said plainly at the top of the card: the one case where
+/// two people can close a barter without a third party or cash.
+class _MutualBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    // primary/onPrimary, not the swap gradient: the gradient's dark-mode end
+    // is too light for white text, and this pair is contrast-tested.
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.x3, vertical: 6),
+      decoration: ShapeDecoration(
+        color: scheme.primary,
+        shape: const StadiumBorder(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Symbols.sync_alt_rounded, size: 16, color: scheme.onPrimary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              l.matchMutual,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: scheme.onPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
