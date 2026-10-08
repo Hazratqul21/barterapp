@@ -371,5 +371,22 @@
   "inboxUndo": "Undo",
   "inboxUnarchive": "Unarchive",
   "inboxArchivedEmpty": "No archived chats",
-  "inboxArchivedHint": "A new message in an archived chat brings it back to the inbox."
+  "inboxArchivedHint": "A new message in an archived chat brings it back to the inbox.",
+  "dealConfirm": "Handed over & received",
+  "dealProblem": "Something’s wrong",
+  "dealDisputed": "Disputed",
+  "dealCancelled": "Cancelled",
+  "dealDisputedOperator": "Dispute opened — an operator is reviewing it. The items stay reserved.",
+  "dealCancelledInfo": "The deal was cancelled — the items are back on sale.",
+  "dealResolvedComplete": "Dispute resolved: the deal stands.",
+  "disputeTitle": "What happened?",
+  "disputeNoShow": "The other side didn’t show up",
+  "disputeNotReceived": "I gave mine but got nothing",
+  "disputeNotAsDescribed": "Not as described",
+  "disputeOther": "Something else",
+  "disputeNote": "Note (optional)",
+  "disputeSend": "Open dispute",
+  "disputeHint": "Small deals are settled by a rule right away; larger ones go to an operator.",
+  "dealReservedUntil": "Items reserved until {date}",
+  "dealWaitingPeer": "You confirmed. Waiting for {name}."
 }

@@ -20,6 +20,7 @@ for t in tests/test_config_guard.py \
          tests/test_otp_security.py \
          tests/test_token_security.py \
          tests/test_trade_integrity.py \
+         tests/test_agreements.py \
          tests/test_socket_ticket.py \
          tests/test_chat_archive.py \
          tests/test_media_sweep.py \

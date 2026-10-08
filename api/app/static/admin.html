@@ -67,6 +67,7 @@
   <nav id="nav" class="hide">
     <button data-tab="blocks" class="on">Lenta</button>
     <button data-tab="reports">Shikoyatlar</button>
+    <button data-tab="disputes">Nizolar</button>
     <button data-tab="push">Bildirishnoma</button>
     <button data-tab="stats">Tahlil</button>
     <button data-tab="setup">Sozlash</button>
@@ -211,6 +212,37 @@
         <th>Nima haqida</th><th>Sabab</th><th>Izoh</th>
         <th>Soni</th><th>Kim</th><th></th>
       </tr></thead><tbody id="reportRows"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ── Nizolar (F02) ─────────────────────────────────────────────── -->
+  <section id="disputes" class="hide">
+    <div class="card">
+      <h2>Avtomatik qoidalar</h2>
+      <p style="color:var(--faint);margin-top:0">
+        Kichik nizolar shu qoidalar bilan avtomatik hal bo‘ladi. Chegaradan
+        katta summa, boshqa sabab yoki ikki tomon yozuvlari zid bo‘lsa —
+        quyidagi navbatga, operatorga tushadi. Har saqlash versiyani oshiradi.
+      </p>
+      <label>Band qilish muddati (soat)
+        <input id="rHours" type="number" min="1" max="720"></label>
+      <label>Avtomatik hal qilish chegarasi (so‘m)
+        <input id="rLimit" type="number" min="0" step="1000"></label>
+      <fieldset style="border:0;padding:0;margin:8px 0">
+        <legend>Avtomatik bekor qilinadigan sabablar</legend>
+        <label><input type="checkbox" name="rReason" value="no_show"> Kelmadi</label>
+        <label><input type="checkbox" name="rReason" value="not_received"> Olmadim</label>
+        <label><input type="checkbox" name="rReason" value="not_as_described"> Ta’rifga mos emas</label>
+        <label><input type="checkbox" name="rReason" value="other"> Boshqa</label>
+      </fieldset>
+      <button class="act" onclick="saveRules()">Saqlash</button>
+      <span id="rVersion" class="pill"></span>
+    </div>
+    <div class="card">
+      <h2>Operator navbati — eskisidan boshlab</h2>
+      <table><thead><tr>
+        <th>Sabab</th><th>Izoh</th><th>Summa</th><th>Nega navbatda</th><th></th>
+      </tr></thead><tbody id="disputeRows"></tbody></table>
     </div>
   </section>
 
@@ -427,7 +459,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -450,6 +482,7 @@ function show(tab) {
     b.classList.toggle('on', b.dataset.tab === tab));
   if (tab === 'blocks') loadBlocks();
   if (tab === 'reports') loadReports();
+  if (tab === 'disputes') loadDisputes();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
   if (tab === 'setup') loadFirebase();
@@ -606,6 +639,75 @@ async function archive(listingId, reportId) {
   try {
     await api('/admin/listings/' + listingId + '/archive', { method: 'POST' });
     await decide(reportId, 'actioned');
+  } catch (e) { say(e.message); }
+}
+
+// ── Nizolar ───────────────────────────────────────────────────────────
+
+const REASONS = {
+  no_show: 'Kelmadi', not_received: 'Olmadim',
+  not_as_described: 'Ta’rifga mos emas', other: 'Boshqa',
+};
+const WHY = {
+  over_limit: 'Summa chegaradan katta',
+  reason_needs_operator: 'Bu sabab operatorga',
+  contradicted_by_confirmation: 'Ikkinchi tomon tasdiqlagan — zid',
+};
+
+async function loadDisputes() {
+  try {
+    const r = await api('/admin/dispute-rules');
+    $('rHours').value = r.reservation_hours;
+    $('rLimit').value = Math.round(r.auto_max_value_minor / 100);
+    document.querySelectorAll('input[name=rReason]').forEach(c =>
+      c.checked = r.auto_cancel_reasons.includes(c.value));
+    $('rVersion').textContent = 'v' + r.version;
+
+    const rows = await api('/admin/disputes');
+    $('disputeRows').innerHTML = rows.length ? rows.map(d => `
+      <tr>
+        <td>${esc(REASONS[d.reason] || d.reason)}</td>
+        <td style="max-width:260px">${esc(d.note || '')}</td>
+        <td>${d.value_minor == null ? '—' :
+              (d.value_minor / 100).toLocaleString('uz') + ' so‘m'}</td>
+        <td>${esc(WHY[d.decided_by_rule] || d.decided_by_rule || '')}</td>
+        <td style="white-space:nowrap">
+          <button class="act danger" onclick="resolveDispute('${d.id}','cancel')">Bekor qilish</button>
+          <button class="act ghost" onclick="resolveDispute('${d.id}','complete')">Savdo kuchda</button>
+        </td>
+      </tr>`).join('') :
+      '<tr><td colspan="5" style="color:var(--faint)">Navbat bo‘sh.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+async function saveRules() {
+  try {
+    const reasons = [...document.querySelectorAll('input[name=rReason]:checked')]
+      .map(c => c.value);
+    const r = await api('/admin/dispute-rules', {
+      method: 'PUT',
+      body: JSON.stringify({
+        reservation_hours: Number($('rHours').value),
+        auto_max_value_minor: Math.round(Number($('rLimit').value) * 100),
+        auto_cancel_reasons: reasons,
+      }),
+    });
+    $('rVersion').textContent = 'v' + r.version;
+    say('Qoidalar saqlandi.', true);
+  } catch (e) { say(e.message); }
+}
+
+async function resolveDispute(id, resolution) {
+  const note = prompt(resolution === 'cancel'
+    ? 'Nega bekor qilinmoqda? (ikkala tomon ko‘radi)'
+    : 'Nega savdo kuchda qoladi? (ikkala tomon ko‘radi)');
+  if (!note || note.trim().length < 3) return;
+  try {
+    await api('/admin/disputes/' + id + '/resolve', {
+      method: 'POST',
+      body: JSON.stringify({ resolution, note: note.trim() }),
+    });
+    say('Nizo hal qilindi.', true); loadDisputes();
   } catch (e) { say(e.message); }
 }
 

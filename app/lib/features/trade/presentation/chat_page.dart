@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/haptics.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/glass.dart';
@@ -116,17 +117,43 @@ class _ChatPageState extends ConsumerState<ChatPage>
     String offerId,
     String action, {
     int? cashDeltaMinor,
+    String? disputeReason,
+    String? disputeNote,
   }) async {
     try {
       await ref
           .read(tradeRepositoryProvider)
-          .act(offerId, action, cashDeltaMinor: cashDeltaMinor);
+          .act(
+            offerId,
+            action,
+            cashDeltaMinor: cashDeltaMinor,
+            disputeReason: disputeReason,
+            disputeNote: disputeNote,
+          );
       ref.invalidate(conversationProvider(widget.conversationId));
       ref.invalidate(conversationsProvider);
       ref.invalidate(matchesProvider);
     } catch (e) {
       if (mounted) _complain(errorMessage(context, e));
     }
+  }
+
+  /// "Something's wrong": pick a reason, add a note, open a dispute.
+  Future<void> _dispute(Offer offer) async {
+    final picked = await showModalBottomSheet<(String, String)>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => const _DisputeSheet(),
+    );
+    if (picked == null || !mounted) return;
+    Haptics.warning();
+    await _act(
+      offer.id,
+      'dispute',
+      disputeReason: picked.$1,
+      disputeNote: picked.$2,
+    );
   }
 
   Future<void> _counter(Offer offer) async {
@@ -226,7 +253,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
                     onAccept: () => _act(offer.id, 'accept'),
                     onDecline: () => _act(offer.id, 'decline'),
                     onCounter: () => _counter(offer),
-                    onComplete: () => _act(offer.id, 'complete'),
+                    onComplete: () => _act(offer.id, 'confirm'),
+                    onDispute: () => _dispute(offer),
                   ),
                   Expanded(
                     child: detail.messages.isEmpty
@@ -422,13 +450,17 @@ class _DealPanel extends ConsumerWidget {
     required this.onDecline,
     required this.onCounter,
     required this.onComplete,
+    required this.onDispute,
   });
 
   final Offer offer;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
   final VoidCallback onCounter;
+
+  /// One side's "handed over & received"; the deal closes when both have.
   final VoidCallback onComplete;
+  final VoidCallback onDispute;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -519,14 +551,62 @@ class _DealPanel extends ConsumerWidget {
                   ],
                 ),
               ] else if (offer.status == OfferStatus.accepted) ...[
-                Gap.h4,
-                FilledButton.icon(
-                  onPressed: onComplete,
-                  icon: const Icon(Symbols.check_circle_rounded),
-                  label: Text(l.dealComplete),
+                if (offer.reservedUntil != null) ...[
+                  Gap.h3,
+                  _InfoLine(
+                    icon: Symbols.lock_clock_rounded,
+                    text: l.dealReservedUntil(
+                      DateFormat.MMMd(
+                        locale,
+                      ).add_Hm().format(offer.reservedUntil!.toLocal()),
+                    ),
+                  ),
+                ],
+                Gap.h3,
+                if (offer.confirmedByMe)
+                  _InfoLine(
+                    icon: Symbols.hourglass_top_rounded,
+                    text: l.dealWaitingPeer(offer.counterparty.name),
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: onComplete,
+                    icon: const Icon(Symbols.check_circle_rounded),
+                    label: Text(l.dealConfirm),
+                  ),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    onPressed: onDispute,
+                    icon: const Icon(Symbols.report_rounded, size: 18),
+                    label: Text(l.dealProblem),
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.error,
+                    ),
+                  ),
                 ),
-              ] else if (offer.status == OfferStatus.completed)
+              ] else if (offer.status == OfferStatus.disputed) ...[
+                Gap.h3,
+                _InfoLine(
+                  icon: Symbols.gavel_rounded,
+                  text: l.dealDisputedOperator,
+                ),
+              ] else if (offer.status == OfferStatus.refunded) ...[
+                Gap.h3,
+                _InfoLine(
+                  icon: Symbols.undo_rounded,
+                  text: l.dealCancelledInfo,
+                ),
+              ] else if (offer.status == OfferStatus.completed) ...[
+                if (offer.dispute?.resolution == 'complete') ...[
+                  Gap.h3,
+                  _InfoLine(
+                    icon: Symbols.gavel_rounded,
+                    text: l.dealResolvedComplete,
+                  ),
+                ],
                 _ReviewPrompt(offer: offer),
+              ],
             ],
           ),
         ),
@@ -548,6 +628,11 @@ class _StatusLine extends StatelessWidget {
       OfferStatus.talking => (l.dealTalking, p.take),
       OfferStatus.accepted => (l.dealAccepted, p.give),
       OfferStatus.completed => (l.dealCompleted, p.give),
+      OfferStatus.disputed => (
+        l.dealDisputed,
+        Theme.of(context).colorScheme.error,
+      ),
+      OfferStatus.refunded => (l.dealCancelled, p.inkSoft),
       OfferStatus.declined => (
         l.dealDeclined,
         Theme.of(context).colorScheme.error,
@@ -879,6 +964,118 @@ class _ReviewPromptState extends ConsumerState<_ReviewPrompt> {
           ),
         );
       },
+    );
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: p.inkSoft),
+        Gap.w2,
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: p.inkSoft),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Reason + optional note. Pops `(reason, note)`.
+class _DisputeSheet extends StatefulWidget {
+  const _DisputeSheet();
+
+  @override
+  State<_DisputeSheet> createState() => _DisputeSheetState();
+}
+
+class _DisputeSheetState extends State<_DisputeSheet> {
+  String? _reason;
+  final _note = TextEditingController();
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final reasons = {
+      'no_show': l.disputeNoShow,
+      'not_received': l.disputeNotReceived,
+      'not_as_described': l.disputeNotAsDescribed,
+      'other': l.disputeOther,
+    };
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        Gap.x5,
+        0,
+        Gap.x5,
+        Gap.x5 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.disputeTitle, style: Theme.of(context).textTheme.titleLarge),
+          Gap.h2,
+          Text(
+            l.disputeHint,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: palette(context).inkSoft),
+          ),
+          Gap.h3,
+          RadioGroup<String>(
+            groupValue: _reason,
+            onChanged: (v) => setState(() => _reason = v),
+            child: Column(
+              children: [
+                for (final e in reasons.entries)
+                  RadioListTile<String>(
+                    value: e.key,
+                    title: Text(e.value),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+              ],
+            ),
+          ),
+          TextField(
+            controller: _note,
+            maxLength: 1000,
+            maxLines: 3,
+            minLines: 1,
+            decoration: InputDecoration(labelText: l.disputeNote),
+          ),
+          Gap.h3,
+          FilledButton(
+            onPressed: _reason == null
+                ? null
+                : () => Navigator.pop(context, (_reason!, _note.text)),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: Text(l.disputeSend),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -359,10 +359,21 @@ class Offer {
     required this.offered,
     this.expiresAt,
     this.conversationId,
+    this.reservedUntil,
+    this.confirmedByMe = false,
+    this.confirmedByPeer = false,
+    this.dispute,
   });
 
   final String id;
   final OfferStatus status;
+
+  /// F02: after accept the goods are held until this moment (null while a
+  /// dispute pauses the clock).
+  final DateTime? reservedUntil;
+  final bool confirmedByMe;
+  final bool confirmedByPeer;
+  final OfferDispute? dispute;
   final int cashDeltaMinor;
   final String currency;
   final DateTime createdAt;
@@ -393,9 +404,47 @@ class Offer {
         .map((e) => ListingCard.fromJson(e as Map<String, dynamic>))
         .toList(),
     conversationId: json['conversation_id'] as String?,
+    reservedUntil: json['reserved_until'] == null
+        ? null
+        : DateTime.parse(json['reserved_until'] as String),
+    confirmedByMe: json['confirmed_by_me'] as bool? ?? false,
+    confirmedByPeer: json['confirmed_by_peer'] as bool? ?? false,
+    dispute: json['dispute'] == null
+        ? null
+        : OfferDispute.fromJson(json['dispute'] as Map<String, dynamic>),
   );
 
   Money get cash => Money(minor: cashDeltaMinor, currency: currency);
+}
+
+/// Why a deal was disputed, and how (or whether) it was settled.
+class OfferDispute {
+  const OfferDispute({
+    required this.reason,
+    required this.resolved,
+    required this.openedByMe,
+    this.resolution,
+    this.decidedByRule,
+  });
+
+  /// no_show · not_received · not_as_described · other
+  final String reason;
+  final bool resolved;
+  final bool openedByMe;
+
+  /// cancel · complete, once resolved.
+  final String? resolution;
+
+  /// "auto_cancel:no_show", "over_limit", "operator", …
+  final String? decidedByRule;
+
+  factory OfferDispute.fromJson(Map<String, dynamic> json) => OfferDispute(
+    reason: json['reason'] as String,
+    resolved: json['status'] == 'resolved',
+    openedByMe: json['opened_by_me'] as bool? ?? false,
+    resolution: json['resolution'] as String?,
+    decidedByRule: json['decided_by_rule'] as String?,
+  );
 }
 
 class ChatMessage {

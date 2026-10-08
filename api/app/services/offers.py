@@ -11,7 +11,8 @@ from app.models.listing import Listing
 from app.models.offer import Conversation, Offer, OfferItem, OfferStatus
 from app.models.social import Notification, NotifyKind, NotifyTargetType
 from app.models.user import User
-from app.schemas.trade import OfferOut
+from app.models.agreement import Dispute, Reservation, TradeConfirmation
+from app.schemas.trade import DisputeOut, OfferOut
 from app.services import stats
 from app.services.presenter import listing_card, trader_brief
 
@@ -22,7 +23,10 @@ TRANSITIONS: dict[str, tuple[set[OfferStatus], OfferStatus, str]] = {
     "accept": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.accepted, "recipient"),
     "decline": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.declined, "recipient"),
     "counter": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.talking, "either"),
-    "complete": ({OfferStatus.accepted}, OfferStatus.completed, "either"),
+    # One side's confirmation; the deal completes only when both have
+    # (services/agreements.confirm). `complete` is the legacy name.
+    "confirm": ({OfferStatus.accepted}, OfferStatus.accepted, "either"),
+    "complete": ({OfferStatus.accepted}, OfferStatus.accepted, "either"),
     "dispute": ({OfferStatus.accepted}, OfferStatus.disputed, "either"),
 }
 
@@ -145,7 +149,40 @@ async def present(
         select(Conversation.id).where(Conversation.offer_id == offer.id)
     )
 
+    holds = (
+        await db.scalars(
+            select(Reservation.expires_at).where(
+                Reservation.offer_id == offer.id, Reservation.active.is_(True)
+            )
+        )
+    ).all()
+    confirmed = set(
+        (
+            await db.scalars(
+                select(TradeConfirmation.user_id).where(
+                    TradeConfirmation.offer_id == offer.id
+                )
+            )
+        ).all()
+    )
+    dispute = await db.scalar(select(Dispute).where(Dispute.offer_id == offer.id))
+
     return OfferOut(
+        reserved_until=min((h for h in holds if h), default=None),
+        confirmed_by_me=viewer_id in confirmed,
+        confirmed_by_peer=peer_id in confirmed,
+        dispute=None
+        if dispute is None
+        else DisputeOut(
+            id=dispute.id,
+            reason=dispute.reason,
+            status=dispute.status,
+            resolution=dispute.resolution,
+            decided_by_rule=dispute.decided_by_rule,
+            opened_by_me=dispute.opened_by == viewer_id,
+            created_at=dispute.created_at,
+            resolved_at=dispute.resolved_at,
+        ),
         id=offer.id,
         status=offer.status,
         cash_delta_minor=offer.cash_delta_minor,

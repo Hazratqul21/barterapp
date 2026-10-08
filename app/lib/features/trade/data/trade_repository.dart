@@ -40,6 +40,8 @@ class TradeRepository {
     String action, {
     int? cashDeltaMinor,
     String? message,
+    String? disputeReason,
+    String? disputeNote,
   }) {
     return _api.patch(
       '/offers/$offerId',
@@ -47,6 +49,9 @@ class TradeRepository {
         'action': action,
         'cash_delta_minor': cashDeltaMinor,
         if (message != null && message.trim().isNotEmpty) 'message': message,
+        'dispute_reason': ?disputeReason,
+        if (disputeNote != null && disputeNote.trim().isNotEmpty)
+          'dispute_note': disputeNote.trim(),
       },
       parse: (data) => Offer.fromJson(data as Map<String, dynamic>),
     );

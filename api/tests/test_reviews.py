@@ -40,6 +40,7 @@ ok("yakunlanmagan savdoga sharh rad etiladi", st == 409, err.get("detail"))
 
 call("PATCH", f"/offers/{oid}", {"action": "accept"}, token=b)
 call("PATCH", f"/offers/{oid}", {"action": "complete"}, token=a)
+call("PATCH", f"/offers/{oid}", {"action": "confirm"}, token=b)   # F02: ikkala tomon
 
 st, review = call("POST", "/reviews", {"offer_id": oid, "rating": 5,
     "body": "Vaqtida keldi, hammasi aytilganidek."}, token=a)
