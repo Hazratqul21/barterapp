@@ -10,6 +10,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/haptics.dart';
+import '../../../core/widgets/deal_timeline.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/glass.dart';
@@ -508,6 +509,11 @@ class _DealPanel extends ConsumerWidget {
                     _Expiry(expiresAt: offer.expiresAt!),
                 ],
               ),
+              // The path, once the deal is on it (or has left it).
+              if (!open && offer.status != OfferStatus.draft) ...[
+                Gap.h3,
+                DealTimeline(offer: offer),
+              ],
               Gap.h3,
               TradeSides(
                 dense: true,

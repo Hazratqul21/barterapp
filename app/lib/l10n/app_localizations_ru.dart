@@ -1252,4 +1252,21 @@ class LRu extends L {
 
   @override
   String get listingGoneBack => 'Вернуться в ленту';
+
+  @override
+  String get timelineOffered => 'Предложение';
+
+  @override
+  String get timelineAgreed => 'Договорились';
+
+  @override
+  String get timelineHandedOver => 'Передано';
+
+  @override
+  String get timelineDone => 'Завершено';
+
+  @override
+  String timelineSemantics(int step, int total, String name) {
+    return 'Сделка: шаг $step из $total, $name';
+  }
 }

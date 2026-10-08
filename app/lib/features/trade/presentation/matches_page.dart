@@ -11,6 +11,7 @@ import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
 import '../../../core/theme/haptics.dart';
+import '../../../core/theme/motion.dart';
 
 class MatchesPage extends ConsumerWidget {
   const MatchesPage({super.key});
@@ -500,6 +501,23 @@ List<String> _reasonLabels(L l, List<String> codes) => [
 class _MutualBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // The swap moment — the one place the bouncy spring is allowed. Plays
+    // once as the card arrives; still under reduce-motion.
+    final spec = Motion.bouncy;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.85, end: 1),
+      duration: spec.durationOf(context),
+      curve: spec.curve,
+      builder: (context, scale, child) => Transform.scale(
+        scale: scale,
+        alignment: Alignment.centerLeft,
+        child: child,
+      ),
+      child: _banner(context),
+    );
+  }
+
+  Widget _banner(BuildContext context) {
     final l = L.of(context);
     final scheme = Theme.of(context).colorScheme;
     // primary/onPrimary, not the swap gradient: the gradient's dark-mode end
