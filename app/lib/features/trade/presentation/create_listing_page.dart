@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/haptics.dart';
+import '../../../core/theme/motion.dart';
+import '../../feed/presentation/listing_card_tile.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
@@ -29,6 +30,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   static const _steps = 4;
   static const _maxPhotos = 10;
   int _step = 0;
+  bool _forward = true;
   bool _busy = false;
 
   final _photos = <_PhotoSlot>[];
@@ -347,12 +349,30 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: (_step + 1) / _steps,
-            minHeight: 4,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            color: p.give,
+          preferredSize: Size.fromHeight(
+            40 + MediaQuery.textScalerOf(context).scale(12),
+          ),
+          child: _StepIndicator(
+            labels: [
+              l.createShortPhotos,
+              l.createShortGive,
+              l.createShortTake,
+              l.createShortValue,
+            ],
+            current: _step,
+            // Only backwards: forward still goes through "Keyingi", which
+            // checks the step is complete.
+            onTap: _busy
+                ? null
+                : (i) {
+                    if (i < _step) {
+                      Haptics.selection();
+                      _edit(() {
+                        _forward = false;
+                        _step = i;
+                      });
+                    }
+                  },
           ),
         ),
       ),
@@ -364,16 +384,25 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
               children: [
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: 300.ms,
-                    transitionBuilder: (child, anim) => FadeTransition(
-                      opacity: anim,
-                      child: SlideTransition(
-                        position: anim.drive(
-                          Tween(begin: const Offset(0.1, 0), end: Offset.zero),
+                    duration: Motion.standard.durationOf(context),
+                    switchInCurve: Motion.standard.curve,
+                    switchOutCurve: Curves.easeOut,
+                    // Slides the way the person is going: forward comes in
+                    // from the right, back from the left.
+                    transitionBuilder: (child, anim) {
+                      final entering = child.key == ValueKey(_step);
+                      final from =
+                          (entering ? 1 : -1) * (_forward ? 0.08 : -0.08);
+                      return FadeTransition(
+                        opacity: anim,
+                        child: SlideTransition(
+                          position: anim.drive(
+                            Tween(begin: Offset(from, 0), end: Offset.zero),
+                          ),
+                          child: child,
                         ),
-                        child: child,
-                      ),
-                    ),
+                      );
+                    },
                     child: ListView(
                       key: ValueKey(_step),
                       padding: const EdgeInsets.all(Gap.x5),
@@ -421,7 +450,10 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                           child: OutlinedButton(
                             onPressed: _busy
                                 ? null
-                                : () => _edit(() => _step--),
+                                : () => _edit(() {
+                                    _forward = false;
+                                    _step--;
+                                  }),
                             child: Text(l.createBack),
                           ),
                         ),
@@ -433,7 +465,12 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                               ? null
                               : () {
                                   Haptics.success();
-                                  last ? _publish() : _edit(() => _step++);
+                                  last
+                                      ? _publish()
+                                      : _edit(() {
+                                          _forward = true;
+                                          _step++;
+                                        });
                                 },
                           child: _busy
                               ? const SizedBox(
@@ -581,6 +618,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     TextField(
       controller: _value,
       keyboardType: TextInputType.number,
+      onChanged: (_) => setState(() {}),
       style: theme.textTheme.headlineMedium?.copyWith(
         fontWeight: FontWeight.w900,
       ),
@@ -591,7 +629,134 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         fillColor: theme.colorScheme.surfaceContainerLow,
       ),
     ),
+    Gap.h6,
+    Text(
+      l.createPreviewTitle,
+      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+    ),
+    Gap.h3,
+    // The real feed card, built from what was typed: the last check before
+    // publishing is seeing it the way a trader scrolling past will.
+    Center(child: _preview(theme)),
   ];
+
+  Widget _preview(ThemeData theme) {
+    final locale = Localizations.localeOf(context).languageCode;
+    String pick(_Trilingual f) {
+      final own = f.controllers[locale]?.text.trim() ?? '';
+      return own.isNotEmpty ? own : f.controllers['uz']!.text.trim();
+    }
+
+    final card = ListingCard(
+      id: 'preview',
+      tag: _tag ?? ListingTag.values.first,
+      title: pick(_title),
+      imageUrl: _photos.isEmpty ? null : _photos.first.url,
+      imageAlt: pick(_title),
+      wantsSummary: pick(_wants),
+      value: Money(minor: _valueSom * 100, currency: 'UZS'),
+      cashOk: _cashOk,
+      isPremium: false,
+      postedAt: DateTime.now(),
+      owner: const TraderBrief(id: 'me', name: '', isVerified: false),
+    );
+    const width = 200.0;
+    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    return IgnorePointer(
+      child: SizedBox(
+        width: width,
+        height: width + ListingCardTile.textBlockHeight(scale),
+        child: ListingCardTile(listing: card, onTap: () {}),
+      ),
+    );
+  }
+}
+
+/// Four labelled steps instead of a bare progress line: where you are, what
+/// is done (a tick) and what is left. Finished steps can be tapped to go back.
+class _StepIndicator extends StatelessWidget {
+  const _StepIndicator({
+    required this.labels,
+    required this.current,
+    required this.onTap,
+  });
+
+  final List<String> labels;
+  final int current;
+  final ValueChanged<int>? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.x4, 0, Gap.x4, Gap.x3),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: i < current,
+                selected: i == current,
+                label: '${i + 1}/${labels.length} ${labels[i]}',
+                excludeSemantics: true,
+                child: InkWell(
+                  onTap: onTap == null || i >= current ? null : () => onTap!(i),
+                  borderRadius: Radii.rXs,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AnimatedContainer(
+                          duration: Motion.standard.durationOf(context),
+                          curve: Motion.standard.curve,
+                          height: 4,
+                          decoration: ShapeDecoration(
+                            color: i <= current
+                                ? p.give
+                                : theme.colorScheme.surfaceContainerHighest,
+                            shape: const StadiumBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            if (i < current) ...[
+                              Icon(
+                                Symbols.check_rounded,
+                                size: 14,
+                                color: p.give,
+                              ),
+                              const SizedBox(width: 2),
+                            ],
+                            Flexible(
+                              child: Text(
+                                labels[i],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: i == current
+                                      ? theme.colorScheme.onSurface
+                                      : p.inkSoft,
+                                  fontWeight: i == current
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Trilingual {
