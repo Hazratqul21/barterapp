@@ -73,6 +73,18 @@ void main() {
       expect(back.toJson(), draft.toJson());
     });
 
+    test('keeps the chosen region and district', () {
+      final draft = ListingDraft(
+        savedAt: DateTime.now(),
+        region: 'Buxoro',
+        district: 'G‘ijduvon',
+      );
+      expect(draft.isEmpty, isFalse);
+      final back = ListingDraft.fromJson(draft.toJson())!;
+      expect(back.region, 'Buxoro');
+      expect(back.district, 'G‘ijduvon');
+    });
+
     test('rejects data it did not write', () {
       expect(ListingDraft.fromJson('nope'), isNull);
       expect(ListingDraft.fromJson(<String, dynamic>{'step': 1}), isNull);

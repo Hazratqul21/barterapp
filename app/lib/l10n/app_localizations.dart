@@ -2270,6 +2270,18 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Tasdiqlangan savdogar'**
   String get matchReasonVerified;
+
+  /// No description provided for @createFieldDistrict.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tuman (ixtiyoriy)'**
+  String get createFieldDistrict;
+
+  /// No description provided for @specRegion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Joylashuvi'**
+  String get specRegion;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

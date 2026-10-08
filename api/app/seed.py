@@ -591,6 +591,8 @@ async def run() -> None:
                 is_premium=spec["premium"],
                 latitude=coords_of[spec["owner"]][0],
                 longitude=coords_of[spec["owner"]][1],
+                region=users[spec["owner"]].region,
+                district=users[spec["owner"]].district,
                 created_at=NOW - timedelta(days=spec["days_ago"]),
             )
             db.add(listing)

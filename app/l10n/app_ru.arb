@@ -361,5 +361,7 @@
   "matchReasonNamedCategory": "Нужная вам категория",
   "matchReasonValueClose": "Близкая стоимость",
   "matchReasonNearby": "Рядом",
-  "matchReasonVerified": "Проверенный продавец"
+  "matchReasonVerified": "Проверенный продавец",
+  "createFieldDistrict": "Район (необязательно)",
+  "specRegion": "Местоположение"
 }

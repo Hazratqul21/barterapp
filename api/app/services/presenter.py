@@ -68,6 +68,8 @@ def listing_card(
         is_premium=listing.is_premium,
         posted_at=listing.created_at,
         owner=owner,
+        region=listing.region,
+        district=listing.district,
         is_favorite=is_favorite,
     )
 

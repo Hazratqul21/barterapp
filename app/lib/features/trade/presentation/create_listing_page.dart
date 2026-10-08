@@ -14,6 +14,7 @@ import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
+import '../../auth/data/auth_repository.dart' show regionsProvider;
 import '../data/listing_draft.dart';
 import '../data/trade_repository.dart';
 
@@ -43,6 +44,11 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   final _wants = _Trilingual();
   final _value = TextEditingController();
   ListingTag? _wantTag;
+
+  /// Where the goods are. Null sends nothing and the server uses the owner's
+  /// region — the common case, one less question.
+  String? _region;
+  final _district = TextEditingController();
   bool _cashOk = false;
   bool _wantsCash = false;
 
@@ -91,6 +97,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
       _value.text = (lst.value.minor ~/ 100).toString();
       _cashOk = lst.cashOk;
+      _region = lst.region;
+      _district.text = lst.district ?? '';
       return;
     }
 
@@ -100,6 +108,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       }
     }
     _value.addListener(_changed);
+    _district.addListener(_changed);
 
     final draft = _drafts.load();
     if (draft != null) {
@@ -117,6 +126,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       f.dispose();
     }
     _value.dispose();
+    _district.dispose();
     super.dispose();
   }
 
@@ -142,6 +152,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     wantTag: _wantTag?.name,
     cashOk: _cashOk,
     wantsCash: _wantsCash,
+    region: _region,
+    district: _district.text,
   );
 
   Future<void> _offerDraft(ListingDraft draft) async {
@@ -189,6 +201,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       }
       _value.text = usable.value;
       _cashOk = usable.cashOk;
+      _region = usable.region;
+      _district.text = usable.district;
       _wantsCash = usable.wantsCash;
       _step = usable.step.clamp(0, _steps - 1);
       // Never land past a step whose requirements are no longer met (the
@@ -304,6 +318,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         'photos': [for (final slot in _photos) slot.url!],
         'value': {'minor': _valueSom * 100, 'currency': 'UZS'},
         'cash_ok': _cashOk,
+        'region': ?_region,
+        if (_district.text.trim().isNotEmpty) 'district': _district.text.trim(),
       };
 
       if (widget.listingToEdit != null) {
@@ -572,6 +588,38 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     _TrilingualField(label: l.createFieldCondition, field: _condition),
     Gap.h4,
     _TrilingualField(label: l.createFieldQuantity, field: _quantity),
+    Gap.h4,
+    // Where the goods are: per listing, so a trader with stock in two regions
+    // can list both, and moving house does not move old listings.
+    ref
+        .watch(regionsProvider)
+        .maybeWhen(
+          data: (regions) => DropdownButtonFormField<String?>(
+            initialValue: regions.contains(_region) ? _region : null,
+            decoration: InputDecoration(
+              labelText: l.filterRegion,
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+            ),
+            items: [
+              for (final r in regions)
+                DropdownMenuItem(value: r, child: Text(r)),
+            ],
+            onChanged: (v) => _edit(() => _region = v),
+          ),
+          orElse: () => const SizedBox.shrink(),
+        ),
+    Gap.h3,
+    TextField(
+      controller: _district,
+      maxLength: 120,
+      decoration: InputDecoration(
+        labelText: l.createFieldDistrict,
+        counterText: '',
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      ),
+    ),
   ];
 
   List<Widget> _takeStep(L l) => [
