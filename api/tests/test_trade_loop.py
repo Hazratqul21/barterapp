@@ -83,7 +83,10 @@ with httpx.Client(base_url=BASE, timeout=20) as c:
     check("opening a thread clears its unread badge", row["unread"] == 0)
 
     # --- complete, which closes both listings -------------------------------
-    done = c.patch(f"/offers/{offer['id']}", headers=H_J, json={"action": "complete"}).json()
+    # F02: each side confirms; one tap alone no longer closes the deal.
+    half = c.patch(f"/offers/{offer['id']}", headers=H_J, json={"action": "complete"}).json()
+    check("one confirmation keeps it open", half["status"] == "accepted")
+    done = c.patch(f"/offers/{offer['id']}", headers=H_B, json={"action": "confirm"}).json()
     check("deal completed", done["status"] == "completed")
 
     after = c.get("/listings", headers=H_J).json()["items"]

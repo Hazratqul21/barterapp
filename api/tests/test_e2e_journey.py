@@ -299,7 +299,12 @@ with httpx.Client(base_url=BASE, timeout=40) as c:
     check("taklif qabul qilindi", r.status_code == 200, r.text[:150])
     check("holat accepted", r.json()["status"] == "accepted")
 
-    r = c.patch(f"/offers/{offer}", headers=auth(farmer), json={"action": "complete"})
+    check("narsalar band qilindi", r.json()["reserved_until"] is not None)
+
+    # F02: har bir tomon o'zi tasdiqlaydi; bittasi yolg'iz yakunlay olmaydi.
+    r = c.patch(f"/offers/{offer}", headers=auth(farmer), json={"action": "confirm"})
+    check("fermer tasdiqladi — hali yakunlanmagan", r.json()["status"] == "accepted")
+    r = c.patch(f"/offers/{offer}", headers=auth(shop), json={"action": "confirm"})
     check("savdo yakunlandi", r.status_code == 200, r.text[:150])
     check("holat completed", r.json()["status"] == "completed")
 

@@ -370,5 +370,22 @@
   "inboxUndo": "Отменить",
   "inboxUnarchive": "Вернуть из архива",
   "inboxArchivedEmpty": "Архив пуст",
-  "inboxArchivedHint": "Если в архивный чат придёт новое сообщение, он сам вернётся во входящие."
+  "inboxArchivedHint": "Если в архивный чат придёт новое сообщение, он сам вернётся во входящие.",
+  "dealConfirm": "Передал и получил",
+  "dealProblem": "Есть проблема",
+  "dealDisputed": "Спор",
+  "dealCancelled": "Отменено",
+  "dealDisputedOperator": "Открыт спор — его рассматривает оператор. Вещи остаются забронированы.",
+  "dealCancelledInfo": "Сделка отменена — вещи снова в продаже.",
+  "dealResolvedComplete": "Спор решён: сделка в силе.",
+  "disputeTitle": "Что случилось?",
+  "disputeNoShow": "Вторая сторона не пришла",
+  "disputeNotReceived": "Я отдал, но не получил",
+  "disputeNotAsDescribed": "Вещь не соответствует описанию",
+  "disputeOther": "Другая причина",
+  "disputeNote": "Комментарий (необязательно)",
+  "disputeSend": "Открыть спор",
+  "disputeHint": "Небольшие сделки решаются по правилу сразу, крупные — оператором.",
+  "dealReservedUntil": "Вещи забронированы до {date}",
+  "dealWaitingPeer": "Вы подтвердили. Ждём подтверждения от {name}."
 }

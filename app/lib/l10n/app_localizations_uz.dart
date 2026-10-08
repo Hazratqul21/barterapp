@@ -1185,4 +1185,62 @@ class LUz extends L {
   @override
   String get inboxArchivedHint =>
       'Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi.';
+
+  @override
+  String get dealConfirm => 'Topshirdim va oldim';
+
+  @override
+  String get dealProblem => 'Muammo bor';
+
+  @override
+  String get dealDisputed => 'Nizoda';
+
+  @override
+  String get dealCancelled => 'Bekor qilingan';
+
+  @override
+  String get dealDisputedOperator =>
+      'Nizo ochildi — operator ko‘rib chiqmoqda. Narsalar band holda qoladi.';
+
+  @override
+  String get dealCancelledInfo =>
+      'Savdo bekor qilindi — narsalar yana sotuvda.';
+
+  @override
+  String get dealResolvedComplete => 'Nizo hal qilindi: savdo kuchda.';
+
+  @override
+  String get disputeTitle => 'Nima bo‘ldi?';
+
+  @override
+  String get disputeNoShow => 'Ikkinchi tomon kelmadi';
+
+  @override
+  String get disputeNotReceived => 'Men berdim, lekin olmadim';
+
+  @override
+  String get disputeNotAsDescribed => 'Narsa ta’rifga mos emas';
+
+  @override
+  String get disputeOther => 'Boshqa sabab';
+
+  @override
+  String get disputeNote => 'Izoh (ixtiyoriy)';
+
+  @override
+  String get disputeSend => 'Nizo ochish';
+
+  @override
+  String get disputeHint =>
+      'Kichik savdolar qoida bo‘yicha darhol hal bo‘ladi, kattalari operatorga o‘tadi.';
+
+  @override
+  String dealReservedUntil(String date) {
+    return 'Narsalar $date gacha band';
+  }
+
+  @override
+  String dealWaitingPeer(String name) {
+    return 'Siz tasdiqladingiz. $name tasdig‘i kutilmoqda.';
+  }
 }
