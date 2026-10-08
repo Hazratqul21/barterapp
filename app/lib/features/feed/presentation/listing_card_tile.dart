@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/art/category_marks.dart';
+import '../../../core/theme/motion.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -53,10 +54,15 @@ class ListingCardTile extends StatelessWidget {
     super.key,
     required this.listing,
     required this.onTap,
+    this.onFavorite,
   });
 
   final ListingCard listing;
   final VoidCallback onTap;
+
+  /// Shows the heart for saving without opening the listing. Null hides it
+  /// (the viewer's own listings, the saved list itself).
+  final VoidCallback? onFavorite;
 
   /// Everything under the photo at text scale [scale]: paddings are fixed,
   /// text lines grow.
@@ -130,20 +136,33 @@ class ListingCardTile extends StatelessWidget {
                   ),
                   if (listing.owner.isVerified)
                     Positioned(
-                      right: Gap.x2,
+                      left: Gap.x2 + 28 + Gap.x1,
                       top: Gap.x2,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
+                        width: 28,
+                        height: 28,
+                        decoration: ShapeDecoration(
                           color: colors.surfaceContainerLowest,
-                          shape: BoxShape.circle,
+                          shape: const RoundedSuperellipseBorder(
+                            borderRadius: Radii.rXs,
+                          ),
                         ),
+                        alignment: Alignment.center,
                         child: Icon(
                           Symbols.verified_rounded,
-                          size: 16,
+                          size: 18,
                           fill: 1,
                           color: p.give,
                         ),
+                      ),
+                    ),
+                  if (onFavorite != null)
+                    Positioned(
+                      right: Gap.x1,
+                      top: Gap.x1,
+                      child: _Heart(
+                        saved: listing.isFavorite,
+                        onTap: onFavorite!,
                       ),
                     ),
                 ],
@@ -260,6 +279,56 @@ class SwapChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Save without leaving the feed. A 48px target around a small glyph, and a
+/// short spring pop when it fills in.
+class _Heart extends StatelessWidget {
+  const _Heart({required this.saved, required this.onTap});
+
+  final bool saved;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      toggled: saved,
+      label: saved ? l.listingSaved : l.listingSave,
+      excludeSemantics: true,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 24,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerLowest.withValues(alpha: 0.92),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: AnimatedScale(
+                scale: saved ? 1 : 0.9,
+                duration: Motion.bouncy.durationOf(context),
+                curve: Motion.bouncy.curve,
+                child: Icon(
+                  Symbols.favorite_rounded,
+                  size: 18,
+                  fill: saved ? 1 : 0,
+                  color: saved ? colors.error : colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -227,6 +227,23 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     return FeedState(items: page.items, cursor: page.nextCursor);
   }
 
+  /// Flip one card's heart in place — no reload, no scroll jump.
+  void setFavorite(String id, bool value) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(
+      FeedState(
+        items: [
+          for (final item in current.items)
+            item.id == id ? item.withFavorite(value) : item,
+        ],
+        cursor: current.cursor,
+        loadingMore: current.loadingMore,
+        loadMoreError: current.loadMoreError,
+      ),
+    );
+  }
+
   Future<void> loadMore({bool retry = false}) async {
     final current = state.value;
     if (state.isLoading ||

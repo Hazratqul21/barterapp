@@ -153,6 +153,88 @@ void main() {
     },
   );
 
+  testWidgets('active filters show as chips and drop in one tap', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 844);
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        apiClientProvider.overrideWithValue(RecordingApi()),
+        regionsProvider.overrideWith((ref) async => ['Farg‘ona']),
+        listingRepositoryProvider.overrideWithValue(Repository()),
+      ],
+    );
+    container
+        .read(feedQueryProvider.notifier)
+        .setFilters(region: 'Farg‘ona', minPrice: 100000, sortBy: 'cheap');
+    final router = buildRouter()..go('/home');
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          locale: const Locale('uz'),
+          supportedLocales: L.supportedLocales,
+          localizationsDelegates: const [
+            L.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(InputChip), findsNWidgets(3));
+    expect(find.widgetWithText(InputChip, 'Farg‘ona'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InputChip, 'Farg‘ona'),
+        matching: find.byTooltip('Tozalash'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final query = container.read(feedQueryProvider);
+    expect(query.region, isNull);
+    expect(query.minPrice, 100000);
+    expect(query.sortBy, 'cheap');
+    expect(find.byType(InputChip), findsNWidgets(2));
+
+    // Unmount, dispose the container (its providers own timers), and let
+    // anything left run out before the binding checks for pending timers.
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+    await tester.pump(const Duration(seconds: 31));
+  });
+
+  test('a heart tap flips one card in place, keeping the page', () async {
+    final repo = Repository()
+      ..handler = (_, _) async =>
+          models.Page(items: [item('a'), item('b')], nextCursor: 'more');
+    final container = ProviderContainer(
+      overrides: [listingRepositoryProvider.overrideWithValue(repo)],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(feedProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(feedProvider.future);
+
+    container.read(feedProvider.notifier).setFavorite('b', true);
+    final state = container.read(feedProvider).requireValue;
+    expect(state.items.map((i) => i.isFavorite), [false, true]);
+    expect(state.cursor, 'more');
+    expect(state.items.last.title, item('b').title);
+  });
+
   test('pagination failure preserves rows and allows explicit retry', () async {
     final repo = Repository();
     var fail = true;

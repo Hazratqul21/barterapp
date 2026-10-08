@@ -15,6 +15,10 @@ import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
 import '../../../core/theme/haptics.dart';
+import '../../../core/theme/motion.dart';
+import '../../../shared/models/models.dart';
+import '../../profile/presentation/favorites_page.dart' show favoritesProvider;
+import '../../trade/data/trade_repository.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -27,6 +31,10 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   final _scrollController = ScrollController();
   Timer? _debounce;
   final _seen = <String>{};
+
+  /// The brand row (logo, region, bell) folds away once the list scrolls,
+  /// leaving only the search bar — more listings on screen while browsing.
+  bool _collapsed = false;
 
   @override
   void initState() {
@@ -45,6 +53,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
+    final collapsed = _scrollController.position.pixels > 24;
+    if (collapsed != _collapsed) setState(() => _collapsed = collapsed);
     if (_scrollController.position.extentAfter < 600) {
       ref.read(feedProvider.notifier).loadMore();
     }
@@ -80,6 +90,29 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     builder: (_) => const _FilterSheet(),
   );
 
+  Future<void> _toggleFavorite(ListingCard listing) async {
+    if (!ref.read(authStateProvider)) {
+      context.push('/signin');
+      return;
+    }
+    final saving = !listing.isFavorite;
+    final notifier = ref.read(feedProvider.notifier);
+    Haptics.light();
+    notifier.setFavorite(listing.id, saving);
+    try {
+      await ref
+          .read(tradeRepositoryProvider)
+          .toggleFavorite(listing.id, saving);
+      ref.invalidate(favoritesProvider);
+    } catch (error) {
+      notifier.setFavorite(listing.id, !saving);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage(context, error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -99,35 +132,47 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          const BrandMark(size: 32),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: _filters,
-                                icon: const Icon(
-                                  Symbols.location_on_rounded,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  query.region ?? l.feedRegionAny,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                      AnimatedSize(
+                        duration: Motion.standard.durationOf(context),
+                        curve: Motion.standard.curve,
+                        alignment: Alignment.topCenter,
+                        child: _collapsed
+                            ? const SizedBox(width: double.infinity)
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    const BrandMark(size: 32),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: TextButton.icon(
+                                          onPressed: _filters,
+                                          icon: const Icon(
+                                            Symbols.location_on_rounded,
+                                            size: 18,
+                                          ),
+                                          label: Text(
+                                            query.region ?? l.feedRegionAny,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: l.feedNotifications,
+                                      onPressed: () =>
+                                          context.push('/notifications'),
+                                      icon: const Icon(
+                                        Symbols.notifications_rounded,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: l.feedNotifications,
-                            onPressed: () => context.push('/notifications'),
-                            icon: const Icon(Symbols.notifications_rounded),
-                          ),
-                        ],
                       ),
-                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -169,6 +214,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                               ),
                             ),
                           ),
+                          if (_collapsed)
+                            IconButton(
+                              tooltip: l.feedNotifications,
+                              onPressed: () => context.push('/notifications'),
+                              icon: const Icon(Symbols.notifications_rounded),
+                            ),
                           const SizedBox(width: 10),
                           Badge(
                             isLabelVisible: query.isNarrowed,
@@ -242,6 +293,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                             ),
                           ),
                         ),
+                        SliverToBoxAdapter(child: _ActiveFilters(query: query)),
                         ...switch (feed) {
                           AsyncLoading() => [
                             const SliverToBoxAdapter(child: FeedShimmer()),
@@ -295,6 +347,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                                       }
                                       return ListingCardTile(
                                         listing: listing,
+                                        onFavorite: () =>
+                                            _toggleFavorite(listing),
                                         onTap: () => context.push(
                                           '/listing/${listing.id}',
                                         ),
@@ -650,6 +704,90 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The filters from the sheet, shown as removable chips above the results.
+///
+/// A badge on the filter button said "something is set" but not what, so an
+/// empty result looked like an empty market. Each chip names one constraint
+/// and drops it in one tap.
+class _ActiveFilters extends ConsumerWidget {
+  const _ActiveFilters({required this.query});
+
+  final FeedQuery query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final notifier = ref.read(feedQueryProvider.notifier);
+    String som(double v) =>
+        Money(minor: (v * 100).round(), currency: 'UZS').format(locale);
+
+    void apply({
+      bool dropRegion = false,
+      bool dropPrice = false,
+      bool dropSort = false,
+    }) {
+      Haptics.selection();
+      notifier.setFilters(
+        minPrice: dropPrice ? null : query.minPrice,
+        maxPrice: dropPrice ? null : query.maxPrice,
+        region: dropRegion ? null : query.region,
+        sortBy: dropSort ? 'new' : query.sortBy,
+      );
+    }
+
+    final chips = <(String, IconData, VoidCallback)>[
+      if (query.region != null)
+        (
+          query.region!,
+          Symbols.location_on_rounded,
+          () => apply(dropRegion: true),
+        ),
+      if (query.minPrice != null || query.maxPrice != null)
+        (
+          switch ((query.minPrice, query.maxPrice)) {
+            (final min?, final max?) => '${som(min)} – ${som(max)}',
+            (final min?, null) => '≥ ${som(min)}',
+            (null, final max?) => '≤ ${som(max)}',
+            _ => '',
+          },
+          Symbols.payments_rounded,
+          () => apply(dropPrice: true),
+        ),
+      if (query.sortBy != 'new')
+        (
+          query.sortBy == 'cheap' ? l.sortCheapest : l.sortExpensive,
+          Symbols.swap_vert_rounded,
+          () => apply(dropSort: true),
+        ),
+    ];
+
+    return AnimatedSize(
+      duration: Motion.standard.durationOf(context),
+      curve: Motion.standard.curve,
+      alignment: Alignment.topCenter,
+      child: chips.isEmpty
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Wrap(
+                spacing: Gap.x2,
+                runSpacing: Gap.x2,
+                children: [
+                  for (final (label, icon, onDelete) in chips)
+                    InputChip(
+                      avatar: Icon(icon, size: 18),
+                      label: Text(label),
+                      onDeleted: onDelete,
+                      deleteButtonTooltipMessage: l.clear,
+                    ),
+                ],
+              ),
+            ),
     );
   }
 }

@@ -125,6 +125,24 @@ class ListingCard {
   final DateTime postedAt;
   final TraderBrief owner;
 
+  /// The same card with the viewer's saved state changed — for an optimistic
+  /// heart tap, before the server confirms.
+  ListingCard withFavorite(bool value) => ListingCard(
+    id: id,
+    tag: tag,
+    title: title,
+    imageUrl: imageUrl,
+    imageAlt: imageAlt,
+    wantsSummary: wantsSummary,
+    value: this.value,
+    distanceKm: distanceKm,
+    cashOk: cashOk,
+    isPremium: isPremium,
+    isFavorite: value,
+    postedAt: postedAt,
+    owner: owner,
+  );
+
   factory ListingCard.fromJson(Map<String, dynamic> json) => ListingCard(
     id: json['id'] as String,
     tag: ListingTag.parse(json['tag'] as String),
