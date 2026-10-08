@@ -388,5 +388,9 @@
   "disputeSend": "Open dispute",
   "disputeHint": "Small deals are settled by a rule right away; larger ones go to an operator.",
   "dealReservedUntil": "Items reserved until {date}",
-  "dealWaitingPeer": "You confirmed. Waiting for {name}."
+  "dealWaitingPeer": "You confirmed. Waiting for {name}.",
+  "listingShare": "Share",
+  "listingGoneTitle": "This listing is no longer available",
+  "listingGoneHint": "The owner removed it or the trade is done. The feed has similar ones.",
+  "listingGoneBack": "Back to the feed"
 }

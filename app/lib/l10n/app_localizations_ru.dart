@@ -1239,4 +1239,17 @@ class LRu extends L {
   String dealWaitingPeer(String name) {
     return 'Вы подтвердили. Ждём подтверждения от $name.';
   }
+
+  @override
+  String get listingShare => 'Поделиться';
+
+  @override
+  String get listingGoneTitle => 'Объявление больше недоступно';
+
+  @override
+  String get listingGoneHint =>
+      'Владелец удалил его или обмен завершён. В ленте есть похожие.';
+
+  @override
+  String get listingGoneBack => 'Вернуться в ленту';
 }

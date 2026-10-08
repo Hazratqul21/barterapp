@@ -2426,6 +2426,30 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Siz tasdiqladingiz. {name} tasdig‘i kutilmoqda.'**
   String dealWaitingPeer(String name);
+
+  /// No description provided for @listingShare.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ulashish'**
+  String get listingShare;
+
+  /// No description provided for @listingGoneTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon endi mavjud emas'**
+  String get listingGoneTitle;
+
+  /// No description provided for @listingGoneHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Egasi uni o‘chirgan yoki savdo yakunlangan. Lentada shunga o‘xshashlari bor.'**
+  String get listingGoneHint;
+
+  /// No description provided for @listingGoneBack.
+  ///
+  /// In uz, this message translates to:
+  /// **'Lentaga qaytish'**
+  String get listingGoneBack;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

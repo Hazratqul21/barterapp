@@ -17,6 +17,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../feed/presentation/listing_card_tile.dart'
     show PriceText, SwapChip;
 import 'photo_viewer.dart';
+import '../../../core/share/listing_link.dart';
 
 class ListingDetailPage extends ConsumerStatefulWidget {
   const ListingDetailPage({super.key, required this.listingId});
@@ -144,16 +145,29 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
     return Scaffold(
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: ErrorState(
-            message: error is ApiException && error.isNetworkFailure
-                ? l.errorNetwork
-                : l.errorGeneric,
-            retryLabel: l.retry,
-            onRetry: () =>
-                ref.invalidate(listingDetailProvider(widget.listingId)),
-          ),
-        ),
+        // A shared link outlives its listing: deleted, archived or traded.
+        // Say so plainly instead of "something went wrong" and a retry that
+        // can never work.
+        error: (error, _) => error is ApiException && error.statusCode == 404
+            ? Center(
+                child: EmptyState(
+                  icon: Symbols.link_off_rounded,
+                  title: l.listingGoneTitle,
+                  hint: l.listingGoneHint,
+                  actionLabel: l.listingGoneBack,
+                  onAction: () => context.go('/home'),
+                ),
+              )
+            : Center(
+                child: ErrorState(
+                  message: error is ApiException && error.isNetworkFailure
+                      ? l.errorNetwork
+                      : l.errorGeneric,
+                  retryLabel: l.retry,
+                  onRetry: () =>
+                      ref.invalidate(listingDetailProvider(widget.listingId)),
+                ),
+              ),
         data: (listing) => Container(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
@@ -381,6 +395,23 @@ class _Content extends StatelessWidget {
                 color: saved ? theme.colorScheme.error : null,
                 onPressed: onToggleSave,
               ),
+            Builder(
+              builder: (buttonContext) => _OverPhotoButton(
+                tooltip: l.listingShare,
+                icon: Symbols.ios_share_rounded,
+                onPressed: () {
+                  Haptics.light();
+                  final box = buttonContext.findRenderObject() as RenderBox?;
+                  shareListing(
+                    context,
+                    listing,
+                    origin: box == null
+                        ? null
+                        : box.localToGlobal(Offset.zero) & box.size,
+                  );
+                },
+              ),
+            ),
             Gap.w2,
             PopupMenuButton<String>(
               onSelected: (value) => switch (value) {

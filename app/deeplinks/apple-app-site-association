@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["__APPLE_TEAM_ID__.uz.barterapp.barterApp"],
+        "components": [{ "/": "/l/*", "comment": "Shared listing links" }]
+      }
+    ]
+  }
+}

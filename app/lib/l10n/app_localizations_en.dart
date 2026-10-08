@@ -1239,4 +1239,17 @@ class LEn extends L {
   String dealWaitingPeer(String name) {
     return 'You confirmed. Waiting for $name.';
   }
+
+  @override
+  String get listingShare => 'Share';
+
+  @override
+  String get listingGoneTitle => 'This listing is no longer available';
+
+  @override
+  String get listingGoneHint =>
+      'The owner removed it or the trade is done. The feed has similar ones.';
+
+  @override
+  String get listingGoneBack => 'Back to the feed';
 }
