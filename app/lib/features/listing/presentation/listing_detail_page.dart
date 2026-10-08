@@ -541,6 +541,8 @@ class _Content extends StatelessWidget {
                         _SpecRow(l.specCategory, listing.category),
                         _SpecRow(l.specCondition, listing.condition),
                         _SpecRow(l.specQuantity, listing.quantity),
+                        if (listing.place != null)
+                          _SpecRow(l.specRegion, listing.place!),
                         _SpecRow(
                           l.specPosted,
                           formatDate(context, listing.postedAt),

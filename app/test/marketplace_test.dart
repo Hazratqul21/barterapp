@@ -224,6 +224,26 @@ void main() {
     await tester.pump(const Duration(seconds: 31));
   });
 
+  test('a listing carries its own place; the heart keeps it', () {
+    final card = models.ListingCard.fromJson({
+      'id': 'p',
+      'tag': 'electronics',
+      'title': 'T',
+      'image_alt': 'T',
+      'wants_summary': 'x',
+      'value': {'minor': 100, 'currency': 'UZS'},
+      'cash_ok': true,
+      'is_premium': false,
+      'posted_at': '2026-10-06T09:00:00Z',
+      'owner': {'id': 'o', 'name': 'O', 'is_verified': false},
+      'region': 'Buxoro',
+      'district': 'G‘ijduvon',
+    });
+    expect(card.place, 'Buxoro, G‘ijduvon');
+    expect(card.withFavorite(true).place, 'Buxoro, G‘ijduvon');
+    expect(item('n').place, isNull);
+  });
+
   test('a heart tap flips one card in place, keeping the page', () async {
     final repo = Repository()
       ..handler = (_, _) async =>

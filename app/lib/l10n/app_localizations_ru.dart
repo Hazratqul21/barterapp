@@ -1156,6 +1156,91 @@ class LRu extends L {
   String get matchReasonVerified => 'Проверенный продавец';
 
   @override
+  String get createFieldDistrict => 'Район (необязательно)';
+
+  @override
+  String get specRegion => 'Местоположение';
+
+  @override
+  String get inboxArchive => 'В архив';
+
+  @override
+  String get inboxArchived => 'Архив';
+
+  @override
+  String get inboxArchivedDone => 'Чат перенесён в архив';
+
+  @override
+  String get inboxUndo => 'Отменить';
+
+  @override
+  String get inboxUnarchive => 'Вернуть из архива';
+
+  @override
+  String get inboxArchivedEmpty => 'Архив пуст';
+
+  @override
+  String get inboxArchivedHint =>
+      'Если в архивный чат придёт новое сообщение, он сам вернётся во входящие.';
+
+  @override
+  String get dealConfirm => 'Передал и получил';
+
+  @override
+  String get dealProblem => 'Есть проблема';
+
+  @override
+  String get dealDisputed => 'Спор';
+
+  @override
+  String get dealCancelled => 'Отменено';
+
+  @override
+  String get dealDisputedOperator =>
+      'Открыт спор — его рассматривает оператор. Вещи остаются забронированы.';
+
+  @override
+  String get dealCancelledInfo => 'Сделка отменена — вещи снова в продаже.';
+
+  @override
+  String get dealResolvedComplete => 'Спор решён: сделка в силе.';
+
+  @override
+  String get disputeTitle => 'Что случилось?';
+
+  @override
+  String get disputeNoShow => 'Вторая сторона не пришла';
+
+  @override
+  String get disputeNotReceived => 'Я отдал, но не получил';
+
+  @override
+  String get disputeNotAsDescribed => 'Вещь не соответствует описанию';
+
+  @override
+  String get disputeOther => 'Другая причина';
+
+  @override
+  String get disputeNote => 'Комментарий (необязательно)';
+
+  @override
+  String get disputeSend => 'Открыть спор';
+
+  @override
+  String get disputeHint =>
+      'Небольшие сделки решаются по правилу сразу, крупные — оператором.';
+
+  @override
+  String dealReservedUntil(String date) {
+    return 'Вещи забронированы до $date';
+  }
+
+  @override
+  String dealWaitingPeer(String name) {
+    return 'Вы подтвердили. Ждём подтверждения от $name.';
+  }
+
+  @override
   String get listingShare => 'Поделиться';
 
   @override

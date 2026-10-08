@@ -2271,6 +2271,162 @@ abstract class L {
   /// **'Tasdiqlangan savdogar'**
   String get matchReasonVerified;
 
+  /// No description provided for @createFieldDistrict.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tuman (ixtiyoriy)'**
+  String get createFieldDistrict;
+
+  /// No description provided for @specRegion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Joylashuvi'**
+  String get specRegion;
+
+  /// No description provided for @inboxArchive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivlash'**
+  String get inboxArchive;
+
+  /// No description provided for @inboxArchived.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxiv'**
+  String get inboxArchived;
+
+  /// No description provided for @inboxArchivedDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suhbat arxivlandi'**
+  String get inboxArchivedDone;
+
+  /// No description provided for @inboxUndo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get inboxUndo;
+
+  /// No description provided for @inboxUnarchive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivdan chiqarish'**
+  String get inboxUnarchive;
+
+  /// No description provided for @inboxArchivedEmpty.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxiv bo‘sh'**
+  String get inboxArchivedEmpty;
+
+  /// No description provided for @inboxArchivedHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi.'**
+  String get inboxArchivedHint;
+
+  /// No description provided for @dealConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Topshirdim va oldim'**
+  String get dealConfirm;
+
+  /// No description provided for @dealProblem.
+  ///
+  /// In uz, this message translates to:
+  /// **'Muammo bor'**
+  String get dealProblem;
+
+  /// No description provided for @dealDisputed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nizoda'**
+  String get dealDisputed;
+
+  /// No description provided for @dealCancelled.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilingan'**
+  String get dealCancelled;
+
+  /// No description provided for @dealDisputedOperator.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nizo ochildi — operator ko‘rib chiqmoqda. Narsalar band holda qoladi.'**
+  String get dealDisputedOperator;
+
+  /// No description provided for @dealCancelledInfo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Savdo bekor qilindi — narsalar yana sotuvda.'**
+  String get dealCancelledInfo;
+
+  /// No description provided for @dealResolvedComplete.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nizo hal qilindi: savdo kuchda.'**
+  String get dealResolvedComplete;
+
+  /// No description provided for @disputeTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima bo‘ldi?'**
+  String get disputeTitle;
+
+  /// No description provided for @disputeNoShow.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ikkinchi tomon kelmadi'**
+  String get disputeNoShow;
+
+  /// No description provided for @disputeNotReceived.
+  ///
+  /// In uz, this message translates to:
+  /// **'Men berdim, lekin olmadim'**
+  String get disputeNotReceived;
+
+  /// No description provided for @disputeNotAsDescribed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Narsa ta’rifga mos emas'**
+  String get disputeNotAsDescribed;
+
+  /// No description provided for @disputeOther.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshqa sabab'**
+  String get disputeOther;
+
+  /// No description provided for @disputeNote.
+  ///
+  /// In uz, this message translates to:
+  /// **'Izoh (ixtiyoriy)'**
+  String get disputeNote;
+
+  /// No description provided for @disputeSend.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nizo ochish'**
+  String get disputeSend;
+
+  /// No description provided for @disputeHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kichik savdolar qoida bo‘yicha darhol hal bo‘ladi, kattalari operatorga o‘tadi.'**
+  String get disputeHint;
+
+  /// No description provided for @dealReservedUntil.
+  ///
+  /// In uz, this message translates to:
+  /// **'Narsalar {date} gacha band'**
+  String dealReservedUntil(String date);
+
+  /// No description provided for @dealWaitingPeer.
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz tasdiqladingiz. {name} tasdig‘i kutilmoqda.'**
+  String dealWaitingPeer(String name);
+
   /// No description provided for @listingShare.
   ///
   /// In uz, this message translates to:

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from app.models.agreement import DisputeReason, DisputeResolution, DisputeStatus
 from app.models.offer import OfferStatus
 from app.models.social import NotifyKind, NotifyTargetType, VerificationState
 from app.schemas.common import ApiModel, Money
@@ -25,9 +26,29 @@ class OfferCreate(ApiModel):
 class OfferAction(ApiModel):
     """One verb per request; the server owns which transitions are legal."""
 
-    action: str = Field(pattern="^(accept|decline|counter|complete|dispute)$")
+    #: `confirm` is one side's "handed over / received"; the deal completes
+    #: when both have confirmed. `complete` is the old name for the same
+    #: step, kept for older apps — it can no longer finish a deal alone.
+    action: str = Field(
+        pattern="^(accept|decline|counter|confirm|complete|dispute)$"
+    )
     cash_delta_minor: int | None = None
     message: str | None = Field(default=None, max_length=1000)
+    #: Required with `dispute`.
+    dispute_reason: DisputeReason | None = None
+    dispute_note: str | None = Field(default=None, max_length=1000)
+
+
+class DisputeOut(ApiModel):
+    id: uuid.UUID
+    reason: DisputeReason
+    status: DisputeStatus
+    resolution: DisputeResolution | None = None
+    #: "auto_cancel:no_show", "over_limit", "operator", …
+    decided_by_rule: str | None = None
+    opened_by_me: bool
+    created_at: datetime
+    resolved_at: datetime | None = None
 
 
 class OfferOut(ApiModel):
@@ -43,6 +64,12 @@ class OfferOut(ApiModel):
     wanted: ListingCard
     offered: list[ListingCard] = Field(default_factory=list)
     conversation_id: uuid.UUID | None = None
+    #: F02 — after accept: goods are held until this moment (null while a
+    #: dispute pauses the clock), and each side's confirmation.
+    reserved_until: datetime | None = None
+    confirmed_by_me: bool = False
+    confirmed_by_peer: bool = False
+    dispute: DisputeOut | None = None
 
 
 class MessageOut(ApiModel):
@@ -75,6 +102,8 @@ class ConversationSummary(ApiModel):
     #: The top-up that goes with the deal, so the row can render it in the
     #: reader's language rather than receiving it pre-formatted.
     cash: Money
+    #: Hidden from my inbox until a new message arrives.
+    archived: bool = False
     last_message: str | None = None
     last_message_at: datetime | None = None
     unread: int = 0

@@ -1155,6 +1155,92 @@ class LEn extends L {
   String get matchReasonVerified => 'Verified trader';
 
   @override
+  String get createFieldDistrict => 'District (optional)';
+
+  @override
+  String get specRegion => 'Location';
+
+  @override
+  String get inboxArchive => 'Archive';
+
+  @override
+  String get inboxArchived => 'Archived';
+
+  @override
+  String get inboxArchivedDone => 'Chat archived';
+
+  @override
+  String get inboxUndo => 'Undo';
+
+  @override
+  String get inboxUnarchive => 'Unarchive';
+
+  @override
+  String get inboxArchivedEmpty => 'No archived chats';
+
+  @override
+  String get inboxArchivedHint =>
+      'A new message in an archived chat brings it back to the inbox.';
+
+  @override
+  String get dealConfirm => 'Handed over & received';
+
+  @override
+  String get dealProblem => 'Something’s wrong';
+
+  @override
+  String get dealDisputed => 'Disputed';
+
+  @override
+  String get dealCancelled => 'Cancelled';
+
+  @override
+  String get dealDisputedOperator =>
+      'Dispute opened — an operator is reviewing it. The items stay reserved.';
+
+  @override
+  String get dealCancelledInfo =>
+      'The deal was cancelled — the items are back on sale.';
+
+  @override
+  String get dealResolvedComplete => 'Dispute resolved: the deal stands.';
+
+  @override
+  String get disputeTitle => 'What happened?';
+
+  @override
+  String get disputeNoShow => 'The other side didn’t show up';
+
+  @override
+  String get disputeNotReceived => 'I gave mine but got nothing';
+
+  @override
+  String get disputeNotAsDescribed => 'Not as described';
+
+  @override
+  String get disputeOther => 'Something else';
+
+  @override
+  String get disputeNote => 'Note (optional)';
+
+  @override
+  String get disputeSend => 'Open dispute';
+
+  @override
+  String get disputeHint =>
+      'Small deals are settled by a rule right away; larger ones go to an operator.';
+
+  @override
+  String dealReservedUntil(String date) {
+    return 'Items reserved until $date';
+  }
+
+  @override
+  String dealWaitingPeer(String name) {
+    return 'You confirmed. Waiting for $name.';
+  }
+
+  @override
   String get listingShare => 'Share';
 
   @override

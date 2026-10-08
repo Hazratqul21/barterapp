@@ -109,6 +109,8 @@ class ListingCard {
     this.imageUrl,
     this.distanceKm,
     this.isFavorite = false,
+    this.region,
+    this.district,
   });
 
   final String id;
@@ -124,6 +126,17 @@ class ListingCard {
   final bool isPremium;
   final DateTime postedAt;
   final TraderBrief owner;
+
+  /// Where the goods are — the listing's own region, not the owner's.
+  final String? region;
+  final String? district;
+
+  /// "Buxoro, G‘ijduvon", or just the region, or null.
+  String? get place => switch ((region, district)) {
+    (final r?, final d?) when d.isNotEmpty => '$r, $d',
+    (final r?, _) => r,
+    _ => null,
+  };
 
   /// The same card with the viewer's saved state changed — for an optimistic
   /// heart tap, before the server confirms.
@@ -141,6 +154,8 @@ class ListingCard {
     isFavorite: value,
     postedAt: postedAt,
     owner: owner,
+    region: region,
+    district: district,
   );
 
   factory ListingCard.fromJson(Map<String, dynamic> json) => ListingCard(
@@ -157,6 +172,8 @@ class ListingCard {
     isFavorite: json['is_favorite'] as bool? ?? false,
     postedAt: DateTime.parse(json['posted_at'] as String),
     owner: TraderBrief.fromJson(json['owner'] as Map<String, dynamic>),
+    region: json['region'] as String?,
+    district: json['district'] as String?,
   );
 }
 
@@ -181,6 +198,8 @@ class ListingDetail extends ListingCard {
     super.imageUrl,
     super.distanceKm,
     super.isFavorite,
+    super.region,
+    super.district,
   });
 
   final String description;
@@ -206,6 +225,8 @@ class ListingDetail extends ListingCard {
       isFavorite: card.isFavorite,
       postedAt: card.postedAt,
       owner: card.owner,
+      region: card.region,
+      district: card.district,
       description: json['description'] as String,
       category: json['category'] as String,
       condition: json['condition'] as String,
@@ -338,10 +359,21 @@ class Offer {
     required this.offered,
     this.expiresAt,
     this.conversationId,
+    this.reservedUntil,
+    this.confirmedByMe = false,
+    this.confirmedByPeer = false,
+    this.dispute,
   });
 
   final String id;
   final OfferStatus status;
+
+  /// F02: after accept the goods are held until this moment (null while a
+  /// dispute pauses the clock).
+  final DateTime? reservedUntil;
+  final bool confirmedByMe;
+  final bool confirmedByPeer;
+  final OfferDispute? dispute;
   final int cashDeltaMinor;
   final String currency;
   final DateTime createdAt;
@@ -372,9 +404,47 @@ class Offer {
         .map((e) => ListingCard.fromJson(e as Map<String, dynamic>))
         .toList(),
     conversationId: json['conversation_id'] as String?,
+    reservedUntil: json['reserved_until'] == null
+        ? null
+        : DateTime.parse(json['reserved_until'] as String),
+    confirmedByMe: json['confirmed_by_me'] as bool? ?? false,
+    confirmedByPeer: json['confirmed_by_peer'] as bool? ?? false,
+    dispute: json['dispute'] == null
+        ? null
+        : OfferDispute.fromJson(json['dispute'] as Map<String, dynamic>),
   );
 
   Money get cash => Money(minor: cashDeltaMinor, currency: currency);
+}
+
+/// Why a deal was disputed, and how (or whether) it was settled.
+class OfferDispute {
+  const OfferDispute({
+    required this.reason,
+    required this.resolved,
+    required this.openedByMe,
+    this.resolution,
+    this.decidedByRule,
+  });
+
+  /// no_show · not_received · not_as_described · other
+  final String reason;
+  final bool resolved;
+  final bool openedByMe;
+
+  /// cancel · complete, once resolved.
+  final String? resolution;
+
+  /// "auto_cancel:no_show", "over_limit", "operator", …
+  final String? decidedByRule;
+
+  factory OfferDispute.fromJson(Map<String, dynamic> json) => OfferDispute(
+    reason: json['reason'] as String,
+    resolved: json['status'] == 'resolved',
+    openedByMe: json['opened_by_me'] as bool? ?? false,
+    resolution: json['resolution'] as String?,
+    decidedByRule: json['decided_by_rule'] as String?,
+  );
 }
 
 class ChatMessage {
@@ -417,11 +487,15 @@ class ConversationSummary {
     this.lastMessage,
     this.lastMessageAt,
     this.unread = 0,
+    this.archived = false,
   });
 
   final String id;
   final TraderBrief peer;
   final String offerId;
+
+  /// Put aside by me; comes back on its own when a new message arrives.
+  final bool archived;
   final OfferStatus offerStatus;
 
   /// Titles joined with a middle dot, for anywhere that needs one string.
@@ -450,6 +524,7 @@ class ConversationSummary {
         gives: json['gives'] as String? ?? '',
         receives: json['receives'] as String? ?? '',
         cash: Money.fromJson(json['cash'] as Map<String, dynamic>),
+        archived: json['archived'] as bool? ?? false,
         lastMessage: json['last_message'] as String?,
         lastMessageAt: json['last_message_at'] == null
             ? null

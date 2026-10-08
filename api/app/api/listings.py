@@ -39,6 +39,7 @@ from app.models.event import EventKind
 from app.services import events
 from app.services import moderation
 from app.services import stats
+from app.core.regions import canonical_region, coordinates_for
 from app.services.matching import haversine_km, rebuild_matches
 from app.services.presenter import listing_card, listing_detail, trader_brief
 
@@ -56,6 +57,16 @@ class FeedSort(str, enum.Enum):
     new = "new"
     cheap = "cheap"
     expensive = "expensive"
+
+
+def _region_or_422(value: str) -> str:
+    """The canonical region name, or a 422 naming the problem."""
+    canonical = canonical_region(value)
+    if canonical is None:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "Bunday hudud yo‘q."
+        )
+    return canonical
 
 
 def _encode_cursor(key: str, listing_id: uuid.UUID) -> str:
@@ -230,13 +241,13 @@ async def list_listings(
         query = query.where(Listing.cash_ok == cash_ok)
 
     if region:
-        # Listings carry coordinates but not a region name, so the filter runs
-        # through the owner. A subquery rather than a join: joining users would
-        # multiply nothing here, but it would also let a later `.distinct()`
-        # requirement creep in, and this reads as what it is — "owned by
-        # somebody in this region".
+        # The listing's own region (migration c5a0c0de0014). It used to run
+        # through the owner's current region, so moving house moved every
+        # old listing with it.
+        # Both spellings: rows backfilled from old free-text profiles may
+        # hold an alias ("Toshkent") rather than the canonical name.
         query = query.where(
-            Listing.owner_id.in_(select(User.id).where(User.region == region))
+            Listing.region.in_({region, canonical_region(region) or region})
         )
 
     if q:
@@ -399,12 +410,24 @@ async def create_listing(
     """
     listing_limit.check(source(request, me))
 
+    # Input first: a bad region is a 422 even for someone out of free listings.
+    region = _region_or_422(payload.region) if payload.region else me.region
+
     if me.user_type != UserType.business and me.free_listings_left <= 0:
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,
             "Bepul e’lonlar tugadi. Davom etish uchun tarif tanlang.",
         )
 
+    district = (payload.district or "").strip() or (
+        None if payload.region else me.district
+    )
+    # Coordinates follow the listing's region when it differs from the
+    # owner's; distance in matches is about where the goods are.
+    lat, lon = payload.latitude, payload.longitude
+    if lat is None or lon is None:
+        centroid = coordinates_for(region) if payload.region else None
+        lat, lon = centroid or (me.latitude, me.longitude)
     listing = Listing(
         owner_id=me.id,
         tag=payload.tag,
@@ -412,8 +435,10 @@ async def create_listing(
         value_minor=payload.value.minor,
         currency=payload.value.currency,
         cash_ok=payload.cash_ok,
-        latitude=payload.latitude if payload.latitude is not None else me.latitude,
-        longitude=payload.longitude if payload.longitude is not None else me.longitude,
+        latitude=lat,
+        longitude=lon,
+        region=region,
+        district=district,
     )
     db.add(listing)
     await db.flush()
@@ -547,6 +572,12 @@ async def update_listing(
         listing.currency = payload.value.currency
     if payload.cash_ok is not None:
         listing.cash_ok = payload.cash_ok
+    if payload.region is not None:
+        listing.region = _region_or_422(payload.region)
+        if centroid := coordinates_for(listing.region):
+            listing.latitude, listing.longitude = centroid
+    if payload.district is not None:
+        listing.district = payload.district.strip() or None
     if payload.latitude is not None:
         listing.latitude = payload.latitude
     if payload.longitude is not None:

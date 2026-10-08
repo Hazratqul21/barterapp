@@ -20,12 +20,15 @@ for t in tests/test_config_guard.py \
          tests/test_otp_security.py \
          tests/test_token_security.py \
          tests/test_trade_integrity.py \
+         tests/test_agreements.py \
          tests/test_socket_ticket.py \
+         tests/test_chat_archive.py \
          tests/test_media_sweep.py \
          tests/test_listing_edit.py \
          tests/test_categories.py \
          tests/test_health_and_errors.py \
          tests/test_feed_search.py \
+         tests/test_listing_region.py \
          tests/test_moderation.py \
          tests/test_push.py \
          tests/test_notify_prefs.py \

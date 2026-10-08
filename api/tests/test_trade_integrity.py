@@ -44,7 +44,9 @@ with httpx.Client(base_url=BASE, timeout=20) as c:
     # Bekzod O1 ni qabul qiladi, keyin yakunlanadi.
     acc = c.patch(f"/offers/{o1['id']}", headers=H_B, json={"action": "accept"})
     check("qabul qilindi (accepted)", acc.json()["status"] == "accepted")
-    done = c.patch(f"/offers/{o1['id']}", headers=H_J, json={"action": "complete"})
+    c.patch(f"/offers/{o1['id']}", headers=H_J, json={"action": "complete"})
+    # F02: ikkinchi tomon ham tasdiqlaydi.
+    done = c.patch(f"/offers/{o1['id']}", headers=H_B, json={"action": "confirm"})
     check("savdo yakunlandi (completed)", done.json()["status"] == "completed")
 
     # O2 endi bekor bo'lishi kerak — e'lon savdoga ketdi.

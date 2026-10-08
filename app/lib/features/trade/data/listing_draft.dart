@@ -21,6 +21,8 @@ class ListingDraft {
     this.wantTag,
     this.cashOk = false,
     this.wantsCash = false,
+    this.region,
+    this.district = '',
   });
 
   /// The server deletes uploads no listing points at after six hours
@@ -45,10 +47,16 @@ class ListingDraft {
   final bool cashOk;
   final bool wantsCash;
 
+  /// Null means "the owner's region" — the server's default.
+  final String? region;
+  final String district;
+
   bool get isEmpty =>
       photos.isEmpty &&
       tag == null &&
       wantTag == null &&
+      region == null &&
+      district.trim().isEmpty &&
       value.trim().isEmpty &&
       fields.values.every(
         (byLocale) => byLocale.values.every((text) => text.trim().isEmpty),
@@ -66,6 +74,8 @@ class ListingDraft {
     wantTag: wantTag,
     cashOk: cashOk,
     wantsCash: wantsCash,
+    region: region,
+    district: district,
   );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +88,8 @@ class ListingDraft {
     'want_tag': wantTag,
     'cash_ok': cashOk,
     'wants_cash': wantsCash,
+    'region': region,
+    'district': district,
   };
 
   /// Null for anything that does not look like a draft this version wrote.
@@ -97,6 +109,8 @@ class ListingDraft {
         wantTag: json['want_tag'] as String?,
         cashOk: json['cash_ok'] as bool? ?? false,
         wantsCash: json['wants_cash'] as bool? ?? false,
+        region: json['region'] as String?,
+        district: json['district'] as String? ?? '',
       );
     } catch (_) {
       return null;

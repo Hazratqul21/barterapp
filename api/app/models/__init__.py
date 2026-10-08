@@ -1,5 +1,14 @@
 """Every model is imported here so Alembic autogenerate sees the full metadata."""
 
+from app.models.agreement import (  # noqa: F401
+    Dispute,
+    DisputeReason,
+    DisputeResolution,
+    DisputeStatus,
+    Reservation,
+    TradeAgreement,
+    TradeConfirmation,
+)
 from app.models.desire import Desire  # noqa: F401
 from app.models.device import Device, DevicePlatform  # noqa: F401
 from app.models.event import Event, EventKind  # noqa: F401

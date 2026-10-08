@@ -40,6 +40,8 @@ class TradeRepository {
     String action, {
     int? cashDeltaMinor,
     String? message,
+    String? disputeReason,
+    String? disputeNote,
   }) {
     return _api.patch(
       '/offers/$offerId',
@@ -47,6 +49,9 @@ class TradeRepository {
         'action': action,
         'cash_delta_minor': cashDeltaMinor,
         if (message != null && message.trim().isNotEmpty) 'message': message,
+        'dispute_reason': ?disputeReason,
+        if (disputeNote != null && disputeNote.trim().isNotEmpty)
+          'dispute_note': disputeNote.trim(),
       },
       parse: (data) => Offer.fromJson(data as Map<String, dynamic>),
     );
@@ -54,12 +59,20 @@ class TradeRepository {
 
   // -------------------------------------------------------------------- chat
 
-  Future<List<ConversationSummary>> conversations() => _api.get(
-    '/conversations',
-    parse: (data) => (data as List)
-        .map((e) => ConversationSummary.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+  Future<void> archiveConversation(String id) =>
+      _api.post('/conversations/$id/archive', parse: (_) {});
+
+  Future<void> unarchiveConversation(String id) =>
+      _api.delete('/conversations/$id/archive', parse: (_) {});
+
+  Future<List<ConversationSummary>> conversations({bool archived = false}) =>
+      _api.get(
+        '/conversations',
+        query: archived ? {'archived': true} : null,
+        parse: (data) => (data as List)
+            .map((e) => ConversationSummary.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 
   Future<ConversationDetail> conversation(String id) => _api.get(
     '/conversations/$id',
@@ -272,6 +285,13 @@ final conversationsProvider =
     FutureProvider.autoDispose<List<ConversationSummary>>((ref) {
       if (!ref.watch(authStateProvider)) return Future.value(const []);
       return ref.watch(tradeRepositoryProvider).conversations();
+    });
+
+/// Threads I archived; reached from the inbox's archive button.
+final archivedConversationsProvider =
+    FutureProvider.autoDispose<List<ConversationSummary>>((ref) {
+      if (!ref.watch(authStateProvider)) return Future.value(const []);
+      return ref.watch(tradeRepositoryProvider).conversations(archived: true);
     });
 
 final conversationProvider = FutureProvider.autoDispose

@@ -446,6 +446,46 @@
   "matchReasonValueClose": "Qiymatlar yaqin",
   "matchReasonNearby": "Yaqin atrofda",
   "matchReasonVerified": "Tasdiqlangan savdogar",
+  "createFieldDistrict": "Tuman (ixtiyoriy)",
+  "specRegion": "Joylashuvi",
+  "inboxArchive": "Arxivlash",
+  "inboxArchived": "Arxiv",
+  "inboxArchivedDone": "Suhbat arxivlandi",
+  "inboxUndo": "Bekor qilish",
+  "inboxUnarchive": "Arxivdan chiqarish",
+  "inboxArchivedEmpty": "Arxiv bo‘sh",
+  "inboxArchivedHint": "Arxivdagi suhbatga yangi xabar kelsa, u kirish qutisiga o‘zi qaytadi.",
+  "dealConfirm": "Topshirdim va oldim",
+  "dealProblem": "Muammo bor",
+  "dealDisputed": "Nizoda",
+  "dealCancelled": "Bekor qilingan",
+  "dealDisputedOperator": "Nizo ochildi — operator ko‘rib chiqmoqda. Narsalar band holda qoladi.",
+  "dealCancelledInfo": "Savdo bekor qilindi — narsalar yana sotuvda.",
+  "dealResolvedComplete": "Nizo hal qilindi: savdo kuchda.",
+  "disputeTitle": "Nima bo‘ldi?",
+  "disputeNoShow": "Ikkinchi tomon kelmadi",
+  "disputeNotReceived": "Men berdim, lekin olmadim",
+  "disputeNotAsDescribed": "Narsa ta’rifga mos emas",
+  "disputeOther": "Boshqa sabab",
+  "disputeNote": "Izoh (ixtiyoriy)",
+  "disputeSend": "Nizo ochish",
+  "disputeHint": "Kichik savdolar qoida bo‘yicha darhol hal bo‘ladi, kattalari operatorga o‘tadi.",
+  "dealReservedUntil": "Narsalar {date} gacha band",
+  "dealWaitingPeer": "Siz tasdiqladingiz. {name} tasdig‘i kutilmoqda.",
+  "@dealReservedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@dealWaitingPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "listingShare": "Ulashish",
   "listingGoneTitle": "E’lon endi mavjud emas",
   "listingGoneHint": "Egasi uni o‘chirgan yoki savdo yakunlangan. Lentada shunga o‘xshashlari bor.",

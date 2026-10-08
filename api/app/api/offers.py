@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import or_, select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,13 +13,14 @@ from app.core.ratelimit import offers as offer_limit, source
 from app.core.security import current_user
 from app.db.session import get_db
 from app.models.listing import Listing, ListingStatus
-from app.models.offer import Conversation, Message, Offer, OfferItem, OfferStatus
+from app.models.offer import Conversation, Message, Offer, OfferStatus
 from app.models.social import NotifyKind, NotifyTargetType
 from app.models.user import User
 from app.schemas.trade import OfferAction, OfferCreate, OfferOut
 from app.models.event import EventKind
 from app.services import events
 from app.services import moderation
+from app.services import agreements
 from app.services import offers as service
 
 router = APIRouter(prefix="/offers", tags=["offers"])
@@ -33,6 +34,9 @@ async def list_offers(
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[OfferOut]:
+    # Lapsed holds are undone on read until a worker does it on a timer.
+    if await agreements.expire_stale(db, now=datetime.now(UTC)):
+        await db.commit()
     rows = (
         (
             await db.scalars(
@@ -204,23 +208,53 @@ async def act_on_offer(
     if offer is None or me.id not in (offer.from_user_id, offer.to_user_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Taklif topilmadi.")
 
+    now = datetime.now(UTC)
+    # A hold that ran out undoes the deal before anyone can act on it.
+    await agreements.expire_stale(db, now=now)
+
+    if payload.action == "dispute" and payload.dispute_reason is None:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "Nizo sababini tanlang."
+        )
     try:
         new_status = service.check_transition(offer, payload.action, me.id)
     except service.OfferError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, str(e))
 
     peer_id = offer.to_user_id if offer.from_user_id == me.id else offer.from_user_id
+    action = "confirm" if payload.action == "complete" else payload.action
+    auto_settled = False
 
-    if payload.action == "counter":
+    if action == "counter":
         service.apply_counter(offer, me.id, payload.cash_delta_minor)
     offer.status = new_status
+    try:
+        if action == "accept":
+            # Freeze the terms and hold every listing — or refuse, all or
+            # nothing, in this transaction.
+            await agreements.reserve(db, offer, now=now)
+        elif action == "confirm":
+            if await agreements.confirm(db, offer, me.id, now=now):
+                await agreements.complete(db, offer, now=now)
+        elif action == "dispute":
+            outcome = await agreements.open_dispute(
+                db, offer, me.id, payload.dispute_reason, payload.dispute_note,
+                now=now,
+            )
+            auto_settled = outcome.auto
+    except agreements.AgreementError as e:
+        await db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e))
+    new_status = offer.status
 
     thread_id = await db.scalar(
         select(Conversation.id).where(Conversation.offer_id == offer.id)
     )
-    now = datetime.now(UTC)
 
     if payload.message and thread_id:
+        thread = await db.get(Conversation, thread_id)
+        if thread is not None:
+            thread.wake()
         db.add(
             Message(
                 conversation_id=thread_id,
@@ -257,43 +291,20 @@ async def act_on_offer(
             locale=locale,
         )
 
-    # A completed trade closes both listings — they are no longer on the table.
-    if new_status == OfferStatus.completed:
-        offered = (
-            await db.scalars(
-                select(OfferItem.listing_id).where(OfferItem.offer_id == offer.id)
-            )
-        ).all()
-        ids = [offer.listing_id, *offered]
-        for listing in (await db.scalars(select(Listing).where(Listing.id.in_(ids)))).all():
-            listing.status = ListingStatus.completed
-
-        # Every other open offer that was competing for any of these listings is
-        # now dead — the goods are gone. Expire them in one atomic statement so
-        # a listing can never sit inside two live deals at once. The offers
-        # touch a listing either as the thing wanted or as something offered.
-        _open = (OfferStatus.pending, OfferStatus.talking, OfferStatus.accepted)
-        via_item = select(OfferItem.offer_id).where(OfferItem.listing_id.in_(ids))
-        await db.execute(
-            update(Offer)
-            .where(
-                Offer.id != offer.id,
-                Offer.status.in_(_open),
-                or_(Offer.listing_id.in_(ids), Offer.id.in_(via_item)),
-            )
-            .values(status=OfferStatus.expired)
-        )
-
     await db.flush()
     out = await service.present(db, offer, me.id, locale)
 
     headline = {
-        "accept": "Taklifingiz qabul qilindi",
+        "accept": "Taklifingiz qabul qilindi — narsalar band qilindi",
         "decline": "Taklifingiz rad etildi",
         "counter": f"{me.full_name} qarshi taklif yubordi",
-        "complete": "Savdo yakunlandi",
-        "dispute": "Savdo bo‘yicha nizo ochildi",
-    }[payload.action]
+        "confirm": "Savdo yakunlandi"
+        if new_status == OfferStatus.completed
+        else f"{me.full_name} topshirishni tasdiqladi — endi siz tasdiqlang",
+        "dispute": "Nizo qoida bo‘yicha hal qilindi: savdo bekor"
+        if auto_settled
+        else "Savdo bo‘yicha nizo ochildi — operator ko‘rib chiqadi",
+    }[action]
 
     await service.notify(
         db,

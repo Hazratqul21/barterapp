@@ -136,8 +136,11 @@ with httpx.Client(base_url=BASE, timeout=30) as c:
     done_offer = made.json()["id"]
 
     c.patch(f"/offers/{done_offer}", headers=auth(peer), json={"action": "accept"})
-    r = c.patch(f"/offers/{done_offer}", headers=auth(peer), json={"action": "complete"})
-    check("savdo yakunlandi", r.status_code == 200, r.text[:120])
+    c.patch(f"/offers/{done_offer}", headers=auth(peer), json={"action": "complete"})
+    # F02: ikkala tomon tasdiqlaydi.
+    r = c.patch(f"/offers/{done_offer}", headers=auth(leaver), json={"action": "confirm"})
+    check("savdo yakunlandi", r.status_code == 200 and r.json()["status"] == "completed",
+          r.text[:120])
 
     r = c.post(
         "/reviews",
