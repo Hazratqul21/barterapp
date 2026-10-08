@@ -361,5 +361,9 @@
   "matchReasonNamedCategory": "Нужная вам категория",
   "matchReasonValueClose": "Близкая стоимость",
   "matchReasonNearby": "Рядом",
-  "matchReasonVerified": "Проверенный продавец"
+  "matchReasonVerified": "Проверенный продавец",
+  "listingShare": "Поделиться",
+  "listingGoneTitle": "Объявление больше недоступно",
+  "listingGoneHint": "Владелец удалил его или обмен завершён. В ленте есть похожие.",
+  "listingGoneBack": "Вернуться в ленту"
 }

@@ -1154,4 +1154,17 @@ class LRu extends L {
 
   @override
   String get matchReasonVerified => 'Проверенный продавец';
+
+  @override
+  String get listingShare => 'Поделиться';
+
+  @override
+  String get listingGoneTitle => 'Объявление больше недоступно';
+
+  @override
+  String get listingGoneHint =>
+      'Владелец удалил его или обмен завершён. В ленте есть похожие.';
+
+  @override
+  String get listingGoneBack => 'Вернуться в ленту';
 }

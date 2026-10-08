@@ -174,4 +174,64 @@ void main() {
     await expectLater(tester, meetsGuideline(textContrastGuideline));
     handle.dispose();
   });
+
+  testWidgets('a link to a removed listing explains itself', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          analyticsServiceProvider.overrideWithValue(_QuietAnalytics()),
+          listingDetailProvider.overrideWith(
+            (ref, id) async =>
+                throw ApiException('E\'lon topilmadi.', statusCode: 404),
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(
+            initialLocation: '/l/gone',
+            routes: [
+              GoRoute(
+                path: '/l/:id',
+                redirect: (_, s) => '/listing/${s.pathParameters['id']}',
+              ),
+              GoRoute(
+                path: '/listing/:id',
+                builder: (_, s) =>
+                    ListingDetailPage(listingId: s.pathParameters['id']!),
+              ),
+              GoRoute(path: '/home', builder: (_, _) => const Text('HOME')),
+            ],
+          ),
+          theme: AppTheme.light(),
+          locale: const Locale('uz'),
+          supportedLocales: L.supportedLocales,
+          localizationsDelegates: const [
+            L.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('E’lon endi mavjud emas'), findsOneWidget);
+    expect(find.text('Qayta urinish'), findsNothing);
+    await tester.tap(find.text('Lentaga qaytish'));
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
+  });
+
+  testWidgets('share button is on the listing', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _pump(tester, _listing());
+    expect(find.byTooltip('Ulashish'), findsOneWidget);
+  });
 }

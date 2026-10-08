@@ -362,5 +362,9 @@
   "matchReasonNamedCategory": "Category you asked for",
   "matchReasonValueClose": "Similar value",
   "matchReasonNearby": "Nearby",
-  "matchReasonVerified": "Verified trader"
+  "matchReasonVerified": "Verified trader",
+  "listingShare": "Share",
+  "listingGoneTitle": "This listing is no longer available",
+  "listingGoneHint": "The owner removed it or the trade is done. The feed has similar ones.",
+  "listingGoneBack": "Back to the feed"
 }

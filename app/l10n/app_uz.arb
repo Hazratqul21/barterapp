@@ -445,5 +445,9 @@
   "matchReasonNamedCategory": "Siz izlagan toifa",
   "matchReasonValueClose": "Qiymatlar yaqin",
   "matchReasonNearby": "Yaqin atrofda",
-  "matchReasonVerified": "Tasdiqlangan savdogar"
+  "matchReasonVerified": "Tasdiqlangan savdogar",
+  "listingShare": "Ulashish",
+  "listingGoneTitle": "E’lon endi mavjud emas",
+  "listingGoneHint": "Egasi uni o‘chirgan yoki savdo yakunlangan. Lentada shunga o‘xshashlari bor.",
+  "listingGoneBack": "Lentaga qaytish"
 }

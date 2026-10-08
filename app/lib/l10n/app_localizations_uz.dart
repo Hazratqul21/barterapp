@@ -1157,4 +1157,17 @@ class LUz extends L {
 
   @override
   String get matchReasonVerified => 'Tasdiqlangan savdogar';
+
+  @override
+  String get listingShare => 'Ulashish';
+
+  @override
+  String get listingGoneTitle => 'E’lon endi mavjud emas';
+
+  @override
+  String get listingGoneHint =>
+      'Egasi uni o‘chirgan yoki savdo yakunlangan. Lentada shunga o‘xshashlari bor.';
+
+  @override
+  String get listingGoneBack => 'Lentaga qaytish';
 }

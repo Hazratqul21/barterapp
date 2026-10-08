@@ -158,6 +158,12 @@ GoRouter buildRouter() {
         pageBuilder: (context, state) =>
             forwardPage(key: state.pageKey, child: const SettingsPage()),
       ),
+      // The shared short link (core/share/listing_link.dart). Kept as its own
+      // path so the iOS/Android app-link files can claim exactly `/l/*`.
+      GoRoute(
+        path: '/l/:id',
+        redirect: (context, state) => '/listing/${state.pathParameters['id']}',
+      ),
       GoRoute(
         path: '/listing/:id',
         parentNavigatorKey: _rootKey,
