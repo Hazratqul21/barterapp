@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:barter_app/core/network/api_client.dart';
 import 'package:barter_app/core/router/app_router.dart';
@@ -10,6 +11,7 @@ import 'package:barter_app/features/feed/presentation/listing_card_tile.dart';
 import 'package:barter_app/l10n/app_localizations.dart';
 import 'package:barter_app/shared/models/models.dart' as models;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,6 +87,18 @@ class RecordingApi implements ApiClient {
 }
 
 void main() {
+  setUpAll(() async {
+    // Real glyphs for the feed golden below.
+    await (FontLoader('Manrope')..addFont(
+          Future.value(
+            ByteData.sublistView(
+              File('assets/fonts/Manrope-Variable.ttf').readAsBytesSync(),
+            ),
+          ),
+        ))
+        .load();
+  });
+
   test('favorites reads the page envelope returned by the API', () async {
     final page = await TradeRepository(RecordingApi()).getFavorites();
     expect(page.items, isEmpty);
@@ -225,6 +239,7 @@ void main() {
               listingRepositoryProvider.overrideWithValue(Repository()),
             ],
             child: MaterialApp.router(
+              debugShowCheckedModeBanner: false,
               routerConfig: router,
               theme: AppTheme.light(),
               locale: const Locale('uz'),
@@ -247,6 +262,21 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.byType(TextField), findsOneWidget);
+        if (size == const Size(390, 844) && scale == 1.0) {
+          // The phone feed as a whole: header, categories, two-column grid.
+          // Asset images (the logo) decode asynchronously; wait for them so
+          // the screenshot does not depend on timing.
+          await tester.runAsync(() async {
+            for (final element in find.byType(Image).evaluate()) {
+              await precacheImage((element.widget as Image).image, element);
+            }
+          });
+          await tester.pumpAndSettle();
+          await expectLater(
+            find.byType(MaterialApp),
+            matchesGoldenFile('goldens/feed_phone.png'),
+          );
+        }
         if (size.width < 1000) {
           final bar = find.text('Asosiy');
           expect(

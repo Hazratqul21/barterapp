@@ -139,24 +139,16 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
               constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final columns = constraints.maxWidth >= 600 ? 2 : 1;
-                  final width =
-                      (constraints.maxWidth - 40 - 16 * (columns - 1)) /
-                      columns;
-                  final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
                   return CustomScrollView(
                     controller: _scrollController,
                     slivers: [
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                         sliver: SliverGrid.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                mainAxisExtent: width * 0.62 + 156 * scale,
-                              ),
+                          gridDelegate: ListingGrid.delegate(
+                            constraints.maxWidth - 40,
+                            MediaQuery.textScalerOf(context),
+                          ),
                           itemCount: listings.length,
                           itemBuilder: (context, index) {
                             final item = listings[index];

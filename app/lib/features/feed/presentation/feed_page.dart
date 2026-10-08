@@ -273,31 +273,11 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                               ),
                               sliver: SliverLayoutBuilder(
                                 builder: (context, constraints) {
-                                  final columns =
-                                      constraints.crossAxisExtent >= 960
-                                      ? 3
-                                      : constraints.crossAxisExtent >= 580
-                                      ? 2
-                                      : 1;
-                                  final cardWidth =
-                                      (constraints.crossAxisExtent -
-                                          16 * (columns - 1)) /
-                                      columns;
-                                  final textScale =
-                                      MediaQuery.textScalerOf(
-                                        context,
-                                      ).scale(14) /
-                                      14;
                                   return SliverGrid.builder(
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: columns,
-                                          crossAxisSpacing: 16,
-                                          mainAxisSpacing: 16,
-                                          mainAxisExtent:
-                                              cardWidth * 0.62 +
-                                              156 * textScale,
-                                        ),
+                                    gridDelegate: ListingGrid.delegate(
+                                      constraints.crossAxisExtent,
+                                      MediaQuery.textScalerOf(context),
+                                    ),
                                     itemCount: value.items.length,
                                     itemBuilder: (context, index) {
                                       final listing = value.items[index];
@@ -401,13 +381,13 @@ class _Categories extends ConsumerWidget {
           ),
         ),
         SizedBox(
-          height: 78 + MediaQuery.textScalerOf(context).scale(14) * 3,
+          height: 74 + MediaQuery.textScalerOf(context).scale(12) * 2.6,
           child: categories.when(
             data: (items) => ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
               itemBuilder: (_, index) => CategoryCard(
                 category: items[index],
                 selected: selected == items[index].id,

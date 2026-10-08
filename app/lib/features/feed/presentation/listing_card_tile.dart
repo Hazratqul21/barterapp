@@ -2,125 +2,261 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/art/category_marks.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 
-/// A readable listing: consistent photo crop, value, item, wanted exchange.
+/// Grid geometry shared by every list of listing cards (feed, favorites,
+/// profile, trader page), so a card never gets a height it was not drawn for.
+abstract final class ListingGrid {
+  static const spacing = Gap.x3;
+
+  /// Two columns on a phone — four listings per screen instead of one —
+  /// three on a tablet, four on a desktop. With large text a card needs more
+  /// room, so the count drops (to one column on a phone at 160%) rather than
+  /// cutting prices and titles short.
+  static int columnsFor(double width, [double textScale = 1]) {
+    final byBreakpoint = width >= 1000
+        ? 4
+        : width >= 600
+        ? 3
+        : 2;
+    final byText = (width / (150 * textScale)).floor();
+    return byText.clamp(1, byBreakpoint);
+  }
+
+  /// Square photo plus the text block, which grows with the text scale.
+  static SliverGridDelegate delegate(double width, TextScaler scaler) {
+    final scale = scaler.scale(14) / 14;
+    final columns = columnsFor(width, scale);
+    final cardWidth = (width - spacing * (columns - 1)) / columns;
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: columns,
+      crossAxisSpacing: spacing,
+      mainAxisSpacing: Gap.x4,
+      mainAxisExtent: cardWidth + ListingCardTile.textBlockHeight(scale),
+    );
+  }
+}
+
+/// A listing at a glance: photo, price, what it is, and — the barter part —
+/// what the owner wants for it.
+///
+/// v1 led with the price in the biggest type and hid the wanted exchange in a
+/// small teal line, which read like a classifieds site. Here the swap chip is
+/// its own coloured element, so "what would they take?" is answered in the
+/// same glance as "what is it?".
 class ListingCardTile extends StatelessWidget {
   const ListingCardTile({
     super.key,
     required this.listing,
     required this.onTap,
   });
+
   final ListingCard listing;
   final VoidCallback onTap;
+
+  /// Everything under the photo at text scale [scale]: paddings are fixed,
+  /// text lines grow.
+  static double textBlockHeight(double scale) =>
+      10 + 10 + 4 + 6 + 8 + 4 + scale * (22 + 2 * 19 + 18 + 16) + 12;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final p = palette(context);
     final locale = Localizations.localeOf(context).languageCode;
+    final category = p.isDark
+        ? CategoryStyle.of(listing.tag).dark
+        : CategoryStyle.of(listing.tag);
+
+    final meta = [
+      if (listing.distanceKm != null)
+        '${listing.distanceKm!.toStringAsFixed(listing.distanceKm! < 10 ? 1 : 0)} km',
+      DateFormat.MMMd(locale).format(listing.postedAt.toLocal()),
+    ].join(' · ');
+
     return Material(
-      color: colors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: Radii.rMd,
-        side: BorderSide(color: colors.outlineVariant),
+      color: colors.surfaceContainerLowest,
+      shape: RoundedSuperellipseBorder(
+        borderRadius: Radii.rLg,
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
           children: [
+            // Square in every card of a row, whatever the title length.
             AspectRatio(
-              aspectRatio: 1 / 0.62,
-              child: Hero(
-                tag: 'listing-image-${listing.id}',
-                child: RemoteImage(
-                  url: listing.imageUrl,
-                  semanticLabel: listing.imageAlt,
+              aspectRatio: 1,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Hero(
+                    tag: 'listing-image-${listing.id}',
+                    child: RemoteImage(
+                      url: listing.imageUrl,
+                      semanticLabel: listing.imageAlt,
+                    ),
+                  ),
+                  // The category, as a mark rather than a word: readable in
+                  // every language and at thumbnail size.
+                  Positioned(
+                    left: Gap.x2,
+                    top: Gap.x2,
+                    child: ExcludeSemantics(
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: ShapeDecoration(
+                          color: category.tint,
+                          shape: const RoundedSuperellipseBorder(
+                            borderRadius: Radii.rXs,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: CategoryMarkIcon(
+                          mark: category.mark,
+                          color: category.color,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (listing.owner.isVerified)
+                    Positioned(
+                      right: Gap.x2,
+                      top: Gap.x2,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerLowest,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Symbols.verified_rounded,
+                          size: 16,
+                          fill: 1,
+                          color: p.give,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Price(listing.value, locale),
+                    const SizedBox(height: 4),
+                    Text(
+                      listing.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SwapChip(wants: listing.wantsSummary),
+                    // Date and distance sit on the card's bottom edge in
+                    // every card, short title or long.
+                    const Spacer(),
+                    Text(
+                      meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: p.inkSoft,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    listing.value.format(locale),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    listing.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Symbols.swap_horiz_rounded,
-                        size: 18,
-                        color: colors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          listing.wantsSummary,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      if (listing.owner.isVerified) ...[
-                        Icon(
-                          Symbols.verified_rounded,
-                          size: 14,
-                          color: colors.primary,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Expanded(
-                        child: Text(
-                          listing.owner.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat.MMMd(
-                          locale,
-                        ).format(listing.postedAt.toLocal()),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The price with the number carrying the weight and the unit stepping back.
+class _Price extends StatelessWidget {
+  const _Price(this.money, this.locale);
+
+  final Money money;
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final formatted = money.format(locale);
+    final split = formatted.lastIndexOf(' ');
+    final number = split > 0 ? formatted.substring(0, split) : formatted;
+    final unit = split > 0 ? formatted.substring(split) : '';
+    // Shrinks rather than truncates: a cut-off price is wrong information.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: number, style: AppText.price(context, size: 16)),
+            TextSpan(text: unit, style: AppText.currency(context, size: 12)),
+          ],
+        ),
+        maxLines: 1,
+      ),
+    );
+  }
+}
+
+/// "⇄ what they want" — the barter half of a listing, in the take colour.
+///
+/// The same chip belongs on the detail page, in chat and on matches, so the
+/// exchange always looks like the same thing.
+class SwapChip extends StatelessWidget {
+  const SwapChip({super.key, required this.wants});
+
+  final String wants;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final l = L.of(context);
+    final text = wants.trim().isEmpty ? l.createWantAny : wants;
+    return Semantics(
+      label: '⇄ $text',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: ShapeDecoration(
+          color: p.takeSoft,
+          shape: const RoundedSuperellipseBorder(borderRadius: Radii.rXs),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Symbols.swap_horiz_rounded, size: 14, color: p.take),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(color: p.take, height: 1.35),
               ),
             ),
           ],

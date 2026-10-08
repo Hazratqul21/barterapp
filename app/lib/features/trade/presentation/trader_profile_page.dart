@@ -310,22 +310,22 @@ class _TraderListings extends ConsumerWidget {
         if (listings.isEmpty) {
           return EmptyState(title: L.of(context).traderListingsEmpty, hint: '');
         }
-        return GridView.builder(
-          padding: Gap.screen,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: Gap.x4,
-            crossAxisSpacing: Gap.x4,
-            childAspectRatio: 0.75,
-          ),
-          itemCount: listings.length,
-          itemBuilder: (context, index) => AnimatedListItem(
-            index: index,
-            child: ListingCardTile(
-              listing: listings[index],
-              onTap: () => context.push('/listing/${listings[index].id}'),
+        return LayoutBuilder(
+          builder: (context, constraints) => GridView.builder(
+            padding: Gap.screen,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: ListingGrid.delegate(
+              constraints.maxWidth - Gap.screen.horizontal,
+              MediaQuery.textScalerOf(context),
+            ),
+            itemCount: listings.length,
+            itemBuilder: (context, index) => AnimatedListItem(
+              index: index,
+              child: ListingCardTile(
+                listing: listings[index],
+                onTap: () => context.push('/listing/${listings[index].id}'),
+              ),
             ),
           ),
         );
