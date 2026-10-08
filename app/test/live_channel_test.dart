@@ -136,9 +136,7 @@ void main() {
       expect(opened, hasLength(3));
 
       // A frame arrives: this connection is healthy, whatever came before.
-      opened.last.deliver(
-        '{"type":"typing","conversation_id":"c1"}',
-      );
+      opened.last.deliver('{"type":"typing","conversation_id":"c1"}');
       async.flushMicrotasks();
 
       // So the next drop is treated as the first one — one second, not five.

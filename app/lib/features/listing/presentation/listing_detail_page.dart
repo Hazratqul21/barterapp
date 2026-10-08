@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/network/api_client.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -547,56 +546,28 @@ class _Content extends StatelessWidget {
                           size: 48,
                           isOnline: listing.owner.isOnline,
                           showPresence: true,
+                          verified: listing.owner.isVerified,
                         ),
                         Gap.w3,
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      listing.owner.name,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.titleSmall,
-                                    ),
-                                  ),
-                                  if (listing.owner.isVerified) ...[
-                                    Gap.w1,
-                                    Icon(
-                                      Icons.verified_user_outlined,
-                                      size: Sizes.iconSm,
-                                      color: p.give,
-                                    ),
-                                  ],
-                                ],
+                              Text(
+                                listing.owner.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall,
                               ),
                               Gap.h1,
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star_rounded,
-                                    size: Sizes.iconSm,
-                                    color: BrandColors.gold500,
-                                  ),
-                                  Gap.w1,
-                                  Text(
-                                    listing.owner.rating?.toStringAsFixed(1) ??
-                                        '—',
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                  Text(
-                                    '  ·  ${l.listingTrades(listing.owner.deals)}',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: p.inkSoft,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              TrustLine(trader: listing.owner),
                             ],
                           ),
                         ),
+                        if (!isMine)
+                          Icon(
+                            Symbols.chevron_right_rounded,
+                            color: p.inkFaint,
+                          ),
                       ],
                     ),
                   ),

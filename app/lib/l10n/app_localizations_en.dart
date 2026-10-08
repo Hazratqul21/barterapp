@@ -1131,4 +1131,7 @@ class LEn extends L {
 
   @override
   String get createPreviewTitle => 'How it looks in the feed';
+
+  @override
+  String get traderNew => 'New member';
 }

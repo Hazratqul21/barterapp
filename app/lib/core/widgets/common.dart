@@ -465,6 +465,7 @@ class TraderAvatar extends StatelessWidget {
     this.size = 40,
     this.isOnline = false,
     this.showPresence = false,
+    this.verified = false,
   });
 
   final String? url;
@@ -472,6 +473,10 @@ class TraderAvatar extends StatelessWidget {
   final double size;
   final bool isOnline;
   final bool showPresence;
+
+  /// A ring in the give colour around a checked identity — the same mark on
+  /// every screen a trader appears.
+  final bool verified;
 
   @override
   Widget build(BuildContext context) {
@@ -499,12 +504,15 @@ class TraderAvatar extends StatelessWidget {
           Container(
             width: size,
             height: size,
+            padding: verified ? EdgeInsets.all(size * 0.06) : null,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: scheme.surfaceContainerHigh,
+              color: verified ? scheme.surface : scheme.surfaceContainerHigh,
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.3),
-                width: 1,
+                color: verified
+                    ? p.give
+                    : scheme.outlineVariant.withValues(alpha: 0.3),
+                width: verified ? 2 : 1,
               ),
             ),
             child: ClipOval(
@@ -540,6 +548,76 @@ class TraderAvatar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// The trust facts about a trader in one line: ★ rating · closed deals ·
+/// verification. Honest by construction — an unverified account says so in a
+/// neutral tone, and a trader with no history reads "new member" instead of
+/// a row of dashes and zeros that looks like a bad record.
+class TrustLine extends StatelessWidget {
+  const TrustLine({super.key, required this.trader, this.compact = false});
+
+  final TraderBrief trader;
+
+  /// Leaves out the verification phrase where a ringed avatar already says it.
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = palette(context);
+    final style = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: p.inkSoft);
+    final isNew = trader.deals == 0 && trader.rating == null;
+
+    final parts = <InlineSpan>[
+      if (isNew)
+        TextSpan(text: l.traderNew)
+      else ...[
+        if (trader.rating != null) ...[
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(
+              Symbols.star_rounded,
+              size: 14,
+              fill: 1,
+              color: p.money,
+            ),
+          ),
+          TextSpan(
+            text: ' ${trader.rating!.toStringAsFixed(1)}',
+            style: style?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const TextSpan(text: '  ·  '),
+        ],
+        TextSpan(text: l.listingTrades(trader.deals)),
+      ],
+      if (!compact) ...[
+        const TextSpan(text: '  ·  '),
+        if (trader.isVerified) ...[
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(
+              Symbols.verified_rounded,
+              size: 14,
+              fill: 1,
+              color: p.give,
+            ),
+          ),
+          TextSpan(
+            text: ' ${l.traderVerified}',
+            style: style?.copyWith(color: p.give, fontWeight: FontWeight.w600),
+          ),
+        ] else
+          TextSpan(text: l.traderUnverified),
+      ],
+    ];
+    return Text.rich(TextSpan(style: style, children: parts));
   }
 }
 

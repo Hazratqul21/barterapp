@@ -90,6 +90,7 @@ class _TraderProfilePageState extends ConsumerState<TraderProfilePage> {
                                   name: profile.brief.name,
                                   isOnline: profile.brief.isOnline,
                                   showPresence: true,
+                                  verified: isVerified,
                                 ),
                               ),
                             ),
@@ -113,34 +114,17 @@ class _TraderProfilePageState extends ConsumerState<TraderProfilePage> {
                               ),
                             ),
                             Gap.h2,
-                            Row(
-                              children: [
-                                if (isVerified) ...[
-                                  Icon(
-                                    Symbols.verified_rounded,
-                                    size: Sizes.iconSm,
-                                    color: p.give,
-                                    fill: 1,
-                                  ),
-                                  Gap.w1,
-                                  Text(
-                                    l.traderVerified,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(color: p.give),
-                                  ),
-                                  Gap.w3,
-                                ],
-                                if (profile.brief.isOnline)
-                                  Text(
-                                    l.traderOnline,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(
-                                          color: p.give,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                              ],
-                            ),
+                            TrustLine(trader: profile.brief),
+                            if (profile.brief.isOnline) ...[
+                              Gap.h1,
+                              Text(
+                                l.traderOnline,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: p.give,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                             if (profile.bio != null) ...[
                               Gap.h4,
                               Text(

@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:barter_app/core/design/design_catalog_page.dart';
 import 'package:barter_app/core/theme/app_theme.dart';
+import 'package:barter_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Screenshots of the design catalog, so a token change is a reviewed image
@@ -23,7 +25,6 @@ void main() {
         ),
       );
     await manrope.load();
-
   });
 
   for (final (name, dark, scale) in [
@@ -32,7 +33,7 @@ void main() {
     ('light_text2x', false, 2.0),
   ]) {
     testWidgets('design catalog — $name', (tester) async {
-      tester.view.physicalSize = Size(390, scale > 1 ? 3400 : 1800);
+      tester.view.physicalSize = Size(390, scale > 1 ? 3800 : 1960);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
@@ -40,6 +41,14 @@ void main() {
         MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: dark ? AppTheme.dark() : AppTheme.light(),
+          locale: const Locale('uz'),
+          supportedLocales: L.supportedLocales,
+          localizationsDelegates: const [
+            L.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           home: MediaQuery(
             data: MediaQueryData(
               size: tester.view.physicalSize,

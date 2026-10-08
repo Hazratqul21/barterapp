@@ -1135,4 +1135,7 @@ class LUz extends L {
 
   @override
   String get createPreviewTitle => 'Lentada shunday ko‘rinadi';
+
+  @override
+  String get traderNew => 'Yangi a’zo';
 }
