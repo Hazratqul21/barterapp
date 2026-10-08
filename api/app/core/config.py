@@ -1,5 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,6 +11,11 @@ _API_ROOT = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    #: development | test | production. Only `production` switches on the
+    #: strict start-up checks in `_guard_production`. A typo ("prod") is an
+    #: error rather than a silent fall back to development rules.
+    app_env: Literal["development", "test", "production"] = "development"
 
     database_url: str = "postgresql+asyncpg://barter:barter@localhost:5434/barter"
 
@@ -76,6 +83,22 @@ class Settings(BaseSettings):
         "http://localhost:8080",
     )
 
+    @property
+    def is_production(self) -> bool:
+        return self.app_env == "production"
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        """Loopback on any port for development; nothing extra in production."""
+        return None if self.is_production else LOOPBACK_ORIGIN_REGEX
+
+
+#: Flutter web picks a fresh port on every run, and reaches the host as both
+#: localhost and 127.0.0.1. Never sent in production: a browser page on the
+#: user's own machine must not be able to call the real API with credentials.
+LOOPBACK_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"}
+
 
 #: The value `jwt_secret` ships with. A server still running on it will accept
 #: a token anyone can mint, which means anyone can be anyone.
@@ -110,10 +133,67 @@ def _guard(settings: Settings) -> None:
         )
 
 
+def production_problems(settings: Settings) -> list[str]:
+    """
+    Everything that makes this configuration unfit for real users.
+
+    Collected rather than raised one by one, so a deploy fails once with the
+    full list instead of once per mistake.
+    """
+    problems: list[str] = []
+    if settings.otp_debug:
+        problems.append(
+            "OTP_DEBUG=true: tasdiqlash kodi HTTP javobida qaytadi — istalgan "
+            "odam istalgan hisobga kiradi. OTP_DEBUG=false qiling."
+        )
+    if settings.jwt_secret == DEV_JWT_SECRET or len(settings.jwt_secret) < 32:
+        problems.append(
+            "JWT_SECRET standart yoki 32 belgidan qisqa. Yangi kalit: "
+            "python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+        )
+    if not (settings.eskiz_email and settings.eskiz_password):
+        problems.append(
+            "SMS sozlanmagan: ESKIZ_EMAIL va ESKIZ_PASSWORD bo'sh — kodlar "
+            "foydalanuvchiga yetib bormaydi."
+        )
+    if not settings.sms_required:
+        problems.append(
+            "SMS_REQUIRED=false: SMS ketmasa ham ro'yxatdan o'tish jimgina "
+            "davom etadi. SMS_REQUIRED=true qiling."
+        )
+    if not settings.cors_origins:
+        problems.append("CORS_ORIGINS bo'sh: veb-ilova domeni ko'rsatilmagan.")
+    for origin in settings.cors_origins:
+        if "*" in origin:
+            problems.append(
+                f"CORS_ORIGINS da wildcard ({origin}): cookie/token bilan "
+                "birga ishlatish xavfli. Aniq domen yozing."
+            )
+            continue
+        parts = urlsplit(origin)
+        if parts.scheme != "https":
+            problems.append(f"CORS_ORIGINS faqat https bo'lishi kerak: {origin}")
+        if (parts.hostname or "") in _LOOPBACK_HOSTS:
+            problems.append(f"CORS_ORIGINS da lokal manzil: {origin}")
+    return problems
+
+
+def _guard_production(settings: Settings) -> None:
+    problems = production_problems(settings)
+    if problems:
+        raise InsecureConfiguration(
+            "APP_ENV=production, lekin sozlamalar xavfsiz emas:\n"
+            + "\n".join(f"  - {p}" for p in problems)
+        )
+
+
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()
-    _guard(settings)
+    if settings.is_production:
+        _guard_production(settings)
+    else:
+        _guard(settings)
     return settings
 
 
