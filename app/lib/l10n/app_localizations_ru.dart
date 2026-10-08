@@ -1132,4 +1132,7 @@ class LRu extends L {
 
   @override
   String get createPreviewTitle => 'Так объявление выглядит в ленте';
+
+  @override
+  String get traderNew => 'Новый участник';
 }

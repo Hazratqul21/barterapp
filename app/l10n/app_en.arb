@@ -355,5 +355,6 @@
   "createShortGive": "Give",
   "createShortTake": "Get",
   "createShortValue": "Value",
-  "createPreviewTitle": "How it looks in the feed"
+  "createPreviewTitle": "How it looks in the feed",
+  "traderNew": "New member"
 }

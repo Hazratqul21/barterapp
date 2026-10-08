@@ -5,7 +5,7 @@ import '../art/category_marks.dart';
 import '../theme/haptics.dart';
 import '../theme/motion.dart';
 import '../theme/tokens.dart';
-import '../widgets/common.dart' show palette;
+import '../widgets/common.dart' show TraderAvatar, TrustLine, palette;
 
 /// Every design token on one screen: colours, type, shapes, motion.
 ///
@@ -30,6 +30,7 @@ class DesignCatalogPage extends StatelessWidget {
           _Section('Narx', _Prices()),
           _Section('Tugmalar', _Buttons()),
           _Section('Kartalar va kategoriyalar', _Cards()),
+          _Section('Ishonch', _Trust()),
           _Section('Harakat (spring)', _MotionDemo()),
         ],
       ),
@@ -263,6 +264,57 @@ class _Cards extends StatelessWidget {
               ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+class _Trust extends StatelessWidget {
+  const _Trust();
+
+  static const _traders = [
+    TraderBrief(
+      id: '1',
+      name: 'Aziz Karimov',
+      isVerified: true,
+      rating: 4.8,
+      deals: 12,
+    ),
+    TraderBrief(id: '2', name: 'Bekzod', isVerified: false),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final t in _traders)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Gap.x3),
+            child: Row(
+              children: [
+                TraderAvatar(
+                  url: null,
+                  name: t.name,
+                  size: 48,
+                  verified: t.isVerified,
+                ),
+                Gap.w3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.name,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      Gap.h1,
+                      TrustLine(trader: t),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

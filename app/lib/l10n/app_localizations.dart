@@ -2228,6 +2228,12 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Lentada shunday ko‘rinadi'**
   String get createPreviewTitle;
+
+  /// No description provided for @traderNew.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi a’zo'**
+  String get traderNew;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

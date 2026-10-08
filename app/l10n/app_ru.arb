@@ -354,5 +354,6 @@
   "createShortGive": "Отдаю",
   "createShortTake": "Хочу",
   "createShortValue": "Цена",
-  "createPreviewTitle": "Так объявление выглядит в ленте"
+  "createPreviewTitle": "Так объявление выглядит в ленте",
+  "traderNew": "Новый участник"
 }
