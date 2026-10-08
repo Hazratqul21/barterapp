@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,7 @@ import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
+import '../data/listing_draft.dart';
 import '../data/trade_repository.dart';
 
 class CreateListingPage extends ConsumerStatefulWidget {
@@ -24,11 +27,11 @@ class CreateListingPage extends ConsumerStatefulWidget {
 
 class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   static const _steps = 4;
+  static const _maxPhotos = 10;
   int _step = 0;
   bool _busy = false;
-  bool _uploading = false;
 
-  final _photos = <String>[];
+  final _photos = <_PhotoSlot>[];
   ListingTag? _tag;
   final _title = _Trilingual();
   final _description = _Trilingual();
@@ -41,15 +44,39 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   bool _cashOk = false;
   bool _wantsCash = false;
 
+  /// Read once: `ref` is not usable in [dispose], where the last save runs.
+  late final ListingDraftStore _drafts = ref.read(listingDraftStoreProvider);
+  Timer? _saveTimer;
+
+  /// Drafts are for new listings only; an edit already lives on the server.
+  bool get _drafting => widget.listingToEdit == null;
+
+  /// False while the "continue your draft?" question is open, so autosave
+  /// cannot overwrite the stored draft with this still-empty form.
+  bool _draftSettled = true;
+
+  /// Set once the listing is published; nothing may be saved after that.
+  bool _done = false;
+
+  Map<String, _Trilingual> get _fields => {
+    'title': _title,
+    'description': _description,
+    'category': _category,
+    'condition': _condition,
+    'quantity': _quantity,
+    'wants': _wants,
+  };
+
   @override
   void initState() {
     super.initState();
     if (widget.listingToEdit != null) {
       final lst = widget.listingToEdit!;
       _photos.addAll(
-        lst.gallery.isEmpty && lst.imageUrl != null
-            ? [lst.imageUrl!]
-            : lst.gallery,
+        (lst.gallery.isEmpty && lst.imageUrl != null
+                ? [lst.imageUrl!]
+                : lst.gallery)
+            .map(_PhotoSlot.uploaded),
       );
       // listing tag is not in ListingDetail? wait, we don't have tag in ListingDetail.
       // We will leave _tag as null so user selects it.
@@ -62,29 +89,126 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
       _value.text = (lst.value.minor ~/ 100).toString();
       _cashOk = lst.cashOk;
+      return;
+    }
+
+    for (final field in _fields.values) {
+      for (final c in field.controllers.values) {
+        c.addListener(_changed);
+      }
+    }
+    _value.addListener(_changed);
+
+    final draft = _drafts.load();
+    if (draft != null) {
+      _draftSettled = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _offerDraft(draft));
     }
   }
 
   @override
   void dispose() {
-    for (final f in [
-      _title,
-      _description,
-      _category,
-      _condition,
-      _quantity,
-      _wants,
-    ]) {
+    _saveTimer?.cancel();
+    // Leaving the page is the moment most worth saving.
+    if (_drafting && _draftSettled && !_done) _drafts.save(_snapshot());
+    for (final f in _fields.values) {
       f.dispose();
     }
     _value.dispose();
     super.dispose();
   }
 
+  /// Any edit: save shortly after typing stops, not on every keystroke.
+  void _changed() {
+    if (!_drafting || !_draftSettled || _done) return;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 600), () {
+      if (!_done) _drafts.save(_snapshot());
+    });
+  }
+
+  ListingDraft _snapshot() => ListingDraft(
+    savedAt: DateTime.now(),
+    step: _step,
+    photos: [
+      for (final slot in _photos)
+        if (slot.url != null) slot.url!,
+    ],
+    tag: _tag?.name,
+    fields: {for (final e in _fields.entries) e.key: e.value.toJson()},
+    value: _value.text,
+    wantTag: _wantTag?.name,
+    cashOk: _cashOk,
+    wantsCash: _wantsCash,
+  );
+
+  Future<void> _offerDraft(ListingDraft draft) async {
+    if (!mounted) return;
+    final l = L.of(context);
+    final resume = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(l.draftFoundTitle),
+        content: Text(l.draftFoundBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.draftDiscard),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.draftContinue),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (resume != true) {
+      await _drafts.clear();
+      _draftSettled = true;
+      return;
+    }
+
+    final expired = draft.photosExpired(DateTime.now());
+    final usable = expired ? draft.withoutPhotos() : draft;
+    final tags = ListingTag.values.asNameMap();
+    setState(() {
+      _photos
+        ..clear()
+        ..addAll(usable.photos.map(_PhotoSlot.uploaded));
+      _tag = tags[usable.tag];
+      _wantTag = tags[usable.wantTag];
+      for (final e in _fields.entries) {
+        final saved = usable.fields[e.key] ?? const {};
+        e.value.controllers.forEach(
+          (locale, c) => c.text = saved[locale] ?? '',
+        );
+      }
+      _value.text = usable.value;
+      _cashOk = usable.cashOk;
+      _wantsCash = usable.wantsCash;
+      _step = usable.step.clamp(0, _steps - 1);
+      // Never land past a step whose requirements are no longer met (the
+      // photos may have just been dropped).
+      while (_step > 0 && !_stepDone(0)) {
+        _step--;
+      }
+    });
+    _draftSettled = true;
+    if (expired) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.draftPhotosExpired)));
+    }
+  }
+
   int get _valueSom => int.tryParse(_value.text.replaceAll(' ', '')) ?? 0;
 
-  bool get _stepComplete => switch (_step) {
-    0 => _photos.isNotEmpty,
+  bool get _stepComplete => _stepDone(_step);
+
+  bool _stepDone(int step) => switch (step) {
+    0 => _photos.isNotEmpty && _photos.every((slot) => slot.url != null),
     1 =>
       _tag != null &&
           _title.complete &&
@@ -97,19 +221,62 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   };
 
   Future<void> _addPhoto() async {
-    setState(() => _uploading = true);
+    final picked = await pickPhoto(context);
+    if (picked == null || !mounted) return;
+    final slot = _PhotoSlot.pending(picked);
+    setState(() => _photos.add(slot));
+    await _upload(slot);
+  }
+
+  /// Each photo uploads on its own: one slow or failed photo no longer
+  /// blocks adding the next, and a failure is retried from the bytes in hand.
+  Future<void> _upload(_PhotoSlot slot) async {
+    final picked = slot.picked;
+    if (picked == null) return;
+    setState(() {
+      slot.error = null;
+      slot.progress = 0;
+    });
     try {
-      final url = await pickAndUploadPhoto(context, ref);
-      if (url != null) setState(() => _photos.add(url));
+      final url = await ref
+          .read(tradeRepositoryProvider)
+          .uploadPhoto(
+            bytes: picked.bytes,
+            filename: picked.filename,
+            onProgress: (sent, total) {
+              if (!mounted || total <= 0) return;
+              setState(() => slot.progress = sent / total);
+            },
+          );
+      if (!mounted) return;
+      setState(() {
+        slot.url = url;
+        slot.picked = null;
+      });
+      _changed();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
-      }
-    } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (!mounted) return;
+      setState(() => slot.error = e);
     }
+  }
+
+  void _removePhoto(_PhotoSlot slot) {
+    setState(() => _photos.remove(slot));
+    _changed();
+  }
+
+  void _reorderPhoto(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex--;
+      _photos.insert(newIndex, _photos.removeAt(oldIndex));
+    });
+    _changed();
+  }
+
+  /// setState that also counts as an edit worth saving.
+  void _edit(VoidCallback change) {
+    setState(change);
+    _changed();
   }
 
   Future<void> _publish() async {
@@ -132,7 +299,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
             'wants_cash': _wantsCash,
           },
         ],
-        'photos': _photos,
+        'photos': [for (final slot in _photos) slot.url!],
         'value': {'minor': _valueSom * 100, 'currency': 'UZS'},
         'cash_ok': _cashOk,
       };
@@ -144,6 +311,9 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         ref.invalidate(listingDetailProvider(widget.listingToEdit!.id));
       } else {
         await ref.read(tradeRepositoryProvider).createListing(body);
+        _done = true;
+        _saveTimer?.cancel();
+        await _drafts.clear();
       }
       ref.invalidate(feedProvider);
       ref.invalidate(myListingsProvider);
@@ -251,7 +421,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                           child: OutlinedButton(
                             onPressed: _busy
                                 ? null
-                                : () => setState(() => _step--),
+                                : () => _edit(() => _step--),
                             child: Text(l.createBack),
                           ),
                         ),
@@ -259,11 +429,11 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                       Expanded(
                         flex: 2,
                         child: FilledButton(
-                          onPressed: !_stepComplete || _busy || _uploading
+                          onPressed: !_stepComplete || _busy
                               ? null
                               : () {
                                   HapticFeedback.mediumImpact();
-                                  last ? _publish() : setState(() => _step++);
+                                  last ? _publish() : _edit(() => _step++);
                                 },
                           child: _busy
                               ? const SizedBox(
@@ -289,20 +459,52 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   }
 
   List<Widget> _photosStep(L l) => [
-    Wrap(
-      spacing: Gap.x3,
-      runSpacing: Gap.x3,
+    Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (index, url) in _photos.indexed)
-          PhotoWell(
-            url: url,
-            onTap: null,
-            onRemove: () => setState(() => _photos.removeAt(index)),
+        if (_photos.length < _maxPhotos) ...[
+          PhotoWell(url: null, onTap: _addPhoto),
+          Gap.w3,
+        ],
+        Expanded(
+          child: SizedBox(
+            // Room for the remove badge that pokes out of each well.
+            height: 96 + 12,
+            child: ReorderableListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(top: 6, right: 6),
+              itemCount: _photos.length,
+              onReorder: _reorderPhoto,
+              itemBuilder: (context, index) {
+                final slot = _photos[index];
+                return Padding(
+                  key: slot.key,
+                  padding: const EdgeInsets.only(right: Gap.x3),
+                  child: _PhotoTile(
+                    slot: slot,
+                    cover: index == 0,
+                    coverLabel: l.photoCover,
+                    failedLabel: l.photoUploadFailed,
+                    retryLabel: l.retry,
+                    onRemove: () => _removePhoto(slot),
+                    onRetry: () => _upload(slot),
+                  ),
+                );
+              },
+            ),
           ),
-        if (_photos.length < 10)
-          PhotoWell(url: null, busy: _uploading, onTap: _addPhoto),
+        ),
       ],
     ),
+    if (_photos.length > 1) ...[
+      Gap.h3,
+      Text(
+        l.photoReorderHint,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: palette(context).inkSoft),
+      ),
+    ],
   ];
 
   List<Widget> _giveStep(L l) => [
@@ -317,7 +519,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         for (final t in ListingTag.values)
           DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
       ],
-      onChanged: (v) => setState(() => _tag = v),
+      onChanged: (v) => _edit(() => _tag = v),
     ),
     Gap.h4,
     _TrilingualField(label: l.createFieldTitle, field: _title),
@@ -344,21 +546,18 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
       items: [
-        DropdownMenuItem(
-          value: null,
-          child: Text(l.createWantAny),
-        ),
+        DropdownMenuItem(value: null, child: Text(l.createWantAny)),
         for (final t in ListingTag.values)
           DropdownMenuItem(value: t, child: Text(categoryLabel(l, t))),
       ],
-      onChanged: (v) => setState(() => _wantTag = v),
+      onChanged: (v) => _edit(() => _wantTag = v),
     ),
     Gap.h4,
     _TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2),
     Gap.h4,
     SwitchListTile(
       value: _cashOk,
-      onChanged: (v) => setState(() {
+      onChanged: (v) => _edit(() {
         _cashOk = v;
         if (v) _wantsCash = false;
       }),
@@ -368,7 +567,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     ),
     SwitchListTile(
       value: _wantsCash,
-      onChanged: (v) => setState(() {
+      onChanged: (v) => _edit(() {
         _wantsCash = v;
         if (v) _cashOk = false;
       }),
@@ -509,6 +708,162 @@ class _TrilingualFieldState extends State<_TrilingualField>
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One photo on the first step: either uploaded (has a [url]) or still on
+/// the device (has [picked]) — uploading, or failed with [error].
+class _PhotoSlot {
+  _PhotoSlot.uploaded(String this.url);
+  _PhotoSlot.pending(PickedPhoto this.picked);
+
+  final key = UniqueKey();
+  String? url;
+  PickedPhoto? picked;
+  double progress = 0;
+  Object? error;
+}
+
+class _PhotoTile extends StatelessWidget {
+  const _PhotoTile({
+    required this.slot,
+    required this.cover,
+    required this.coverLabel,
+    required this.failedLabel,
+    required this.retryLabel,
+    required this.onRemove,
+    required this.onRetry,
+  });
+
+  final _PhotoSlot slot;
+  final bool cover;
+  final String coverLabel;
+  final String failedLabel;
+  final String retryLabel;
+  final VoidCallback onRemove;
+  final VoidCallback onRetry;
+
+  static const _size = 96.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    final theme = Theme.of(context);
+    final picked = slot.picked;
+
+    final Widget well;
+    if (slot.url != null || picked == null) {
+      well = PhotoWell(url: slot.url, onTap: null, onRemove: onRemove);
+    } else {
+      final failed = slot.error != null;
+      well = SizedBox.square(
+        dimension: _size,
+        child: Stack(
+          clipBehavior: Clip.none,
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.memory(
+                picked.bytes,
+                fit: BoxFit.cover,
+                color: Colors.black.withValues(alpha: 0.45),
+                colorBlendMode: BlendMode.darken,
+              ),
+            ),
+            Center(
+              child: failed
+                  ? Semantics(
+                      button: true,
+                      label: '$failedLabel. $retryLabel',
+                      child: IconButton(
+                        tooltip: retryLabel,
+                        onPressed: onRetry,
+                        icon: const Icon(
+                          Symbols.refresh_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : SizedBox.square(
+                      dimension: 34,
+                      child: CircularProgressIndicator(
+                        value: slot.progress > 0 ? slot.progress : null,
+                        strokeWidth: 3,
+                        color: Colors.white,
+                        backgroundColor: Colors.white24,
+                      ),
+                    ),
+            ),
+            if (failed)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 6,
+                child: Text(
+                  failedLabel,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            if (failed)
+              Positioned(
+                top: -6,
+                right: -6,
+                child: Material(
+                  color: theme.colorScheme.surfaceContainerLowest,
+                  shape: const CircleBorder(),
+                  elevation: 2,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: onRemove,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Symbols.close_rounded,
+                        size: 16,
+                        color: p.inkSoft,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    if (!cover) return well;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        well,
+        Positioned(
+          left: 6,
+          bottom: 6,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: p.give,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Text(
+                  coverLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

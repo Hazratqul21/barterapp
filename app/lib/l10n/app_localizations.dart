@@ -2150,6 +2150,54 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Foydalanuvchi bloklandi'**
   String get userBlocked;
+
+  /// No description provided for @draftFoundTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qoralama topildi'**
+  String get draftFoundTitle;
+
+  /// No description provided for @draftFoundBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tugallanmagan e’loningiz saqlanib qolgan. Davom ettirasizmi?'**
+  String get draftFoundBody;
+
+  /// No description provided for @draftContinue.
+  ///
+  /// In uz, this message translates to:
+  /// **'Davom ettirish'**
+  String get draftContinue;
+
+  /// No description provided for @draftDiscard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangidan boshlash'**
+  String get draftDiscard;
+
+  /// No description provided for @draftPhotosExpired.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qoralamadagi suratlar eskirgan — ularni qayta qo‘shing.'**
+  String get draftPhotosExpired;
+
+  /// No description provided for @photoCover.
+  ///
+  /// In uz, this message translates to:
+  /// **'Asosiy'**
+  String get photoCover;
+
+  /// No description provided for @photoUploadFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuklanmadi'**
+  String get photoUploadFailed;
+
+  /// No description provided for @photoReorderHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi.'**
+  String get photoReorderHint;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

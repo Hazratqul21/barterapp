@@ -342,5 +342,13 @@
   "filterInvalidRange": "Minimum value must not exceed maximum value.",
   "navPost": "Post",
   "reportSent": "Your report was sent to moderation",
-  "userBlocked": "User blocked"
+  "userBlocked": "User blocked",
+  "draftFoundTitle": "Draft found",
+  "draftFoundBody": "Your unfinished listing was saved. Continue where you left off?",
+  "draftContinue": "Continue",
+  "draftDiscard": "Start over",
+  "draftPhotosExpired": "The draft’s photos have expired — please add them again.",
+  "photoCover": "Cover",
+  "photoUploadFailed": "Upload failed",
+  "photoReorderHint": "Press and drag a photo to reorder. The first one is shown in the feed."
 }
