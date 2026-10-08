@@ -174,7 +174,7 @@ class ListingCardTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Price(listing.value, locale),
+                    PriceText(listing.value, size: 16),
                     const SizedBox(height: 4),
                     Text(
                       listing.title,
@@ -211,27 +211,34 @@ class ListingCardTile extends StatelessWidget {
 }
 
 /// The price with the number carrying the weight and the unit stepping back.
-class _Price extends StatelessWidget {
-  const _Price(this.money, this.locale);
+/// Shrinks rather than truncates: a cut-off price is wrong information.
+class PriceText extends StatelessWidget {
+  const PriceText(this.money, {super.key, this.size = 17});
 
   final Money money;
-  final String locale;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
     final formatted = money.format(locale);
     final split = formatted.lastIndexOf(' ');
     final number = split > 0 ? formatted.substring(0, split) : formatted;
     final unit = split > 0 ? formatted.substring(split) : '';
-    // Shrinks rather than truncates: a cut-off price is wrong information.
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: number, style: AppText.price(context, size: 16)),
-            TextSpan(text: unit, style: AppText.currency(context, size: 12)),
+            TextSpan(
+              text: number,
+              style: AppText.price(context, size: size),
+            ),
+            TextSpan(
+              text: unit,
+              style: AppText.currency(context, size: size * 0.75),
+            ),
           ],
         ),
         maxLines: 1,

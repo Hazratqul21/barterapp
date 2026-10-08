@@ -14,6 +14,10 @@ import '../../trade/data/trade_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/analytics/analytics_service.dart';
 import '../../../core/theme/haptics.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+import '../../feed/presentation/listing_card_tile.dart'
+    show PriceText, SwapChip;
+import 'photo_viewer.dart';
 
 class ListingDetailPage extends ConsumerStatefulWidget {
   const ListingDetailPage({super.key, required this.listingId});
@@ -210,27 +214,38 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
       bottomNavigationBar: async.maybeWhen(
         data: (listing) {
           final isMine = ref.watch(meProvider).value?.id == listing.owner.id;
-          return SafeArea(
-            minimum: const EdgeInsets.fromLTRB(Gap.x5, Gap.x2, Gap.x5, Gap.x3),
-            child: Center(
-              heightFactor: 1,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-                child: Row(
-                  children: [
-                    if (isMine)
-                      Expanded(
-                        child: FilledButton.icon(
+          final scheme = Theme.of(context).colorScheme;
+          return DecoratedBox(
+            // Its own surface and a hairline, so the content scrolling
+            // underneath reads as underneath.
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLowest,
+              border: Border(top: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: SafeArea(
+              minimum: const EdgeInsets.fromLTRB(
+                Gap.x5,
+                Gap.x3,
+                Gap.x5,
+                Gap.x3,
+              ),
+              child: Center(
+                heightFactor: 1,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+                  child: isMine
+                      ? FilledButton.icon(
                           onPressed: () {
                             Haptics.light();
                             context.push('/create', extra: listing);
                           },
                           icon: const Icon(
-                            Icons.edit_rounded,
+                            Symbols.edit_rounded,
                             size: Sizes.iconMd,
                           ),
                           label: Text(l.actionEdit),
                           style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(Sizes.buttonLg),
                             backgroundColor: Theme.of(
                               context,
                             ).colorScheme.secondary,
@@ -238,23 +253,42 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                               context,
                             ).colorScheme.onSecondary,
                           ),
+                        )
+                      // The decision bar: what it is worth and what they want,
+                      // next to the one action — no scrolling back up to check.
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  PriceText(listing.value, size: 18),
+                                  const SizedBox(height: 2),
+                                  SwapChip(wants: listing.wants.join(', ')),
+                                ],
+                              ),
+                            ),
+                            Gap.w3,
+                            FilledButton.icon(
+                              onPressed: () {
+                                Haptics.light();
+                                context.push('/offer/${listing.id}');
+                              },
+                              icon: const Icon(
+                                Symbols.swap_horiz_rounded,
+                                size: Sizes.iconMd,
+                              ),
+                              label: Text(l.listingOffer),
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(0, Sizes.buttonLg),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: Gap.x6,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      )
-                    else
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            Haptics.light();
-                            context.push('/offer/${listing.id}');
-                          },
-                          icon: const Icon(
-                            Icons.swap_horiz_rounded,
-                            size: Sizes.iconMd,
-                          ),
-                          label: Text(l.listingOffer),
-                        ),
-                      ),
-                  ],
                 ),
               ),
             ),
@@ -316,90 +350,77 @@ class _Content extends StatelessWidget {
         SliverAppBar(
           pinned: true,
           expandedHeight: heroHeight,
-          backgroundColor: BrandColors.brand500,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            tooltip: context.canPop()
-                ? MaterialLocalizations.of(context).backButtonTooltip
-                : MaterialLocalizations.of(context).closeButtonTooltip,
-            icon: Icon(
-              context.canPop() ? Icons.arrow_back : Icons.close_rounded,
+          // Calm surface once collapsed; over the photo the controls sit on
+          // their own dark discs so they read on any picture.
+          backgroundColor: theme.colorScheme.surface,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          leadingWidth: 64,
+          leading: Center(
+            child: _OverPhotoButton(
+              tooltip: context.canPop()
+                  ? MaterialLocalizations.of(context).backButtonTooltip
+                  : MaterialLocalizations.of(context).closeButtonTooltip,
+              icon: context.canPop()
+                  ? Symbols.arrow_back_rounded
+                  : Symbols.close_rounded,
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
             ),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
-            },
           ),
           actions: [
-            if (isMine)
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    onEdit();
-                  } else if (value == 'delete') {
-                    onDelete();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
-                  PopupMenuItem(value: 'delete', child: Text(l.actionDelete)),
-                ],
-              )
-            else
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'report') {
-                    onReport();
-                  } else if (value == 'block') {
-                    onBlock();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'report',
-                    child: Text(l.actionReportUser),
-                  ),
-                  PopupMenuItem(value: 'block', child: Text(l.actionBlockUser)),
-                ],
-              ),
             if (!isMine)
-              Padding(
-                padding: const EdgeInsets.only(right: Gap.x2),
-                child: TextButton(
-                  onPressed: onToggleSave,
-                  style: TextButton.styleFrom(
-                    backgroundColor: saved
-                        ? BrandColors.gold500
-                        : Colors.black.withValues(alpha: 0.35),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(saved ? l.listingSaved : l.listingSave),
-                ),
+              _OverPhotoButton(
+                tooltip: saved ? l.listingSaved : l.listingSave,
+                icon: Symbols.favorite_rounded,
+                filled: saved,
+                color: saved ? theme.colorScheme.error : null,
+                onPressed: onToggleSave,
               ),
+            Gap.w2,
+            PopupMenuButton<String>(
+              onSelected: (value) => switch (value) {
+                'edit' => onEdit(),
+                'delete' => onDelete(),
+                'report' => onReport(),
+                'block' => onBlock(),
+                _ => null,
+              },
+              itemBuilder: (context) => isMine
+                  ? [
+                      PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(l.actionDelete),
+                      ),
+                    ]
+                  : [
+                      PopupMenuItem(
+                        value: 'report',
+                        child: Text(l.actionReportUser),
+                      ),
+                      PopupMenuItem(
+                        value: 'block',
+                        child: Text(l.actionBlockUser),
+                      ),
+                    ],
+              child: const _OverPhotoButton(icon: Symbols.more_horiz_rounded),
+            ),
+            Gap.w3,
           ],
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(
               tag: 'listing-image-${listing.id}',
-              child: AnimatedSwitcher(
-                duration: M3Motion.short4,
-                switchInCurve: M3Motion.standardDecelerate,
-                switchOutCurve: M3Motion.standardAccelerate,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: RemoteImage(
-                  key: ValueKey(
-                    gallery.isEmpty
-                        ? ''
-                        : gallery[shot.clamp(0, gallery.length - 1)],
-                  ),
-                  url: gallery.isEmpty
-                      ? null
-                      : gallery[shot.clamp(0, gallery.length - 1)],
-                  semanticLabel: listing.imageAlt,
-                ),
+              child: _Gallery(
+                photos: gallery,
+                index: shot,
+                semanticLabel: listing.imageAlt,
+                onIndex: onShot,
               ),
             ),
           ),
@@ -410,37 +431,6 @@ class _Content extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (gallery.length > 1) ...[
-                  SizedBox(
-                    height: 60,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: gallery.length,
-                      separatorBuilder: (_, _) => Gap.w2,
-                      itemBuilder: (context, i) => InkWell(
-                        onTap: () => onShot(i),
-                        borderRadius: Radii.rSm,
-                        child: Container(
-                          width: 60,
-                          decoration: BoxDecoration(
-                            borderRadius: Radii.rSm,
-                            border: Border.all(
-                              color: i == shot ? p.give : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: RemoteImage(
-                            url: gallery[i],
-                            semanticLabel: '',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Gap.h5,
-                ],
-
                 Text(listing.title, style: theme.textTheme.headlineMedium),
                 Gap.h2,
                 Wrap(
@@ -448,12 +438,7 @@ class _Content extends StatelessWidget {
                   runSpacing: Gap.x2,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
-                      listing.value.format(locale),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
+                    PriceText(listing.value, size: 22),
                     Pill(
                       label: listing.cashOk ? l.listingCashOk : l.listingCashNo,
                       foreground: listing.cashOk ? p.money : p.inkSoft,
@@ -540,6 +525,9 @@ class _Content extends StatelessWidget {
                 BouncingClayCard(
                   clayMode: true,
                   borderRadius: Radii.rLg,
+                  onTap: isMine
+                      ? null
+                      : () => context.push('/trader/${listing.owner.id}'),
                   child: Container(
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerLow,
@@ -797,6 +785,140 @@ class _SpecRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The photos, swipeable, with a "2 / 5" counter. Tap opens them full
+/// screen; coming back lands on the photo that was last viewed.
+class _Gallery extends StatefulWidget {
+  const _Gallery({
+    required this.photos,
+    required this.index,
+    required this.semanticLabel,
+    required this.onIndex,
+  });
+
+  final List<String> photos;
+  final int index;
+  final String semanticLabel;
+  final ValueChanged<int> onIndex;
+
+  @override
+  State<_Gallery> createState() => _GalleryState();
+}
+
+class _GalleryState extends State<_Gallery> {
+  late final PageController _pages = PageController(initialPage: widget.index);
+
+  @override
+  void didUpdateWidget(_Gallery old) {
+    super.didUpdateWidget(old);
+    if (_pages.hasClients && _pages.page?.round() != widget.index) {
+      _pages.jumpToPage(widget.index);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  Future<void> _open(int i) async {
+    final back = await showPhotoViewer(
+      context,
+      photos: widget.photos,
+      initial: i,
+      semanticLabel: widget.semanticLabel,
+    );
+    if (back != null && mounted) widget.onIndex(back);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.photos.isEmpty) {
+      return RemoteImage(url: null, semanticLabel: widget.semanticLabel);
+    }
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PageView.builder(
+          controller: _pages,
+          itemCount: widget.photos.length,
+          onPageChanged: (i) {
+            Haptics.selection();
+            widget.onIndex(i);
+          },
+          itemBuilder: (context, i) => GestureDetector(
+            onTap: () => _open(i),
+            child: RemoteImage(
+              url: widget.photos[i],
+              semanticLabel: widget.semanticLabel,
+            ),
+          ),
+        ),
+        if (widget.photos.length > 1)
+          Positioned(
+            right: Gap.x4,
+            bottom: Gap.x4,
+            child: IgnorePointer(
+              child: PhotoCounter(
+                index: widget.index.clamp(0, widget.photos.length - 1),
+                count: widget.photos.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// A control floating over the hero photo: a dark disc so the glyph reads on
+/// a white wall or a dark field alike. 48px target.
+class _OverPhotoButton extends StatelessWidget {
+  const _OverPhotoButton({
+    required this.icon,
+    this.onPressed,
+    this.tooltip,
+    this.filled = false,
+    this.color,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final bool filled;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final glyph = Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        size: 22,
+        fill: filled ? 1 : 0,
+        color: color ?? Colors.white,
+      ),
+    );
+    // Without onPressed this is the face of a PopupMenuButton, which
+    // supplies its own tap target and tooltip.
+    if (onPressed == null) {
+      return SizedBox.square(dimension: 48, child: Center(child: glyph));
+    }
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      icon: glyph,
     );
   }
 }
