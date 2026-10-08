@@ -1,9 +1,13 @@
 import 'package:barter_app/core/network/api_client.dart';
 import 'package:barter_app/core/theme/app_theme.dart';
 import 'package:barter_app/features/trade/data/listing_draft.dart';
+import 'package:barter_app/features/feed/presentation/listing_card_tile.dart';
 import 'package:barter_app/features/trade/presentation/create_listing_page.dart';
 import 'package:barter_app/l10n/app_localizations.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +55,17 @@ Future<void> _pumpCreate(WidgetTester tester, SharedPreferences prefs) async {
 }
 
 void main() {
+  setUpAll(() async {
+    await (FontLoader('Manrope')..addFont(
+          Future.value(
+            ByteData.sublistView(
+              File('assets/fonts/Manrope-Variable.ttf').readAsBytesSync(),
+            ),
+          ),
+        ))
+        .load();
+  });
+
   group('ListingDraft', () {
     test('survives a JSON round trip', () {
       final draft = _draft(photos: ['https://x/1.jpg', 'https://x/2.jpg']);
@@ -144,6 +159,57 @@ void main() {
       await tester.tap(find.text('Yangidan boshlash'));
       await tester.pumpAndSettle();
       expect(ListingDraftStore(prefs).load(), isNull);
+    });
+
+    testWidgets('steps are labelled and the last one previews the card', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final prefs = await _prefs();
+      // A finished draft on the last step; an empty URL is an uploaded photo
+      // that renders the local placeholder (no network in tests).
+      await ListingDraftStore(prefs).save(
+        ListingDraft(
+          savedAt: DateTime.now(),
+          step: 3,
+          photos: const [''],
+          tag: 'electronics',
+          fields: {
+            for (final f in [
+              'title',
+              'description',
+              'category',
+              'condition',
+              'quantity',
+            ])
+              f: const {'uz': 'Noutbuk', 'ru': 'Ноутбук', 'en': 'Laptop'},
+            'wants': const {'uz': 'Telefon', 'ru': 'Телефон', 'en': 'Phone'},
+          },
+          value: '5000000',
+        ),
+      );
+      await _pumpCreate(tester, prefs);
+      await tester.tap(find.text('Davom ettirish'));
+      await tester.pumpAndSettle();
+
+      for (final label in ['Suratlar', 'Beraman', 'Olaman', 'Qiymat']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('Lentada shunday ko‘rinadi'), findsOneWidget);
+      expect(find.byType(ListingCardTile), findsOneWidget);
+      expect(find.text('Noutbuk'), findsWidgets);
+      expect(find.text('Telefon'), findsOneWidget);
+      await expectLater(
+        find.byType(CreateListingPage),
+        matchesGoldenFile('goldens/create_listing_preview.png'),
+      );
+
+      // A finished step is a shortcut back.
+      await tester.tap(find.text('Beraman'));
+      await tester.pumpAndSettle();
+      expect(find.text('Lentada shunday ko‘rinadi'), findsNothing);
     });
 
     testWidgets('no question without a draft', (tester) async {

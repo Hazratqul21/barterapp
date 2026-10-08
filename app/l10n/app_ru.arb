@@ -349,5 +349,10 @@
   "draftPhotosExpired": "Фото в черновике устарели — добавьте их заново.",
   "photoCover": "Обложка",
   "photoUploadFailed": "Не загрузилось",
-  "photoReorderHint": "Чтобы изменить порядок, нажмите и перетащите фото. Первое показывается в ленте."
+  "photoReorderHint": "Чтобы изменить порядок, нажмите и перетащите фото. Первое показывается в ленте.",
+  "createShortPhotos": "Фото",
+  "createShortGive": "Отдаю",
+  "createShortTake": "Хочу",
+  "createShortValue": "Цена",
+  "createPreviewTitle": "Так объявление выглядит в ленте"
 }

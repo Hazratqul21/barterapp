@@ -2198,6 +2198,36 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi.'**
   String get photoReorderHint;
+
+  /// No description provided for @createShortPhotos.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suratlar'**
+  String get createShortPhotos;
+
+  /// No description provided for @createShortGive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Beraman'**
+  String get createShortGive;
+
+  /// No description provided for @createShortTake.
+  ///
+  /// In uz, this message translates to:
+  /// **'Olaman'**
+  String get createShortTake;
+
+  /// No description provided for @createShortValue.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qiymat'**
+  String get createShortValue;
+
+  /// No description provided for @createPreviewTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Lentada shunday ko‘rinadi'**
+  String get createPreviewTitle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

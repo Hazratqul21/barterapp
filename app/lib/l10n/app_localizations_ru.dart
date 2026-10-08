@@ -1117,4 +1117,19 @@ class LRu extends L {
   @override
   String get photoReorderHint =>
       'Чтобы изменить порядок, нажмите и перетащите фото. Первое показывается в ленте.';
+
+  @override
+  String get createShortPhotos => 'Фото';
+
+  @override
+  String get createShortGive => 'Отдаю';
+
+  @override
+  String get createShortTake => 'Хочу';
+
+  @override
+  String get createShortValue => 'Цена';
+
+  @override
+  String get createPreviewTitle => 'Так объявление выглядит в ленте';
 }

@@ -1116,4 +1116,19 @@ class LEn extends L {
   @override
   String get photoReorderHint =>
       'Press and drag a photo to reorder. The first one is shown in the feed.';
+
+  @override
+  String get createShortPhotos => 'Photos';
+
+  @override
+  String get createShortGive => 'Give';
+
+  @override
+  String get createShortTake => 'Get';
+
+  @override
+  String get createShortValue => 'Value';
+
+  @override
+  String get createPreviewTitle => 'How it looks in the feed';
 }

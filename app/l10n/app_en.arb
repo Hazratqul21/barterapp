@@ -350,5 +350,10 @@
   "draftPhotosExpired": "The draft’s photos have expired — please add them again.",
   "photoCover": "Cover",
   "photoUploadFailed": "Upload failed",
-  "photoReorderHint": "Press and drag a photo to reorder. The first one is shown in the feed."
+  "photoReorderHint": "Press and drag a photo to reorder. The first one is shown in the feed.",
+  "createShortPhotos": "Photos",
+  "createShortGive": "Give",
+  "createShortTake": "Get",
+  "createShortValue": "Value",
+  "createPreviewTitle": "How it looks in the feed"
 }

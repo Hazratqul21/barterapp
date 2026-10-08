@@ -1120,4 +1120,19 @@ class LUz extends L {
   @override
   String get photoReorderHint =>
       'Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi.';
+
+  @override
+  String get createShortPhotos => 'Suratlar';
+
+  @override
+  String get createShortGive => 'Beraman';
+
+  @override
+  String get createShortTake => 'Olaman';
+
+  @override
+  String get createShortValue => 'Qiymat';
+
+  @override
+  String get createPreviewTitle => 'Lentada shunday ko‘rinadi';
 }

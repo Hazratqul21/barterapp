@@ -433,5 +433,10 @@
   "draftPhotosExpired": "Qoralamadagi suratlar eskirgan — ularni qayta qo‘shing.",
   "photoCover": "Asosiy",
   "photoUploadFailed": "Yuklanmadi",
-  "photoReorderHint": "Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi."
+  "photoReorderHint": "Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi.",
+  "createShortPhotos": "Suratlar",
+  "createShortGive": "Beraman",
+  "createShortTake": "Olaman",
+  "createShortValue": "Qiymat",
+  "createPreviewTitle": "Lentada shunday ko‘rinadi"
 }
