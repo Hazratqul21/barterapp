@@ -1134,4 +1134,23 @@ class LEn extends L {
 
   @override
   String get traderNew => 'New member';
+
+  @override
+  String get matchMutual => 'Mutual match';
+
+  @override
+  String get matchMutualHint =>
+      'They want what you have, too — you can swap directly.';
+
+  @override
+  String get matchReasonNamedCategory => 'Category you asked for';
+
+  @override
+  String get matchReasonValueClose => 'Similar value';
+
+  @override
+  String get matchReasonNearby => 'Nearby';
+
+  @override
+  String get matchReasonVerified => 'Verified trader';
 }

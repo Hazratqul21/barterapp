@@ -356,5 +356,11 @@
   "createShortTake": "Get",
   "createShortValue": "Value",
   "createPreviewTitle": "How it looks in the feed",
-  "traderNew": "New member"
+  "traderNew": "New member",
+  "matchMutual": "Mutual match",
+  "matchMutualHint": "They want what you have, too — you can swap directly.",
+  "matchReasonNamedCategory": "Category you asked for",
+  "matchReasonValueClose": "Similar value",
+  "matchReasonNearby": "Nearby",
+  "matchReasonVerified": "Verified trader"
 }

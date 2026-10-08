@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import math
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.models.desire import Desire
 from app.models.listing import Listing, ListingStatus
 from app.models.social import Match
@@ -25,6 +27,34 @@ W_CATEGORY = 10
 
 # Beyond this, hauling the goods usually costs more than the trade is worth.
 MAX_USEFUL_KM = 400.0
+
+#: Bumped whenever the rules below change, and stored on every match row, so a
+#: shift in what people are shown can be traced to the rule set behind it.
+RULES_VERSION = "f01-v1"
+
+#: Added when each side wants what the other has. A one-way fit still needs a
+#: third party or cash to close; a mutual one can close between two people, so
+#: it should outrank a slightly closer one-way pair.
+MUTUAL_BONUS = 15
+
+#: Reason codes a match can carry. Stable strings: the client translates them,
+#: analytics groups by them, so renaming one is a breaking change.
+REASONS = (
+    "mutual",          # they want what I have, too
+    "named_category",  # their listing is in a category I named
+    "value_close",     # worths within 20% of each other
+    "nearby",          # within 25 km
+    "verified",        # their identity is checked
+)
+
+
+@dataclass
+class Verdict:
+    """The matcher's answer for one pair: rank, and the reasons behind it."""
+
+    score: int
+    mutual: bool
+    reasons: list[str] = field(default_factory=list)
 
 
 def haversine_km(
@@ -132,8 +162,66 @@ def score_pair(
     return max(0, min(100, round(total)))
 
 
-def explain(score: int, distance_km: float | None) -> str:
+def evaluate_pair(
+    mine: Listing,
+    theirs: Listing,
+    *,
+    my_desires: list[Desire],
+    their_desires: list[Desire],
+    distance_km: float | None,
+    their_rating: float | None,
+    their_verified: bool,
+    mutual_enabled: bool = True,
+) -> Verdict | None:
+    """
+    Score one pair in both directions and say why.
+
+    Admission is still one-way — their listing must be something I asked for
+    (`wanted`). On top of that, if my listing is something *they* asked for,
+    the pair is mutual: ranked above one-way fits and labelled so.
+
+    Different currencies are not compared at all: a value band in so'm says
+    nothing about a price in dollars, and guessing a rate would produce
+    confident nonsense.
+    """
+    if mine.currency != theirs.currency:
+        return None
+    score = score_pair(
+        mine,
+        theirs,
+        my_desires=my_desires,
+        distance_km=distance_km,
+        their_rating=their_rating,
+        their_verified=their_verified,
+    )
+    if score is None:
+        return None
+
+    mutual = mutual_enabled and wanted(their_desires, mine) is not None
+    match = wanted(my_desires, theirs)
+    reasons: list[str] = []
+    if mutual:
+        reasons.append("mutual")
+    if match is not None and match.category is not None:
+        reasons.append("named_category")
+    if value_score(mine.value_minor, theirs.value_minor) >= 0.8:
+        reasons.append("value_close")
+    if distance_km is not None and distance_km <= 25:
+        reasons.append("nearby")
+    if their_verified:
+        reasons.append("verified")
+
+    if mutual:
+        score = min(100, score + MUTUAL_BONUS)
+    return Verdict(score=score, mutual=mutual, reasons=reasons)
+
+
+def explain(
+    score: int, distance_km: float | None, *, mutual: bool = False
+) -> str:
     """One sentence naming the strongest reason, so the card is not just a number."""
+    if mutual:
+        return "Ikki tomon ham bir-birining narsasini izlamoqda."
     if score >= 85:
         return "Ular aynan sizning toifangizni izlamoqda."
     if distance_km is not None and distance_km <= 25:
@@ -210,6 +298,16 @@ async def rebuild_matches(
     ).all():
         desires_by_listing.setdefault(desire.listing_id, []).append(desire)
 
+    # Theirs too, for the reverse direction: does my listing satisfy them?
+    their_desires_by_listing: dict[uuid.UUID, list[Desire]] = {}
+    if settings.matching_mutual:
+        for desire in (
+            await db.scalars(
+                select(Desire).where(Desire.listing_id.in_([o.id for o in others]))
+            )
+        ).all():
+            their_desires_by_listing.setdefault(desire.listing_id, []).append(desire)
+
     owner_ids = list({listing.owner_id for listing in others})
     owners = {
         u.id: u
@@ -232,7 +330,7 @@ async def rebuild_matches(
         delete(Match).where(Match.user_id == user_id, Match.dismissed_at.is_(None))
     )
 
-    scored: list[tuple[int, Listing, Listing]] = []
+    scored: list[tuple[Verdict, Listing, Listing]] = []
     for my_listing in mine:
         my_desires = desires_by_listing.get(my_listing.id, [])
         for their_listing in others:
@@ -249,25 +347,31 @@ async def rebuild_matches(
                 their_listing.latitude,
                 their_listing.longitude,
             )
-            score = score_pair(
+            verdict = evaluate_pair(
                 my_listing,
                 their_listing,
                 my_desires=my_desires,
+                their_desires=their_desires_by_listing.get(their_listing.id, []),
                 distance_km=distance,
                 their_rating=ratings.get(owner.id, (None, 0))[0],
                 their_verified=owner.is_verified,
+                mutual_enabled=settings.matching_mutual,
             )
-            if score is not None and score >= 55:
-                scored.append((score, my_listing, their_listing))
+            if verdict is not None and verdict.score >= 55:
+                scored.append((verdict, my_listing, their_listing))
 
-    scored.sort(key=lambda row: row[0], reverse=True)
-    for score, my_listing, their_listing in scored[:20]:
+    # Mutual first, then by score: a two-way fit can close between two people.
+    scored.sort(key=lambda row: (row[0].mutual, row[0].score), reverse=True)
+    for verdict, my_listing, their_listing in scored[:20]:
         db.add(
             Match(
                 user_id=user_id,
                 my_listing_id=my_listing.id,
                 their_listing_id=their_listing.id,
-                score=score,
+                score=verdict.score,
+                mutual=verdict.mutual,
+                reason_codes=verdict.reasons,
+                rules_version=RULES_VERSION,
                 computed_at=now,
             )
         )

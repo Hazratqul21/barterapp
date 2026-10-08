@@ -1135,4 +1135,23 @@ class LRu extends L {
 
   @override
   String get traderNew => 'Новый участник';
+
+  @override
+  String get matchMutual => 'Взаимное совпадение';
+
+  @override
+  String get matchMutualHint =>
+      'Ему тоже нужно то, что есть у вас, — можно обменяться напрямую.';
+
+  @override
+  String get matchReasonNamedCategory => 'Нужная вам категория';
+
+  @override
+  String get matchReasonValueClose => 'Близкая стоимость';
+
+  @override
+  String get matchReasonNearby => 'Рядом';
+
+  @override
+  String get matchReasonVerified => 'Проверенный продавец';
 }

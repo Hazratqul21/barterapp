@@ -16,7 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, Timestamps, UUIDPrimaryKey
@@ -153,6 +153,19 @@ class Match(Base, UUIDPrimaryKey):
         UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False
     )
     score: Mapped[int] = mapped_column(Integer, nullable=False)
+    #: Their listing is what I asked for *and* mine is what they asked for —
+    #: the double coincidence of wants that makes a barter actually happen.
+    mutual: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    #: Why, as stable codes the client translates (see matching.REASONS).
+    reason_codes: Mapped[list[str]] = mapped_column(
+        ARRAY(String(32)), nullable=False, server_default="{}"
+    )
+    #: Which rule set produced this row, so a ranking change can be traced.
+    rules_version: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default="v0"
+    )
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

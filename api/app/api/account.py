@@ -100,7 +100,7 @@ async def list_matches(
         await db.scalars(
             select(Match)
             .where(Match.user_id == me.id, Match.dismissed_at.is_(None))
-            .order_by(Match.score.desc())
+            .order_by(Match.mutual.desc(), Match.score.desc())
             .limit(20)
         )
     ).all()
@@ -149,7 +149,10 @@ async def list_matches(
             MatchOut(
                 id=row.id,
                 score=row.score,
-                reason=explain(row.score, None),
+                reason=explain(row.score, None, mutual=row.mutual),
+                mutual=row.mutual,
+                reason_codes=list(row.reason_codes or []),
+                rules_version=row.rules_version,
                 mine=listing_card(mine, locale, brief(mine.owner_id)),
                 theirs=listing_card(theirs, locale, owner),
                 owner=owner,
