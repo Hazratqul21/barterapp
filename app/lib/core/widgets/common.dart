@@ -114,9 +114,36 @@ class RemoteImage extends StatelessWidget {
     );
     if (url == null || url!.isEmpty) return placeholder;
 
+    // Decode at the size it is shown, not the 2000px upload: a two-column
+    // feed was holding a dozen full-resolution bitmaps in memory to draw
+    // 170px squares, which is where scroll jank on mid-range Android came
+    // from. Rounded up to 200px steps so nearby sizes share a cache entry.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final width = constraints.hasBoundedWidth
+            ? decodeWidthFor(constraints.maxWidth, dpr)
+            : null;
+        return _network(context, placeholder, width);
+      },
+    );
+  }
+
+  /// Physical pixels to decode for a box [logicalWidth] wide: rounded up to
+  /// a 200px step, never above the 2000px the uploads are resized to.
+  @visibleForTesting
+  static int decodeWidthFor(double logicalWidth, double dpr) {
+    final px = (logicalWidth * dpr).ceil();
+    return ((px + 199) ~/ 200 * 200).clamp(200, 2000);
+  }
+
+  Widget _network(BuildContext context, Widget placeholder, int? cacheWidth) {
+    final p = palette(context);
+    final scheme = Theme.of(context).colorScheme;
     return CachedNetworkImage(
       imageUrl: url!,
       fit: fit,
+      memCacheWidth: cacheWidth,
       placeholder: (_, _) => placeholder,
       errorWidget: (_, _, _) => Semantics(
         label: L.of(context).errorNoImage,

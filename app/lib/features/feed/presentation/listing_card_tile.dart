@@ -86,6 +86,7 @@ class _ListingCardTileState extends State<ListingCardTile> {
     final listing = widget.listing;
     final onFavorite = widget.onFavorite;
     final theme = Theme.of(context);
+    final l = L.of(context);
     final colors = theme.colorScheme;
     final p = palette(context);
     final locale = Localizations.localeOf(context).languageCode;
@@ -119,125 +120,144 @@ class _ListingCardTileState extends State<ListingCardTile> {
         color: colors.surfaceContainerLowest,
         shape: shape,
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: widget.onTap,
-          onHover: (v) => setState(() => _hovered = v),
-          onFocusChange: (v) => setState(() => _focused = v),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Square in every card of a row, whatever the title length.
-              AspectRatio(
-                aspectRatio: 1,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: 'listing-image-${listing.id}',
-                      child: AnimatedScale(
-                        scale: _hovered ? 1.04 : 1,
-                        duration: Motion.standard.durationOf(context),
-                        curve: Motion.standard.curve,
-                        child: RemoteImage(
-                          url: listing.imageUrl,
-                          semanticLabel: listing.imageAlt,
-                        ),
-                      ),
-                    ),
-                    // The category, as a mark rather than a word: readable in
-                    // every language and at thumbnail size.
-                    Positioned(
-                      left: Gap.x2,
-                      top: Gap.x2,
-                      child: ExcludeSemantics(
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: ShapeDecoration(
-                            color: category.tint,
-                            shape: const RoundedSuperellipseBorder(
-                              borderRadius: Radii.rXs,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: CategoryMarkIcon(
-                            mark: category.mark,
-                            color: category.color,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (listing.owner.isVerified)
-                      Positioned(
-                        left: Gap.x2 + 28 + Gap.x1,
-                        top: Gap.x2,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: ShapeDecoration(
-                            color: colors.surfaceContainerLowest,
-                            shape: const RoundedSuperellipseBorder(
-                              borderRadius: Radii.rXs,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Symbols.verified_rounded,
-                            size: 18,
-                            fill: 1,
-                            color: p.give,
-                          ),
-                        ),
-                      ),
-                    if (onFavorite != null)
-                      Positioned(
-                        right: Gap.x1,
-                        top: Gap.x1,
-                        child: _Heart(
-                          saved: listing.isFavorite,
-                          onTap: onFavorite,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        // A screen reader hears one sentence per card — what it is, what it
+        // costs, what the owner wants — instead of a dozen fragments. The
+        // heart stays a separate button.
+        child: Semantics(
+          button: true,
+          label: [
+            listing.title,
+            listing.value.format(locale),
+            '${l.listingWants}: ${listing.wantsSummary.trim().isEmpty ? l.createWantAny : listing.wantsSummary}',
+            if (listing.owner.isVerified) l.traderVerified,
+            meta,
+          ].join('. '),
+          child: InkWell(
+            onTap: widget.onTap,
+            onHover: (v) => setState(() => _hovered = v),
+            onFocusChange: (v) => setState(() => _focused = v),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Square in every card of a row, whatever the title length.
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      PriceText(listing.value, size: 16),
-                      const SizedBox(height: 4),
-                      Text(
-                        listing.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          height: 1.35,
+                      ExcludeSemantics(
+                        child: Hero(
+                          tag: 'listing-image-${listing.id}',
+                          child: AnimatedScale(
+                            scale: _hovered ? 1.04 : 1,
+                            duration: Motion.standard.durationOf(context),
+                            curve: Motion.standard.curve,
+                            child: RemoteImage(
+                              url: listing.imageUrl,
+                              semanticLabel: listing.imageAlt,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      SwapChip(wants: listing.wantsSummary),
-                      // Date and distance sit on the card's bottom edge in
-                      // every card, short title or long.
-                      const Spacer(),
-                      Text(
-                        meta,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: p.inkSoft,
-                          fontWeight: FontWeight.w500,
+                      // The category, as a mark rather than a word: readable in
+                      // every language and at thumbnail size.
+                      Positioned(
+                        left: Gap.x2,
+                        top: Gap.x2,
+                        child: ExcludeSemantics(
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: ShapeDecoration(
+                              color: category.tint,
+                              shape: const RoundedSuperellipseBorder(
+                                borderRadius: Radii.rXs,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: CategoryMarkIcon(
+                              mark: category.mark,
+                              color: category.color,
+                              size: 18,
+                            ),
+                          ),
                         ),
                       ),
+                      if (listing.owner.isVerified)
+                        Positioned(
+                          left: Gap.x2 + 28 + Gap.x1,
+                          top: Gap.x2,
+                          child: ExcludeSemantics(
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: ShapeDecoration(
+                                color: colors.surfaceContainerLowest,
+                                shape: const RoundedSuperellipseBorder(
+                                  borderRadius: Radii.rXs,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Symbols.verified_rounded,
+                                size: 18,
+                                fill: 1,
+                                color: p.give,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (onFavorite != null)
+                        Positioned(
+                          right: Gap.x1,
+                          top: Gap.x1,
+                          child: _Heart(
+                            saved: listing.isFavorite,
+                            onTap: onFavorite,
+                          ),
+                        ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          PriceText(listing.value, size: 16),
+                          const SizedBox(height: 4),
+                          Text(
+                            listing.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SwapChip(wants: listing.wantsSummary),
+                          // Date and distance sit on the card's bottom edge in
+                          // every card, short title or long.
+                          const Spacer(),
+                          Text(
+                            meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: p.inkSoft,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
