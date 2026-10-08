@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import base64
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -114,9 +116,24 @@ async def remove_favorite(
         await db.commit()
 
 
+def _encode_cursor(created_at: datetime, favorite_id: uuid.UUID) -> str:
+    raw = f"{created_at.isoformat()}|{favorite_id}"
+    return base64.urlsafe_b64encode(raw.encode()).decode()
+
+
+def _decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
+    try:
+        raw = base64.urlsafe_b64decode(cursor.encode()).decode()
+        key, favorite_id = raw.rsplit("|", 1)
+        return datetime.fromisoformat(key), uuid.UUID(favorite_id)
+    except Exception:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kursor yaroqsiz.")
+
+
 @router.get("/favorites", response_model=Page[ListingCard])
 async def list_favorites(
     limit: int = Query(default=20, ge=1, le=50),
+    cursor: str | None = None,
     locale: str = Depends(resolve_locale),
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
@@ -128,24 +145,39 @@ async def list_favorites(
     somebody since blocked — are filtered out rather than shown as dead cards.
     The rows stay: a completed trade can be disputed and reopened, and losing
     the shortlist over that would be worse than briefly hiding one entry.
+
+    Keyset pages on (saved at, favorite id): the list used to stop at 50 with
+    no way to reach the rest. The key is the save, not the listing, so editing
+    a listing never moves it within somebody's shortlist.
     """
     hidden = await moderation.blocked_ids(db, me.id)
 
     query = (
-        select(Listing)
+        select(Listing, Favorite.created_at, Favorite.id)
         .join(Favorite, Favorite.listing_id == Listing.id)
         .options(selectinload(Listing.translations), selectinload(Listing.photos))
         .where(
             Favorite.user_id == me.id,
             Listing.status == ListingStatus.active,
         )
-        .order_by(Favorite.created_at.desc(), Listing.id.desc())
-        .limit(limit)
+        .order_by(Favorite.created_at.desc(), Favorite.id.desc())
+        .limit(limit + 1)
     )
     if hidden:
         query = query.where(Listing.owner_id.notin_(hidden))
+    if cursor:
+        saved_at, last_id = _decode_cursor(cursor)
+        query = query.where(
+            or_(
+                Favorite.created_at < saved_at,
+                (Favorite.created_at == saved_at) & (Favorite.id < last_id),
+            )
+        )
 
-    rows = list((await db.scalars(query)).unique().all())
+    page = list((await db.execute(query)).unique().all())
+    has_more = len(page) > limit
+    page = page[:limit]
+    rows = [row[0] for row in page]
     if not rows:
         return Page[ListingCard](items=[], next_cursor=None)
 
@@ -176,5 +208,5 @@ async def list_favorites(
             )
             for row in rows
         ],
-        next_cursor=None,
+        next_cursor=_encode_cursor(page[-1][1], page[-1][2]) if has_more else None,
     )

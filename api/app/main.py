@@ -106,11 +106,10 @@ app.add_middleware(
     # blocked by the browser, because the middleware only ever recognised the
     # dev origins below.
     allow_origins=list(settings.cors_origins),
-    # Flutter web picks a fresh port on every run, and reaches the host as both
-    # localhost and 127.0.0.1 depending on how it was launched. The regex keeps
-    # development working; it deliberately covers only loopback, never a
-    # wildcard, so `allow_credentials=True` stays safe.
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    # Loopback on any port in development (Flutter web changes port every
+    # run); None in production. Never a wildcard, so `allow_credentials=True`
+    # stays safe.
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

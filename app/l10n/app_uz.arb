@@ -425,5 +425,13 @@
   "filterInvalidRange": "Eng kam narx eng yuqori narxdan katta bo‘lmasin.",
   "navPost": "E’lon",
   "reportSent": "Shikoyatingiz moderatorga yuborildi",
-  "userBlocked": "Foydalanuvchi bloklandi"
+  "userBlocked": "Foydalanuvchi bloklandi",
+  "draftFoundTitle": "Qoralama topildi",
+  "draftFoundBody": "Tugallanmagan e’loningiz saqlanib qolgan. Davom ettirasizmi?",
+  "draftContinue": "Davom ettirish",
+  "draftDiscard": "Yangidan boshlash",
+  "draftPhotosExpired": "Qoralamadagi suratlar eskirgan — ularni qayta qo‘shing.",
+  "photoCover": "Asosiy",
+  "photoUploadFailed": "Yuklanmadi",
+  "photoReorderHint": "Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi."
 }

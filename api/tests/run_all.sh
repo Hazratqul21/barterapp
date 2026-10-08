@@ -9,7 +9,8 @@ set -u
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
 fail=0
-for t in tests/test_trade_loop.py \
+for t in tests/test_config_guard.py \
+         tests/test_trade_loop.py \
          tests/test_uploads_and_desires.py \
          tests/test_profile_and_regions.py \
          tests/test_create_listing.py \
@@ -28,6 +29,7 @@ for t in tests/test_trade_loop.py \
          tests/test_push.py \
          tests/test_notify_prefs.py \
          tests/test_favorites.py \
+         tests/test_favorites_pagination.py \
          tests/test_admin_reports.py \
          tests/test_sms.py \
          tests/test_events.py \

@@ -1093,4 +1093,31 @@ class LUz extends L {
 
   @override
   String get userBlocked => 'Foydalanuvchi bloklandi';
+
+  @override
+  String get draftFoundTitle => 'Qoralama topildi';
+
+  @override
+  String get draftFoundBody =>
+      'Tugallanmagan e’loningiz saqlanib qolgan. Davom ettirasizmi?';
+
+  @override
+  String get draftContinue => 'Davom ettirish';
+
+  @override
+  String get draftDiscard => 'Yangidan boshlash';
+
+  @override
+  String get draftPhotosExpired =>
+      'Qoralamadagi suratlar eskirgan — ularni qayta qo‘shing.';
+
+  @override
+  String get photoCover => 'Asosiy';
+
+  @override
+  String get photoUploadFailed => 'Yuklanmadi';
+
+  @override
+  String get photoReorderHint =>
+      'Tartibni o‘zgartirish uchun suratni bosib turib suring. Birinchisi lentada ko‘rinadi.';
 }

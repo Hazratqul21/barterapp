@@ -1089,4 +1089,31 @@ class LEn extends L {
 
   @override
   String get userBlocked => 'User blocked';
+
+  @override
+  String get draftFoundTitle => 'Draft found';
+
+  @override
+  String get draftFoundBody =>
+      'Your unfinished listing was saved. Continue where you left off?';
+
+  @override
+  String get draftContinue => 'Continue';
+
+  @override
+  String get draftDiscard => 'Start over';
+
+  @override
+  String get draftPhotosExpired =>
+      'The draft’s photos have expired — please add them again.';
+
+  @override
+  String get photoCover => 'Cover';
+
+  @override
+  String get photoUploadFailed => 'Upload failed';
+
+  @override
+  String get photoReorderHint =>
+      'Press and drag a photo to reorder. The first one is shown in the feed.';
 }

@@ -247,12 +247,13 @@ class TradeRepository {
   Future<void> deleteListing(String id) =>
       _api.delete('/listings/$id', parse: (_) {});
 
-  Future<List<ListingCard>> getFavorites() => _api.get(
+  /// One page of saved listings. Pass the previous page's `nextCursor` to
+  /// continue; the list used to stop at 50 with no way to reach the rest.
+  Future<Page<ListingCard>> getFavorites({String? cursor}) => _api.get(
     '/favorites',
-    query: {'limit': 50},
-    parse: (data) => ((data as Map<String, dynamic>)['items'] as List)
-        .map((e) => ListingCard.fromJson(e as Map<String, dynamic>))
-        .toList(),
+    query: {'limit': 30, 'cursor': ?cursor},
+    parse: (data) =>
+        Page.fromJson(data as Map<String, dynamic>, ListingCard.fromJson),
   );
 
   Future<List<Settlement>> settlements() => _api.get(

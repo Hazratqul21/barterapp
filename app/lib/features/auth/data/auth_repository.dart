@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../shared/models/models.dart';
+import '../../trade/data/listing_draft.dart';
 
 class AuthRepository {
   AuthRepository(this._api, this._session);
@@ -50,14 +51,21 @@ class AuthRepository {
   Future<List<String>> regions() =>
       _api.get('/regions', parse: (data) => (data as List).cast<String>());
 
-  Future<void> deleteAccount() => _api.delete('/me', body: {'confirm': true}, parse: (_) {});
+  Future<void> deleteAccount() =>
+      _api.delete('/me', body: {'confirm': true}, parse: (_) {});
 
+  Future<NotificationSettings> getNotificationSettings() => _api.get(
+    '/notification-settings',
+    parse: (data) => NotificationSettings.fromJson(data),
+  );
 
-  Future<NotificationSettings> getNotificationSettings() =>
-      _api.get('/notification-settings', parse: (data) => NotificationSettings.fromJson(data));
-
-  Future<NotificationSettings> updateNotificationSettings(Map<String, dynamic> data) =>
-      _api.patch('/notification-settings', body: data, parse: (d) => NotificationSettings.fromJson(d));
+  Future<NotificationSettings> updateNotificationSettings(
+    Map<String, dynamic> data,
+  ) => _api.patch(
+    '/notification-settings',
+    body: data,
+    parse: (d) => NotificationSettings.fromJson(d),
+  );
 
   Future<void> signOut() => _session.clear();
 }
@@ -79,6 +87,9 @@ class AuthState extends Notifier<bool> {
 
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
+    // A shared phone must not hand the next person this one's half-written
+    // listing. A merely expired session keeps it: same person, signing back in.
+    await ref.read(listingDraftStoreProvider).clear();
     state = false;
     ref.invalidate(meProvider);
   }
