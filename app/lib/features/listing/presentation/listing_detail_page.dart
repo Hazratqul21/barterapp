@@ -440,7 +440,13 @@ class _Content extends StatelessWidget {
                     PriceText(listing.value, size: 22),
                     Pill(
                       label: listing.cashOk ? l.listingCashOk : l.listingCashNo,
-                      foreground: listing.cashOk ? p.money : p.inkSoft,
+                      // Small text on the soft gold: the brand gold is
+                      // 3.4:1 there, so light mode takes a deeper shade (AA).
+                      foreground: !listing.cashOk
+                          ? p.inkSoft
+                          : p.isDark
+                          ? p.money
+                          : Color.lerp(p.money, Colors.black, 0.3)!,
                       background: listing.cashOk
                           ? p.moneySoft
                           : theme.colorScheme.surfaceContainerHighest,
@@ -828,11 +834,19 @@ class _GalleryState extends State<_Gallery> {
             Haptics.selection();
             widget.onIndex(i);
           },
-          itemBuilder: (context, i) => GestureDetector(
-            onTap: () => _open(i),
-            child: RemoteImage(
-              url: widget.photos[i],
-              semanticLabel: widget.semanticLabel,
+          // Labelled as a button: it opens the photo full screen.
+          itemBuilder: (context, i) => Semantics(
+            button: true,
+            label: widget.photos.length > 1
+                ? '${widget.semanticLabel} (${i + 1}/${widget.photos.length})'
+                : widget.semanticLabel,
+            excludeSemantics: true,
+            child: GestureDetector(
+              onTap: () => _open(i),
+              child: RemoteImage(
+                url: widget.photos[i],
+                semanticLabel: widget.semanticLabel,
+              ),
             ),
           ),
         ),

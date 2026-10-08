@@ -74,8 +74,13 @@ class _BarterAppState extends ConsumerState<BarterApp> {
       // opt-in for the few picture-free sheets that actually benefit from it;
       // keeping it out of the app root avoids a permanent animated layer under
       // every scrollable route.
+      // The theme makes every Scaffold transparent so screens with their own
+      // backdrop (aurora, glass) show through. This is what they show through
+      // to: an opaque surface. It used to be scaffoldBackgroundColor — i.e.
+      // transparent — so a page without its own backdrop (the listing
+      // detail) was drawn over nothing.
       builder: (context, child) => ColoredBox(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: Theme.of(context).colorScheme.surface,
         child: DeviceFrame(child: child ?? const SizedBox.shrink()),
       ),
       locale: Locale(locale),

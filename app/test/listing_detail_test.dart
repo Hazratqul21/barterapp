@@ -68,6 +68,11 @@ Future<void> _pump(WidgetTester tester, ListingDetail listing) async {
           ],
         ),
         debugShowCheckedModeBanner: false,
+        // Same root surface as main.dart.
+        builder: (context, child) => ColoredBox(
+          color: Theme.of(context).colorScheme.surface,
+          child: child,
+        ),
         theme: AppTheme.light(),
         locale: const Locale('uz'),
         supportedLocales: L.supportedLocales,
@@ -154,5 +159,19 @@ void main() {
     // Back on the listing, on the photo last viewed.
     expect(find.byType(PhotoCounter), findsOneWidget);
     expect(find.text('2 / 3'), findsOneWidget);
+  });
+
+  testWidgets('detail page meets tap-target, label and contrast rules', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final handle = tester.ensureSemantics();
+    await _pump(tester, _listing());
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    handle.dispose();
   });
 }
