@@ -392,5 +392,10 @@
   "listingShare": "Share",
   "listingGoneTitle": "This listing is no longer available",
   "listingGoneHint": "The owner removed it or the trade is done. The feed has similar ones.",
-  "listingGoneBack": "Back to the feed"
+  "listingGoneBack": "Back to the feed",
+  "timelineOffered": "Offered",
+  "timelineAgreed": "Agreed",
+  "timelineHandedOver": "Handed over",
+  "timelineDone": "Done",
+  "timelineSemantics": "Deal: step {step} of {total}, {name}"
 }

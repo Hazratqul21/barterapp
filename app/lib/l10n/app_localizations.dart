@@ -2450,6 +2450,36 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Lentaga qaytish'**
   String get listingGoneBack;
+
+  /// No description provided for @timelineOffered.
+  ///
+  /// In uz, this message translates to:
+  /// **'Taklif'**
+  String get timelineOffered;
+
+  /// No description provided for @timelineAgreed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kelishildi'**
+  String get timelineAgreed;
+
+  /// No description provided for @timelineHandedOver.
+  ///
+  /// In uz, this message translates to:
+  /// **'Topshirildi'**
+  String get timelineHandedOver;
+
+  /// No description provided for @timelineDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yakunlandi'**
+  String get timelineDone;
+
+  /// No description provided for @timelineSemantics.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bitim: {step}/{total}-qadam, {name}'**
+  String timelineSemantics(int step, int total, String name);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

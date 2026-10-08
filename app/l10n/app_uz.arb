@@ -489,5 +489,23 @@
   "listingShare": "Ulashish",
   "listingGoneTitle": "E’lon endi mavjud emas",
   "listingGoneHint": "Egasi uni o‘chirgan yoki savdo yakunlangan. Lentada shunga o‘xshashlari bor.",
-  "listingGoneBack": "Lentaga qaytish"
+  "listingGoneBack": "Lentaga qaytish",
+  "timelineOffered": "Taklif",
+  "timelineAgreed": "Kelishildi",
+  "timelineHandedOver": "Topshirildi",
+  "timelineDone": "Yakunlandi",
+  "timelineSemantics": "Bitim: {step}/{total}-qadam, {name}",
+  "@timelineSemantics": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

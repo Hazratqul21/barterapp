@@ -1252,4 +1252,21 @@ class LEn extends L {
 
   @override
   String get listingGoneBack => 'Back to the feed';
+
+  @override
+  String get timelineOffered => 'Offered';
+
+  @override
+  String get timelineAgreed => 'Agreed';
+
+  @override
+  String get timelineHandedOver => 'Handed over';
+
+  @override
+  String get timelineDone => 'Done';
+
+  @override
+  String timelineSemantics(int step, int total, String name) {
+    return 'Deal: step $step of $total, $name';
+  }
 }

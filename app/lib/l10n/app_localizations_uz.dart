@@ -1256,4 +1256,21 @@ class LUz extends L {
 
   @override
   String get listingGoneBack => 'Lentaga qaytish';
+
+  @override
+  String get timelineOffered => 'Taklif';
+
+  @override
+  String get timelineAgreed => 'Kelishildi';
+
+  @override
+  String get timelineHandedOver => 'Topshirildi';
+
+  @override
+  String get timelineDone => 'Yakunlandi';
+
+  @override
+  String timelineSemantics(int step, int total, String name) {
+    return 'Bitim: $step/$total-qadam, $name';
+  }
 }

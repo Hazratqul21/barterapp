@@ -391,5 +391,10 @@
   "listingShare": "Поделиться",
   "listingGoneTitle": "Объявление больше недоступно",
   "listingGoneHint": "Владелец удалил его или обмен завершён. В ленте есть похожие.",
-  "listingGoneBack": "Вернуться в ленту"
+  "listingGoneBack": "Вернуться в ленту",
+  "timelineOffered": "Предложение",
+  "timelineAgreed": "Договорились",
+  "timelineHandedOver": "Передано",
+  "timelineDone": "Завершено",
+  "timelineSemantics": "Сделка: шаг {step} из {total}, {name}"
 }
