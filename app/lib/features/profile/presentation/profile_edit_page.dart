@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -11,6 +10,7 @@ import '../../../core/widgets/photo_picker.dart';
 import '../../../shared/models/models.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key, required this.isOnboarding});
@@ -51,7 +51,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   }
 
   Future<void> _pickPhoto() async {
-    HapticFeedback.lightImpact();
+    Haptics.light();
     setState(() => _uploading = true);
     try {
       final url = await pickAndUploadPhoto(context, ref);
@@ -69,7 +69,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    Haptics.success();
     setState(() => _busy = true);
     try {
       await ref.read(authRepositoryProvider).updateProfile({

@@ -11,6 +11,7 @@ import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
 import '../data/trade_repository.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/haptics.dart';
 
 /// Propose a swap: pick what you put up, add cash if the two sides are not
 /// level, say something.
@@ -232,7 +233,7 @@ class _OfferPageState extends ConsumerState<OfferPage> {
                       onPressed: _selected.isEmpty || _sending
                           ? null
                           : () {
-                              HapticFeedback.lightImpact();
+                              Haptics.light();
                               _send();
                             },
                       child: _sending
@@ -367,12 +368,15 @@ class _MyListings extends StatelessWidget {
             clayMode: true,
             borderRadius: Radii.rLg,
             onTap: () {
-              HapticFeedback.selectionClick();
+              Haptics.selection();
               onToggle(item.id);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              width: (MediaQuery.sizeOf(context).width * 0.35).clamp(80.0, 132.0),
+              width: (MediaQuery.sizeOf(context).width * 0.35).clamp(
+                80.0,
+                132.0,
+              ),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 borderRadius: Radii.rLg,

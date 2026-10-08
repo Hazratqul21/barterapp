@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -7,6 +6,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/section_theme.dart';
 import '../widgets/common.dart';
+import '../theme/haptics.dart';
 
 /// Keep the branch navigator at the same tree position across breakpoints.
 class AppShell extends ConsumerWidget {
@@ -168,7 +168,7 @@ class AppShell extends ConsumerWidget {
   }
 
   void _go(int index) {
-    HapticFeedback.selectionClick();
+    Haptics.selection();
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,

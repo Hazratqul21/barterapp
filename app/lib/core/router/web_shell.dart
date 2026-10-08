@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../theme/haptics.dart';
 
 const kWebBreakpoint = 900.0;
 
@@ -123,7 +123,7 @@ class _RailItem extends StatelessWidget {
         preferBelow: false,
         child: InkWell(
           onTap: () {
-            HapticFeedback.lightImpact();
+            Haptics.light();
             onTap();
           },
           borderRadius: BorderRadius.circular(28),

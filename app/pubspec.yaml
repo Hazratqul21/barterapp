@@ -71,9 +71,6 @@ flutter:
   # and both carry the full Cyrillic block, which is what the previous face was
   # missing.
   fonts:
-    - family: Rubik
-      fonts:
-        - asset: assets/fonts/Rubik-Variable.ttf
     - family: Manrope
       fonts:
         - asset: assets/fonts/Manrope-Variable.ttf

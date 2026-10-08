@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../art/girih.dart';
+import '../theme/app_theme.dart';
 import '../theme/section_theme.dart';
 import 'common.dart';
 
@@ -334,7 +335,7 @@ class SwapBanner extends StatelessWidget {
       child: ClipRRect(
         borderRadius: borderRadius,
         child: ColoredBox(
-          color: const Color(0xFFEAF7F7),
+          color: BrandColors.mist,
           child: Image.asset(
             'assets/images/feed_header_hero.png',
             fit: BoxFit.cover,

@@ -9,6 +9,7 @@ import '../../../core/widgets/common.dart';
 import '../../../core/widgets/legal_links.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 class _OtpInput extends StatefulWidget {
   const _OtpInput({
@@ -257,7 +258,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     onPressed: _busy || (!_codeSent && !_phoneLooksValid)
                         ? null
                         : () {
-                            HapticFeedback.mediumImpact();
+                            Haptics.success();
                             _codeSent ? _verify() : _sendCode();
                           },
                     child: _busy

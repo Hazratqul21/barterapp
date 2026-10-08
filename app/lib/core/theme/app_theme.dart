@@ -21,6 +21,15 @@ abstract final class BrandColors {
   ); // Accessible MAB teal for text/CTAs.
   static const take500 = Color(0xFF0D9488); // Secondary Seed (Darker Teal)
   static const gold500 = Color(0xFFF0A82A); // Tertiary Seed
+
+  // Surfaces that used to be hard-coded at their call sites.
+  static const glassDark = Color(0xFF141B18);
+  static const glassDarkRaised = Color(0xFF1B2420);
+  static const mist = Color(0xFFEAF7F7);
+
+  /// Premium badge — the one place a non-brand hue is allowed.
+  static const premiumStart = Color(0xFF5D3FD3);
+  static const premiumEnd = Color(0xFF9D65FF);
 }
 
 @immutable
@@ -144,7 +153,7 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
     sunken: Color(0xFFF2EEE7),
     hair: Color(0xFFE7E2D9),
     inkSoft: Color(0xFF5A6B62),
-    inkFaint: Color(0xFF6B7D73), // WCAG AA 4.5:1 contrast ratio
+    inkFaint: Color(0xFF62746A), // 4.69:1 on canvas — test/design_system_test
     isDark: false,
   );
 
@@ -162,7 +171,7 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
     sunken: Color(0xFF161D19),
     hair: Color(0xFF283330),
     inkSoft: Color(0xFF9CACA4),
-    inkFaint: Color(0xFF6C7C75),
+    inkFaint: Color(0xFF73837C), // 4.81:1 on canvas
     isDark: true,
   );
 }
@@ -295,17 +304,18 @@ abstract final class AppTheme {
         letterSpacing: 0,
         height: 1.5,
       ),
+      // Proportional figures in running text; tabular only where numbers
+      // stack in columns (prices, counters — see [AppText.price]).
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
         fontSize: 14,
         fontWeight: FontWeight.w400,
-        letterSpacing: 0.05,
+        letterSpacing: 0,
         height: 1.5,
-        fontFeatures: const [FontFeature.tabularFigures()],
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
         fontSize: 12.5,
         fontWeight: FontWeight.w400,
-        letterSpacing: 0.1,
+        letterSpacing: 0,
         height: 1.45,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
@@ -317,12 +327,14 @@ abstract final class AppTheme {
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
+        letterSpacing: 0,
       ),
+      // Nav and tag labels. Wide tracking belongs to SMALL CAPS only; on
+      // mixed-case Uzbek/Cyrillic words it just looks loose.
       labelSmall: baseTextTheme.labelSmall?.copyWith(
-        fontSize: 11,
+        fontSize: 11.5,
         fontWeight: FontWeight.w700,
-        letterSpacing: 0.8,
+        letterSpacing: 0.1,
       ),
     );
 
@@ -348,9 +360,38 @@ abstract final class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
+        shape: RoundedSuperellipseBorder(
           borderRadius: Radii.rLg,
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        ),
+      ),
+
+      // Squircles: the continuous curve iOS uses. A plain rounded rectangle
+      // shows a visible "corner join" at large radii; this does not.
+      dialogTheme: const DialogThemeData(
+        shape: RoundedSuperellipseBorder(borderRadius: Radii.rXl),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedSuperellipseBorder(borderRadius: Radii.sheetTop),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedSuperellipseBorder(borderRadius: Radii.rMd),
+      ),
+      chipTheme: const ChipThemeData(
+        shape: RoundedSuperellipseBorder(borderRadius: Radii.rSm),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(64, Sizes.buttonMd),
+          shape: const StadiumBorder(),
+          textStyle: textTheme.labelLarge,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, Sizes.buttonSm),
+          textStyle: textTheme.labelLarge,
         ),
       ),
 

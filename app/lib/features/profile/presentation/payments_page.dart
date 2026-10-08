@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -10,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../trade/data/trade_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 final _cardsProvider = FutureProvider.autoDispose<List<PaymentCard>>(
   (ref) => ref.watch(tradeRepositoryProvider).cards(),
@@ -24,7 +24,7 @@ class PaymentsPage extends ConsumerStatefulWidget {
 
 class _PaymentsPageState extends ConsumerState<PaymentsPage> {
   Future<void> _makePrimary(String cardId) async {
-    HapticFeedback.mediumImpact();
+    Haptics.success();
     try {
       await ref.read(tradeRepositoryProvider).makePrimary(cardId);
       ref.invalidate(_cardsProvider);
@@ -60,7 +60,7 @@ class _PaymentsPageState extends ConsumerState<PaymentsPage> {
     );
 
     if (confirmed == true) {
-      HapticFeedback.heavyImpact();
+      Haptics.warning();
       try {
         await ref.read(tradeRepositoryProvider).removeCard(cardId);
         ref.invalidate(_cardsProvider);

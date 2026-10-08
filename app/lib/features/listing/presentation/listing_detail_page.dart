@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +13,7 @@ import '../../profile/presentation/favorites_page.dart';
 import '../../trade/data/trade_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/analytics/analytics_service.dart';
+import '../../../core/theme/haptics.dart';
 
 class ListingDetailPage extends ConsumerStatefulWidget {
   const ListingDetailPage({super.key, required this.listingId});
@@ -222,7 +222,7 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () {
-                            HapticFeedback.lightImpact();
+                            Haptics.light();
                             context.push('/create', extra: listing);
                           },
                           icon: const Icon(
@@ -244,7 +244,7 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () {
-                            HapticFeedback.lightImpact();
+                            Haptics.light();
                             context.push('/offer/${listing.id}');
                           },
                           icon: const Icon(

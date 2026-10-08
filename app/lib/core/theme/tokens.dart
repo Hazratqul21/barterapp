@@ -108,6 +108,27 @@ abstract final class Sizes {
   static const contentMax = 720.0;
 }
 
+/// Text roles the Material scale has no name for.
+abstract final class AppText {
+  /// Prices and counts: tabular figures so digits line up in a column and a
+  /// changing number does not jiggle, bold enough to scan.
+  static TextStyle price(BuildContext context, {double size = 17}) =>
+      Theme.of(context).textTheme.titleMedium!.copyWith(
+        fontSize: size,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+
+  /// The currency after a price ("so'm"): smaller and quieter, so the number
+  /// carries the weight.
+  static TextStyle currency(BuildContext context, {double size = 13}) =>
+      Theme.of(context).textTheme.labelMedium!.copyWith(
+        fontSize: size,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+}
+
 /// Shadows are reserved for genuinely elevated elements. Routine content uses
 /// tonal surfaces and a hairline, which keeps attention on the primary action.
 abstract final class Shadows {

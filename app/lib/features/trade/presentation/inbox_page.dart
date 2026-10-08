@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -12,6 +11,7 @@ import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
 import 'chat_page.dart';
+import '../../../core/theme/haptics.dart';
 
 class InboxPage extends ConsumerStatefulWidget {
   const InboxPage({super.key});
@@ -49,7 +49,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
                   threads: threads,
                   selectedId: _open,
                   onSelect: (id) {
-                    HapticFeedback.selectionClick();
+                    Haptics.selection();
                     setState(() => _open = id);
                   },
                   onRetry: () => ref.invalidate(conversationsProvider),
@@ -79,7 +79,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
             tooltip: l.notificationsTitle,
             icon: const Icon(Symbols.notifications_rounded),
             onPressed: () {
-              HapticFeedback.lightImpact();
+              Haptics.light();
               context.push('/notifications');
             },
           ),
@@ -93,7 +93,7 @@ class _InboxPageState extends ConsumerState<InboxPage> {
             threads: threads,
             selectedId: null,
             onSelect: (id) {
-              HapticFeedback.lightImpact();
+              Haptics.light();
               context.push('/chat/$id');
             },
             onRetry: () => ref.invalidate(conversationsProvider),

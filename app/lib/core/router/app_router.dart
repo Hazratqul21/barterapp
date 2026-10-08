@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +23,7 @@ import '../../features/trade/presentation/matches_page.dart';
 import '../../features/trade/presentation/notifications_page.dart';
 import '../../features/trade/presentation/offer_page.dart';
 import '../../features/trade/presentation/trader_profile_page.dart';
+import '../design/design_catalog_page.dart';
 import 'app_shell.dart';
 import 'transitions.dart';
 
@@ -86,6 +88,14 @@ GoRouter buildRouter() {
       ),
       // The profile and every signed-out prompt push here. The route was
       // missing entirely, so "Kirish" landed on go_router's error page.
+      // Design tokens catalog — debug builds only, never in a release.
+      if (kDebugMode)
+        GoRoute(
+          path: '/dev/design',
+          parentNavigatorKey: _rootKey,
+          pageBuilder: (context, state) =>
+              forwardPage(key: state.pageKey, child: const DesignCatalogPage()),
+        ),
       GoRoute(
         path: '/signin',
         parentNavigatorKey: _rootKey,

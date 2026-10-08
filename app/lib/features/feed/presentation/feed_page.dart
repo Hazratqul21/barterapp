@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -15,6 +14,7 @@ import '../../auth/data/auth_repository.dart';
 import 'feed_banner.dart';
 import 'feed_shimmer.dart';
 import 'listing_card_tile.dart';
+import '../../../core/theme/haptics.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -192,7 +192,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
-                      HapticFeedback.lightImpact();
+                      Haptics.light();
                       ref.invalidate(feedProvider);
                       try {
                         await ref.read(feedProvider.future);

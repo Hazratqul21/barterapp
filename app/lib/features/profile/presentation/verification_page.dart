@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -10,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../trade/data/trade_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 final _verificationProvider =
     FutureProvider.autoDispose<
@@ -57,7 +57,7 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
 
   Future<void> _submitStep(String step) async {
     if (_submitting != null) return;
-    HapticFeedback.mediumImpact();
+    Haptics.success();
     setState(() => _submitting = step);
     try {
       await ref.read(tradeRepositoryProvider).submitStep(step);

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -11,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/trade_repository.dart';
+import '../../../core/theme/haptics.dart';
 
 class MatchesPage extends ConsumerWidget {
   const MatchesPage({super.key});
@@ -40,7 +40,7 @@ class MatchesPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Symbols.info_rounded),
             onPressed: () {
-              HapticFeedback.lightImpact();
+              Haptics.light();
               _showExplain(context, l);
             },
           ),
@@ -69,7 +69,7 @@ class MatchesPage extends ConsumerWidget {
                   )
                 : RefreshIndicator(
                     onRefresh: () async {
-                      HapticFeedback.mediumImpact();
+                      Haptics.success();
                       return ref.invalidate(matchesProvider);
                     },
                     child: LayoutBuilder(
@@ -241,7 +241,7 @@ class _MatchCard extends ConsumerWidget {
               Gap.h3,
               InkWell(
                 onTap: () {
-                  HapticFeedback.lightImpact();
+                  Haptics.light();
                   context.push('/trader/${match.owner.id}');
                 },
                 borderRadius: Radii.rSm,
@@ -299,7 +299,7 @@ class _MatchCard extends ConsumerWidget {
                     flex: 2,
                     child: OutlinedButton(
                       onPressed: () async {
-                        HapticFeedback.lightImpact();
+                        Haptics.light();
                         await ref
                             .read(tradeRepositoryProvider)
                             .dismissMatch(match.id);
@@ -313,7 +313,7 @@ class _MatchCard extends ConsumerWidget {
                     flex: 3,
                     child: FilledButton.icon(
                       onPressed: () {
-                        HapticFeedback.mediumImpact();
+                        Haptics.success();
                         context.push('/offer/${match.theirs.id}');
                       },
                       icon: const Icon(Symbols.bolt_rounded, size: 18),

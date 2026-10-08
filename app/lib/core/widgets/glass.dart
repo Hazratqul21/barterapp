@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../router/web_shell.dart' show kWebBreakpoint;
+import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 import 'backgrounds.dart';
 import 'common.dart';
@@ -86,7 +87,7 @@ class GlassSurface extends StatelessWidget {
 
     // Dark glass is a smoked pane, not a white one dimmed: tinting a dark
     // surface with white washes the colour out of everything behind it.
-    final base = p.isDark ? const Color(0xFF141B18) : Colors.white;
+    final base = p.isDark ? BrandColors.glassDark : Colors.white;
     final (nearAlpha, farAlpha) = p.isDark ? (0.62, 0.44) : (0.72, 0.52);
 
     final rimNear = p.isDark ? 0.20 : 0.85;
@@ -95,30 +96,45 @@ class GlassSurface extends StatelessWidget {
     return RepaintBoundary(
       child: DecoratedBox(
         decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        boxShadow: shadow
-            ? [
-                BoxShadow(
-                  color: p.isDark
-                      ? Colors.black.withValues(alpha: 0.42)
-                      : const Color(0xFF12211A).withValues(alpha: 0.13),
-                  blurRadius: 36,
-                  spreadRadius: -6,
-                  offset: const Offset(0, 14),
+          borderRadius: borderRadius,
+          boxShadow: shadow
+              ? [
+                  BoxShadow(
+                    color: p.isDark
+                        ? Colors.black.withValues(alpha: 0.42)
+                        : BrandColors.ink.withValues(alpha: 0.13),
+                    blurRadius: 36,
+                    spreadRadius: -6,
+                    offset: const Offset(0, 14),
+                  ),
+                ]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: kIsWeb
+              ? _buildContent(
+                  base,
+                  nearAlpha,
+                  farAlpha,
+                  rimNear,
+                  rimFar,
+                  p.isDark,
+                )
+              : BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
+                  child: _buildContent(
+                    base,
+                    nearAlpha,
+                    farAlpha,
+                    rimNear,
+                    rimFar,
+                    p.isDark,
+                  ),
                 ),
-              ]
-            : null,
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: kIsWeb
-            ? _buildContent(base, nearAlpha, farAlpha, rimNear, rimFar, p.isDark)
-            : BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
-                child: _buildContent(base, nearAlpha, farAlpha, rimNear, rimFar, p.isDark),
-              ),
-      ),
-    ));
+    );
   }
 
   Widget _buildContent(
@@ -332,7 +348,7 @@ class _Framed extends StatelessWidget {
           BoxShadow(
             color: p.isDark
                 ? Colors.black.withValues(alpha: 0.42)
-                : const Color(0xFF12211A).withValues(alpha: 0.13),
+                : BrandColors.ink.withValues(alpha: 0.13),
             blurRadius: 36,
             spreadRadius: -6,
             offset: const Offset(0, 14),
@@ -782,7 +798,7 @@ class ClayTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
-    final base = tone ?? (p.isDark ? const Color(0xFF1B2420) : p.canvas);
+    final base = tone ?? (p.isDark ? BrandColors.glassDarkRaised : p.canvas);
 
     // The two lights. On a dark theme the "light" is a lifted grey rather than
     // white — white on near-black reads as a scratch, not as a highlight.
@@ -791,7 +807,7 @@ class ClayTile extends StatelessWidget {
         : Colors.white.withValues(alpha: 0.95);
     final shade = p.isDark
         ? Colors.black.withValues(alpha: 0.55)
-        : const Color(0xFF12211A).withValues(alpha: 0.13);
+        : BrandColors.ink.withValues(alpha: 0.13);
 
     final shape = BorderRadius.circular(radius);
 
