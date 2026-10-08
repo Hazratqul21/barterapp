@@ -86,7 +86,21 @@ class RecordingApi implements ApiClient {
 
 void main() {
   test('favorites reads the page envelope returned by the API', () async {
-    expect(await TradeRepository(RecordingApi()).getFavorites(), isEmpty);
+    final page = await TradeRepository(RecordingApi()).getFavorites();
+    expect(page.items, isEmpty);
+    expect(page.nextCursor, isNull);
+  });
+  test('favorites pages past the first batch with the cursor', () async {
+    final api = RecordingApi()
+      ..response = {'items': <dynamic>[], 'next_cursor': 'next-page'};
+    final repository = TradeRepository(api);
+
+    final first = await repository.getFavorites();
+    expect(api.query, isNot(contains('cursor')));
+    expect(first.nextCursor, 'next-page');
+
+    await repository.getFavorites(cursor: first.nextCursor);
+    expect(api.query?['cursor'], 'next-page');
   });
   test('reports and notification reads use the backend contract', () async {
     final api = RecordingApi();

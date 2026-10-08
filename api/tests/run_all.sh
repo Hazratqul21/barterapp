@@ -28,6 +28,7 @@ for t in tests/test_trade_loop.py \
          tests/test_push.py \
          tests/test_notify_prefs.py \
          tests/test_favorites.py \
+         tests/test_favorites_pagination.py \
          tests/test_admin_reports.py \
          tests/test_sms.py \
          tests/test_events.py \
