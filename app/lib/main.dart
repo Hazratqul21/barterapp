@@ -16,10 +16,15 @@ import 'core/notifications/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    if (kDebugMode) debugPrint('Firebase init failed: $e');
+  // The web build has no Firebase options, so there init can only fail — and
+  // when gstatic.com is unreachable it never settles, leaving a blank page.
+  // Elsewhere a slow network must not hold the first frame hostage either.
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      if (kDebugMode) debugPrint('Firebase init failed: $e');
+    }
   }
 
   // Real paths on the web: a listing link has no "#" in it, so it can be shared.

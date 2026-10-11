@@ -411,19 +411,19 @@ void main() {
           final minField = find.byType(TextFormField).at(0);
           final maxField = find.byType(TextFormField).at(1);
           await tester.enterText(minField, '-1');
-          await tester.tap(find.text("Qo'llash"));
+          await tester.tap(find.text('Qo‘llash'));
           await tester.pumpAndSettle();
           expect(find.text('To‘g‘ri, musbat narx kiriting'), findsOneWidget);
           await tester.enterText(minField, '2000');
           await tester.enterText(maxField, '1000');
-          await tester.tap(find.text("Qo'llash"));
+          await tester.tap(find.text('Qo‘llash'));
           await tester.pumpAndSettle();
           expect(
             find.text('Eng kam narx eng yuqori narxdan katta bo‘lmasin.'),
             findsOneWidget,
           );
           await tester.enterText(maxField, '5000');
-          await tester.tap(find.text("Qo'llash"));
+          await tester.tap(find.text('Qo‘llash'));
           await tester.pumpAndSettle();
           expect(
             ProviderScope.containerOf(context).read(feedQueryProvider).minPrice,

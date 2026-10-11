@@ -85,7 +85,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
         title: Text(l.profileTitle),
         actions: [
           IconButton(
-            tooltip: 'Saved Listings', // Ideally localized
+            tooltip: l.savedListings,
             onPressed: () => context.push('/profile/favorites'),
             icon: const Icon(Symbols.bookmark_rounded, size: Sizes.iconLg),
           ),
@@ -139,8 +139,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           ),
                           if (me.handle != null)
                             Center(
+                              // The business name, not a username.
                               child: Text(
-                                '@${me.handle}',
+                                me.handle!,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: p.inkSoft,
                                 ),
@@ -244,25 +245,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           // STATS ROW
                           Padding(
                             padding: Gap.screen,
-                            child: Row(
-                              children: [
-                                _StatCard(
-                                  label: l.profileStatActive,
-                                  value: '${me.activeListings}',
-                                ),
-                                Gap.w2,
-                                _StatCard(
-                                  label: l.profileStatCompleted,
-                                  value: '${me.completedTrades}',
-                                ),
-                                Gap.w2,
-                                _StatCard(
-                                  label: l.profileStatCompletion,
-                                  value: me.completionRate != null
-                                      ? '${me.completionRate}%'
-                                      : '—',
-                                ),
-                              ],
+                            // Equal heights even when one label wraps.
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _StatCard(
+                                    label: l.profileStatActive,
+                                    value: '${me.activeListings}',
+                                  ),
+                                  Gap.w2,
+                                  _StatCard(
+                                    label: l.profileStatCompleted,
+                                    value: '${me.completedTrades}',
+                                  ),
+                                  Gap.w2,
+                                  _StatCard(
+                                    label: l.profileStatCompletion,
+                                    value: me.completionRate != null
+                                        ? '${me.completionRate}%'
+                                        : '—',
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           Gap.h6,
@@ -338,10 +343,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: p.inkSoft,
-                fontSize: 9,
-              ),
+              style: theme.textTheme.labelSmall?.copyWith(color: p.inkSoft),
             ),
           ],
         ),

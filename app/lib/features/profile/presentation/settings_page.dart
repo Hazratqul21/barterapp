@@ -58,81 +58,87 @@ class SettingsPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(
-                            Symbols.language_rounded,
-                            color: p.give,
+                    // Tiles ink on the card, not under its fill.
+                    clipBehavior: Clip.antiAlias,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(
+                              Symbols.language_rounded,
+                              color: p.give,
+                            ),
+                            title: Text(l.profileLanguage),
                           ),
-                          title: Text(l.profileLanguage),
-                          subtitle: Text(
-                            l.createGiveHint,
-                            style: TextStyle(fontSize: 11, color: p.inkFaint),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            Gap.x4,
-                            0,
-                            Gap.x4,
-                            Gap.x4,
-                          ),
-                          child: SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(value: 'uz', label: Text('UZ')),
-                              ButtonSegment(value: 'ru', label: Text('RU')),
-                              ButtonSegment(value: 'en', label: Text('EN')),
-                            ],
-                            selected: {locale},
-                            onSelectionChanged: (Set<String> v) {
-                              Haptics.light();
-                              ref.read(localeProvider.notifier).set(v.first);
-                            },
-                            showSelectedIcon: false,
-                            style: SegmentedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              selectedBackgroundColor: p.give,
-                              selectedForegroundColor: Colors.white,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              Gap.x4,
+                              0,
+                              Gap.x4,
+                              Gap.x4,
+                            ),
+                            child: SegmentedButton<String>(
+                              segments: const [
+                                ButtonSegment(value: 'uz', label: Text('UZ')),
+                                ButtonSegment(value: 'ru', label: Text('RU')),
+                                ButtonSegment(value: 'en', label: Text('EN')),
+                              ],
+                              selected: {locale},
+                              onSelectionChanged: (Set<String> v) {
+                                Haptics.light();
+                                ref.read(localeProvider.notifier).set(v.first);
+                              },
+                              showSelectedIcon: false,
+                              style: SegmentedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                selectedBackgroundColor: p.give,
+                                selectedForegroundColor: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                        const _Divider(),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final isDark = ref.watch(darkModeProvider);
-                            return ListTile(
-                              leading: AnimatedSwitcher(
-                                duration: M3Motion.short3,
-                                child: Icon(
-                                  isDark
-                                      ? Symbols.dark_mode_rounded
-                                      : Symbols.light_mode_rounded,
-                                  key: ValueKey(isDark ? 'dark' : 'light'),
-                                  color: p.give,
+                          const _Divider(),
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final isDark = ref.watch(darkModeProvider);
+                              return ListTile(
+                                leading: AnimatedSwitcher(
+                                  duration: M3Motion.short3,
+                                  child: Icon(
+                                    isDark
+                                        ? Symbols.dark_mode_rounded
+                                        : Symbols.light_mode_rounded,
+                                    key: ValueKey(isDark ? 'dark' : 'light'),
+                                    color: p.give,
+                                  ),
                                 ),
-                              ),
-                              title: Text(l.actionDarkMode),
-                              trailing: Switch(
-                                value: isDark,
-                                onChanged: (v) =>
-                                    ref.read(darkModeProvider.notifier).set(v),
-                              ),
-                            );
-                          },
-                        ),
-                        const _Divider(),
-                        Consumer(
-                          builder: (context, ref, _) => ListTile(
-                            leading: const Icon(Symbols.notifications_rounded),
-                            title: Text(l.notificationSettings),
-                            trailing: const Icon(Symbols.chevron_right_rounded),
-                            onTap: () {
-                              context.push('/profile/notification-settings');
+                                title: Text(l.actionDarkMode),
+                                trailing: Switch(
+                                  value: isDark,
+                                  onChanged: (v) => ref
+                                      .read(darkModeProvider.notifier)
+                                      .set(v),
+                                ),
+                              );
                             },
                           ),
-                        ),
-                      ],
+                          const _Divider(),
+                          Consumer(
+                            builder: (context, ref, _) => ListTile(
+                              leading: const Icon(
+                                Symbols.notifications_rounded,
+                              ),
+                              title: Text(l.notificationSettings),
+                              trailing: const Icon(
+                                Symbols.chevron_right_rounded,
+                              ),
+                              onTap: () {
+                                context.push('/profile/notification-settings');
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -151,26 +157,31 @@ class SettingsPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        _SettingsTile(
-                          icon: Symbols.verified_user_rounded,
-                          title: l.verifyTitle,
-                          onTap: () => context.push('/settings/verify'),
-                        ),
-                        const _Divider(),
-                        _SettingsTile(
-                          icon: Symbols.account_balance_wallet_rounded,
-                          title: l.paymentsTitle,
-                          onTap: () => context.push('/settings/payments'),
-                        ),
-                        const _Divider(),
-                        _SettingsTile(
-                          icon: Symbols.block_rounded,
-                          title: l.blockedTitle,
-                          onTap: () => context.push('/settings/blocks'),
-                        ),
-                      ],
+                    // Tiles ink on the card, not under its fill.
+                    clipBehavior: Clip.antiAlias,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Column(
+                        children: [
+                          _SettingsTile(
+                            icon: Symbols.verified_user_rounded,
+                            title: l.verifyTitle,
+                            onTap: () => context.push('/settings/verify'),
+                          ),
+                          const _Divider(),
+                          _SettingsTile(
+                            icon: Symbols.account_balance_wallet_rounded,
+                            title: l.paymentsTitle,
+                            onTap: () => context.push('/settings/payments'),
+                          ),
+                          const _Divider(),
+                          _SettingsTile(
+                            icon: Symbols.block_rounded,
+                            title: l.blockedTitle,
+                            onTap: () => context.push('/settings/blocks'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -189,20 +200,26 @@ class SettingsPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        _SettingsTile(
-                          icon: Symbols.policy_rounded,
-                          title: l.legalPrivacy,
-                          onTap: () => openLegalLink(context, privacyPolicyUrl),
-                        ),
-                        const _Divider(),
-                        _SettingsTile(
-                          icon: Symbols.description_rounded,
-                          title: l.legalTerms,
-                          onTap: () => openLegalLink(context, termsOfUseUrl),
-                        ),
-                      ],
+                    // Tiles ink on the card, not under its fill.
+                    clipBehavior: Clip.antiAlias,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Column(
+                        children: [
+                          _SettingsTile(
+                            icon: Symbols.policy_rounded,
+                            title: l.legalPrivacy,
+                            onTap: () =>
+                                openLegalLink(context, privacyPolicyUrl),
+                          ),
+                          const _Divider(),
+                          _SettingsTile(
+                            icon: Symbols.description_rounded,
+                            title: l.legalTerms,
+                            onTap: () => openLegalLink(context, termsOfUseUrl),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

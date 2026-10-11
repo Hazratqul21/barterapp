@@ -155,26 +155,39 @@ class RemoteImage extends StatelessWidget {
               colors: [scheme.surfaceContainerHigh, scheme.surfaceContainer],
             ),
           ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Symbols.photo_rounded,
-                  color: p.inkFaint.withValues(alpha: 0.5),
-                  size: 32,
+          // Avatars are 40–80px circles: there the words do not fit and
+          // only the icon, scaled to the box, is drawn.
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final side = box.biggest.shortestSide;
+              final roomy = box.maxWidth >= 120 && box.maxHeight >= 90;
+              final icon = Icon(
+                Symbols.photo_rounded,
+                color: p.inkFaint.withValues(alpha: 0.5),
+                size: roomy || !side.isFinite
+                    ? 32
+                    : (side * 0.45).clamp(12, 32),
+              );
+              if (!roomy) return Center(child: icon);
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    icon,
+                    const SizedBox(height: 8),
+                    Text(
+                      L.of(context).errorNoImage,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: p.inkFaint.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  L.of(context).errorNoImage,
-                  style: TextStyle(
-                    color: p.inkFaint.withValues(alpha: 0.8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -910,6 +923,26 @@ class CategoryCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Wide enough for the longest word, so a long Russian name
+  /// ("Животноводство") wraps between words instead of inside one.
+  double _widthFor(BuildContext context, TextStyle? style) {
+    var widest = 0.0;
+    for (final word in category.name.split(RegExp(r'\s+'))) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: word,
+          style: style?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 1,
+      )..layout();
+      widest = widest < painter.width ? painter.width : widest;
+      painter.dispose();
+    }
+    return (widest + 8).clamp(76.0, 140.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
@@ -921,6 +954,11 @@ class CategoryCard extends StatelessWidget {
         ? null
         : (p.isDark ? CategoryStyle.of(tag).dark : CategoryStyle.of(tag));
     final accent = style?.color ?? p.give;
+    final labelStyle = theme.textTheme.labelMedium?.copyWith(
+      color: selected ? accent : theme.colorScheme.onSurface,
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      height: 1.2,
+    );
     return Semantics(
       button: true,
       selected: selected,
@@ -931,7 +969,7 @@ class CategoryCard extends StatelessWidget {
         },
         customBorder: const RoundedSuperellipseBorder(borderRadius: Radii.rMd),
         child: SizedBox(
-          width: 76,
+          width: _widthFor(context, labelStyle),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
@@ -966,11 +1004,7 @@ class CategoryCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: selected ? accent : theme.colorScheme.onSurface,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    height: 1.2,
-                  ),
+                  style: labelStyle,
                 ),
               ],
             ),

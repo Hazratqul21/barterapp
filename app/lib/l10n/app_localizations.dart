@@ -561,6 +561,30 @@ abstract class L {
   /// **'{phone} raqamiga yuborilgan 6 xonali kod.'**
   String authCodeSubtitle(String phone);
 
+  /// No description provided for @authChangePhone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Raqamni o‘zgartirish'**
+  String get authChangePhone;
+
+  /// No description provided for @authResend.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kodni qayta yuborish'**
+  String get authResend;
+
+  /// No description provided for @authResendIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qayta yuborish: {seconds} s'**
+  String authResendIn(int seconds);
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In uz, this message translates to:
+  /// **'{km} km'**
+  String distanceKm(String km);
+
   /// No description provided for @authVerify.
   ///
   /// In uz, this message translates to:
@@ -602,12 +626,6 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'SMS provayderi hali ulanmagan. Sinov kodi: {code}'**
   String authOtpDebug(String code);
-
-  /// No description provided for @authResend.
-  ///
-  /// In uz, this message translates to:
-  /// **'Kodni qayta yuborish'**
-  String get authResend;
 
   /// No description provided for @authWithApple.
   ///
@@ -1782,19 +1800,19 @@ abstract class L {
   /// No description provided for @editListing.
   ///
   /// In uz, this message translates to:
-  /// **'E\'lonni tahrirlash'**
+  /// **'E’lonni tahrirlash'**
   String get editListing;
 
   /// No description provided for @deleteListing.
   ///
   /// In uz, this message translates to:
-  /// **'E\'lonni o\'chirish'**
+  /// **'E’lonni o‘chirish'**
   String get deleteListing;
 
   /// No description provided for @savedListings.
   ///
   /// In uz, this message translates to:
-  /// **'Saqlangan e\'lonlar'**
+  /// **'Saqlangan e’lonlar'**
   String get savedListings;
 
   /// No description provided for @reportUser.
@@ -1812,7 +1830,7 @@ abstract class L {
   /// No description provided for @saveChanges.
   ///
   /// In uz, this message translates to:
-  /// **'O\'zgarishlarni saqlash'**
+  /// **'O‘zgarishlarni saqlash'**
   String get saveChanges;
 
   /// No description provided for @filterTitle.
@@ -1824,13 +1842,13 @@ abstract class L {
   /// No description provided for @filterMinPrice.
   ///
   /// In uz, this message translates to:
-  /// **'Minimal narx (so\'m)'**
+  /// **'Minimal narx (so‘m)'**
   String get filterMinPrice;
 
   /// No description provided for @filterMaxPrice.
   ///
   /// In uz, this message translates to:
-  /// **'Maksimal narx (so\'m)'**
+  /// **'Maksimal narx (so‘m)'**
   String get filterMaxPrice;
 
   /// No description provided for @filterRegion.
@@ -1842,7 +1860,7 @@ abstract class L {
   /// No description provided for @filterApply.
   ///
   /// In uz, this message translates to:
-  /// **'Qo\'llash'**
+  /// **'Qo‘llash'**
   String get filterApply;
 
   /// No description provided for @filterClear.
@@ -1872,7 +1890,7 @@ abstract class L {
   /// No description provided for @actionDelete.
   ///
   /// In uz, this message translates to:
-  /// **'O\'chirish'**
+  /// **'O‘chirish'**
   String get actionDelete;
 
   /// No description provided for @actionCancel.
@@ -1890,7 +1908,7 @@ abstract class L {
   /// No description provided for @actionDeleteListing.
   ///
   /// In uz, this message translates to:
-  /// **'E\'lonni o\'chirish'**
+  /// **'E’lonni o‘chirish'**
   String get actionDeleteListing;
 
   /// No description provided for @actionReportUser.
@@ -1908,19 +1926,19 @@ abstract class L {
   /// No description provided for @actionDeleteAccount.
   ///
   /// In uz, this message translates to:
-  /// **'Hisobni o\'chirish'**
+  /// **'Hisobni o‘chirish'**
   String get actionDeleteAccount;
 
   /// No description provided for @actionDarkMode.
   ///
   /// In uz, this message translates to:
-  /// **'Qorong\'u rejim'**
+  /// **'Qorong‘u rejim'**
   String get actionDarkMode;
 
   /// No description provided for @emptyMyListings.
   ///
   /// In uz, this message translates to:
-  /// **'Hozircha e\'lonlar yo\'q'**
+  /// **'Hozircha e’lonlar yo‘q'**
   String get emptyMyListings;
 
   /// No description provided for @blockedTitle.
@@ -1932,7 +1950,7 @@ abstract class L {
   /// No description provided for @blockedEmpty.
   ///
   /// In uz, this message translates to:
-  /// **'Bloklangan foydalanuvchilar yo\'q'**
+  /// **'Bloklangan foydalanuvchilar yo‘q'**
   String get blockedEmpty;
 
   /// No description provided for @blockedUnblock.
@@ -1998,7 +2016,7 @@ abstract class L {
   /// No description provided for @notifOff.
   ///
   /// In uz, this message translates to:
-  /// **'O\'chirilgan'**
+  /// **'O‘chirilgan'**
   String get notifOff;
 
   /// No description provided for @notifQuietHoursStart.
@@ -2016,19 +2034,19 @@ abstract class L {
   /// No description provided for @notifQuietHoursDisable.
   ///
   /// In uz, this message translates to:
-  /// **'Sokin soatlarni o\'chirish'**
+  /// **'Sokin soatlarni o‘chirish'**
   String get notifQuietHoursDisable;
 
   /// No description provided for @favSavedListings.
   ///
   /// In uz, this message translates to:
-  /// **'Saqlangan e\'lonlar'**
+  /// **'Saqlangan e’lonlar'**
   String get favSavedListings;
 
   /// No description provided for @favNoSavedListings.
   ///
   /// In uz, this message translates to:
-  /// **'Hozircha saqlangan e\'lonlar yo\'q'**
+  /// **'Hozircha saqlangan e’lonlar yo‘q'**
   String get favNoSavedListings;
 
   /// No description provided for @legalTitle.
@@ -2052,7 +2070,7 @@ abstract class L {
   /// No description provided for @deleteAccountConfirm.
   ///
   /// In uz, this message translates to:
-  /// **'Haqiqatan ham hisobingizni o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi va ma\'lumotlaringiz butunlay o\'chiriladi.'**
+  /// **'Haqiqatan ham hisobingizni o‘chirmoqchimisiz? Bu amalni bekor qilib bo‘lmaydi va ma’lumotlaringiz butunlay o‘chiriladi.'**
   String get deleteAccountConfirm;
 
   /// No description provided for @profileVerifyAccount.

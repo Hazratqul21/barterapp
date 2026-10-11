@@ -254,6 +254,22 @@ class LRu extends L {
   }
 
   @override
+  String get authChangePhone => 'Изменить номер';
+
+  @override
+  String get authResend => 'Отправить код ещё раз';
+
+  @override
+  String authResendIn(int seconds) {
+    return 'Повторно через $seconds с';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km км';
+  }
+
+  @override
   String get authVerify => 'Подтвердить';
 
   @override
@@ -275,9 +291,6 @@ class LRu extends L {
   String authOtpDebug(String code) {
     return 'SMS-провайдер ещё не подключён. Тестовый код: $code';
   }
-
-  @override
-  String get authResend => 'Отправить код ещё раз';
 
   @override
   String get authWithApple => 'Продолжить с Apple';
