@@ -15,6 +15,7 @@ for t in tests/test_config_guard.py \
          tests/test_uploads_and_desires.py \
          tests/test_profile_and_regions.py \
          tests/test_create_listing.py \
+         tests/test_listing_single_language.py \
          tests/test_counter_offer.py \
          tests/test_reviews.py \
          tests/test_otp_security.py \
