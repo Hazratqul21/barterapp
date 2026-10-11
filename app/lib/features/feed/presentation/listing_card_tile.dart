@@ -96,7 +96,14 @@ class _ListingCardTileState extends State<ListingCardTile> {
 
     final meta = [
       if (listing.distanceKm != null)
-        '${listing.distanceKm!.toStringAsFixed(listing.distanceKm! < 10 ? 1 : 0)} km'
+        L
+            .of(context)
+            .distanceKm(
+              NumberFormat.decimalPatternDigits(
+                locale: locale,
+                decimalDigits: listing.distanceKm! < 10 ? 1 : 0,
+              ).format(listing.distanceKm),
+            )
       else if (listing.region != null)
         listing.region!,
       DateFormat.MMMd(locale).format(listing.postedAt.toLocal()),

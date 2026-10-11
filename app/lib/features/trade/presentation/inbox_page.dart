@@ -359,7 +359,8 @@ class _ThreadCard extends StatelessWidget {
                     _StatusPill(status: thread.offerStatus),
                   ],
                 ),
-                if (thread.cash.minor > 0) ...[
+                // Either way round, money is part of this deal.
+                if (thread.cash.minor != 0) ...[
                   Gap.h2,
                   Row(
                     children: [
@@ -370,7 +371,10 @@ class _ThreadCard extends StatelessWidget {
                       ),
                       Gap.w1,
                       Text(
-                        thread.cash.format(l.localeName),
+                        Money(
+                          minor: thread.cash.minor.abs(),
+                          currency: thread.cash.currency,
+                        ).format(l.localeName),
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: p.money,
                         ),

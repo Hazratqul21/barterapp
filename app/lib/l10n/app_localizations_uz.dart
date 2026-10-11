@@ -255,6 +255,22 @@ class LUz extends L {
   }
 
   @override
+  String get authChangePhone => 'Raqamni o‘zgartirish';
+
+  @override
+  String get authResend => 'Kodni qayta yuborish';
+
+  @override
+  String authResendIn(int seconds) {
+    return 'Qayta yuborish: $seconds s';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km km';
+  }
+
+  @override
   String get authVerify => 'Tasdiqlash';
 
   @override
@@ -276,9 +292,6 @@ class LUz extends L {
   String authOtpDebug(String code) {
     return 'SMS provayderi hali ulanmagan. Sinov kodi: $code';
   }
-
-  @override
-  String get authResend => 'Kodni qayta yuborish';
 
   @override
   String get authWithApple => 'Apple bilan davom etish';
@@ -904,13 +917,13 @@ class LUz extends L {
       'Yangi mosliklar va xabarlar haqida bildirishnoma oling';
 
   @override
-  String get editListing => 'E\'lonni tahrirlash';
+  String get editListing => 'E’lonni tahrirlash';
 
   @override
-  String get deleteListing => 'E\'lonni o\'chirish';
+  String get deleteListing => 'E’lonni o‘chirish';
 
   @override
-  String get savedListings => 'Saqlangan e\'lonlar';
+  String get savedListings => 'Saqlangan e’lonlar';
 
   @override
   String get reportUser => 'Foydalanuvchi ustidan shikoyat';
@@ -919,22 +932,22 @@ class LUz extends L {
   String get blockUser => 'Foydalanuvchini bloklash';
 
   @override
-  String get saveChanges => 'O\'zgarishlarni saqlash';
+  String get saveChanges => 'O‘zgarishlarni saqlash';
 
   @override
   String get filterTitle => 'Filterlar';
 
   @override
-  String get filterMinPrice => 'Minimal narx (so\'m)';
+  String get filterMinPrice => 'Minimal narx (so‘m)';
 
   @override
-  String get filterMaxPrice => 'Maksimal narx (so\'m)';
+  String get filterMaxPrice => 'Maksimal narx (so‘m)';
 
   @override
   String get filterRegion => 'Hudud';
 
   @override
-  String get filterApply => 'Qo\'llash';
+  String get filterApply => 'Qo‘llash';
 
   @override
   String get filterClear => 'Tozalash';
@@ -949,7 +962,7 @@ class LUz extends L {
   String get actionEdit => 'Tahrirlash';
 
   @override
-  String get actionDelete => 'O\'chirish';
+  String get actionDelete => 'O‘chirish';
 
   @override
   String get actionCancel => 'Bekor qilish';
@@ -958,7 +971,7 @@ class LUz extends L {
   String get actionOk => 'Tushunarli';
 
   @override
-  String get actionDeleteListing => 'E\'lonni o\'chirish';
+  String get actionDeleteListing => 'E’lonni o‘chirish';
 
   @override
   String get actionReportUser => 'Ustidan shikoyat qilish';
@@ -967,19 +980,19 @@ class LUz extends L {
   String get actionBlockUser => 'Bloklash';
 
   @override
-  String get actionDeleteAccount => 'Hisobni o\'chirish';
+  String get actionDeleteAccount => 'Hisobni o‘chirish';
 
   @override
-  String get actionDarkMode => 'Qorong\'u rejim';
+  String get actionDarkMode => 'Qorong‘u rejim';
 
   @override
-  String get emptyMyListings => 'Hozircha e\'lonlar yo\'q';
+  String get emptyMyListings => 'Hozircha e’lonlar yo‘q';
 
   @override
   String get blockedTitle => 'Bloklanganlar';
 
   @override
-  String get blockedEmpty => 'Bloklangan foydalanuvchilar yo\'q';
+  String get blockedEmpty => 'Bloklangan foydalanuvchilar yo‘q';
 
   @override
   String get blockedUnblock => 'Blokdan chiqarish';
@@ -1013,7 +1026,7 @@ class LUz extends L {
   String get notifQuietHours => 'Sokin soatlar';
 
   @override
-  String get notifOff => 'O\'chirilgan';
+  String get notifOff => 'O‘chirilgan';
 
   @override
   String get notifQuietHoursStart => 'Sokin soatlar boshlanishi';
@@ -1022,13 +1035,13 @@ class LUz extends L {
   String get notifQuietHoursEnd => 'Sokin soatlar tugashi';
 
   @override
-  String get notifQuietHoursDisable => 'Sokin soatlarni o\'chirish';
+  String get notifQuietHoursDisable => 'Sokin soatlarni o‘chirish';
 
   @override
-  String get favSavedListings => 'Saqlangan e\'lonlar';
+  String get favSavedListings => 'Saqlangan e’lonlar';
 
   @override
-  String get favNoSavedListings => 'Hozircha saqlangan e\'lonlar yo\'q';
+  String get favNoSavedListings => 'Hozircha saqlangan e’lonlar yo‘q';
 
   @override
   String get legalTitle => 'HUQUQIY';
@@ -1041,7 +1054,7 @@ class LUz extends L {
 
   @override
   String get deleteAccountConfirm =>
-      'Haqiqatan ham hisobingizni o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi va ma\'lumotlaringiz butunlay o\'chiriladi.';
+      'Haqiqatan ham hisobingizni o‘chirmoqchimisiz? Bu amalni bekor qilib bo‘lmaydi va ma’lumotlaringiz butunlay o‘chiriladi.';
 
   @override
   String get profileVerifyAccount => 'Hisobingizni tasdiqlang';

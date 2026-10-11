@@ -28,10 +28,14 @@ class MotionSpec {
   /// The spring as a 0→1 curve over [duration].
   Curve get curve => SpringCurve(spring, duration);
 
-  /// Zero under reduce-motion: the change still happens, it just does not
-  /// travel.
+  /// Instant under reduce-motion: the change still happens, it just does not
+  /// travel. One millisecond rather than zero — `AnimatedSize` with a zero
+  /// duration finishes inside its own layout and trips a framework assertion.
   Duration durationOf(BuildContext context) =>
-      shouldReduceMotion(context) ? Duration.zero : duration;
+      shouldReduceMotion(context) ? reduced : duration;
+
+  /// What [durationOf] returns under reduce-motion.
+  static const reduced = Duration(milliseconds: 1);
 }
 
 abstract final class Motion {

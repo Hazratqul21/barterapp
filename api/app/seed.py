@@ -302,7 +302,7 @@ LISTINGS = [
         "premium": False,
         "days_ago": 3,
         "photos": [IMG["timber"]],
-        "title": t("Yong'oq taxtasi", "Доска из ореха", "Walnut timber"),
+        "title": t("Yong‘oq taxtasi", "Доска из ореха", "Walnut timber"),
         "wants_summary": t("Chorva", "Скот", "Livestock"),
         "image_alt": t("Taxtalar", "Доски", "Planks"),
         "category": t("Qurilish", "Стройматериалы", "Construction"),
@@ -326,7 +326,7 @@ LISTINGS = [
         "premium": True,
         "days_ago": 1,
         "photos": [IMG["cattle"]],
-        "title": t("Sog'in sigirlar", "Дойные коровы", "Dairy cows"),
+        "title": t("Sog‘in sigirlar", "Дойные коровы", "Dairy cows"),
         "wants_summary": t("Meva", "Фрукты", "Fruit"),
         "image_alt": t("Sigirlar", "Коровы", "Cows"),
         "category": t("Chorvachilik", "Животноводство", "Livestock"),
@@ -660,13 +660,14 @@ async def run() -> None:
                 created_at=NOW - timedelta(days=days),
             ))
 
-        # A live negotiation: my MacBook + $100 against Bekzod's iPhone.
+        # A live negotiation: my MacBook against Bekzod's iPhone plus the
+        # difference in cash. Negative: the sender asks for money back.
         live = Offer(
             listing_id=listings["phone"].id,
             from_user_id=users["me"].id,
             to_user_id=users["bek"].id,
             status=OfferStatus.pending,
-            cash_delta_minor=1_260_000_00,
+            cash_delta_minor=-705_600_00,
             expires_at=NOW + timedelta(hours=46),
             created_at=NOW - timedelta(hours=2),
         )
@@ -687,7 +688,7 @@ async def run() -> None:
             ("bek", "Salom! MacBook hali ham barterga bormi?", 120),
             ("me", 'Ha — 14", M3 Pro, 18 GB. Batareya sikli 84 ta.', 105),
             ("bek", "Mening iPhone 13’im 256 GB, qutisi bilan. To‘g‘ridan-to‘g‘ri almashamizmi?", 90),
-            ("me", "Noutbuk qimmatroq, shuning uchun sizning tomondan $100 qo‘shib taklif yubordim.", 45),
+            ("me", "Noutbuk qimmatroq, shuning uchun farqini — 705 600 so‘m — siz tomondan qo‘shib taklif yubordim.", 45),
             ("bek", "To‘g‘ri. Shanba kuni ertalab Registonda ko‘rishsak bo‘ladimi?", 20),
         ]
         for sender, body, minutes_ago in script:

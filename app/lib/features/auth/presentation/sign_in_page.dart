@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,8 +128,15 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   bool _busy = false;
   String? _error;
 
+  /// Seconds until another code may be asked for. A wrong number or an SMS
+  /// that never arrived used to leave only one way out: leaving the page.
+  int _resendIn = 0;
+  Timer? _resendTimer;
+  static const _resendAfter = 60;
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _phone.dispose();
     _code.dispose();
     super.dispose();
@@ -160,7 +169,28 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       _codeSent = true;
       if (code != null) _code.text = code;
     });
+    _startResendCountdown();
   });
+
+  void _startResendCountdown() {
+    _resendTimer?.cancel();
+    setState(() => _resendIn = _resendAfter);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return t.cancel();
+      setState(() => _resendIn--);
+      if (_resendIn <= 0) t.cancel();
+    });
+  }
+
+  void _changePhone() {
+    _resendTimer?.cancel();
+    setState(() {
+      _codeSent = false;
+      _resendIn = 0;
+      _error = null;
+      _code.clear();
+    });
+  }
 
   Future<void> _verify() => _run(() async {
     final isNewUser = await ref
@@ -220,6 +250,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     controller: _phone,
                     enabled: !_codeSent && !_busy,
                     keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    onSubmitted: (_) {
+                      if (!_busy && _phoneLooksValid) _sendCode();
+                    },
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -238,6 +273,24 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       controller: _code,
                       enabled: !_busy,
                       onSubmitted: (_) => _verify(),
+                    ),
+                    Gap.h2,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: _busy ? null : _changePhone,
+                          child: Text(l.authChangePhone),
+                        ),
+                        TextButton(
+                          onPressed: _busy || _resendIn > 0 ? null : _sendCode,
+                          child: Text(
+                            _resendIn > 0
+                                ? l.authResendIn(_resendIn)
+                                : l.authResend,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
 

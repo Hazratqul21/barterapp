@@ -254,6 +254,22 @@ class LEn extends L {
   }
 
   @override
+  String get authChangePhone => 'Change number';
+
+  @override
+  String get authResend => 'Send the code again';
+
+  @override
+  String authResendIn(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km km';
+  }
+
+  @override
   String get authVerify => 'Verify';
 
   @override
@@ -275,9 +291,6 @@ class LEn extends L {
   String authOtpDebug(String code) {
     return 'No SMS provider yet. Test code: $code';
   }
-
-  @override
-  String get authResend => 'Send the code again';
 
   @override
   String get authWithApple => 'Continue with Apple';

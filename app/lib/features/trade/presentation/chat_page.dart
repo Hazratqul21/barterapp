@@ -471,9 +471,13 @@ class _DealPanel extends ConsumerWidget {
     final locale = l.localeName;
 
     final mine = offer.offered.map((o) => o.title).join(' + ');
-    final cash = offer.cashDeltaMinor != 0
-        ? ' + ${offer.cash.format(locale)}'
-        : '';
+    // Positive: the sender tops up. Negative: the sender asks for the
+    // difference, so the money travels with the item they receive.
+    final delta = offer.cashDeltaMinor;
+    final cashText =
+        ' + ${Money(minor: delta.abs(), currency: offer.currency).format(locale)}';
+    final senderCash = delta > 0 ? cashText : '';
+    final receiverCash = delta < 0 ? cashText : '';
     final awaitingMe = !offer.isMine;
     final open =
         offer.status == OfferStatus.pending ||
@@ -518,9 +522,10 @@ class _DealPanel extends ConsumerWidget {
               TradeSides(
                 dense: true,
                 giveCaption: offer.isMine ? l.dealYouGive : l.dealYouGet,
-                giveLabel: '$mine$cash',
+                // Left is always the sender's side; only the captions flip.
+                giveLabel: '$mine$senderCash',
                 takeCaption: offer.isMine ? l.dealYouGet : l.dealYouGive,
-                takeLabel: offer.wanted.title,
+                takeLabel: '${offer.wanted.title}$receiverCash',
               ),
               if (open && awaitingMe) ...[
                 Gap.h4,
