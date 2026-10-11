@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- A test build on a real phone talks to the API on the developer's
+         computer over plain http://<LAN IP>:8010. Android 9+ refuses
+         cleartext by default, so without this the APK installs, opens and
+         every request fails. Only debug and profile builds carry it: the
+         release manifest stays HTTPS-only. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>
