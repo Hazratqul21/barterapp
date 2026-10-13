@@ -1275,8 +1275,13 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Gold on dark grounds (the logo's own pairing), olive on light ones:
+    // pale gold on ivory would all but vanish.
+    final dark = onDark || Theme.of(context).brightness == Brightness.dark;
     Widget top = Image.asset(
-      'assets/brand/mab-logo.png',
+      dark
+          ? 'assets/brand/mab-wordmark-gold.png'
+          : 'assets/brand/mab-wordmark-olive.png',
       fit: BoxFit.contain,
       semanticLabel: 'MAB',
       filterQuality: FilterQuality.high,

@@ -82,6 +82,7 @@
   "authResend": "Resend code",
   "authResendIn": "Resend in {seconds}s",
   "distanceKm": "{km} km",
+  "splashTagline": "Trade. Trust.",
   "authVerify": "Verify",
   "authInvalidPhone": "Enter the full number starting with +998.",
   "authSignedOut": "You are not signed in",

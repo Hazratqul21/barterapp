@@ -25,31 +25,33 @@ chiplari, hamma joyda bir xil radius. U C segmentni yo'qotardi.
 Mahsulotning butun g'oyasi ikkilikda: **beraman ⇄ olaman**. Palitra shuni
 takrorlaydi.
 
+Brend v3 (2026-10): ranglar **MAB logotipidan** olingan — to‘q zaytun
+plitka va shampan-oltin harflar — ilovada bir pog‘ona ochroq.
+
 | Ma'no | Yorug' | Qorong'i | Qayerda |
 |---|---|---|---|
-| **Beraman** (give) | `#0E7A52` | `#4FCB92` | Egasi beradigan narsa, asosiy tugma, tasdiq |
-| **Olaman** (take) | `#1D4FBF` | `#8FB0F5` | «Kerak:» bloklari, xohishlar |
-| **Pul** (money) | `#B47714` | `#E0B45A` | Narx, premium, o'qilmagan |
+| **Beraman** (give) | `#5B6A3A` zaytun | `#A9B97A` | Egasi beradigan narsa, asosiy tugma, tasdiq |
+| **Olaman** (take) | `#2C6E85` neft-ko‘k | `#7FB6C9` | «Kerak:» bloklari, xohishlar |
+| **Pul** (money) | `#7D6422` to‘q oltin | `#D9C08A` | Narx matni, o‘qilmagan |
+| **Oltin** (gold) | `#C9B07A` | `#E6CF9C` | Premium, mukofot — faqat fon/urg‘u, oq ustida matn emas |
 
-`vivid` darajalari faqat bitta ish uchun: **gradient**. Lenta sarlavhasi va
-splash yashildan ko'kka oqadi — ya'ni sarlavhaning o'zi savdo rasmi. Boshqa
-hech qayerda to'liq kuchda ishlatilmaydi.
+Logo: `assets/brand/mab-wordmark-olive.png` (yorug‘ fon),
+`mab-wordmark-gold.png` (qorong‘i fon), `mab-icon.png` (ikonka). Splash va
+tizim launch ekrani — zaytun `#252813` ustida oltin logo.
 
-```dart
-palette(context).swapGradient   // give → take
-```
+`swapGradient` (zaytun → neft-ko‘k) faqat savdo lahzalarida: moslik,
+kelishuv, yakun.
 
 ### Yuzalar issiq
 
 ```
-canvas   #FAF8F4    sahifa
-surface  #FFFFFF    kartalar
-sunken   #F2EEE7    qidiruv maydoni, inert plitkalar
-hair     #E7E2D9    ajratuvchi chiziq
+canvas   #F7F4EB    sahifa (fil suyagi)
+surface  #FFFDF8    kartalar
+sunken   #F1ECE1    qidiruv maydoni, inert plitkalar
+hair     #E3DECF    ajratuvchi chiziq
 ```
 
-Sovuq ko'k-kulrang emas. Bu fermerlar va ustaxonalar bozori — u qog'ozga
-tushgan kunduzgi yorug'likka o'xshashi kerak, bank paneliga emas.
+Qorong‘i rejim neon emas: zaytun-qora `#12140C` fon.
 
 ### Kategoriya ranglari
 
@@ -57,12 +59,12 @@ Olti bo'lim, har biri o'z rangi va belgisi bilan (`CategoryStyle`):
 
 | Bo'lim | Rang | Belgi |
 |---|---|---|
-| Qishloq xo'jaligi | yashil | `agriculture` |
-| Chorva | qahrabo | `pet_supplies` |
-| Texnika | to'q sariq | `precision_manufacturing` |
-| Transport | ko'k | `local_shipping` |
-| Elektronika | binafsha | `devices` |
-| Qurilish | qizil | `construction` |
+| Qishloq xo'jaligi | zaytun `#4E5B30` | `agriculture` |
+| Chorva | oltin-jigarrang `#7D6422` | `pet_supplies` |
+| Texnika | terrakota `#8C4A22` | `precision_manufacturing` |
+| Transport | neft-ko‘k `#2C6E85` | `local_shipping` |
+| Elektronika | olxo‘ri `#4E3F86` | `devices` |
+| Qurilish | g‘isht `#8E3A28` | `construction` |
 
 Bular uchala tilda bir xil ishlaydi va uchta tarjimani tejaydi.
 

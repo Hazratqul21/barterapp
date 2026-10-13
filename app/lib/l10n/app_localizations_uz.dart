@@ -271,6 +271,9 @@ class LUz extends L {
   }
 
   @override
+  String get splashTagline => 'Almashing. Ishoning.';
+
+  @override
   String get authVerify => 'Tasdiqlash';
 
   @override

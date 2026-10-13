@@ -270,6 +270,9 @@ class LEn extends L {
   }
 
   @override
+  String get splashTagline => 'Trade. Trust.';
+
+  @override
   String get authVerify => 'Verify';
 
   @override

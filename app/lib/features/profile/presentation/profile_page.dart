@@ -208,7 +208,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                   children: [
                                     const Icon(
                                       Icons.verified_user_rounded,
-                                      color: Colors.white,
+                                      color: BrandColors.olive900,
                                       size: 32,
                                     ),
                                     Gap.h2,
@@ -216,14 +216,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                       l.profileVerifyAccount,
                                       style: theme.textTheme.titleMedium
                                           ?.copyWith(
-                                            color: Colors.white,
+                                            color: BrandColors.olive900,
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
                                     Text(
                                       l.profileVerifyDesc,
                                       style: theme.textTheme.bodySmall
-                                          ?.copyWith(color: Colors.white70),
+                                          ?.copyWith(
+                                            color: BrandColors.olive700,
+                                          ),
                                     ),
                                   ],
                                 ),

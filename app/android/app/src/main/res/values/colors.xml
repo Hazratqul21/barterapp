@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The logo's olive: the launch screen matches the Flutter splash, so
+         opening the app shows no white flash in either theme. -->
+    <color name="splash_background">#252813</color>
+</resources>
