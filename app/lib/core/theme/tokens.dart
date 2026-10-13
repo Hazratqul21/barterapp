@@ -143,6 +143,23 @@ abstract final class Shadows {
     ),
   ];
 
+  /// Clay at rest: cards and tiles stand a little off the page. Two layers —
+  /// a tight contact shadow and a wide soft one — read as a rounded object
+  /// rather than a flat card with a drop shadow.
+  static List<BoxShadow> get clay => [
+    BoxShadow(
+      color: _tint.withValues(alpha: 0.05),
+      blurRadius: 3,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: _tint.withValues(alpha: 0.10),
+      blurRadius: 24,
+      spreadRadius: -8,
+      offset: const Offset(0, 12),
+    ),
+  ];
+
   /// Things that float over content: the search field on the hero, chips.
   static List<BoxShadow> get raised => [
     BoxShadow(

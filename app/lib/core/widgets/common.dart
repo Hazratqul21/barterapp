@@ -979,8 +979,31 @@ class CategoryCard extends StatelessWidget {
                   curve: Motion.fast.curve,
                   width: 56,
                   height: 56,
+                  // Clay: lit from the top, a soft shadow in the tile's own
+                  // hue underneath — a small object, not a flat swatch.
                   decoration: ShapeDecoration(
-                    color: style?.tint ?? p.giveSoft,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.lerp(
+                          style?.tint ?? p.giveSoft,
+                          Colors.white,
+                          p.isDark ? 0.04 : 0.55,
+                        )!,
+                        style?.tint ?? p.giveSoft,
+                      ],
+                    ),
+                    shadows: selected || p.isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.22),
+                              blurRadius: 14,
+                              spreadRadius: -5,
+                              offset: const Offset(0, 7),
+                            ),
+                          ],
                     shape: RoundedSuperellipseBorder(
                       borderRadius: Radii.rLg,
                       side: BorderSide(
