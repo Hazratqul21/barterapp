@@ -37,6 +37,23 @@ flutter run
 flutter run -d web-server --web-port=8086 --web-hostname=127.0.0.1
 ```
 
+### Haqiqiy telefonda sinash (APK)
+
+Telefon va kompyuter bitta Wi‑Fi'da bo‘lsin. API tarmoqdan ko‘rinishi uchun `--host 0.0.0.0` bilan ishga tushiriladi:
+
+```sh
+cd api
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8010
+
+# boshqa terminalda (macOS):
+cd app
+IP=$(ipconfig getifaddr en0)
+flutter build apk --profile --dart-define=API_BASE_URL=http://$IP:8010
+cp build/app/outputs/flutter-apk/app-profile.apk ~/Desktop/MAB.apk
+```
+
+`http://` faqat debug va profile build'larda ruxsat etilgan; release APK faqat HTTPS bilan ishlaydi.
+
 ### Production rejimi
 
 Serverda `APP_ENV=production` qo‘ying. Bu rejimda API quyidagilardan biri bo‘lsa **ishga tushmaydi** va barcha muammolarni bitta xabarda chiqaradi:
