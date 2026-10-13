@@ -733,7 +733,7 @@ class LRu extends L {
 
   @override
   String get createGiveHint =>
-      'Заполните на всех трёх языках — чтобы читающий по-русски не увидел сломанное приложение.';
+      'Пишите на удобном вам языке — читатели на других языках тоже увидят ваш текст.';
 
   @override
   String get createTakeHint =>

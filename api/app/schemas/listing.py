@@ -44,16 +44,34 @@ class ListingDetail(ListingCard):
     wants: list[str] = Field(default_factory=list)
 
 
+#: The order a missing language borrows from: the author's own words first.
+LOCALES = ("uz", "ru", "en")
+
+
 class TranslatedText(ApiModel):
     """
-    A field in every supported language. Required on write: the server rejects a
-    listing that is missing one, rather than quietly serving Uzbek to a Russian
-    reader.
+    A field in the supported languages. One is enough on write.
+
+    Asking for all three made publishing a listing eighteen text boxes long, and
+    people gave up at the second step: a farmer selling rice writes in the
+    language they speak. A language left out is filled with the author's own
+    text, the way every classifieds site shows a listing as it was written; all
+    three rows still exist, so readers, search and edits work as before.
     """
 
-    uz: str = Field(min_length=1)
-    ru: str = Field(min_length=1)
-    en: str = Field(min_length=1)
+    uz: str = ""
+    ru: str = ""
+    en: str = ""
+
+    @model_validator(mode="after")
+    def _fill_missing(self) -> TranslatedText:
+        given = {code: getattr(self, code).strip() for code in LOCALES}
+        source = next((text for text in given.values() if text), None)
+        if source is None:
+            raise ValueError("Matnni kamida bitta tilda yozing.")
+        for code, text in given.items():
+            object.__setattr__(self, code, text or source)
+        return self
 
 
 class DesireIn(ApiModel):
@@ -119,9 +137,9 @@ class ListingUpdate(ApiModel):
     to it, because that is what a photo editor with a remove button does. The
     same holds for `wants` and `desires`. Leaving them out changes nothing.
 
-    Translated fields stay all-or-nothing per field: a title arrives in three
-    languages or not at all, so an edit can never leave the feed half-translated
-    the way a per-locale patch would.
+    Translated fields are replaced whole: a title sent in one language becomes
+    that title in every language, so an edit never leaves an old wording
+    behind in a locale the author did not touch.
     """
 
     tag: ListingTag | None = None

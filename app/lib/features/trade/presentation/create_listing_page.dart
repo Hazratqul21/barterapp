@@ -36,12 +36,15 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
   final _photos = <_PhotoSlot>[];
   ListingTag? _tag;
-  final _title = _Trilingual();
-  final _description = _Trilingual();
-  final _category = _Trilingual();
-  final _condition = _Trilingual();
-  final _quantity = _Trilingual();
-  final _wants = _Trilingual();
+  // One box per field, written in whatever language the person uses. Every
+  // field used to have UZ/RU/EN tabs and "Next" stayed off until all
+  // eighteen boxes were filled; people gave up at the second step. The
+  // server shows the author's own words to readers of the other languages.
+  final _title = _Text();
+  final _description = _Text();
+  final _condition = _Text();
+  final _quantity = _Text();
+  final _wants = _Text();
   final _value = TextEditingController();
   ListingTag? _wantTag;
 
@@ -66,10 +69,17 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   /// Set once the listing is published; nothing may be saved after that.
   bool _done = false;
 
-  Map<String, _Trilingual> get _fields => {
+  /// Text fields as they were when an edit opened; empty for a new listing.
+  Map<String, String> _original = const {};
+
+  /// A new listing sends every field; an edit only the ones that changed.
+  bool _send(String field, _Text text) =>
+      !_original.containsKey(field) ||
+      _original[field] != text.controller.text.trim();
+
+  Map<String, _Text> get _fields => {
     'title': _title,
     'description': _description,
-    'category': _category,
     'condition': _condition,
     'quantity': _quantity,
     'wants': _wants,
@@ -78,6 +88,13 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   @override
   void initState() {
     super.initState();
+    // "Next" depends on what is typed: rebuild the page, not just the box.
+    // Only the field used to repaint, so the button could stay disabled
+    // after the last box was filled until something else moved.
+    for (final field in _fields.values) {
+      field.controller.addListener(_refresh);
+    }
+    _value.addListener(_refresh);
     if (widget.listingToEdit != null) {
       final lst = widget.listingToEdit!;
       _photos.addAll(
@@ -86,14 +103,21 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                 : lst.gallery)
             .map(_PhotoSlot.uploaded),
       );
-      // listing tag is not in ListingDetail? wait, we don't have tag in ListingDetail.
-      // We will leave _tag as null so user selects it.
-      _title.controllers.forEach((k, v) => v.text = lst.title);
-      _description.controllers.forEach((k, v) => v.text = lst.description);
-      _category.controllers.forEach((k, v) => v.text = lst.category);
-      _condition.controllers.forEach((k, v) => v.text = lst.condition);
-      _quantity.controllers.forEach((k, v) => v.text = lst.quantity);
-      _wants.controllers.forEach((k, v) => v.text = lst.wants.join(', '));
+      _tag = lst.tag;
+      // What the edit started from: only text that changes is sent, so
+      // fixing the price does not overwrite the other languages' wording.
+      _original = {
+        'title': lst.title,
+        'description': lst.description,
+        'condition': lst.condition,
+        'quantity': lst.quantity,
+        'wants': lst.wants.join(', '),
+      };
+      _title.controller.text = lst.title;
+      _description.controller.text = lst.description;
+      _condition.controller.text = lst.condition;
+      _quantity.controller.text = lst.quantity;
+      _wants.controller.text = lst.wants.join(', ');
 
       _value.text = (lst.value.minor ~/ 100).toString();
       _cashOk = lst.cashOk;
@@ -103,9 +127,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     }
 
     for (final field in _fields.values) {
-      for (final c in field.controllers.values) {
-        c.addListener(_changed);
-      }
+      field.controller.addListener(_changed);
     }
     _value.addListener(_changed);
     _district.addListener(_changed);
@@ -130,6 +152,10 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     super.dispose();
   }
 
+  void _refresh() {
+    if (mounted) setState(() {});
+  }
+
   /// Any edit: save shortly after typing stops, not on every keystroke.
   void _changed() {
     if (!_drafting || !_draftSettled || _done) return;
@@ -147,7 +173,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
         if (slot.url != null) slot.url!,
     ],
     tag: _tag?.name,
-    fields: {for (final e in _fields.entries) e.key: e.value.toJson()},
+    fields: {for (final e in _fields.entries) e.key: e.value.toJson(_locale)},
     value: _value.text,
     wantTag: _wantTag?.name,
     cashOk: _cashOk,
@@ -194,10 +220,15 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       _tag = tags[usable.tag];
       _wantTag = tags[usable.wantTag];
       for (final e in _fields.entries) {
+        // Drafts saved before this change hold three languages: take the
+        // one the person reads, else whichever they wrote.
         final saved = usable.fields[e.key] ?? const {};
-        e.value.controllers.forEach(
-          (locale, c) => c.text = saved[locale] ?? '',
-        );
+        e.value.controller.text =
+            saved[_locale] ??
+            saved.values.firstWhere(
+              (t) => t.trim().isNotEmpty,
+              orElse: () => '',
+            );
       }
       _value.text = usable.value;
       _cashOk = usable.cashOk;
@@ -219,6 +250,24 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     }
   }
 
+  /// The language the text is written in: the one the app is shown in.
+  /// Kept in a field because the last draft save runs in [dispose], where
+  /// the context can no longer be asked.
+  String _locale = 'uz';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _locale = Localizations.localeOf(context).languageCode;
+  }
+
+  /// The category comes from the picker, already translated: no reason to
+  /// make anyone type "Elektronika" after choosing Elektronika.
+  Map<String, String> _categoryText(ListingTag tag) => {
+    for (final code in const ['uz', 'ru', 'en'])
+      code: categoryLabel(lookupL(Locale(code)), tag),
+  };
+
   int get _valueSom => int.tryParse(_value.text.replaceAll(' ', '')) ?? 0;
 
   bool get _stepComplete => _stepDone(_step);
@@ -229,7 +278,6 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       _tag != null &&
           _title.complete &&
           _description.complete &&
-          _category.complete &&
           _condition.complete &&
           _quantity.complete,
     2 => _wants.complete,
@@ -298,16 +346,24 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   Future<void> _publish() async {
     setState(() => _busy = true);
     try {
+      final lang = _locale;
       final body = {
         'tag': _tag!.name,
-        'title': _title.toJson(),
-        'description': _description.toJson(),
-        'image_alt': _title.toJson(),
-        'category': _category.toJson(),
-        'condition': _condition.toJson(),
-        'quantity': _quantity.toJson(),
-        'wants_summary': _wants.toJson(),
-        'wants': [_wants.toJson()],
+        if (_send('title', _title)) ...{
+          'title': _title.toJson(lang),
+          'image_alt': _title.toJson(lang),
+        },
+        if (_send('description', _description))
+          'description': _description.toJson(lang),
+        // An edit keeps a hand-written category unless the type changed.
+        if (widget.listingToEdit?.tag != _tag) 'category': _categoryText(_tag!),
+        if (_send('condition', _condition))
+          'condition': _condition.toJson(lang),
+        if (_send('quantity', _quantity)) 'quantity': _quantity.toJson(lang),
+        if (_send('wants', _wants)) ...{
+          'wants_summary': _wants.toJson(lang),
+          'wants': [_wants.toJson(lang)],
+        },
         'desires': [
           {
             'category': _wantTag?.name,
@@ -575,19 +631,17 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       onChanged: (v) => _edit(() => _tag = v),
     ),
     Gap.h4,
-    _TrilingualField(label: l.createFieldTitle, field: _title),
+    _TextField(label: l.createFieldTitle, field: _title),
     Gap.h4,
-    _TrilingualField(
+    _TextField(
       label: l.createFieldDescription,
       field: _description,
-      maxLines: 3,
+      maxLines: 4,
     ),
     Gap.h4,
-    _TrilingualField(label: l.createFieldCategory, field: _category),
+    _TextField(label: l.createFieldCondition, field: _condition),
     Gap.h4,
-    _TrilingualField(label: l.createFieldCondition, field: _condition),
-    Gap.h4,
-    _TrilingualField(label: l.createFieldQuantity, field: _quantity),
+    _TextField(label: l.createFieldQuantity, field: _quantity),
     Gap.h4,
     // Where the goods are: per listing, so a trader with stock in two regions
     // can list both, and moving house does not move old listings.
@@ -638,7 +692,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       onChanged: (v) => _edit(() => _wantTag = v),
     ),
     Gap.h4,
-    _TrilingualField(label: l.createFieldWants, field: _wants, maxLines: 2),
+    _TextField(label: l.createFieldWants, field: _wants, maxLines: 2),
     Gap.h4,
     SwitchListTile(
       value: _cashOk,
@@ -689,11 +743,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   ];
 
   Widget _preview(ThemeData theme) {
-    final locale = Localizations.localeOf(context).languageCode;
-    String pick(_Trilingual f) {
-      final own = f.controllers[locale]?.text.trim() ?? '';
-      return own.isNotEmpty ? own : f.controllers['uz']!.text.trim();
-    }
+    String pick(_Text f) => f.controller.text.trim();
 
     final card = ListingCard(
       id: 'preview',
@@ -807,124 +857,55 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
-class _Trilingual {
-  final controllers = {
-    'uz': TextEditingController(),
-    'ru': TextEditingController(),
-    'en': TextEditingController(),
-  };
-  bool get complete =>
-      controllers.values.every((c) => c.text.trim().isNotEmpty);
-  Map<String, String> toJson() => {
-    for (final e in controllers.entries) e.key: e.value.text.trim(),
-  };
-  void dispose() {
-    for (final c in controllers.values) {
-      c.dispose();
-    }
-  }
+class _Text {
+  final controller = TextEditingController();
+  bool get complete => controller.text.trim().isNotEmpty;
+
+  /// Sent in the language it was written in; the server fills the others.
+  Map<String, String> toJson(String locale) => {locale: controller.text.trim()};
+
+  void dispose() => controller.dispose();
 }
 
-class _TrilingualField extends StatefulWidget {
-  const _TrilingualField({
+/// The page rebuilds on every keystroke (for "Next"), which also redraws the
+/// tick here.
+class _TextField extends StatelessWidget {
+  const _TextField({
     required this.label,
     required this.field,
     this.maxLines = 1,
   });
   final String label;
-  final _Trilingual field;
+  final _Text field;
   final int maxLines;
-  @override
-  State<_TrilingualField> createState() => _TrilingualFieldState();
-}
-
-class _TrilingualFieldState extends State<_TrilingualField>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 3, vsync: this);
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              widget.label,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (widget.field.complete)
-              Icon(
+    final multiline = maxLines > 1;
+    return TextField(
+      controller: field.controller,
+      minLines: multiline ? 2 : 1,
+      maxLines: maxLines,
+      textCapitalization: TextCapitalization.sentences,
+      textInputAction: multiline
+          ? TextInputAction.newline
+          : TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: label,
+        alignLabelWithHint: multiline,
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerLow,
+        suffixIcon: field.complete
+            ? Icon(
                 Symbols.check_circle_rounded,
-                size: 16,
+                size: 20,
                 color: p.give,
                 fill: 1,
-              ),
-          ],
-        ),
-        Gap.h2,
-        BouncingClayCard(
-          clayMode: true,
-          borderRadius: Radii.rMd,
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
-              borderRadius: Radii.rMd,
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Column(
-              children: [
-                TabBar(
-                  controller: _tabs,
-                  indicatorColor: p.give,
-                  labelColor: p.give,
-                  tabs: const [
-                    Tab(text: 'UZ'),
-                    Tab(text: 'RU'),
-                    Tab(text: 'EN'),
-                  ],
-                ),
-                SizedBox(
-                  height: widget.maxLines == 1 ? 60 : 100,
-                  child: TabBarView(
-                    controller: _tabs,
-                    children: [
-                      for (final code in ['uz', 'ru', 'en'])
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Gap.x3,
-                          ),
-                          child: TextField(
-                            controller: widget.field.controllers[code],
-                            maxLines: widget.maxLines,
-                            onChanged: (_) => setState(() {}),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+              )
+            : null,
+      ),
     );
   }
 }
