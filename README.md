@@ -45,12 +45,14 @@ Telefon va kompyuter bitta Wi‑Fi'da bo‘lsin. API tarmoqdan ko‘rinishi uchu
 cd api
 .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8010
 
-# boshqa terminalda (macOS):
-cd app
-IP=$(ipconfig getifaddr en0)
-flutter build apk --profile --dart-define=API_BASE_URL=http://$IP:8010
-cp build/app/outputs/flutter-apk/app-profile.apk ~/Desktop/MAB.apk
+# boshqa terminalda (macOS), loyiha ildizidan:
+bash app/scripts/build_apk.sh
 ```
+
+Skript IP'ni o'zi topadi (`en0`…`en3`), backend ochiqligini tekshiradi,
+build xato bersa sababini aytadi va faqat muvaffaqiyatli APK'ni
+`~/Desktop/MAB.apk` ga ko'chiradi. IP'ni qo'lda berish:
+`bash app/scripts/build_apk.sh 192.168.1.5`.
 
 `http://` faqat debug va profile build'larda ruxsat etilgan; release APK faqat HTTPS bilan ishlaydi.
 
