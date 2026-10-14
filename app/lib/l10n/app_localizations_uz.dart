@@ -730,7 +730,7 @@ class LUz extends L {
 
   @override
   String get createGiveHint =>
-      'Uchala tilda ham to‘ldiring — ruscha o‘qiydigan odam uchun ilova buzuq ko‘rinmasligi uchun.';
+      'O‘zingizga qulay tilda yozing — boshqa tilda o‘qiydiganlar ham matningizni ko‘radi.';
 
   @override
   String get createTakeHint =>

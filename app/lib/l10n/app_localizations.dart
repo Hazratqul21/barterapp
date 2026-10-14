@@ -1452,7 +1452,7 @@ abstract class L {
   /// No description provided for @createGiveHint.
   ///
   /// In uz, this message translates to:
-  /// **'Uchala tilda ham to‘ldiring — ruscha o‘qiydigan odam uchun ilova buzuq ko‘rinmasligi uchun.'**
+  /// **'O‘zingizga qulay tilda yozing — boshqa tilda o‘qiydiganlar ham matningizni ko‘radi.'**
   String get createGiveHint;
 
   /// No description provided for @createTakeHint.

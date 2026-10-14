@@ -317,7 +317,7 @@
   "createNext": "Keyingisi",
   "createBack": "Orqaga",
   "createPhotosHint": "Birinchi surat lentada ko‘rinadi. Kamida bittasi kerak.",
-  "createGiveHint": "Uchala tilda ham to‘ldiring — ruscha o‘qiydigan odam uchun ilova buzuq ko‘rinmasligi uchun.",
+  "createGiveHint": "O‘zingizga qulay tilda yozing — boshqa tilda o‘qiydiganlar ham matningizni ko‘radi.",
   "createTakeHint": "Evaziga nima olmoqchisiz? Bu moslikni topishga yordam beradi.",
   "createValueHint": "Taxminiy qiymat teng savdolarni topish uchun kerak.",
   "createFieldDescription": "Tavsif",
