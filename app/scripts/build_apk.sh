@@ -26,13 +26,21 @@ flutter --version | head -1
 step "Kompyuter IP manzili"
 IP="${1:-}"
 if [ -z "$IP" ]; then
-  for iface in en0 en1 en2 en3; do
+  # Avval internetga chiqayotgan interfeys, keyin odatiy en0…en3.
+  DEF="$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"
+  for iface in $DEF en0 en1 en2 en3 en4 en5; do
     IP="$(ipconfig getifaddr "$iface" 2>/dev/null || true)"
     [ -n "$IP" ] && break
   done
 fi
 if [ -z "$IP" ]; then
-  red "IP topilmadi. Wi‑Fi yoqilganini tekshiring yoki IP'ni qo'lda bering:"
+  # Oxirgi chora: istalgan uy/ofis tarmog'i manzili (192.168.*, 10.*, 172.16–31.*).
+  IP="$(ifconfig 2>/dev/null | awk '/inet /{print $2}' \
+    | grep -E '^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -1)"
+fi
+if [ -z "$IP" ]; then
+  red "IP topilmadi. Wi‑Fi yoqilganini tekshiring yoki IP'ni qo'lda bering"
+  red "(System Settings → Wi‑Fi → Details → IP address):"
   red "  bash app/scripts/build_apk.sh 192.168.x.x"
   exit 1
 fi
