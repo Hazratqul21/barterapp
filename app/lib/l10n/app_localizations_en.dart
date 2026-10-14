@@ -732,7 +732,7 @@ class LEn extends L {
 
   @override
   String get createGiveHint =>
-      'Fill in all three languages — so a Russian reader does not meet a broken app.';
+      'Write in whichever language suits you — readers of other languages see your text too.';
 
   @override
   String get createTakeHint =>

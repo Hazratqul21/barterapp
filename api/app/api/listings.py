@@ -400,8 +400,8 @@ async def create_listing(
     db: AsyncSession = Depends(get_db),
 ) -> ListingDetail:
     """
-    Publishing requires all three languages. `TranslatedText` makes that a
-    validation error rather than a half-translated listing in the feed.
+    Text arrives in at least one language; `TranslatedText` fills the others
+    with the author's words, so every locale has a row to read.
 
     Free listings are metered: everyone gets a small monthly quota, after which
     the plan charges per listing or by subscription. Businesses are exempt while

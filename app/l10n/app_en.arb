@@ -228,7 +228,7 @@
   "createNext": "Next",
   "createBack": "Back",
   "createPhotosHint": "The first photo is the one the feed shows. At least one is needed.",
-  "createGiveHint": "Fill in all three languages — so a Russian reader does not meet a broken app.",
+  "createGiveHint": "Write in whichever language suits you — readers of other languages see your text too.",
   "createTakeHint": "What do you want in return? This is what finds your matches.",
   "createValueHint": "An estimated value is how equal swaps find each other.",
   "createFieldDescription": "Description",
