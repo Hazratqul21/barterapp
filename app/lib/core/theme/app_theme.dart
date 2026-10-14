@@ -7,29 +7,44 @@ import 'tokens.dart';
 // Brand Colours
 // ─────────────────────────────────────────────────────────────────────────────
 abstract final class BrandColors {
-  static const ink = Color(0xFF12211A);
-  static const inkSoft = Color(0xFF5A6B62);
-  static const inkFaint = Color(0xFF93A099);
+  // Brand v3 — taken from the MAB logo (olive tile, champagne-gold letters),
+  // one step lighter for the app so it reads as warm rather than heavy.
+  static const ink = Color(0xFF1E2112);
+  static const inkSoft = Color(0xFF545A43);
+  static const inkFaint = Color(0xFF62674F);
 
-  // M3 Tonal Base
-  static const canvas = Color(0xFFFAF8F4);
-  static const surface = Color(0xFFFFFFFF);
-  static const hair = Color(0xFFE7E2D9);
+  static const canvas = Color(0xFFF7F4EB);
+  static const surface = Color(0xFFFFFDF8);
+  static const hair = Color(0xFFE3DECF);
 
-  static const brand500 = Color(
-    0xFF007D73,
-  ); // Accessible MAB teal for text/CTAs.
-  static const take500 = Color(0xFF0D9488); // Secondary Seed (Darker Teal)
-  static const gold500 = Color(0xFFF0A82A); // Tertiary Seed
+  /// Olive — the logo tile at 600. Primary actions and "I give".
+  static const brand500 = Color(0xFF5B6A3A);
+
+  /// The logo tile itself and its deepest shade (splash, dark grounds).
+  static const olive700 = Color(0xFF3E4228);
+  static const olive900 = Color(0xFF252813);
+
+  /// The lit centre of the logo tile (splash glow).
+  static const olive600Glow = Color(0xFF4A5030);
+
+  /// Petrol blue — "I want". Distinct from olive in hue and in lightness.
+  static const take500 = Color(0xFF2C6E85);
+
+  /// Champagne gold from the letters. A fill and an accent, never body text
+  /// on a light ground (2.2:1); text in gold uses [BarterPalette.money].
+  static const gold500 = Color(0xFFC9B07A);
+  static const goldLight = Color(0xFFF0DFCB);
+  static const goldDeep = Color(0xFF9C8250);
 
   // Surfaces that used to be hard-coded at their call sites.
-  static const glassDark = Color(0xFF141B18);
-  static const glassDarkRaised = Color(0xFF1B2420);
-  static const mist = Color(0xFFEAF7F7);
+  static const glassDark = Color(0xFF1B1E12);
+  static const glassDarkRaised = Color(0xFF232717);
+  static const mist = Color(0xFFF1F3E7);
 
-  /// Premium badge — the one place a non-brand hue is allowed.
-  static const premiumStart = Color(0xFF5D3FD3);
-  static const premiumEnd = Color(0xFF9D65FF);
+  /// Premium is gold, the brand's own reward colour — the old violet sat
+  /// outside the palette.
+  static const premiumStart = Color(0xFFF0DFCB);
+  static const premiumEnd = Color(0xFFC9B07A);
 }
 
 @immutable
@@ -70,9 +85,8 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
 
   /// The brand gradient — the hero header, the create button, the splash.
   ///
-  /// Give moves into take: a restrained green-to-blue sweep, not a generic
-  /// teal wash. Keeping the end on [take] makes the barter relationship clear
-  /// wherever this is used (the hero and the create action).
+  /// Give moves into take: olive into petrol blue. Reserved for the moments
+  /// a trade moves (match found, agreed, done) — a reward, not a background.
   LinearGradient get swapGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -139,39 +153,42 @@ class BarterPalette extends ThemeExtension<BarterPalette> {
     );
   }
 
+  // Contrast is checked in test/design_system_test.dart: every text colour
+  // here is ≥ 4.5:1 on canvas, surface and sunken.
   static const light = BarterPalette(
-    give: BrandColors.brand500, // Teal/Feruza
-    giveSoft: Color(0xFFE0F2F1), // Light teal
-    giveVivid: Color(0xFF1DE9B6),
-    take: Color(0xFF1D4FBF),
-    takeSoft: Color(0xFFE6EDFC),
-    takeVivid: Color(0xFF3B76F0),
-    money: Color(0xFFB47714),
-    moneySoft: Color(0xFFFDF2DC),
-    moneyVivid: Color(0xFFF0A82A),
-    canvas: Color(0xFFFAF8F4),
-    sunken: Color(0xFFF2EEE7),
-    hair: Color(0xFFE7E2D9),
-    inkSoft: Color(0xFF5A6B62),
-    inkFaint: Color(0xFF62746A), // 4.69:1 on canvas — test/design_system_test
+    give: BrandColors.brand500,
+    giveSoft: Color(0xFFECEFDF),
+    giveVivid: Color(0xFF7A8C4C),
+    take: BrandColors.take500,
+    takeSoft: Color(0xFFE3EFF3),
+    takeVivid: Color(0xFF3A8AA6),
+    money: Color(0xFF7D6422),
+    moneySoft: Color(0xFFFBF3E2),
+    moneyVivid: BrandColors.gold500,
+    canvas: BrandColors.canvas,
+    sunken: Color(0xFFF1ECE1),
+    hair: BrandColors.hair,
+    inkSoft: BrandColors.inkSoft,
+    inkFaint: BrandColors.inkFaint, // 5.35:1 on canvas
     isDark: false,
   );
 
+  /// Olive-black rather than neon: the old #1DE9B6 glowed at night.
   static const dark = BarterPalette(
-    give: Color(0xFF1DE9B6), // Bright Teal for Dark mode
-    giveSoft: Color(0xFF004D40), // Dark teal
-    giveVivid: Color(0xFF64FFDA),
-    take: Color(0xFF8FB0F5),
-    takeSoft: Color(0xFF141D33),
-    takeVivid: Color(0xFF4C82F2),
-    money: Color(0xFFE0B45A),
-    moneySoft: Color(0xFF261E0E),
-    moneyVivid: Color(0xFFD69A2C),
-    canvas: Color(0xFF0B100D),
-    sunken: Color(0xFF161D19),
-    hair: Color(0xFF283330),
-    inkSoft: Color(0xFF9CACA4),
-    inkFaint: Color(0xFF73837C), // 4.81:1 on canvas
+    give: Color(0xFFA9B97A),
+    giveSoft: Color(0xFF2A3018),
+    giveVivid: Color(0xFFC3D296),
+    take: Color(0xFF7FB6C9),
+    takeSoft: Color(0xFF13262D),
+    takeVivid: Color(0xFF9DCADB),
+    money: Color(0xFFD9C08A),
+    moneySoft: Color(0xFF2A2414),
+    moneyVivid: Color(0xFFE6CF9C),
+    canvas: Color(0xFF12140C),
+    sunken: Color(0xFF1B1E12),
+    hair: Color(0xFF2E3320),
+    inkSoft: Color(0xFFB9BDA6),
+    inkFaint: Color(0xFF8E937C), // 5.85:1 on canvas
     isDark: true,
   );
 }
@@ -219,7 +236,7 @@ abstract final class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
     final p = isDark ? BarterPalette.dark : BarterPalette.light;
-    final textColor = isDark ? const Color(0xFFE9F0EB) : BrandColors.ink;
+    final textColor = isDark ? const Color(0xFFECEDE2) : BrandColors.ink;
 
     // ── M3 Color Scheme with Surface Container Logic ──────────────────────
     final scheme =
@@ -229,31 +246,31 @@ abstract final class AppTheme {
         ).copyWith(
           primary: p.give,
           primaryContainer: isDark
-              ? const Color(0xFF163C35)
-              : const Color(0xFFE6F3EF),
+              ? const Color(0xFF2A3018)
+              : const Color(0xFFECEFDF),
           onPrimaryContainer: isDark
-              ? const Color(0xFFBCECDF)
-              : const Color(0xFF164B40),
-          onPrimary: isDark ? const Color(0xFF08251F) : Colors.white,
+              ? const Color(0xFFD5DEB4)
+              : const Color(0xFF2F3519),
+          onPrimary: isDark ? const Color(0xFF1B1E12) : Colors.white,
           secondary: p.take,
           tertiary: p.money,
           surface: p.canvas,
           // M3 Surface Containers (v1.2 standards)
           surfaceContainerLowest: isDark
-              ? const Color(0xFF080C0A)
-              : const Color(0xFFFFFFFF),
+              ? const Color(0xFF0D0F08)
+              : BrandColors.surface,
           surfaceContainerLow: isDark
-              ? const Color(0xFF111713)
-              : const Color(0xFFF7F4EE),
+              ? const Color(0xFF171A0F)
+              : const Color(0xFFFAF7EF),
           surfaceContainer: isDark
-              ? const Color(0xFF161D19)
-              : const Color(0xFFF2EEE7),
+              ? const Color(0xFF1B1E12)
+              : const Color(0xFFF1ECE1),
           surfaceContainerHigh: isDark
-              ? const Color(0xFF1C2420)
-              : const Color(0xFFEBE6DD),
+              ? const Color(0xFF222616)
+              : const Color(0xFFEAE5D7),
           surfaceContainerHighest: isDark
-              ? const Color(0xFF232C27)
-              : const Color(0xFFE2DCD3),
+              ? const Color(0xFF2A2F1C)
+              : const Color(0xFFE1DBCB),
           outlineVariant: p.hair,
         );
 
@@ -299,7 +316,8 @@ abstract final class AppTheme {
         height: 1.4,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-        fontSize: 15,
+        // 16, not 15: read outdoors and by older traders (design v3).
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         letterSpacing: 0,
         height: 1.5,

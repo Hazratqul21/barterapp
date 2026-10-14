@@ -270,6 +270,9 @@ class LRu extends L {
   }
 
   @override
+  String get splashTagline => 'Меняйтесь. Доверяйте.';
+
+  @override
   String get authVerify => 'Подтвердить';
 
   @override

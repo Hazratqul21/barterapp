@@ -81,6 +81,7 @@
   "authResend": "Отправить код ещё раз",
   "authResendIn": "Повторно через {seconds} с",
   "distanceKm": "{km} км",
+  "splashTagline": "Меняйтесь. Доверяйте.",
   "authVerify": "Подтвердить",
   "authInvalidPhone": "Введите номер полностью, начиная с +998.",
   "authSignedOut": "Вы не вошли в аккаунт",

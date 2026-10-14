@@ -585,6 +585,12 @@ abstract class L {
   /// **'{km} km'**
   String distanceKm(String km);
 
+  /// No description provided for @splashTagline.
+  ///
+  /// In uz, this message translates to:
+  /// **'Almashing. Ishoning.'**
+  String get splashTagline;
+
   /// No description provided for @authVerify.
   ///
   /// In uz, this message translates to:

@@ -132,7 +132,7 @@ abstract final class AppText {
 /// Shadows are reserved for genuinely elevated elements. Routine content uses
 /// tonal surfaces and a hairline, which keeps attention on the primary action.
 abstract final class Shadows {
-  static const _tint = Color(0xFF0E3A28);
+  static const _tint = Color(0xFF252813);
 
   /// Resting cards.
   static List<BoxShadow> get card => [
@@ -192,33 +192,33 @@ class CategoryStyle {
   static const _styles = <ListingTag, CategoryStyle>{
     ListingTag.agri: CategoryStyle(
       mark: CategoryMark.crops,
-      color: Color(0xFF15803D),
-      tint: Color(0xFFDCFCE7),
+      color: Color(0xFF4E5B30),
+      tint: Color(0xFFE6EBD3),
     ),
     ListingTag.livestock: CategoryStyle(
       mark: CategoryMark.livestock,
-      color: Color(0xFFA16207),
-      tint: Color(0xFFFEF3C7),
+      color: Color(0xFF7D6422),
+      tint: Color(0xFFF5EAD2),
     ),
     ListingTag.machinery: CategoryStyle(
       mark: CategoryMark.tractor,
-      color: Color(0xFFC2410C),
-      tint: Color(0xFFFFEDD5),
+      color: Color(0xFF8C4A22),
+      tint: Color(0xFFF4E1D4),
     ),
     ListingTag.transport: CategoryStyle(
       mark: CategoryMark.truck,
-      color: Color(0xFF1D4ED8),
-      tint: Color(0xFFDBEAFE),
+      color: Color(0xFF2C6E85),
+      tint: Color(0xFFDDEBF0),
     ),
     ListingTag.electronics: CategoryStyle(
       mark: CategoryMark.chip,
-      color: Color(0xFF6D28D9),
-      tint: Color(0xFFEDE9FE),
+      color: Color(0xFF4E3F86),
+      tint: Color(0xFFE7E4F1),
     ),
     ListingTag.construction: CategoryStyle(
       mark: CategoryMark.bricks,
-      color: Color(0xFFB91C1C),
-      tint: Color(0xFFFEE2E2),
+      color: Color(0xFF8E3A28),
+      tint: Color(0xFFF3DCD6),
     ),
   };
 
@@ -229,6 +229,6 @@ class CategoryStyle {
   CategoryStyle get dark => CategoryStyle(
     mark: mark,
     color: Color.lerp(color, Colors.white, 0.45)!,
-    tint: Color.lerp(color, const Color(0xFF0B1014), 0.82)!,
+    tint: Color.lerp(color, const Color(0xFF12140C), 0.82)!,
   );
 }

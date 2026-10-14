@@ -123,6 +123,7 @@
       }
     }
   },
+  "splashTagline": "Almashing. Ishoning.",
   "authVerify": "Tasdiqlash",
   "authInvalidPhone": "Raqamni +998 bilan to‘liq kiriting.",
   "authSignedOut": "Hisobga kirmagansiz",

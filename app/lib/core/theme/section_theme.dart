@@ -43,7 +43,8 @@ final sectionProvider = NotifierProvider<SectionController, AppSection>(
 /// Colours come from the palette so they are already right for the dark theme;
 /// only the violet, which the palette has no slot for, is given per-brightness.
 ({Color a, Color b}) sectionAura(BarterPalette p, AppSection section) {
-  final violet = p.isDark ? const Color(0xFF6D5BC7) : const Color(0xFF7C5CFF);
+  // Plum from the electronics category: the one hue the palette lacks.
+  final violet = p.isDark ? const Color(0xFF8E80C2) : const Color(0xFF4E3F86);
   return switch (section) {
     AppSection.home => (a: p.giveVivid, b: p.takeVivid),
     AppSection.matches => (a: p.moneyVivid, b: p.giveVivid),
