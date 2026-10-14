@@ -232,57 +232,6 @@ abstract final class AppTheme {
 
   static ThemeData light() => _build(Brightness.light);
 
-  /// Clay, lightly: the primary button stands a millimetre off the page —
-  /// lit from above, a soft coloured shadow under it — and sinks when
-  /// pressed (gradient reversed, shadow gone). Disabled stays flat so an
-  /// unavailable action does not look pressable.
-  static Widget _clay(
-    BuildContext context,
-    Set<WidgetState> states,
-    Widget? child,
-  ) {
-    if (states.contains(WidgetState.disabled)) return child!;
-    // Light and shade laid over whatever colour the button already has, so a
-    // red "delete" stays red: the theme cannot see a local backgroundColor.
-    final pressed = states.contains(WidgetState.pressed);
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: const StadiumBorder(),
-        shadows: pressed
-            ? null
-            : [
-                BoxShadow(
-                  color: BrandColors.olive900.withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  spreadRadius: -6,
-                  offset: const Offset(0, 9),
-                ),
-              ],
-      ),
-      // Behind the label, over the button's own fill.
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          shape: const StadiumBorder(),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: pressed
-                ? [
-                    Colors.black.withValues(alpha: 0.12),
-                    Colors.black.withValues(alpha: 0),
-                  ]
-                : [
-                    Colors.white.withValues(alpha: 0.16),
-                    Colors.white.withValues(alpha: 0),
-                    Colors.black.withValues(alpha: 0.08),
-                  ],
-          ),
-        ),
-        child: child,
-      ),
-    );
-  }
-
   static ThemeData dark() => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
@@ -517,7 +466,23 @@ abstract final class AppTheme {
           minimumSize: const Size(64, 56),
           shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
           textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
-        ).copyWith(backgroundBuilder: _clay),
+        ).copyWith(
+          // Clay, lightly: the button stands a millimetre off the page on a
+          // soft olive shadow and sinks when pressed. Material's own
+          // elevation follows the button's shape exactly; a background
+          // builder is laid out inside the padding and showed as a second
+          // box within the button.
+          elevation: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.pressed) ||
+                    states.contains(WidgetState.disabled)
+                ? 0
+                : 3,
+          ),
+          shadowColor: WidgetStatePropertyAll(
+            BrandColors.olive900.withValues(alpha: 0.55),
+          ),
+        ),
       ),
     );
   }
