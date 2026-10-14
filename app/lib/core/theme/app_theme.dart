@@ -224,9 +224,13 @@ abstract final class AppTheme {
 
   static const _transitions = PageTransitionsTheme(
     builders: {
+      // The same push everywhere; see router/transitions.dart.
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
       TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
     },
   );
 
@@ -462,27 +466,28 @@ abstract final class AppTheme {
       ),
 
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(64, 56),
-          shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
-          textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
-        ).copyWith(
-          // Clay, lightly: the button stands a millimetre off the page on a
-          // soft olive shadow and sinks when pressed. Material's own
-          // elevation follows the button's shape exactly; a background
-          // builder is laid out inside the padding and showed as a second
-          // box within the button.
-          elevation: WidgetStateProperty.resolveWith(
-            (states) =>
-                states.contains(WidgetState.pressed) ||
-                    states.contains(WidgetState.disabled)
-                ? 0
-                : 3,
-          ),
-          shadowColor: WidgetStatePropertyAll(
-            BrandColors.olive900.withValues(alpha: 0.55),
-          ),
-        ),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: const Size(64, 56),
+              shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
+              textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
+            ).copyWith(
+              // Clay, lightly: the button stands a millimetre off the page on a
+              // soft olive shadow and sinks when pressed. Material's own
+              // elevation follows the button's shape exactly; a background
+              // builder is laid out inside the padding and showed as a second
+              // box within the button.
+              elevation: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.pressed) ||
+                        states.contains(WidgetState.disabled)
+                    ? 0
+                    : 3,
+              ),
+              shadowColor: WidgetStatePropertyAll(
+                BrandColors.olive900.withValues(alpha: 0.55),
+              ),
+            ),
       ),
     );
   }

@@ -378,7 +378,11 @@ void main() {
           // the screenshot does not depend on timing.
           await tester.runAsync(() async {
             for (final element in find.byType(Image).evaluate()) {
-              await precacheImage((element.widget as Image).image, element);
+              final image = (element.widget as Image).image;
+              // Category photos come from the network, which tests lack;
+              // their tiles fall back to the drawn mark.
+              if (image is! AssetBundleImageProvider) continue;
+              await precacheImage(image, element);
             }
           });
           await tester.pumpAndSettle();

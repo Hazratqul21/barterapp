@@ -1015,13 +1015,20 @@ class CategoryCard extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: style == null
-                      ? Icon(Symbols.category_rounded, color: accent, size: 26)
-                      : CategoryMarkIcon(
-                          mark: style.mark,
-                          color: style.color,
-                          size: 30,
-                        ),
+                  child: _tilePicture(
+                    tag,
+                    style == null
+                        ? Icon(
+                            Symbols.category_rounded,
+                            color: accent,
+                            size: 26,
+                          )
+                        : CategoryMarkIcon(
+                            mark: style.mark,
+                            color: style.color,
+                            size: 30,
+                          ),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -1038,6 +1045,39 @@ class CategoryCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A real photograph of the category over its drawn mark. The mark stays
+/// underneath: it shows while the photo loads, offline, or if the photo
+/// fails, so the tile is never blank and never broken. A plain
+/// [Image.network] (memory cache) on purpose — six small photos, and no
+/// disk-cache plugin to stand up in tests.
+Widget _tilePicture(ListingTag? tag, Widget mark) {
+  final url = tag == null ? null : categoryImage(tag);
+  if (url == null) return mark;
+  return ClipRSuperellipse(
+    borderRadius: Radii.rLg,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Center(child: mark),
+        Image.network(
+          url,
+          fit: BoxFit.cover,
+          cacheWidth: 200,
+          excludeFromSemantics: true,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          frameBuilder: (context, child, frame, sync) => sync
+              ? child
+              : AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: Motion.standard.durationOf(context),
+                  child: child,
+                ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// The small tinted badge that marks which category a listing belongs to.

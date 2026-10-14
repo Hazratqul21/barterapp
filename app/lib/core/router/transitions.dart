@@ -1,59 +1,21 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io' show Platform;
 
 import '../theme/app_theme.dart';
 import '../widgets/common.dart' show shouldReduceMotion;
 
-bool get _isApple => !kIsWeb && (Platform.isIOS || Platform.isMacOS);
+/// One feel on every platform (design v3): the iOS push — a slide with the
+/// edge swipe back — on iOS, Android and the web alike. It used to be iOS
+/// there and a shared-axis fade elsewhere, so the same app moved differently
+/// depending on the phone it was opened on.
+Page<T> forwardPage<T>({required LocalKey key, required Widget child}) =>
+    CupertinoPage<T>(key: key, child: child);
 
-Page<T> forwardPage<T>({required LocalKey key, required Widget child}) {
-  if (_isApple) return CupertinoPage<T>(key: key, child: child);
-
-  return CustomTransitionPage<T>(
-    key: key,
-    child: child,
-    transitionDuration: M3Motion.medium4,
-    reverseTransitionDuration: M3Motion.medium2,
-    transitionsBuilder: (context, animation, secondary, child) {
-      if (shouldReduceMotion(context)) return child;
-      return SharedAxisTransition(
-        animation: animation,
-        secondaryAnimation: secondary,
-        transitionType: SharedAxisTransitionType.horizontal,
-        fillColor: Colors.transparent,
-        child: child,
-      );
-    },
-  );
-}
-
-Page<T> risingPage<T>({required LocalKey key, required Widget child}) {
-  // Rising (bottom sheet style) can use fullscreenDialog on iOS for the native modal feel.
-  if (_isApple) {
-    return CupertinoPage<T>(key: key, child: child, fullscreenDialog: true);
-  }
-
-  return CustomTransitionPage<T>(
-    key: key,
-    child: child,
-    transitionDuration: M3Motion.medium4,
-    reverseTransitionDuration: M3Motion.medium2,
-    transitionsBuilder: (context, animation, secondary, child) {
-      if (shouldReduceMotion(context)) return child;
-      return SharedAxisTransition(
-        animation: animation,
-        secondaryAnimation: secondary,
-        transitionType: SharedAxisTransitionType.vertical,
-        fillColor: Colors.transparent,
-        child: child,
-      );
-    },
-  );
-}
+/// Screens that rise over the current one (create, offer): the iOS modal.
+Page<T> risingPage<T>({required LocalKey key, required Widget child}) =>
+    CupertinoPage<T>(key: key, child: child, fullscreenDialog: true);
 
 Page<T> fadePage<T>({required LocalKey key, required Widget child}) {
   return CustomTransitionPage<T>(
