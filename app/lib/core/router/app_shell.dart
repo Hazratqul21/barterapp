@@ -5,7 +5,9 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/section_theme.dart';
+import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import '../widgets/glass.dart';
 import '../theme/haptics.dart';
 
 /// Keep the branch navigator at the same tree position across breakpoints.
@@ -108,35 +110,40 @@ class AppShell extends ConsumerWidget {
               Expanded(child: navigationShell),
             ],
           ),
+          // Floating liquid glass: the page runs underneath and shows through
+          // it, which is what makes it glass rather than a grey strip. Pages
+          // keep their last item clear with MediaQuery.paddingOf(context).
+          extendBody: true,
           bottomNavigationBar:
               wide || MediaQuery.viewInsetsOf(context).bottom > 0
               ? null
-              : Material(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: palette(context).hair),
-                      ),
-                    ),
-                    child: SafeArea(
-                      top: false,
+              : SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.only(bottom: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                    child: GlassSurface(
+                      level: GlassLevel.chrome,
+                      specular: true,
+                      borderRadius: const BorderRadius.all(Radius.circular(28)),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
-                          vertical: 4,
+                          vertical: 6,
                         ),
                         child: Row(
                           children: [
                             for (var slot = 0; slot < 5; slot++)
                               Expanded(
                                 child: slot == 2
-                                    ? _Destination(
-                                        icon: Symbols.add_box_rounded,
-                                        label: l.navPost,
-                                        selected: false,
-                                        action: true,
-                                        onTap: create,
+                                    // heightFactor 1: a bare Center grows
+                                    // to the bar's full allowed height.
+                                    ? Center(
+                                        heightFactor: 1,
+                                        child: _CreateButton(
+                                          label: l.navPost,
+                                          onTap: create,
+                                        ),
                                       )
                                     : _Destination(
                                         icon:
@@ -176,24 +183,58 @@ class AppShell extends ConsumerWidget {
   }
 }
 
+/// The one action in the bar: raised olive clay with the logo's gold, so it
+/// reads as a button rather than a fifth tab.
+class _CreateButton extends StatelessWidget {
+  const _CreateButton({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = palette(context);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: ClayTile(
+          size: 52,
+          radius: 18,
+          tone: p.give,
+          onTap: () {
+            Haptics.light();
+            onTap();
+          },
+          child: Icon(
+            Symbols.add_rounded,
+            size: 28,
+            weight: 700,
+            color: p.isDark ? BrandColors.olive900 : BrandColors.goldLight,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Destination extends StatelessWidget {
   const _Destination({
     required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
-    this.action = false,
   });
   final IconData icon;
   final String label;
   final bool selected;
-  final bool action;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final color = selected || action ? colors.primary : colors.onSurfaceVariant;
+    final color = selected ? colors.primary : colors.onSurfaceVariant;
     return Semantics(
       selected: selected,
       button: true,
@@ -217,7 +258,7 @@ class _Destination extends StatelessWidget {
                 child: Icon(
                   icon,
                   size: 25,
-                  fill: selected || action ? 1 : 0,
+                  fill: selected ? 1 : 0,
                   color: color,
                 ),
               ),
@@ -228,9 +269,7 @@ class _Destination extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: color,
-                  fontWeight: selected || action
-                      ? FontWeight.w700
-                      : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ],

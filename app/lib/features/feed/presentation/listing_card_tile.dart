@@ -123,7 +123,8 @@ class _ListingCardTileState extends State<ListingCardTile> {
       // Shadow only: the border is drawn once, by the Material below.
       decoration: ShapeDecoration(
         shape: RoundedSuperellipseBorder(borderRadius: Radii.rLg),
-        shadows: _hovered ? Shadows.raised : const [],
+        // Clay at rest (a soft olive shadow), lifted further under a pointer.
+        shadows: _hovered ? Shadows.raised : Shadows.clay,
       ),
       child: Material(
         color: colors.surfaceContainerLowest,

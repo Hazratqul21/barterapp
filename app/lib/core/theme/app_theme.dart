@@ -231,6 +231,7 @@ abstract final class AppTheme {
   );
 
   static ThemeData light() => _build(Brightness.light);
+
   static ThemeData dark() => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
@@ -465,6 +466,22 @@ abstract final class AppTheme {
           minimumSize: const Size(64, 56),
           shape: const RoundedRectangleBorder(borderRadius: Radii.rFull),
           textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
+        ).copyWith(
+          // Clay, lightly: the button stands a millimetre off the page on a
+          // soft olive shadow and sinks when pressed. Material's own
+          // elevation follows the button's shape exactly; a background
+          // builder is laid out inside the padding and showed as a second
+          // box within the button.
+          elevation: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.pressed) ||
+                    states.contains(WidgetState.disabled)
+                ? 0
+                : 3,
+          ),
+          shadowColor: WidgetStatePropertyAll(
+            BrandColors.olive900.withValues(alpha: 0.55),
+          ),
         ),
       ),
     );

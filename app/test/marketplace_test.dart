@@ -436,7 +436,13 @@ void main() {
           expect(tester.takeException(), isNull);
         }
         // Force the cards into view, including on landscape phones.
-        await tester.drag(find.byType(CustomScrollView), const Offset(0, -260));
+        // From near the top: the list now runs under the floating glass
+        // bar, so its centre can sit on the bar in landscape.
+        await tester.dragFrom(
+          tester.getTopLeft(find.byType(CustomScrollView)) +
+              const Offset(40, 40),
+          const Offset(0, -260),
+        );
         await tester.pumpAndSettle();
         expect(find.byType(ListingCardTile), findsWidgets);
         expect(tester.takeException(), isNull);

@@ -295,9 +295,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         _MyListingsSection(me: me)
                       else
                         _MyReviewsSection(meId: me.id),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: 100),
-                      ), // Space for FAB
+                      // Clear of the floating glass bar and the home indicator.
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.paddingOf(context).bottom + 24,
+                        ),
+                      ),
                     ],
                   ),
                 ).animate().fadeIn(

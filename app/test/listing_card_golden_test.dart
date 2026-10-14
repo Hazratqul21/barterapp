@@ -177,17 +177,18 @@ void main() {
                 .decoration!
             as ShapeDecoration;
 
-    expect(deco().shadows, isEmpty);
+    final resting = deco().shadows;
+    expect(resting, isNotEmpty, reason: 'clay: cards stand off the page');
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(tester.getCenter(find.byType(ListingCardTile)));
     await tester.pumpAndSettle();
-    expect(deco().shadows, isNotEmpty);
+    expect(deco().shadows, isNot(equals(resting)));
 
     await mouse.moveTo(Offset.zero);
     await tester.pumpAndSettle();
-    expect(deco().shadows, isEmpty);
+    expect(deco().shadows, equals(resting));
 
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pumpAndSettle();

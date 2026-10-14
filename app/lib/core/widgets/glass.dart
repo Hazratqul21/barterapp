@@ -88,7 +88,11 @@ class GlassSurface extends StatelessWidget {
     // Dark glass is a smoked pane, not a white one dimmed: tinting a dark
     // surface with white washes the colour out of everything behind it.
     final base = p.isDark ? BrandColors.glassDark : Colors.white;
-    final (nearAlpha, farAlpha) = p.isDark ? (0.62, 0.44) : (0.72, 0.52);
+    // Without a blur (the web) a thin pane lets the text underneath read
+    // through the labels on top: there it is nearly opaque instead.
+    final (nearAlpha, farAlpha) = kIsWeb
+        ? (p.isDark ? (0.92, 0.86) : (0.94, 0.88))
+        : (p.isDark ? (0.62, 0.44) : (0.72, 0.52));
 
     final rimNear = p.isDark ? 0.20 : 0.85;
     final rimFar = p.isDark ? 0.05 : 0.22;
