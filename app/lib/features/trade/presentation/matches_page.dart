@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/router/web_shell.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
@@ -513,7 +515,14 @@ class _MutualBanner extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: child,
       ),
-      child: _banner(context),
+      // One pass of gold light across the banner as it lands: value found.
+      child: shouldReduceMotion(context)
+          ? _banner(context)
+          : _banner(context).animate().shimmer(
+              delay: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 1100),
+              color: BrandColors.goldLight.withValues(alpha: 0.7),
+            ),
     );
   }
 
