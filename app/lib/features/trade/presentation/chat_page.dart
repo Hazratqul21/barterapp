@@ -521,6 +521,10 @@ class _DealPanel extends ConsumerWidget {
               Gap.h3,
               TradeSides(
                 dense: true,
+                // Plays the swap the moment the other side accepts.
+                agreed:
+                    offer.status == OfferStatus.accepted ||
+                    offer.status == OfferStatus.completed,
                 giveCaption: offer.isMine ? l.dealYouGive : l.dealYouGet,
                 // Left is always the sender's side; only the captions flip.
                 giveLabel: '$mine$senderCash',

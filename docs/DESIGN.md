@@ -248,6 +248,24 @@ almashtiriladi, aks holda chat pufagi o'zini butun oyna kengligiga o'lchardi.
 
 ---
 
+## 6.5 Harakat (motion) — “Imzo” darajasi
+
+Kundalik harakat sokin (`Motion.fast/standard/slow`, prujina). `Motion.bouncy`
+faqat uchta savdo lahzasida:
+
+| Lahza | Nima bo‘ladi | Qayerda |
+|---|---|---|
+| **Kelishildi** | ⇄ strelkalar 180° aylanadi, ikki tomon bir-biriga intilib qaytadi, `Haptics.success` | `TradeSides(agreed:)` — chat bitim paneli |
+| **Moslik topildi** | “O‘zaro moslik” banneri prujinada kattalashadi, ustidan oltin yorug‘lik bir marta o‘tadi | `matches_page.dart` `_MutualBanner` |
+| **Bosqich bajarildi** | Bitim yo‘lidagi doira prujinada “otilib” chiqadi | `DealTimeline` |
+
+Qoidalar: faqat holat **ekranda** o‘zgarganda o‘ynaydi (eski bitimni ochganda
+yo‘q); “Harakatni kamaytirish” yoqilgan bo‘lsa — hech narsa siljimaydi.
+Shisha (`GlassSurface`) faqat suzuvchi qatlamlarda: pastki menyu, rasm
+ustidagi tugmalar, varaqlar. Clay — bosiladigan narsalarda: tugma
+(Material elevation 3 → bosilganda 0), karta (`Shadows.clay`), kategoriya
+plitkasi.
+
 ## 7. Har ekran uchun tekshiruv ro'yxati
 
 - [ ] To'rt holat: yuklanmoqda / xato / bo'sh / ma'lumot

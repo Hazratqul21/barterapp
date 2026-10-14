@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -1090,7 +1092,7 @@ class CategoryBadge extends StatelessWidget {
 /// The single most repeated idea in the product, so it is drawn once. Green
 /// leads, blue answers, and the arrow between them is the whole pitch: this is
 /// not a price, it is a swap.
-class TradeSides extends StatelessWidget {
+class TradeSides extends StatefulWidget {
   const TradeSides({
     super.key,
     required this.giveLabel,
@@ -1098,6 +1100,7 @@ class TradeSides extends StatelessWidget {
     this.giveCaption,
     this.takeCaption,
     this.dense = false,
+    this.agreed = false,
   });
 
   /// What is being handed over.
@@ -1112,56 +1115,118 @@ class TradeSides extends StatelessWidget {
 
   final bool dense;
 
+  /// Whether the two sides have agreed. Turning true while on screen plays the
+  /// swap — MAB's signature motion: the arrows turn over and the two sides
+  /// lean into each other once, on the bouncy spring, with a success tap.
+  /// Opening a deal that was agreed earlier plays nothing.
+  final bool agreed;
+
+  @override
+  State<TradeSides> createState() => _TradeSidesState();
+}
+
+class _TradeSidesState extends State<TradeSides>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _swap = AnimationController(
+    vsync: this,
+    duration: Motion.bouncy.duration,
+  );
+
+  @override
+  void didUpdateWidget(TradeSides old) {
+    super.didUpdateWidget(old);
+    if (widget.agreed && !old.agreed) {
+      Haptics.success();
+      if (!shouldReduceMotion(context)) _swap.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _swap.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = palette(context);
     final theme = Theme.of(context);
 
     Widget side(String label, String? caption, Color color, Color tint) {
-      return Expanded(
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: Gap.x3,
-            vertical: dense ? Gap.x2 : Gap.x3,
-          ),
-          decoration: BoxDecoration(color: tint, borderRadius: Radii.rSm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (caption != null) ...[
-                Text(
-                  caption.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(color: color),
-                ),
-                Gap.h1,
-              ],
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: Gap.x3,
+          vertical: widget.dense ? Gap.x2 : Gap.x3,
+        ),
+        decoration: BoxDecoration(color: tint, borderRadius: Radii.rSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (caption != null) ...[
               Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(height: 1.3),
+                caption.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(color: color),
               ),
+              Gap.h1,
             ],
-          ),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(height: 1.3),
+            ),
+          ],
         ),
       );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        side(giveLabel, giveCaption, p.give, p.giveSoft),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
-          child: Icon(
-            Symbols.swap_horiz_rounded,
-            size: Sizes.iconMd,
-            color: p.inkFaint,
-          ),
-        ),
-        side(takeLabel, takeCaption, p.take, p.takeSoft),
-      ],
+    final curve = Motion.bouncy.curve;
+    return AnimatedBuilder(
+      animation: _swap,
+      builder: (context, _) {
+        final t = curve.transform(_swap.value);
+        // There and back: the sides meet halfway, then settle where they were.
+        final lean = math.sin(math.pi * _swap.value) * 10;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Transform.translate(
+                offset: Offset(lean, 0),
+                child: side(
+                  widget.giveLabel,
+                  widget.giveCaption,
+                  p.give,
+                  p.giveSoft,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Gap.x2),
+              child: Transform.rotate(
+                angle: math.pi * t,
+                child: Icon(
+                  Symbols.swap_horiz_rounded,
+                  size: Sizes.iconMd,
+                  color: _swap.isAnimating ? p.give : p.inkFaint,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Transform.translate(
+                offset: Offset(-lean, 0),
+                child: side(
+                  widget.takeLabel,
+                  widget.takeCaption,
+                  p.take,
+                  p.takeSoft,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -5,7 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../shared/models/models.dart';
 import '../theme/motion.dart';
 import '../theme/tokens.dart';
-import 'common.dart' show palette;
+import 'common.dart' show palette, shouldReduceMotion;
 
 /// Where a deal stands, as four steps: offered → agreed (goods held) →
 /// handed over (both sides confirm) → done.
@@ -77,7 +77,7 @@ class DealTimeline extends StatelessWidget {
 
 enum _StepState { done, next, todo, stopped }
 
-class _Step extends StatelessWidget {
+class _Step extends StatefulWidget {
   const _Step({
     required this.label,
     required this.state,
@@ -95,7 +95,42 @@ class _Step extends StatelessWidget {
   final bool linkDone;
 
   @override
+  State<_Step> createState() => _StepWidgetState();
+}
+
+class _StepWidgetState extends State<_Step>
+    with SingleTickerProviderStateMixin {
+  /// 0 → 1 once, when this step becomes done while on screen: the circle
+  /// pops on the bouncy spring. Opening a finished deal plays nothing.
+  late final AnimationController _pop = AnimationController(
+    vsync: this,
+    duration: Motion.bouncy.duration,
+    value: 1,
+  );
+
+  @override
+  void didUpdateWidget(_Step old) {
+    super.didUpdateWidget(old);
+    if (widget.state == _StepState.done &&
+        old.state != _StepState.done &&
+        !shouldReduceMotion(context)) {
+      _pop.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final label = widget.label;
+    final first = widget.first;
+    final last = widget.last;
+    final linkDone = widget.linkDone;
     final p = palette(context);
     final scheme = Theme.of(context).colorScheme;
     final (fill, border, icon, iconColor) = switch (state) {
@@ -127,19 +162,25 @@ class _Step extends StatelessWidget {
                     ? const SizedBox()
                     : Container(height: 2, color: linkDone ? p.give : line),
               ),
-              AnimatedContainer(
-                duration: Motion.standard.durationOf(context),
-                curve: Motion.standard.curve,
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: fill,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: border, width: 2),
+              ScaleTransition(
+                scale: Tween(
+                  begin: 0.55,
+                  end: 1.0,
+                ).chain(CurveTween(curve: Motion.bouncy.curve)).animate(_pop),
+                child: AnimatedContainer(
+                  duration: Motion.standard.durationOf(context),
+                  curve: Motion.standard.curve,
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: fill,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: border, width: 2),
+                  ),
+                  child: icon == null
+                      ? null
+                      : Icon(icon, size: 14, color: iconColor, weight: 700),
                 ),
-                child: icon == null
-                    ? null
-                    : Icon(icon, size: 14, color: iconColor, weight: 700),
               ),
               Expanded(
                 child: last
