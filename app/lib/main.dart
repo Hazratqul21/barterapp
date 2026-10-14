@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +76,7 @@ class _BarterAppState extends ConsumerState<BarterApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ref.watch(darkModeProvider) ? ThemeMode.dark : ThemeMode.light,
+      scrollBehavior: const MabScrollBehavior(),
       // Ordinary routes share a quiet, opaque canvas. Decorative aurora is
       // opt-in for the few picture-free sheets that actually benefit from it;
       // keeping it out of the app root avoids a permanent animated layer under
@@ -98,4 +100,29 @@ class _BarterAppState extends ConsumerState<BarterApp> {
       ],
     );
   }
+}
+
+/// Lists feel the same on every platform (design v3): the iOS rubber-band
+/// at the ends instead of Android's stretch, and mouse drag on the web for
+/// the horizontal strips. Pull-to-refresh still works — it listens for the
+/// overscroll the bounce produces.
+class MabScrollBehavior extends MaterialScrollBehavior {
+  const MabScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => child;
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    ...super.dragDevices,
+    PointerDeviceKind.mouse,
+  };
 }

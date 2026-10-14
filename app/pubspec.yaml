@@ -64,7 +64,6 @@ flutter:
   assets:
     - assets/brand/
     - assets/images/
-    - assets/images/categories/
     - assets/media/
 
   #
