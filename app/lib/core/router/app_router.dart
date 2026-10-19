@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/models/models.dart';
 import '../../features/auth/presentation/sign_in_page.dart';
+import '../../features/billing/presentation/order_status_page.dart';
+import '../../features/billing/presentation/tariffs_page.dart';
 import '../../features/feed/presentation/feed_page.dart';
 import '../../features/listing/presentation/listing_detail_page.dart';
 import '../../features/onboarding/presentation/intro_page.dart';
@@ -223,6 +225,29 @@ GoRouter buildRouter() {
         parentNavigatorKey: _rootKey,
         pageBuilder: (context, state) =>
             forwardPage(key: state.pageKey, child: const PaymentsPage()),
+      ),
+      GoRoute(
+        path: '/tariffs',
+        parentNavigatorKey: _rootKey,
+        pageBuilder: (context, state) =>
+            forwardPage(key: state.pageKey, child: const TariffsPage()),
+      ),
+      GoRoute(
+        path: '/payments/order/:id',
+        parentNavigatorKey: _rootKey,
+        pageBuilder: (context, state) => forwardPage(
+          key: state.pageKey,
+          child: OrderStatusPage(orderId: state.pathParameters['id']!),
+        ),
+      ),
+      // Where Payme sends people back after paying on the web
+      // (PAYME_RETURN_URL on the server).
+      GoRoute(
+        path: '/payments/return',
+        redirect: (context, state) {
+          final id = state.uri.queryParameters['order'];
+          return id == null || id.isEmpty ? '/tariffs' : '/payments/order/$id';
+        },
       ),
       GoRoute(
         path: '/settings/blocks',

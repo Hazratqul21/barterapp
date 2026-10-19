@@ -1285,4 +1285,126 @@ class LEn extends L {
   String timelineSemantics(int step, int total, String name) {
     return 'Deal: step $step of $total, $name';
   }
+
+  @override
+  String get billingTitle => 'Plans and payments';
+
+  @override
+  String get billingSubtitle => 'Listing packs and boosts';
+
+  @override
+  String billingFreeLeft(int count) {
+    return '$count free listings left';
+  }
+
+  @override
+  String get billingFreeUnlimited =>
+      'Posting listings is free and unlimited for now';
+
+  @override
+  String get billingPacks => 'LISTING PACKS';
+
+  @override
+  String get billingBoostSection => 'BOOSTS';
+
+  @override
+  String get billingBoostHint => 'Tap “Boost” on one of your active listings.';
+
+  @override
+  String billingListings(int count) {
+    return '$count listings';
+  }
+
+  @override
+  String billingDays(int count) {
+    return '$count days on top';
+  }
+
+  @override
+  String billingDiscountUntil(String date) {
+    return 'Discount until $date';
+  }
+
+  @override
+  String get billingPayBefore => 'Pay with';
+
+  @override
+  String get billingPayAfter => '';
+
+  @override
+  String get billingSecureNote =>
+      'Card number, expiry date and the SMS code are entered on the Payme page. MAB never sees them.';
+
+  @override
+  String get billingEmpty => 'No plans yet';
+
+  @override
+  String get billingEmptyHint => 'Prices will be announced soon.';
+
+  @override
+  String get billingUnavailable =>
+      'Payments are not connected yet. Please try again later.';
+
+  @override
+  String get billingHistory => 'PAYMENT HISTORY';
+
+  @override
+  String get billingNoOrders => 'No payments yet';
+
+  @override
+  String get billingOpenFailed => 'Could not open the Payme page';
+
+  @override
+  String get orderTitle => 'Payment';
+
+  @override
+  String get orderPending => 'Waiting for payment';
+
+  @override
+  String get orderPendingHint =>
+      'Finish paying on the Payme page. This screen updates by itself.';
+
+  @override
+  String get orderPaid => 'Payment received';
+
+  @override
+  String orderPaidPack(int count) {
+    return '$count listings were added to your account.';
+  }
+
+  @override
+  String orderPaidBoost(int count) {
+    return 'Your listing stays on top for $count days.';
+  }
+
+  @override
+  String get orderCancelled => 'Payment cancelled';
+
+  @override
+  String get orderCancelledHint => 'You were not charged. You can try again.';
+
+  @override
+  String get orderOpenPayme => 'Open the Payme page';
+
+  @override
+  String get orderDone => 'Done';
+
+  @override
+  String get boostAction => 'Boost';
+
+  @override
+  String get boostSheetTitle => 'Boost this listing';
+
+  @override
+  String get boostSheetHint =>
+      'Your listing shows higher in the feed with a Premium badge.';
+
+  @override
+  String get quotaTitle => 'Free listings used up';
+
+  @override
+  String get quotaBody => 'Pick a listing pack to publish. Your draft is kept.';
+
+  @override
+  String get quotaAction => 'See plans';
 }

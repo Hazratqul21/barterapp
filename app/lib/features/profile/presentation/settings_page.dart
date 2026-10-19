@@ -170,6 +170,12 @@ class SettingsPage extends ConsumerWidget {
                           ),
                           const _Divider(),
                           _SettingsTile(
+                            icon: Symbols.sell_rounded,
+                            title: l.billingTitle,
+                            onTap: () => context.push('/tariffs'),
+                          ),
+                          const _Divider(),
+                          _SettingsTile(
                             icon: Symbols.account_balance_wallet_rounded,
                             title: l.paymentsTitle,
                             onTap: () => context.push('/settings/payments'),

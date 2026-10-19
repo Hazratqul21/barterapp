@@ -2504,6 +2504,216 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Bitim: {step}/{total}-qadam, {name}'**
   String timelineSemantics(int step, int total, String name);
+
+  /// No description provided for @billingTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tariflar va to‘lovlar'**
+  String get billingTitle;
+
+  /// No description provided for @billingSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lon paketlari va e’lonni ko‘tarish'**
+  String get billingSubtitle;
+
+  /// No description provided for @billingFreeLeft.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} ta bepul e’lon qoldi'**
+  String billingFreeLeft(int count);
+
+  /// No description provided for @billingFreeUnlimited.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha e’lon joylash bepul va cheklanmagan'**
+  String get billingFreeUnlimited;
+
+  /// No description provided for @billingPacks.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’LON PAKETLARI'**
+  String get billingPacks;
+
+  /// No description provided for @billingBoostSection.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’LONNI KO‘TARISH'**
+  String get billingBoostSection;
+
+  /// No description provided for @billingBoostHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Faol e’loningiz sahifasida «Ko‘tarish» tugmasini bosing.'**
+  String get billingBoostHint;
+
+  /// No description provided for @billingListings.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} ta e’lon'**
+  String billingListings(int count);
+
+  /// No description provided for @billingDays.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} kun yuqorida'**
+  String billingDays(int count);
+
+  /// No description provided for @billingDiscountUntil.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chegirma {date} gacha'**
+  String billingDiscountUntil(String date);
+
+  /// No description provided for @billingPayBefore.
+  ///
+  /// In uz, this message translates to:
+  /// **''**
+  String get billingPayBefore;
+
+  /// No description provided for @billingPayAfter.
+  ///
+  /// In uz, this message translates to:
+  /// **'orqali to‘lash'**
+  String get billingPayAfter;
+
+  /// No description provided for @billingSecureNote.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta raqami, muddati va SMS kod Payme sahifasida kiritiladi. MAB ularni ko‘rmaydi.'**
+  String get billingSecureNote;
+
+  /// No description provided for @billingEmpty.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tariflar hali qo‘shilmagan'**
+  String get billingEmpty;
+
+  /// No description provided for @billingEmptyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Narxlar tez orada e’lon qilinadi.'**
+  String get billingEmptyHint;
+
+  /// No description provided for @billingUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov tizimi hali ulanmagan. Birozdan keyin urinib ko‘ring.'**
+  String get billingUnavailable;
+
+  /// No description provided for @billingHistory.
+  ///
+  /// In uz, this message translates to:
+  /// **'TO‘LOVLAR TARIXI'**
+  String get billingHistory;
+
+  /// No description provided for @billingNoOrders.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hali to‘lov qilinmagan'**
+  String get billingNoOrders;
+
+  /// No description provided for @billingOpenFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Payme sahifasini ochib bo‘lmadi'**
+  String get billingOpenFailed;
+
+  /// No description provided for @orderTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov'**
+  String get orderTitle;
+
+  /// No description provided for @orderPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov kutilmoqda'**
+  String get orderPending;
+
+  /// No description provided for @orderPendingHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Payme sahifasida to‘lovni yakunlang. Bu sahifa o‘zi yangilanadi.'**
+  String get orderPendingHint;
+
+  /// No description provided for @orderPaid.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov qabul qilindi'**
+  String get orderPaid;
+
+  /// No description provided for @orderPaidPack.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingizga {count} ta e’lon qo‘shildi.'**
+  String orderPaidPack(int count);
+
+  /// No description provided for @orderPaidBoost.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’loningiz {count} kun yuqorida turadi.'**
+  String orderPaidBoost(int count);
+
+  /// No description provided for @orderCancelled.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov bekor qilindi'**
+  String get orderCancelled;
+
+  /// No description provided for @orderCancelledHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Pul yechilmadi. Qaytadan urinib ko‘rishingiz mumkin.'**
+  String get orderCancelledHint;
+
+  /// No description provided for @orderOpenPayme.
+  ///
+  /// In uz, this message translates to:
+  /// **'Payme sahifasini ochish'**
+  String get orderOpenPayme;
+
+  /// No description provided for @orderDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tayyor'**
+  String get orderDone;
+
+  /// No description provided for @boostAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ko‘tarish'**
+  String get boostAction;
+
+  /// No description provided for @boostSheetTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’lonni ko‘tarish'**
+  String get boostSheetTitle;
+
+  /// No description provided for @boostSheetHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'E’loningiz lentada yuqorida, «Premium» belgisi bilan ko‘rinadi.'**
+  String get boostSheetHint;
+
+  /// No description provided for @quotaTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bepul e’lonlar tugadi'**
+  String get quotaTitle;
+
+  /// No description provided for @quotaBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi e’lon joylash uchun e’lon paketini tanlang. Qoralama saqlanib qoladi.'**
+  String get quotaBody;
+
+  /// No description provided for @quotaAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tariflarni ko‘rish'**
+  String get quotaAction;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
