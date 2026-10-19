@@ -28,6 +28,13 @@ from app.models.listing import (  # noqa: F401
 )
 from app.models.moderation import Block, Report  # noqa: F401
 from app.models.notify_pref import NotificationSetting  # noqa: F401
+from app.models.payment import (  # noqa: F401
+    OrderStatus,
+    PaymentOrder,
+    PaymeTransaction,
+    Product,
+    ProductKind,
+)
 from app.models.offer import Conversation, Message, Offer, OfferItem  # noqa: F401
 from app.models.review import Review  # noqa: F401
 from app.models.setting import AppSetting  # noqa: F401
@@ -64,7 +71,12 @@ __all__ = [
     "NotificationSetting",
     "Offer",
     "OfferItem",
+    "OrderStatus",
     "OtpChallenge",
+    "PaymeTransaction",
+    "PaymentOrder",
+    "Product",
+    "ProductKind",
     "PaymentMethod",
     "Report",
     "Review",
