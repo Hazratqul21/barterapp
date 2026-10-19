@@ -76,6 +76,11 @@ class Settings(BaseSettings):
     #: albatta ha: aks holda odam kod kutadi, kod kelmaydi va sabab
     #: hech qayerda ko'rinmaydi.
     sms_required: bool = False
+    #: Vaqtinchalik: Eskiz shartnomasi kelguncha productionni SMS'siz ishga
+    #: tushirish. Kodlar foydalanuvchiga bormaydi — faqat server logida
+    #: (journalctl -u mab-api) ko'rinadi, ya'ni faqat jamoa kira oladi.
+    #: Eskiz ulangach albatta o'chiring.
+    sms_optional: bool = False
 
     # Payme (Merchant API). Bo'sh bo'lsa to'lov o'chiq: buyurtma yaratib
     # bo'lmaydi va Payme endpoint'i har so'rovni avtorizatsiya xatosi bilan
@@ -172,12 +177,15 @@ def production_problems(settings: Settings) -> list[str]:
             "JWT_SECRET standart yoki 32 belgidan qisqa. Yangi kalit: "
             "python -c \"import secrets; print(secrets.token_urlsafe(48))\""
         )
-    if not (settings.eskiz_email and settings.eskiz_password):
+    if settings.sms_optional:
+        pass  # get_settings() ogohlantiradi; qolgan tekshiruvlar o'z joyida.
+    elif not (settings.eskiz_email and settings.eskiz_password):
         problems.append(
             "SMS sozlanmagan: ESKIZ_EMAIL va ESKIZ_PASSWORD bo'sh — kodlar "
-            "foydalanuvchiga yetib bormaydi."
+            "foydalanuvchiga yetib bormaydi. Vaqtincha SMS'siz ishga "
+            "tushirish uchun: SMS_OPTIONAL=true."
         )
-    if not settings.sms_required:
+    if not settings.sms_required and not settings.sms_optional:
         problems.append(
             "SMS_REQUIRED=false: SMS ketmasa ham ro'yxatdan o'tish jimgina "
             "davom etadi. SMS_REQUIRED=true qiling."
@@ -218,6 +226,13 @@ def get_settings() -> Settings:
     settings = Settings()
     if settings.is_production:
         _guard_production(settings)
+        if settings.sms_optional:
+            import warnings
+            warnings.warn(
+                "SMS_OPTIONAL=true: SMS yuborilmaydi, tasdiqlash kodlari faqat "
+                "server logida. Eskiz ulangach o'chiring.",
+                stacklevel=2,
+            )
     else:
         _guard(settings)
     return settings

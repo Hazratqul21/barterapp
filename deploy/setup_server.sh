@@ -69,6 +69,7 @@ MEDIA_ROOT=$APP_DIR/media
 # SMS (Eskiz) — to'ldirilmaguncha production rejimi server ishga tushishiga
 # yo'l qo'ymaydi: SMS bo'lmasa hech kim kira olmaydi.
 SMS_REQUIRED=true
+# Eskiz kelguncha vaqtincha: SMS_OPTIONAL=true (kodlar: journalctl -u mab-api)
 ESKIZ_EMAIL=
 ESKIZ_PASSWORD=
 # ESKIZ_SENDER=4546
