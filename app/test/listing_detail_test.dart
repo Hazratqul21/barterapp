@@ -48,7 +48,11 @@ ListingDetail _listing({int photos = 3}) => ListingDetail(
   wants: const ['iPhone 15 Pro', 'planshet'],
 );
 
-Future<void> _pump(WidgetTester tester, ListingDetail listing) async {
+Future<void> _pump(
+  WidgetTester tester,
+  ListingDetail listing, {
+  double textScale = 1,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(
@@ -71,7 +75,12 @@ Future<void> _pump(WidgetTester tester, ListingDetail listing) async {
         // Same root surface as main.dart.
         builder: (context, child) => ColoredBox(
           color: Theme.of(context).colorScheme.surface,
-          child: child,
+          child: MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
         ),
         theme: AppTheme.light(),
         locale: const Locale('uz'),
@@ -99,6 +108,37 @@ void main() {
         ))
         .load();
   });
+
+  testWidgets('desktop detail places gallery beside information', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _pump(tester, _listing());
+    expect(tester.takeException(), isNull);
+    final photo = tester.getRect(find.byType(PageView));
+    final title = tester.getRect(find.text('MacBook Pro 14 M3, 16 GB').first);
+    expect(photo.right, lessThan(title.left));
+    expect(title.top, lessThan(photo.bottom));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/listing_detail_desktop.png'),
+    );
+  });
+
+  for (final width in [320.0, 900.0, 1440.0]) {
+    testWidgets('detail fits width $width with 200% text', (tester) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await _pump(tester, _listing(), textScale: 2);
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('swipe moves the counter; tap opens the viewer on that photo', (
     tester,

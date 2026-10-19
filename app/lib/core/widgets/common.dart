@@ -903,16 +903,8 @@ String categoryLabel(L l, ListingTag tag) => switch (tag) {
   ListingTag.construction => l.filterConstruction,
 };
 
-/// A category as a tall photo card — the shape from the design reference.
-///
-/// The strip used to be small medallions. This is the richer version: a soft
-/// clay card with a photograph on top, the drawn mark on a floating disc that
-/// straddles the photo's lower edge, and the name beneath. Selecting one draws
-/// a green rim around it.
-///
-/// The photo comes from [categoryImages], one editable place. When it is
-/// missing or still loading, the card shows the category's own gradient with a
-/// faint mark, so it is never blank and never broken.
+/// A compact category photo with a persistent selection ring and a label.
+/// Bundled images work offline; the drawn mark remains a loading fallback.
 class CategoryCard extends StatelessWidget {
   const CategoryCard({
     super.key,
@@ -942,7 +934,7 @@ class CategoryCard extends StatelessWidget {
       widest = widest < painter.width ? painter.width : widest;
       painter.dispose();
     }
-    return (widest + 8).clamp(76.0, 140.0);
+    return (widest + 12).clamp(80.0, 280.0);
   }
 
   @override
@@ -1015,19 +1007,22 @@ class CategoryCard extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: _tilePicture(
-                    tag,
-                    style == null
-                        ? Icon(
-                            Symbols.category_rounded,
-                            color: accent,
-                            size: 26,
-                          )
-                        : CategoryMarkIcon(
-                            mark: style.mark,
-                            color: style.color,
-                            size: 30,
-                          ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: _tilePicture(
+                      tag,
+                      style == null
+                          ? Icon(
+                              Symbols.category_rounded,
+                              color: accent,
+                              size: 26,
+                            )
+                          : CategoryMarkIcon(
+                              mark: style.mark,
+                              color: style.color,
+                              size: 30,
+                            ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -1047,11 +1042,7 @@ class CategoryCard extends StatelessWidget {
   }
 }
 
-/// A real photograph of the category over its drawn mark. The mark stays
-/// underneath: it shows while the photo loads, offline, or if the photo
-/// fails, so the tile is never blank and never broken. A plain
-/// [Image.network] (memory cache) on purpose — six small photos, and no
-/// disk-cache plugin to stand up in tests.
+/// Bundled photography with the category mark as a graceful fallback.
 Widget _tilePicture(ListingTag? tag, Widget mark) {
   final url = tag == null ? null : categoryImage(tag);
   if (url == null) return mark;
@@ -1061,7 +1052,7 @@ Widget _tilePicture(ListingTag? tag, Widget mark) {
       fit: StackFit.expand,
       children: [
         Center(child: mark),
-        Image.network(
+        Image.asset(
           url,
           fit: BoxFit.cover,
           cacheWidth: 200,

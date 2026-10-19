@@ -1,0 +1,24 @@
+PASS  lentada e'lonlar bor  — 12
+PASS  min_value arzonlarni kesadi  — chegara=630000000
+PASS  min_value hammasini yo'q qilmaydi
+PASS  max_value qimmatlarni kesadi
+PASS  teskari oraliq 400 beradi  — 400
+PASS  sort=cheap o'sish tartibida  — [78120000, 110000000, 148680000, 166320000]
+PASS  sort=expensive kamayish tartibida
+PASS  ikkala saralash ham bir xil to'plamni qaytaradi  — filtr emas, faqat tartib o'zgaradi
+PASS  kichik sahifa kursor beradi
+PASS  keyingi sahifa takrorlanmaydi  — kursor saralash kalitini tashiydi
+PASS  ikki sahifa birgalikda hammasini qamraydi  — hech bir e'lon tushib qolmaydi
+PASS  ikkinchi sahifa birinchisidan arzon emas
+PASS  buzuq kursor 400 beradi  — 400
+PASS  'MacBook' uz tilida ham topiladi  — qidiruv tarjimaga qulflanmagan
+PASS  'MacBook' ru tilida ham topiladi  — qidiruv tarjimaga qulflanmagan
+PASS  'MacBook' en tilida ham topiladi  — qidiruv tarjimaga qulflanmagan
+PASS  qidiruvda e'lon takrorlanmaydi  — uch tilli join dublikat bermaydi
+PASS  '%' joker sifatida ishlamaydi  — 4 / 12
+PASS  topilmaydigan so'z bo'sh qaytaradi
+PASS  cash_ok filtri ishlaydi
+PASS  noma'lum viloyat bo'sh qaytaradi
+PASS  haqiqiy viloyat bo'yicha e'lon topiladi  — Farg‘ona
+PASS  viloyat filtri lentani toraytiradi  — Farg‘ona: 2 / 12
+PASS  filtr va saralash birga ishlaydi

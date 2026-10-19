@@ -171,7 +171,7 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
         data: (listing) => Container(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: _Content(
               listing: listing,
               isMine: ref.watch(meProvider).value?.id == listing.owner.id,
@@ -269,21 +269,18 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                         )
                       // The decision bar: what it is worth and what they want,
                       // next to the one action — no scrolling back up to check.
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  PriceText(listing.value, size: 18),
-                                  const SizedBox(height: 2),
-                                  SwapChip(wants: listing.wants.join(', ')),
-                                ],
-                              ),
-                            ),
-                            Gap.w3,
-                            FilledButton.icon(
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final summary = Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PriceText(listing.value, size: 18),
+                                const SizedBox(height: 2),
+                                SwapChip(wants: listing.wants.join(', ')),
+                              ],
+                            );
+                            final action = FilledButton.icon(
                               onPressed: () {
                                 Haptics.light();
                                 context.push('/offer/${listing.id}');
@@ -299,8 +296,27 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                                   horizontal: Gap.x6,
                                 ),
                               ),
-                            ),
-                          ],
+                            );
+                            final stacked =
+                                constraints.maxWidth < 340 ||
+                                MediaQuery.textScalerOf(context).scale(14) /
+                                        14 >
+                                    1.3;
+                            return stacked
+                                ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [summary, Gap.h3, action],
+                                  )
+                                : Row(
+                                    children: [
+                                      Expanded(child: summary),
+                                      Gap.w3,
+                                      action,
+                                    ],
+                                  );
+                          },
                         ),
                 ),
               ),
@@ -358,284 +374,311 @@ class _Content extends StatelessWidget {
       520.0,
     );
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          expandedHeight: heroHeight,
-          // Calm surface once collapsed; over the photo the controls sit on
-          // their own dark discs so they read on any picture.
-          backgroundColor: theme.colorScheme.surface,
-          surfaceTintColor: Colors.transparent,
-          automaticallyImplyLeading: false,
-          leadingWidth: 64,
-          leading: Center(
-            child: _OverPhotoButton(
-              tooltip: context.canPop()
-                  ? MaterialLocalizations.of(context).backButtonTooltip
-                  : MaterialLocalizations.of(context).closeButtonTooltip,
-              icon: context.canPop()
-                  ? Symbols.arrow_back_rounded
-                  : Symbols.close_rounded,
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
-            ),
+    final details = Padding(
+      padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(listing.title, style: theme.textTheme.headlineMedium),
+          Gap.h2,
+          Wrap(
+            spacing: Gap.x3,
+            runSpacing: Gap.x2,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              PriceText(listing.value, size: 22),
+              Pill(
+                label: listing.cashOk ? l.listingCashOk : l.listingCashNo,
+                // Small text on the soft gold: the brand gold is
+                // 3.4:1 there, so light mode takes a deeper shade (AA).
+                foreground: !listing.cashOk
+                    ? p.inkSoft
+                    : p.isDark
+                    ? p.money
+                    : Color.lerp(p.money, Colors.black, 0.3)!,
+                background: listing.cashOk
+                    ? p.moneySoft
+                    : theme.colorScheme.surfaceContainerHighest,
+              ),
+            ],
           ),
-          actions: [
-            if (!isMine)
-              _OverPhotoButton(
-                tooltip: saved ? l.listingSaved : l.listingSave,
-                icon: Symbols.favorite_rounded,
-                filled: saved,
-                color: saved ? theme.colorScheme.error : null,
-                onPressed: onToggleSave,
+
+          Gap.h6,
+          _GiveTakeCard(listing: listing),
+
+          Gap.h6,
+          _SectionLabel(l.listingAbout),
+          BouncingClayCard(
+            clayMode: true,
+            borderRadius: Radii.rLg,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: Radii.rLg,
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
               ),
-            Builder(
-              builder: (buttonContext) => _OverPhotoButton(
-                tooltip: l.listingShare,
-                icon: Symbols.ios_share_rounded,
-                onPressed: () {
-                  Haptics.light();
-                  final box = buttonContext.findRenderObject() as RenderBox?;
-                  shareListing(
-                    context,
-                    listing,
-                    origin: box == null
-                        ? null
-                        : box.localToGlobal(Offset.zero) & box.size,
-                  );
-                },
-              ),
-            ),
-            Gap.w2,
-            PopupMenuButton<String>(
-              onSelected: (value) => switch (value) {
-                'edit' => onEdit(),
-                'delete' => onDelete(),
-                'report' => onReport(),
-                'block' => onBlock(),
-                _ => null,
-              },
-              itemBuilder: (context) => isMine
-                  ? [
-                      PopupMenuItem(value: 'edit', child: Text(l.actionEdit)),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(l.actionDelete),
-                      ),
-                    ]
-                  : [
-                      PopupMenuItem(
-                        value: 'report',
-                        child: Text(l.actionReportUser),
-                      ),
-                      PopupMenuItem(
-                        value: 'block',
-                        child: Text(l.actionBlockUser),
-                      ),
-                    ],
-              child: const _OverPhotoButton(icon: Symbols.more_horiz_rounded),
-            ),
-            Gap.w3,
-          ],
-          flexibleSpace: FlexibleSpaceBar(
-            background: Hero(
-              tag: 'listing-image-${listing.id}',
-              child: _Gallery(
-                photos: gallery,
-                index: shot,
-                semanticLabel: listing.imageAlt,
-                onIndex: onShot,
+              child: Padding(
+                padding: const EdgeInsets.all(Gap.x4),
+                child: Text(
+                  listing.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: p.inkSoft),
+                ),
               ),
             ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(listing.title, style: theme.textTheme.headlineMedium),
-                Gap.h2,
-                Wrap(
-                  spacing: Gap.x3,
-                  runSpacing: Gap.x2,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    PriceText(listing.value, size: 22),
-                    Pill(
-                      label: listing.cashOk ? l.listingCashOk : l.listingCashNo,
-                      // Small text on the soft gold: the brand gold is
-                      // 3.4:1 there, so light mode takes a deeper shade (AA).
-                      foreground: !listing.cashOk
-                          ? p.inkSoft
-                          : p.isDark
-                          ? p.money
-                          : Color.lerp(p.money, Colors.black, 0.3)!,
-                      background: listing.cashOk
-                          ? p.moneySoft
-                          : theme.colorScheme.surfaceContainerHighest,
-                    ),
-                  ],
-                ),
 
-                Gap.h6,
-                _GiveTakeCard(listing: listing),
-
-                Gap.h6,
-                _SectionLabel(l.listingAbout),
-                BouncingClayCard(
-                  clayMode: true,
-                  borderRadius: Radii.rLg,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: Radii.rLg,
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(Gap.x4),
-                      child: Text(
-                        listing.description,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: p.inkSoft,
-                        ),
-                      ),
-                    ),
+          Gap.h6,
+          BouncingClayCard(
+            clayMode: true,
+            borderRadius: Radii.rLg,
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: Radii.rLg,
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
                   ),
                 ),
+              ),
+              child: ExpansionTile(
+                title: _SectionLabel(l.listingSpecs),
+                tilePadding: const EdgeInsets.symmetric(horizontal: Gap.x4),
+                initiallyExpanded: true,
+                shape: const Border(),
+                children: [
+                  _SpecRow(l.specCategory, listing.category),
+                  _SpecRow(l.specCondition, listing.condition),
+                  _SpecRow(l.specQuantity, listing.quantity),
+                  if (listing.place != null)
+                    _SpecRow(l.specRegion, listing.place!),
+                  _SpecRow(l.specPosted, formatDate(context, listing.postedAt)),
+                  _SpecRow(
+                    l.specValue,
+                    listing.value.format(locale),
+                    last: true,
+                  ),
+                  Gap.h2,
+                ],
+              ),
+            ),
+          ),
 
-                Gap.h6,
-                BouncingClayCard(
-                  clayMode: true,
-                  borderRadius: Radii.rLg,
-                  child: Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: Radii.rLg,
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      title: _SectionLabel(l.listingSpecs),
-                      tilePadding: const EdgeInsets.symmetric(
-                        horizontal: Gap.x4,
-                      ),
-                      initiallyExpanded: true,
-                      shape: const Border(),
+          Gap.h6,
+          _SectionLabel(l.listingOwner),
+          BouncingClayCard(
+            clayMode: true,
+            borderRadius: Radii.rLg,
+            onTap: isMine
+                ? null
+                : () => context.push('/trader/${listing.owner.id}'),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: Radii.rLg,
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.all(Gap.x4),
+              child: Row(
+                children: [
+                  TraderAvatar(
+                    url: listing.owner.avatarUrl,
+                    name: listing.owner.name,
+                    size: 48,
+                    isOnline: listing.owner.isOnline,
+                    showPresence: true,
+                    verified: listing.owner.isVerified,
+                  ),
+                  Gap.w3,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SpecRow(l.specCategory, listing.category),
-                        _SpecRow(l.specCondition, listing.condition),
-                        _SpecRow(l.specQuantity, listing.quantity),
-                        if (listing.place != null)
-                          _SpecRow(l.specRegion, listing.place!),
-                        _SpecRow(
-                          l.specPosted,
-                          formatDate(context, listing.postedAt),
+                        Text(
+                          listing.owner.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall,
                         ),
-                        _SpecRow(
-                          l.specValue,
-                          listing.value.format(locale),
-                          last: true,
-                        ),
-                        Gap.h2,
+                        Gap.h1,
+                        TrustLine(trader: listing.owner),
                       ],
                     ),
                   ),
+                  if (!isMine)
+                    Icon(Symbols.chevron_right_rounded, color: p.inkFaint),
+                ],
+              ),
+            ),
+          ),
+          Gap.h4,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.shield_outlined, size: Sizes.iconSm, color: p.give),
+              Gap.w2,
+              Expanded(
+                child: Text(
+                  l.listingSafety,
+                  style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint),
                 ),
-
-                Gap.h6,
-                _SectionLabel(l.listingOwner),
-                BouncingClayCard(
-                  clayMode: true,
-                  borderRadius: Radii.rLg,
-                  onTap: isMine
-                      ? null
-                      : () => context.push('/trader/${listing.owner.id}'),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: Radii.rLg,
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(Gap.x4),
-                    child: Row(
-                      children: [
-                        TraderAvatar(
-                          url: listing.owner.avatarUrl,
-                          name: listing.owner.name,
-                          size: 48,
-                          isOnline: listing.owner.isOnline,
-                          showPresence: true,
-                          verified: listing.owner.isVerified,
-                        ),
-                        Gap.w3,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                listing.owner.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall,
-                              ),
-                              Gap.h1,
-                              TrustLine(trader: listing.owner),
-                            ],
-                          ),
-                        ),
-                        if (!isMine)
-                          Icon(
-                            Symbols.chevron_right_rounded,
-                            color: p.inkFaint,
-                          ),
-                      ],
-                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    final photo = Hero(
+      tag: 'listing-image-${listing.id}',
+      child: _Gallery(
+        photos: gallery,
+        index: shot,
+        semanticLabel: listing.imageAlt,
+        onIndex: onShot,
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use the available content width, including large-text needs.
+        final wide =
+            constraints.maxWidth >= 900 &&
+            MediaQuery.textScalerOf(context).scale(14) / 14 < 1.6;
+        return CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: wide ? 0 : heroHeight,
+              // Calm surface once collapsed; over the photo the controls sit on
+              // their own dark discs so they read on any picture.
+              backgroundColor: theme.colorScheme.surface,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading: false,
+              leadingWidth: 64,
+              leading: Center(
+                child: _OverPhotoButton(
+                  tooltip: context.canPop()
+                      ? MaterialLocalizations.of(context).backButtonTooltip
+                      : MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: context.canPop()
+                      ? Symbols.arrow_back_rounded
+                      : Symbols.close_rounded,
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
+                ),
+              ),
+              actions: [
+                if (!isMine)
+                  _OverPhotoButton(
+                    tooltip: saved ? l.listingSaved : l.listingSave,
+                    icon: Symbols.favorite_rounded,
+                    filled: saved,
+                    color: saved ? theme.colorScheme.error : null,
+                    onPressed: onToggleSave,
+                  ),
+                Builder(
+                  builder: (buttonContext) => _OverPhotoButton(
+                    tooltip: l.listingShare,
+                    icon: Symbols.ios_share_rounded,
+                    onPressed: () {
+                      Haptics.light();
+                      final box =
+                          buttonContext.findRenderObject() as RenderBox?;
+                      shareListing(
+                        context,
+                        listing,
+                        origin: box == null
+                            ? null
+                            : box.localToGlobal(Offset.zero) & box.size,
+                      );
+                    },
                   ),
                 ),
-                Gap.h4,
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.shield_outlined,
-                      size: Sizes.iconSm,
-                      color: p.give,
-                    ),
-                    Gap.w2,
-                    Expanded(
-                      child: Text(
-                        l.listingSafety,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: p.inkFaint,
-                        ),
-                      ),
-                    ),
-                  ],
+                Gap.w2,
+                PopupMenuButton<String>(
+                  onSelected: (value) => switch (value) {
+                    'edit' => onEdit(),
+                    'delete' => onDelete(),
+                    'report' => onReport(),
+                    'block' => onBlock(),
+                    _ => null,
+                  },
+                  itemBuilder: (context) => isMine
+                      ? [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text(l.actionEdit),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(l.actionDelete),
+                          ),
+                        ]
+                      : [
+                          PopupMenuItem(
+                            value: 'report',
+                            child: Text(l.actionReportUser),
+                          ),
+                          PopupMenuItem(
+                            value: 'block',
+                            child: Text(l.actionBlockUser),
+                          ),
+                        ],
+                  child: const _OverPhotoButton(
+                    icon: Symbols.more_horiz_rounded,
+                  ),
                 ),
+                Gap.w3,
               ],
+              flexibleSpace: wide
+                  ? null
+                  : FlexibleSpaceBar(
+                      background: Hero(
+                        tag: 'listing-image-${listing.id}',
+                        child: _Gallery(
+                          photos: gallery,
+                          index: shot,
+                          semanticLabel: listing.imageAlt,
+                          onIndex: onShot,
+                        ),
+                      ),
+                    ),
             ),
-          ),
-        ),
-      ],
+            SliverToBoxAdapter(
+              child: wide
+                  ? Padding(
+                      padding: const EdgeInsets.all(Gap.x5),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: Radii.rLg,
+                              child: AspectRatio(aspectRatio: 1, child: photo),
+                            ),
+                          ),
+                          Gap.w4,
+                          Expanded(child: details),
+                        ],
+                      ),
+                    )
+                  : details,
+            ),
+          ],
+        );
+      },
     );
   }
 }

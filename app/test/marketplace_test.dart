@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:barter_app/core/network/api_client.dart';
 import 'package:barter_app/core/router/app_router.dart';
+import 'package:barter_app/features/profile/presentation/settings_page.dart';
 import 'package:barter_app/core/theme/app_theme.dart';
 import 'package:barter_app/features/feed/data/listing_repository.dart';
 import 'package:barter_app/features/auth/data/auth_repository.dart';
@@ -49,6 +50,9 @@ class Repository implements ListingRepository {
   @override
   Future<List<models.CategoryModel>> categories() async => const [
     models.CategoryModel(id: 'agri', name: 'Qishloq xo‘jaligi'),
+    models.CategoryModel(id: 'livestock', name: 'Chorvachilik'),
+    models.CategoryModel(id: 'machinery', name: 'Texnika'),
+    models.CategoryModel(id: 'transport', name: 'Transport'),
     models.CategoryModel(id: 'electronics', name: 'Elektronika'),
     models.CategoryModel(id: 'construction', name: 'Qurilish'),
   ];
@@ -323,6 +327,7 @@ void main() {
     const Size(390, 844),
     const Size(430, 932),
     const Size(844, 390),
+    const Size(950, 768),
     const Size(1024, 768),
     const Size(1440, 900),
   ]) {
@@ -379,9 +384,7 @@ void main() {
           await tester.runAsync(() async {
             for (final element in find.byType(Image).evaluate()) {
               final image = (element.widget as Image).image;
-              // Category photos come from the network, which tests lack;
-              // their tiles fall back to the drawn mark.
-              if (image is! AssetBundleImageProvider) continue;
+              if (image is NetworkImage) continue;
               await precacheImage(image, element);
             }
           });
@@ -391,7 +394,7 @@ void main() {
             matchesGoldenFile('goldens/feed_phone.png'),
           );
         }
-        if (size.width < 1000) {
+        if (size.width < 900) {
           final bar = find.text('Asosiy');
           expect(
             tester.getRect(bar).bottom,
@@ -450,6 +453,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(ListingCardTile), findsWidgets);
         expect(tester.takeException(), isNull);
+        if (size.width == 950) {
+          router.go('/profile');
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Sozlamalar').first);
+          await tester.pumpAndSettle();
+          expect(find.byType(SettingsPage), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        }
       });
     }
   }

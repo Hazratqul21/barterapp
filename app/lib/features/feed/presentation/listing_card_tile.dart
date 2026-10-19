@@ -67,7 +67,7 @@ class ListingCardTile extends StatefulWidget {
   /// Everything under the photo at text scale [scale]: paddings are fixed,
   /// text lines grow.
   static double textBlockHeight(double scale) =>
-      10 + 10 + 4 + 6 + 8 + 4 + scale * (22 + 2 * 19 + 18 + 16) + 12;
+      10 + 10 + 4 + 6 + 8 + 4 + scale * (22 + 2 * 19 + 2 * 18 + 16) + 12;
 
   @override
   State<ListingCardTile> createState() => _ListingCardTileState();
@@ -236,8 +236,6 @@ class _ListingCardTileState extends State<ListingCardTile> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          PriceText(listing.value, size: 16),
-                          const SizedBox(height: 4),
                           Text(
                             listing.title,
                             maxLines: 2,
@@ -249,6 +247,8 @@ class _ListingCardTileState extends State<ListingCardTile> {
                           ),
                           const SizedBox(height: 6),
                           SwapChip(wants: listing.wantsSummary),
+                          const SizedBox(height: 6),
+                          PriceText(listing.value, size: 14),
                           // Date and distance sit on the card's bottom edge in
                           // every card, short title or long.
                           const Spacer(),
@@ -343,7 +343,7 @@ class SwapChip extends StatelessWidget {
             Flexible(
               child: Text(
                 text,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(
                   context,
