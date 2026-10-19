@@ -1,4 +1,4 @@
-package uz.barterapp.barter_app
+package uz.mab.app
 
 import io.flutter.embedding.android.FlutterActivity
 

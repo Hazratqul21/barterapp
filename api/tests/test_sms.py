@@ -53,7 +53,7 @@ check("chiziqcha tozalanadi", to_eskiz_number("+998-90-1234567") == "99890123456
 
 text = otp_text("482910")
 check("matnda kod bor", "482910" in text, text)
-check("matnda brend nomi bor", "BarterApp" in text, text)
+check("matnda brend nomi bor", "MAB" in text, text)
 check(
     "matn SMS uzunligiga sig'adi",
     len(text) <= 160,

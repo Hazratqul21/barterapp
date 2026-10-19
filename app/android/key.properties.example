@@ -3,15 +3,17 @@
 # `key.properties` va `.jks` fayli git'ga TUSHMASLIGI kerak — kalitni qo'lga
 # kiritgan har kim sizning nomingizdan ilova yangilanishini chiqara oladi.
 #
-# Kalit yaratish:
+# Kalit yaratish (bir marta):
 #
-#   keytool -genkey -v -keystore ~/barterapp-release.jks \
-#     -keyalg RSA -keysize 2048 -validity 10000 -alias barterapp
+#   keytool -genkey -v -keystore ~/mab-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 #
-# Bir marta yaratiladi va abadiy saqlanadi: kalit yo'qolsa, Play Store'dagi
-# ilovaga boshqa hech qachon yangilanish chiqarib bo'lmaydi.
+# Bu "upload" kalit: Play App Signing yoqilgan bo'lsa, ilovani Google o'z
+# kaliti bilan imzolaydi. Upload kalit yo'qolsa, Play Console → App integrity
+# orqali yangisini so'rash mumkin (bir necha kun oladi). Baribir parol va
+# .jks faylini ishonchli joyda (parol menejeri + zaxira nusxa) saqlang.
 
 storePassword=<keystore paroli>
 keyPassword=<kalit paroli>
-keyAlias=barterapp
-storeFile=/home/foydalanuvchi/barterapp-release.jks
+keyAlias=upload
+storeFile=/Users/<foydalanuvchi>/mab-upload.jks

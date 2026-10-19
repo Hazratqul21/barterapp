@@ -7,6 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/auth/data/auth_repository.dart';
 
+/// The production API. Release builds use it unless `API_BASE_URL` says
+/// otherwise.
+const productionApiBaseUrl = 'https://api.mab.uz';
+
 /// Where the API lives during development.
 ///
 /// The Android emulator reaches the host machine on 10.0.2.2, not localhost —
@@ -15,16 +19,9 @@ String defaultApiBaseUrl() {
   const override = String.fromEnvironment('API_BASE_URL');
   if (override.isNotEmpty) return override;
 
-  // A release build has no business talking to a laptop. Without this, a
-  // store build compiled without the define would install, open, and fail
-  // every request in silence — which looks like a broken server, not a
-  // broken build, and is found by users rather than by whoever shipped it.
-  if (kReleaseMode) {
-    throw StateError(
-      'API_BASE_URL berilmagan. Reliz quring:\n'
-      '  flutter build web --dart-define=API_BASE_URL=https://api.example.uz',
-    );
-  }
+  // A release build has no business talking to a laptop: without a define it
+  // talks to production. Staging or a local server is a define away.
+  if (kReleaseMode) return productionApiBaseUrl;
 
   // The Android emulator reaches the host machine on 10.0.2.2, not localhost.
   if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:8010';

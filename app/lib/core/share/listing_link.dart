@@ -3,14 +3,17 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../shared/models/models.dart';
 
-/// The public web address listings are shared under, e.g.
-/// `https://barter.example.uz`. Set at build time:
+/// The public web address listings are shared under: `https://mab.uz`, the
+/// same host the Android app link and the iOS associated domain claim.
+/// Override at build time for staging:
 ///
-///   flutter build web --dart-define=PUBLIC_WEB_BASE_URL=https://barter.example.uz
+///   flutter build web --dart-define=PUBLIC_WEB_BASE_URL=https://staging.mab.uz
 ///
-/// Empty in development: sharing then sends the text without a link rather
-/// than a localhost URL nobody else can open.
-const publicWebBaseUrl = String.fromEnvironment('PUBLIC_WEB_BASE_URL');
+/// An empty define sends the text without a link.
+const publicWebBaseUrl = String.fromEnvironment(
+  'PUBLIC_WEB_BASE_URL',
+  defaultValue: 'https://mab.uz',
+);
 
 /// `/l/<id>` — short enough for an SMS, and the path the app's router and the
 /// iOS/Android app-link files (docs/DEEPLINKS.md) both claim.

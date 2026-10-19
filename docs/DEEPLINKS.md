@@ -1,39 +1,29 @@
 # Ulashish havolalari va app-link'lar
 
-E'lon ulashilganda havola: `PUBLIC_WEB_BASE_URL/l/<id>` (masalan `https://barter.example.uz/l/3f2…`).
+Domen: **mab.uz**. E'lon ulashilganda havola: `https://mab.uz/l/<id>`.
 
 - **Web:** `/l/:id` → `/listing/:id` (go_router). O'chirilgan/yakunlangan e'lon — "E'lon endi mavjud emas" sahifasi.
 - **Ilova o'rnatilgan bo'lsa** havola to'g'ridan-to'g'ri ilovada ochiladi — buning uchun quyidagilar kerak.
 
 ## 1. Build
 
+Release build'lar sukut bo'yicha `https://api.mab.uz` (API) va `https://mab.uz` (ulashish) ga ulanadi. Staging uchun:
+
 ```sh
-flutter build web --dart-define=PUBLIC_WEB_BASE_URL=https://<domen> --dart-define=API_BASE_URL=https://<api>
-flutter build apk --dart-define=PUBLIC_WEB_BASE_URL=https://<domen> ...
+flutter build appbundle --dart-define=API_BASE_URL=https://api.staging.mab.uz --dart-define=PUBLIC_WEB_BASE_URL=https://staging.mab.uz
 ```
 
-Berilmasa ulashishda havolasiz matn yuboriladi (localhost havola emas).
+`PUBLIC_WEB_BASE_URL=` (bo'sh) berilsa, ulashishda havolasiz matn yuboriladi.
 
 ## 2. Domen'da fayllar (`app/deeplinks/` — shablonlar)
 
 | Fayl | Manzil | To'ldirish |
 |---|---|---|
-| `assetlinks.json` | `https://<domen>/.well-known/assetlinks.json` | `__RELEASE_SHA256_FINGERPRINT__` — release kalit (`keytool -list -v -keystore …` yoki Play Console → App signing) |
-| `apple-app-site-association` | `https://<domen>/.well-known/apple-app-site-association` (kengaytmasiz, `application/json`) | `__APPLE_TEAM_ID__` — Apple Developer Team ID |
+| `assetlinks.json` | `https://mab.uz/.well-known/assetlinks.json` | `__RELEASE_SHA256_FINGERPRINT__` — **Play Console → Test and release → App integrity → App signing key certificate → SHA-256** (Play App Signing'da Google'ning kaliti; upload kalitning emas) |
+| `apple-app-site-association` | `https://mab.uz/.well-known/apple-app-site-association` (kengaytmasiz, `application/json`) | `__APPLE_TEAM_ID__` — Apple Developer Team ID |
 
-## 3. Ilova sozlamalari (domen ma'lum bo'lgach)
+## 3. Ilova sozlamalari
 
-**Android** — `android/app/src/main/AndroidManifest.xml`, `MainActivity` ichiga:
+**Android** — `AndroidManifest.xml` da `mab.uz/l/` uchun `autoVerify` intent-filter bor. `assetlinks.json` joylanmaguncha havola brauzerda ochiladi, ilova ishlashiga ta'sir qilmaydi.
 
-```xml
-<intent-filter android:autoVerify="true">
-    <action android:name="android.intent.action.VIEW"/>
-    <category android:name="android.intent.category.DEFAULT"/>
-    <category android:name="android.intent.category.BROWSABLE"/>
-    <data android:scheme="https" android:host="<domen>" android:pathPrefix="/l/"/>
-</intent-filter>
-```
-
-**iOS** — Xcode → Runner → Signing & Capabilities → Associated Domains: `applinks:<domen>`.
-
-Domen hali tanlanmagani uchun manifest/entitlements o'zgartirilmadi: soxta domen bilan `autoVerify` relizni buzadi.
+**iOS** — hali qilinmagan: Apple Developer'da App ID `uz.mab.app` ga Associated Domains yoqilgach, Xcode → Runner → Signing & Capabilities → Associated Domains: `applinks:mab.uz`. Capability'siz entitlement qo'shilsa imzolash buziladi.
