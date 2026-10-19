@@ -67,7 +67,17 @@ Serverda `APP_ENV=production` qo‘ying. Bu rejimda API quyidagilardan biri bo�
 
 Productionda localhost uchun CORS regex ham o‘chadi. Tekshiruv: `api/tests/test_config_guard.py`.
 
-Android emulator default API manzili `10.0.2.2:8010`, iOS simulator/web `127.0.0.1:8010`. Real telefon yoki release build uchun tegishli `API_BASE_URL` qiymatini `--dart-define` orqali bering.
+Android emulator default API manzili `10.0.2.2:8010`, iOS simulator/web `127.0.0.1:8010`. Release build sukut bo'yicha `https://api.mab.uz` ga ulanadi; boshqa server uchun `--dart-define=API_BASE_URL=...` bering.
+
+### Domen va identifikatorlar
+
+| Nima | Qiymat |
+|---|---|
+| Sayt / ulashish havolalari | `https://mab.uz` (`/l/<id>`) |
+| API | `https://api.mab.uz` |
+| Maxfiylik siyosati / shartlar | `https://mab.uz/privacy`, `https://mab.uz/terms` |
+| Android `applicationId`, iOS bundle ID | `uz.mab.app` (Play'ga yuklangandan keyin o'zgarmaydi) |
+| Production CORS | `CORS_ORIGINS=["https://mab.uz","https://www.mab.uz"]` |
 
 ## Tekshiruvlar
 

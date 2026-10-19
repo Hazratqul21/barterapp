@@ -30,7 +30,7 @@ from app.db.session import SessionLocal
 log = logging.getLogger("barter")
 
 app = FastAPI(
-    title="BarterApp API",
+    title="MAB API",
     version="0.1.0",
     description=(
         "Cash-free barter marketplace. Every response is already in one language — "

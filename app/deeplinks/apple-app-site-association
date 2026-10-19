@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["__APPLE_TEAM_ID__.uz.barterapp.barterApp"],
+        "appIDs": ["__APPLE_TEAM_ID__.uz.mab.app"],
         "components": [{ "/": "/l/*", "comment": "Shared listing links" }]
       }
     ]

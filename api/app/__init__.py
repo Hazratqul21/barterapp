@@ -1,4 +1,4 @@
-"""BarterApp server.
+"""MAB server.
 
 The version check below is the first thing that runs in the package, and it is
 here because of what happens without it.
@@ -20,7 +20,7 @@ _MINIMUM = (3, 11)
 
 if sys.version_info < _MINIMUM:
     raise RuntimeError(
-        "BarterApp serveri Python {}.{}+ talab qiladi, hozirgisi {}.{}.\n"
+        "MAB serveri Python {}.{}+ talab qiladi, hozirgisi {}.{}.\n"
         "\n"
         "macOS'dagi `python3` — bu 3.9. Muhitni aniq versiya bilan quring:\n"
         "\n"

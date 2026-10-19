@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     #: Eskiz har bir matnni oldindan tasdiqlaydi va tasdiqlanmagani jimgina
     #: yetkazilmaydi. Shu sababli matn shakli sozlamada — tasdiq boshqa so'z
     #: bilan kelsa, kod emas, .env o'zgaradi.
-    eskiz_otp_template: str = "BarterApp: tasdiqlash kodi {code}. Hech kimga aytmang."
+    eskiz_otp_template: str = "MAB: tasdiqlash kodi {code}. Hech kimga aytmang."
     #: SMS yuborilmasa ro'yxatdan o'tish to'xtatilsinmi. Ishlab chiqarishda
     #: albatta ha: aks holda odam kod kutadi, kod kelmaydi va sabab
     #: hech qayerda ko'rinmaydi.
