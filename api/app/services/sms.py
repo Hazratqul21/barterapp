@@ -115,7 +115,10 @@ class LogSms:
     """
 
     async def send(self, phone: str, text: str) -> None:
-        log.info("sms (quruq rejim) → %s: %s", phone, text)
+        # warning, not info: uvicorn shows warnings by default, and in
+        # production without a provider (SMS_OPTIONAL) this log line is the
+        # only place the team can read a sign-in code.
+        log.warning("sms (quruq rejim) → %s: %s", phone, text)
 
 
 _client: EskizClient | LogSms | None = None

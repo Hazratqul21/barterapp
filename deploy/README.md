@@ -58,6 +58,8 @@ sudo systemctl restart mab-api
 curl -s http://127.0.0.1:8010/health
 ```
 
+Eskiz hali bo'lmasa, vaqtincha `.env` ga `SMS_OPTIONAL=true` yozing. Shunda API SMS'siz ishga tushadi, tasdiqlash kodlari esa faqat server logida ko'rinadi (`sudo journalctl -u mab-api -f | grep "quruq rejim"`). Bu rejimda faqat jamoa kira oladi. Eskiz ulangach qatorni o'chiring.
+
 ## 3. Keyingi yangilanishlar
 
 ```sh
