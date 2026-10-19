@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../../../core/network/api_client.dart' show ApiException;
 import '../../../core/theme/haptics.dart';
 import '../../../core/theme/motion.dart';
 import '../../feed/presentation/listing_card_tile.dart';
@@ -393,6 +394,17 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       ref.invalidate(myListingsProvider);
       if (!mounted) return;
       context.pop();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.statusCode == 402) {
+        // Out of free listings: offer the plans instead of a dead end. The
+        // draft stays saved, so nothing typed is lost on the way.
+        await _offerPlans();
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage(context, e))));
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -402,6 +414,29 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _offerPlans() async {
+    final l = L.of(context);
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Symbols.sell_rounded),
+        title: Text(l.quotaTitle),
+        content: Text(l.quotaBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.quotaAction),
+          ),
+        ],
+      ),
+    );
+    if (go == true && mounted) context.push('/tariffs');
   }
 
   @override

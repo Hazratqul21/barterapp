@@ -25,7 +25,7 @@ if (hasReleaseKeys) {
 }
 
 android {
-    namespace = "uz.barterapp.barter_app"
+    namespace = "uz.mab.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -35,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "uz.barterapp.barterApp"
+        applicationId = "uz.mab.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -61,7 +61,7 @@ android {
                 signingConfigs.getByName("release")
             } else {
                 logger.warn(
-                    "\n  BarterApp: android/key.properties topilmadi — reliz " +
+                    "\n  MAB: android/key.properties topilmadi — reliz " +
                     "debug kaliti bilan imzolanadi.\n" +
                     "  Bunday paketni Play Console qabul qilmaydi. " +
                     "Kalit yaratish uchun android/key.properties.example ga qarang.\n"

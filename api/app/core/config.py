@@ -71,11 +71,24 @@ class Settings(BaseSettings):
     #: Eskiz har bir matnni oldindan tasdiqlaydi va tasdiqlanmagani jimgina
     #: yetkazilmaydi. Shu sababli matn shakli sozlamada — tasdiq boshqa so'z
     #: bilan kelsa, kod emas, .env o'zgaradi.
-    eskiz_otp_template: str = "BarterApp: tasdiqlash kodi {code}. Hech kimga aytmang."
+    eskiz_otp_template: str = "MAB: tasdiqlash kodi {code}. Hech kimga aytmang."
     #: SMS yuborilmasa ro'yxatdan o'tish to'xtatilsinmi. Ishlab chiqarishda
     #: albatta ha: aks holda odam kod kutadi, kod kelmaydi va sabab
     #: hech qayerda ko'rinmaydi.
     sms_required: bool = False
+
+    # Payme (Merchant API). Bo'sh bo'lsa to'lov o'chiq: buyurtma yaratib
+    # bo'lmaydi va Payme endpoint'i har so'rovni avtorizatsiya xatosi bilan
+    # qaytaradi. Kalit faqat .env dan keladi va hech qayerda chop etilmaydi.
+    #: Kassa ID'si (Payme biznes kabinetidagi "ID kassy").
+    payme_merchant_id: str = ""
+    #: Kassa kaliti. Sinovda — test kaliti, jangovar rejimda — asosiy kalit.
+    payme_key: str = ""
+    #: https://test.paycom.uz — sinov (sandbox), https://checkout.paycom.uz — jangovar.
+    payme_checkout_url: str = "https://test.paycom.uz"
+    #: To'lovdan keyin foydalanuvchi qaytadigan sahifa; `{order_id}` buyurtma
+    #: raqami bilan almashtiriladi.
+    payme_return_url: str = "https://mab.uz/payments/return?order={order_id}"
 
     #: F01: also check the reverse direction (do they want what I have?) and
     #: rank two-way fits first. Off restores the one-way matcher.
@@ -90,6 +103,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def payme_enabled(self) -> bool:
+        return bool(self.payme_merchant_id and self.payme_key)
 
     @property
     def cors_origin_regex(self) -> str | None:
@@ -164,6 +181,11 @@ def production_problems(settings: Settings) -> list[str]:
         problems.append(
             "SMS_REQUIRED=false: SMS ketmasa ham ro'yxatdan o'tish jimgina "
             "davom etadi. SMS_REQUIRED=true qiling."
+        )
+    if bool(settings.payme_merchant_id) != bool(settings.payme_key):
+        problems.append(
+            "Payme yarim sozlangan: PAYME_MERCHANT_ID va PAYME_KEY ikkalasi "
+            "ham to'ldirilishi (yoki ikkalasi ham bo'sh qolishi) kerak."
         )
     if not settings.cors_origins:
         problems.append("CORS_ORIGINS bo'sh: veb-ilova domeni ko'rsatilmagan.")

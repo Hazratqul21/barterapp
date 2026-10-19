@@ -9,6 +9,11 @@ abstract final class BrandColors {
   // Brand v3 — taken from the MAB logo (olive tile, champagne-gold letters),
   // one step lighter for the app so it reads as warm rather than heavy.
   static const ink = Color(0xFF1E2112);
+
+  // Payme's own colours, for the "pay with Payme" button only: it hands the
+  // person to Payme, so it looks like Payme rather than like a MAB action.
+  static const paymeTeal = Color(0xFF33CCCC);
+  static const paymeInk = Color(0xFF16313A);
   static const inkSoft = Color(0xFF545A43);
   static const inkFaint = Color(0xFF62674F);
 

@@ -1285,4 +1285,129 @@ class LRu extends L {
   String timelineSemantics(int step, int total, String name) {
     return 'Сделка: шаг $step из $total, $name';
   }
+
+  @override
+  String get billingTitle => 'Тарифы и оплата';
+
+  @override
+  String get billingSubtitle => 'Пакеты объявлений и поднятие';
+
+  @override
+  String billingFreeLeft(int count) {
+    return 'Осталось бесплатных объявлений: $count';
+  }
+
+  @override
+  String get billingFreeUnlimited =>
+      'Пока размещение объявлений бесплатно и без ограничений';
+
+  @override
+  String get billingPacks => 'ПАКЕТЫ ОБЪЯВЛЕНИЙ';
+
+  @override
+  String get billingBoostSection => 'ПОДНЯТИЕ ОБЪЯВЛЕНИЯ';
+
+  @override
+  String get billingBoostHint =>
+      'Нажмите «Поднять» на странице своего активного объявления.';
+
+  @override
+  String billingListings(int count) {
+    return 'Объявлений: $count';
+  }
+
+  @override
+  String billingDays(int count) {
+    return '$count дн. в топе';
+  }
+
+  @override
+  String billingDiscountUntil(String date) {
+    return 'Скидка до $date';
+  }
+
+  @override
+  String get billingPayBefore => 'Оплатить через';
+
+  @override
+  String get billingPayAfter => '';
+
+  @override
+  String get billingSecureNote =>
+      'Номер карты, срок действия и SMS-код вводятся на странице Payme. MAB их не видит.';
+
+  @override
+  String get billingEmpty => 'Тарифы ещё не добавлены';
+
+  @override
+  String get billingEmptyHint => 'Цены скоро появятся.';
+
+  @override
+  String get billingUnavailable =>
+      'Платёжная система ещё не подключена. Попробуйте позже.';
+
+  @override
+  String get billingHistory => 'ИСТОРИЯ ОПЛАТ';
+
+  @override
+  String get billingNoOrders => 'Оплат пока нет';
+
+  @override
+  String get billingOpenFailed => 'Не удалось открыть страницу Payme';
+
+  @override
+  String get orderTitle => 'Оплата';
+
+  @override
+  String get orderPending => 'Ожидаем оплату';
+
+  @override
+  String get orderPendingHint =>
+      'Завершите оплату на странице Payme. Эта страница обновится сама.';
+
+  @override
+  String get orderPaid => 'Оплата получена';
+
+  @override
+  String orderPaidPack(int count) {
+    return 'На ваш счёт добавлено объявлений: $count.';
+  }
+
+  @override
+  String orderPaidBoost(int count) {
+    return 'Ваше объявление будет в топе $count дн.';
+  }
+
+  @override
+  String get orderCancelled => 'Оплата отменена';
+
+  @override
+  String get orderCancelledHint =>
+      'Деньги не списаны. Можно попробовать снова.';
+
+  @override
+  String get orderOpenPayme => 'Открыть страницу Payme';
+
+  @override
+  String get orderDone => 'Готово';
+
+  @override
+  String get boostAction => 'Поднять';
+
+  @override
+  String get boostSheetTitle => 'Поднять объявление';
+
+  @override
+  String get boostSheetHint =>
+      'Объявление будет выше в ленте и с отметкой «Premium».';
+
+  @override
+  String get quotaTitle => 'Бесплатные объявления закончились';
+
+  @override
+  String get quotaBody =>
+      'Чтобы разместить объявление, выберите пакет. Черновик сохранится.';
+
+  @override
+  String get quotaAction => 'Посмотреть тарифы';
 }

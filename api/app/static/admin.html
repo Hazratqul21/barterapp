@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BarterApp — Admin</title>
+<title>MAB — Admin</title>
 <style>
   :root{
     --bg:#F7F6F3; --card:#FFFFFF; --ink:#12211B; --soft:#5C6B64; --faint:#94A29B;
@@ -63,12 +63,13 @@
 <body>
 
 <header>
-  <h1>BarterApp · Admin</h1>
+  <h1>MAB · Admin</h1>
   <nav id="nav" class="hide">
     <button data-tab="blocks" class="on">Lenta</button>
     <button data-tab="reports">Shikoyatlar</button>
     <button data-tab="disputes">Nizolar</button>
     <button data-tab="push">Bildirishnoma</button>
+    <button data-tab="billing">To‘lovlar</button>
     <button data-tab="stats">Tahlil</button>
     <button data-tab="setup">Sozlash</button>
   </nav>
@@ -343,7 +344,7 @@
       </div>
       <div class="row">
         <div><label>iOS bundle ID (ixtiyoriy)</label>
-          <input id="fcBundle" placeholder="uz.barterapp.barterApp"></div>
+          <input id="fcBundle" placeholder="uz.mab.app"></div>
       </div>
 
       <div class="bar">
@@ -366,6 +367,74 @@
         Ikkalasi bir marta qilinadi. Shundan keyin kalit almashtirish
         faqat shu sahifadan bo'ladi.
       </p>
+    </div>
+  </section>
+
+  <!-- ── To'lovlar: narxlar va buyurtmalar ─────────────────────────── -->
+  <section id="billing" class="hide">
+    <div class="card">
+      <h2>Holat</h2>
+      <div id="billStatus" class="hint"></div>
+      <div class="bar">
+        <label style="display:flex;gap:8px;align-items:center;margin:0">
+          <input type="checkbox" id="feeOn" style="width:auto" onchange="saveFee()">
+          Bepul kvota tugaganda e‘lon pullik
+        </label>
+      </div>
+      <p class="hint">O‘chiq bo‘lsa e‘lon joylash cheklanmaydi. Yoqishdan oldin kamida bitta
+        faol «e‘lon paketi» tarifi bo‘lishi kerak.</p>
+    </div>
+    <div class="card">
+      <h2 id="pTitle">Tarif qo‘shish / o‘zgartirish</h2>
+      <label>Kod (lotincha, masalan <code>listing_1</code>, <code>boost_7d</code>)</label>
+      <input id="pCode" placeholder="listing_1">
+      <label>Turi</label>
+      <select id="pKind" onchange="pKindChanged()">
+        <option value="listing_pack">E‘lon paketi (N ta e‘lon)</option>
+        <option value="boost">Boost (e‘lonni N kun yuqoriga)</option>
+      </select>
+      <label>Nomi (uz / ru / en)</label>
+      <input id="pUz" placeholder="1 ta e‘lon">
+      <input id="pRu" placeholder="1 объявление">
+      <input id="pEn" placeholder="1 listing">
+      <label>Narxi, so‘m</label>
+      <input id="pPrice" inputmode="numeric" placeholder="5000">
+      <label>Chegirma, % (0 — chegirmasiz)</label>
+      <input id="pDisc" inputmode="numeric" value="0">
+      <label>Chegirma tugash sanasi (bo‘sh — muddatsiz)</label>
+      <input id="pDiscUntil" type="datetime-local">
+      <div id="pQtyBox">
+        <label>E‘lonlar soni</label>
+        <input id="pQty" inputmode="numeric" value="1">
+      </div>
+      <div id="pDaysBox" class="hide">
+        <label>Necha kun</label>
+        <input id="pDays" inputmode="numeric" value="7">
+      </div>
+      <label>Tartib (kichigi oldinda)</label>
+      <input id="pPos" inputmode="numeric" value="0">
+      <label>MXIK (IKPU) kodi va o‘lchov birligi kodi — fiskal chek uchun</label>
+      <input id="pMxik" placeholder="MXIK">
+      <input id="pPkg" placeholder="Package code">
+      <label style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="pActive" style="width:auto"> Faol (foydalanuvchiga ko‘rinadi)
+      </label>
+      <div class="bar">
+        <button class="act" onclick="saveProduct()">Saqlash</button>
+        <button class="act ghost" onclick="resetProduct()">Tozalash</button>
+      </div>
+      <p class="hint">Yangi narx faqat yangi buyurtmalarga ta‘sir qiladi.</p>
+    </div>
+    <div class="card">
+      <h2>Tariflar</h2>
+      <table><thead><tr><th>Kod</th><th>Nomi</th><th>Narx</th><th>To‘lanadi</th>
+        <th>Holat</th><th>Sotilgan</th><th></th></tr></thead>
+      <tbody id="productRows"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Oxirgi buyurtmalar</h2>
+      <table><thead><tr><th>Vaqt</th><th>Telefon</th><th>Tarif</th><th>Summa</th><th>Holat</th></tr></thead>
+      <tbody id="orderRows"></tbody></table>
     </div>
   </section>
 
@@ -459,7 +528,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'disputes', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -476,13 +545,14 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
   if (tab === 'blocks') loadBlocks();
   if (tab === 'reports') loadReports();
   if (tab === 'disputes') loadDisputes();
+  if (tab === 'billing') loadBilling();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
   if (tab === 'setup') loadFirebase();
@@ -843,6 +913,116 @@ async function saveClientConfig() {
   } catch (e) { say(e.message); }
 }
 
+// ── To'lovlar ─────────────────────────────────────────────────────────
+
+let PRODUCTS = [];
+const som = minor => (minor / 100).toLocaleString('ru-RU') + ' so‘m';
+const ORDER_STATUS = { pending: 'Kutilmoqda', paid: 'To‘langan', cancelled: 'Bekor' };
+
+function pKindChanged() {
+  const boost = $('pKind').value === 'boost';
+  $('pQtyBox').classList.toggle('hide', boost);
+  $('pDaysBox').classList.toggle('hide', !boost);
+}
+
+function resetProduct() {
+  ['pCode', 'pUz', 'pRu', 'pEn', 'pPrice', 'pDiscUntil', 'pMxik', 'pPkg'].forEach(id => $(id).value = '');
+  $('pDisc').value = '0'; $('pQty').value = '1'; $('pDays').value = '7'; $('pPos').value = '0';
+  $('pKind').value = 'listing_pack'; $('pActive').checked = false;
+  $('pCode').disabled = false;
+  $('pTitle').textContent = 'Tarif qo‘shish / o‘zgartirish';
+  pKindChanged();
+}
+
+function editProduct(code) {
+  const p = PRODUCTS.find(x => x.code === code);
+  if (!p) return;
+  $('pCode').value = p.code; $('pCode').disabled = true;
+  $('pKind').value = p.kind;
+  $('pUz').value = p.title.uz || ''; $('pRu').value = p.title.ru || ''; $('pEn').value = p.title.en || '';
+  $('pPrice').value = p.price_minor / 100;
+  $('pDisc').value = p.discount_percent;
+  $('pDiscUntil').value = p.discount_until ? p.discount_until.slice(0, 16) : '';
+  $('pQty').value = p.quantity; $('pDays').value = p.duration_days || 7;
+  $('pPos').value = p.position;
+  $('pMxik').value = p.mxik_code || ''; $('pPkg').value = p.package_code || '';
+  $('pActive').checked = p.is_active;
+  $('pTitle').textContent = 'Tarifni o‘zgartirish: ' + p.code;
+  pKindChanged();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderBilling(b) {
+  PRODUCTS = b.products;
+  $('billStatus').innerHTML = b.payme_configured
+    ? `Payme ulangan · <code>${esc(b.payme_checkout_url)}</code>`
+    : 'Payme hali ulanmagan: serverda <code>PAYME_MERCHANT_ID</code> va <code>PAYME_KEY</code> bo‘sh.';
+  $('feeOn').checked = b.listing_fee_enabled;
+  $('productRows').innerHTML = b.products.length ? b.products.map(p => `<tr>
+      <td><code>${esc(p.code)}</code></td>
+      <td>${esc(p.title.uz)}<br><span class="hint">${p.kind === 'boost'
+        ? esc(p.duration_days) + ' kun' : esc(p.quantity) + ' ta e‘lon'}</span></td>
+      <td>${som(p.price_minor)}</td>
+      <td><b>${som(p.final_price_minor)}</b>${p.final_price_minor !== p.price_minor
+        ? ` <span class="pill">−${p.discount_percent}%</span>` : ''}</td>
+      <td>${p.is_active ? 'Faol' : '<span class="hint">O‘chiq</span>'}</td>
+      <td>${p.paid_orders}</td>
+      <td><button class="act ghost" onclick="editProduct('${esc(p.code)}')">O‘zgartirish</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--faint)">Hali tarif yo‘q.</td></tr>';
+}
+
+async function loadBilling() {
+  try {
+    renderBilling(await api('/admin/billing'));
+    const orders = await api('/admin/billing/orders?limit=50');
+    $('orderRows').innerHTML = orders.length ? orders.map(o => `<tr>
+        <td>${new Date(o.created_at).toLocaleString('ru-RU')}</td>
+        <td>${esc(o.user_phone || '—')}</td>
+        <td>${esc(o.title)}</td>
+        <td>${som(o.amount_minor)}</td>
+        <td>${ORDER_STATUS[o.status] || esc(o.status)}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="color:var(--faint)">Buyurtma yo‘q.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+async function saveFee() {
+  try {
+    renderBilling(await api('/admin/billing/settings', {
+      method: 'PUT', body: JSON.stringify({ listing_fee_enabled: $('feeOn').checked }),
+    }));
+    say('Saqlandi.', true);
+  } catch (e) { $('feeOn').checked = !$('feeOn').checked; say(e.message); }
+}
+
+async function saveProduct() {
+  const code = $('pCode').value.trim().toLowerCase();
+  const price = Math.round(parseFloat($('pPrice').value.replace(/\s/g, '').replace(',', '.')) * 100);
+  if (!code) return say('Kodni kiriting.');
+  if (!(price >= 0)) return say('Narxni so‘mda kiriting.');
+  const boost = $('pKind').value === 'boost';
+  const until = $('pDiscUntil').value;
+  const body = {
+    kind: $('pKind').value,
+    title: { uz: $('pUz').value, ru: $('pRu').value, en: $('pEn').value },
+    price_minor: price,
+    discount_percent: parseInt($('pDisc').value || '0', 10),
+    discount_until: until ? new Date(until).toISOString() : null,
+    quantity: boost ? 1 : parseInt($('pQty').value || '1', 10),
+    duration_days: boost ? parseInt($('pDays').value || '1', 10) : null,
+    position: parseInt($('pPos').value || '0', 10),
+    is_active: $('pActive').checked,
+    mxik_code: $('pMxik').value.trim() || null,
+    package_code: $('pPkg').value.trim() || null,
+  };
+  try {
+    renderBilling(await api('/admin/billing/products/' + encodeURIComponent(code), {
+      method: 'PUT', body: JSON.stringify(body),
+    }));
+    say('Tarif saqlandi.', true);
+    resetProduct();
+  } catch (e) { say(e.message); }
+}
+
 // ── Tahlil ────────────────────────────────────────────────────────────
 
 async function loadStats() {
@@ -871,6 +1051,7 @@ async function loadStats() {
 
 resetForm();
 segChanged();
+resetProduct();
 if (TOKEN) start();
 </script>
 </body>

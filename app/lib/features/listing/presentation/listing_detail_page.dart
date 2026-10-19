@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../billing/presentation/boost_sheet.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -247,25 +248,53 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
                   child: isMine
-                      ? FilledButton.icon(
-                          onPressed: () {
-                            Haptics.light();
-                            context.push('/create', extra: listing);
-                          },
-                          icon: const Icon(
-                            Symbols.edit_rounded,
-                            size: Sizes.iconMd,
-                          ),
-                          label: Text(l.actionEdit),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(Sizes.buttonLg),
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.secondary,
-                            foregroundColor: Theme.of(
-                              context,
-                            ).colorScheme.onSecondary,
-                          ),
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () {
+                                  Haptics.light();
+                                  context.push('/create', extra: listing);
+                                },
+                                icon: const Icon(
+                                  Symbols.edit_rounded,
+                                  size: Sizes.iconMd,
+                                ),
+                                label: Text(l.actionEdit),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(
+                                    Sizes.buttonLg,
+                                  ),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondary,
+                                ),
+                              ),
+                            ),
+                            Gap.w3,
+                            // Paid placement: Payme, priced by the admin.
+                            Expanded(
+                              child: FilledButton.tonalIcon(
+                                onPressed: () {
+                                  Haptics.light();
+                                  showBoostSheet(context, listing.id);
+                                },
+                                icon: const Icon(
+                                  Symbols.rocket_launch_rounded,
+                                  size: Sizes.iconMd,
+                                ),
+                                label: Text(l.boostAction),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(
+                                    Sizes.buttonLg,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         )
                       // The decision bar: what it is worth and what they want,
                       // next to the one action — no scrolling back up to check.

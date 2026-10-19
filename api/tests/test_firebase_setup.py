@@ -221,7 +221,7 @@ with httpx.Client(base_url=BASE, timeout=30) as c:
             "app_id": "1:999:ios:sinov",
             "messaging_sender_id": "999",
             "project_id": "barter-sinov",
-            "ios_bundle_id": "uz.barterapp.barterApp",
+            "ios_bundle_id": "uz.mab.app",
         },
     )
     check("mijoz parametrlari saqlanadi", r.status_code == 200, r.text[:100])
@@ -229,7 +229,7 @@ with httpx.Client(base_url=BASE, timeout=30) as c:
     public = c.get("/config/firebase").json()
     check("ilova kirmasdan oladi", public["configured"] is True, str(public))
     check("qiymatlar to'g'ri", public["project_id"] == "barter-sinov")
-    check("bundle ham keladi", public["ios_bundle_id"] == "uz.barterapp.barterApp")
+    check("bundle ham keladi", public["ios_bundle_id"] == "uz.mab.app")
 
     r = c.put(
         "/admin/firebase/client",

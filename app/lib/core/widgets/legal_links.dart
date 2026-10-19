@@ -4,11 +4,11 @@ import '../../l10n/app_localizations.dart';
 
 const privacyPolicyUrl = String.fromEnvironment(
   'PRIVACY_POLICY_URL',
-  defaultValue: 'https://barterapp.uz/privacy',
+  defaultValue: 'https://mab.uz/privacy',
 );
 const termsOfUseUrl = String.fromEnvironment(
   'TERMS_URL',
-  defaultValue: 'https://barterapp.uz/terms',
+  defaultValue: 'https://mab.uz/terms',
 );
 
 Future<void> openLegalLink(BuildContext context, String url) async {

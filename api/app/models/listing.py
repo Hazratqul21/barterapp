@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import enum
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    DateTime,
     Enum,
     Float,
     ForeignKey,
@@ -77,6 +79,9 @@ class Listing(Base, UUIDPrimaryKey, Timestamps):
     is_premium: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
+    #: Pullik ko'tarish (boost) tugaydigan vaqt. Bo'sh bo'lsa `is_premium`
+    #: muddatsiz (admin yoki seed qo'ygan).
+    premium_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Copied from the owner at publish time so a feed query can compute distance
     # without joining users, and so moving house does not rewrite old listings.
