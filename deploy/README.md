@@ -80,7 +80,7 @@ sudo tail -n 50 /var/log/nginx/error.log
 
 - **API ishga tushmasa:** loglarda `APP_ENV=production, lekin sozlamalar xavfsiz emas` degan yozuv bo'lsa, ro'yxatdagi har bir bandni `.env` da tuzating.
 - **Sertifikat olinmagan bo'lsa:** DNS tayyor bo'lgach `sudo certbot --nginx -d mab.uz -d www.mab.uz -d api.mab.uz --redirect -m <email> --agree-tos -n`.
-- **Moderator (admin) huquqi:** `sudo -u mab bash -c 'cd /opt/mab/api && set -a && . ./.env && set +a && .venv/bin/python -m app.grant_moderator +998XXXXXXXXX'`.
+- **Moderator (admin) huquqi:** `sudo -u mab bash -c 'cd /opt/mab/api && .venv/bin/python -m app.grant_moderator +998XXXXXXXXX'`.
 
 ## Zaxira nusxa (tavsiya)
 
