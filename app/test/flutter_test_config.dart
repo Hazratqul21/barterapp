@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Runs before every test file in this directory.
@@ -9,6 +11,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// by a few pixels between machines (a laptop and the CI runner), while a
 /// real design change moves far more than 0.5% of an image.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // Load actual icon glyphs as well as text fonts for meaningful screenshots.
+  final manifest =
+      jsonDecode(await rootBundle.loadString('FontManifest.json')) as List;
+  for (final entry in manifest) {
+    final loader = FontLoader(entry['family'] as String);
+    for (final font in entry['fonts'] as List) {
+      loader.addFont(rootBundle.load(font['asset'] as String));
+    }
+    await loader.load();
+  }
   final previous = goldenFileComparator;
   if (previous is LocalFileComparator) {
     goldenFileComparator = _TolerantComparator(previous.basedir);

@@ -1,0 +1,82 @@
+00:00 +0: loading /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart
+00:00 +0: favorites reads the page envelope returned by the API
+00:00 +1: reports and notification reads use the backend contract
+00:00 +2: feed uses backend filter names, minor units and supported sorting
+00:00 +3: pagination failure preserves rows and allows explicit retry
+00:00 +4: an old next-page response cannot overwrite a new search
+00:00 +5: feed fits 320.0x568.0 text 1.0
+00:00 +6: feed fits 320.0x568.0 text 1.6
+00:00 +7: feed fits 390.0x844.0 text 1.0
+Pending timers:
+Timer (duration: 0:00:00.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#7      DioMixin.fetch (package:dio/src/dio_mixin.dart:529:30)
+#8      DioMixin.request (package:dio/src/dio_mixin.dart:414:12)
+#9      DioMixin.post (package:dio/src/dio_mixin.dart:108:12)
+#10     ApiClient.post (package:barter_app/core/network/api_client.dart:236:35)
+#11     AnalyticsService.flush (package:barter_app/core/analytics/analytics_service.dart:42:24)
+#12     AnalyticsService.dispose (package:barter_app/core/analytics/analytics_service.dart:58:5)
+#13     analyticsServiceProvider.<anonymous closure>.<anonymous closure> (package:barter_app/core/analytics/analytics_service.dart:65:31)
+#14     InternalProviderContainer.runGuarded (package:riverpod/src/core/provider_container.dart:787:9)
+#15     _runCallbacks (package:riverpod/src/core/ref.dart:793:17)
+#16     ProviderElement.runOnDispose (package:riverpod/src/core/element.dart:1255:5)
+#17     ElementWithFuture.runOnDispose (package:riverpod/src/core/element.dart:320:11)
+#18     ProviderElement.clearState (package:riverpod/src/core/element.dart:1290:5)
+#19     ProviderElement.dispose (package:riverpod/src/core/element.dart:1323:5)
+#20     ElementWithFuture.dispose (package:riverpod/src/core/element.dart:344:11)
+#21     ProviderContainer._dispose (package:riverpod/src/core/provider_container.dart:1316:15)
+#22     ProviderContainer.dispose (package:riverpod/src/core/provider_container.dart:1334:21)
+#23     ProviderScopeState.dispose (package:flutter_riverpod/src/core/provider_scope.dart:220:15)
+#24     StatefulElement.unmount (package:flutter/src/widgets/framework.dart:6030:11)
+#25     _InactiveElements._unmount (package:flutter/src/widgets/framework.dart:2117:13)
+#26     ListIterable.forEach (dart:_internal/iterable.dart:49:13)
+#27     _InactiveElements._unmountAll (package:flutter/src/widgets/framework.dart:2126:25)
+#28     BuildOwner.lockState (package:flutter/src/widgets/framework.dart:3020:15)
+#29     BuildOwner.finalizeTree (package:flutter/src/widgets/framework.dart:3344:7)
+#30     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2453:19)
+#31     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:509:5)
+#32     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#33     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#34     AutomatedTestWidgetsFlutterBinding.scheduleWarmUpFrame (package:flutter_test/src/binding.dart:2357:5)
+#35     _runWidget (package:flutter/src/widgets/binding.dart:1952:7)
+#36     runApp (package:flutter/src/widgets/binding.dart:1885:3)
+#37     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1959:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2542 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2542:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1973:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  feed fits 390.0x844.0 text 1.0
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +7 -1: feed fits 390.0x844.0 text 1.0 [E]
+  Test failed. See exception logs above.
+  The test description was: feed fits 390.0x844.0 text 1.0
+  
+00:01 +7 -1: feed fits 390.0x844.0 text 1.6
+00:01 +8 -1: feed fits 430.0x932.0 text 1.0
+00:01 +9 -1: feed fits 430.0x932.0 text 1.6
+00:01 +10 -1: feed fits 844.0x390.0 text 1.0
+00:01 +11 -1: feed fits 844.0x390.0 text 1.6
+00:01 +12 -1: feed fits 1024.0x768.0 text 1.0
+00:01 +13 -1: feed fits 1024.0x768.0 text 1.6
+00:01 +14 -1: feed fits 1440.0x900.0 text 1.0
+00:01 +15 -1: feed fits 1440.0x900.0 text 1.6
+00:01 +16 -1: Some tests failed.
+
+Failing tests:
+  /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 390.0x844.0 text 1.0

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'tokens.dart';
@@ -227,17 +226,8 @@ abstract final class AppTheme {
   static const _displayFamily = 'Manrope';
   static const _bodyFamily = 'Manrope';
 
-  static const _transitions = PageTransitionsTheme(
-    builders: {
-      // The same push everywhere; see router/transitions.dart.
-      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.fuchsia: CupertinoPageTransitionsBuilder(),
-    },
-  );
+  // Flutter chooses native transitions, including Android back gestures.
+  static const _transitions = PageTransitionsTheme();
 
   static ThemeData light() => _build(Brightness.light);
 

@@ -1,21 +1,19 @@
 import 'package:animations/animations.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/common.dart' show shouldReduceMotion;
 
-/// One feel on every platform (design v3): the iOS push — a slide with the
-/// edge swipe back — on iOS, Android and the web alike. It used to be iOS
-/// there and a shared-axis fade elsewhere, so the same app moved differently
-/// depending on the phone it was opened on.
-Page<T> forwardPage<T>({required LocalKey key, required Widget child}) =>
-    CupertinoPage<T>(key: key, child: child);
+/// Native transitions on phones; browser navigation does not slide a page.
+Page<T> forwardPage<T>({required LocalKey key, required Widget child}) => kIsWeb
+    ? NoTransitionPage<T>(key: key, child: child)
+    : MaterialPage<T>(key: key, child: child);
 
-/// Screens that rise over the current one (create, offer): the iOS modal.
-Page<T> risingPage<T>({required LocalKey key, required Widget child}) =>
-    CupertinoPage<T>(key: key, child: child, fullscreenDialog: true);
+Page<T> risingPage<T>({required LocalKey key, required Widget child}) => kIsWeb
+    ? NoTransitionPage<T>(key: key, child: child)
+    : MaterialPage<T>(key: key, child: child, fullscreenDialog: true);
 
 Page<T> fadePage<T>({required LocalKey key, required Widget child}) {
   return CustomTransitionPage<T>(
@@ -42,12 +40,14 @@ Page<T> heroPage<T>({required LocalKey key, required Widget child}) {
     transitionDuration: M3Motion.medium4,
     reverseTransitionDuration: M3Motion.medium3,
     transitionsBuilder: (context, animation, secondary, child) =>
-        FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: M3Motion.emphasizedDecelerate,
+        shouldReduceMotion(context)
+        ? child
+        : FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: M3Motion.emphasizedDecelerate,
+            ),
+            child: child,
           ),
-          child: child,
-        ),
   );
 }

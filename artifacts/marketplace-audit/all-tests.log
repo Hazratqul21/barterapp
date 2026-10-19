@@ -1,0 +1,40 @@
+00:00 +0: loading /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart
+00:00 +0: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: showBarterPanel on a phone it is a bottom sheet with a drag handle
+00:00 +1: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a short viewport
+00:00 +2: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a short viewport
+00:00 +3: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: showBarterPanel closing returns the value the body popped
+00:00 +4: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a small phone
+00:00 +5: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: SheetSkin wallpaper carries the app background into the sheet
+00:00 +6: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: SheetSkin wallpaper carries the app background into the sheet
+00:00 +7: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: SheetSkin wallpaper carries the app background into the sheet
+00:00 +8: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: SheetSkin wallpaper carries the app background into the sheet
+00:00 +9: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a phone held sideways
+00:00 +10: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a phone held sideways
+00:00 +11: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/intro_layout_test.dart: the intro fits a phone held sideways
+00:00 +12: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/glass_sheet_test.dart: SheetSkin custom puts whatever it is handed behind the content
+00:00 +13: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: switching tabs preserves the previous screen state
+00:01 +14: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: switching tabs preserves the previous screen state
+00:01 +15: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: switching tabs preserves the previous screen state
+00:01 +16: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: switching tabs preserves the previous screen state
+00:01 +17: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: resizing across frame boundary preserves state
+00:01 +18: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: primary button colours remain readable in both themes
+00:01 +19: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/mab_regression_test.dart: reduced motion shows late list content immediately
+00:01 +20: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +21: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +22: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +23: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +24: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +25: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/wallpaper_perf_test.dart: drifting does not repaint the app above it
+00:01 +26: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 320.0x568.0 text 1.0
+00:02 +27: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 320.0x568.0 text 1.6
+00:02 +28: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 390.0x844.0 text 1.0
+00:02 +29: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 390.0x844.0 text 1.6
+00:02 +30: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 430.0x932.0 text 1.0
+00:02 +31: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 430.0x932.0 text 1.6
+00:02 +32: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 844.0x390.0 text 1.0
+00:02 +33: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 844.0x390.0 text 1.6
+00:02 +34: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 1024.0x768.0 text 1.0
+00:02 +35: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 1024.0x768.0 text 1.6
+00:03 +36: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 1440.0x900.0 text 1.0
+00:03 +37: /Users/hazratqulabduraufov/Desktop/barter-platform/app/test/marketplace_test.dart: feed fits 1440.0x900.0 text 1.6
+00:03 +38: All tests passed!
