@@ -1289,4 +1289,129 @@ class LUz extends L {
   String timelineSemantics(int step, int total, String name) {
     return 'Bitim: $step/$total-qadam, $name';
   }
+
+  @override
+  String get billingTitle => 'Tariflar va to‘lovlar';
+
+  @override
+  String get billingSubtitle => 'E’lon paketlari va e’lonni ko‘tarish';
+
+  @override
+  String billingFreeLeft(int count) {
+    return '$count ta bepul e’lon qoldi';
+  }
+
+  @override
+  String get billingFreeUnlimited =>
+      'Hozircha e’lon joylash bepul va cheklanmagan';
+
+  @override
+  String get billingPacks => 'E’LON PAKETLARI';
+
+  @override
+  String get billingBoostSection => 'E’LONNI KO‘TARISH';
+
+  @override
+  String get billingBoostHint =>
+      'Faol e’loningiz sahifasida «Ko‘tarish» tugmasini bosing.';
+
+  @override
+  String billingListings(int count) {
+    return '$count ta e’lon';
+  }
+
+  @override
+  String billingDays(int count) {
+    return '$count kun yuqorida';
+  }
+
+  @override
+  String billingDiscountUntil(String date) {
+    return 'Chegirma $date gacha';
+  }
+
+  @override
+  String get billingPayBefore => '';
+
+  @override
+  String get billingPayAfter => 'orqali to‘lash';
+
+  @override
+  String get billingSecureNote =>
+      'Karta raqami, muddati va SMS kod Payme sahifasida kiritiladi. MAB ularni ko‘rmaydi.';
+
+  @override
+  String get billingEmpty => 'Tariflar hali qo‘shilmagan';
+
+  @override
+  String get billingEmptyHint => 'Narxlar tez orada e’lon qilinadi.';
+
+  @override
+  String get billingUnavailable =>
+      'To‘lov tizimi hali ulanmagan. Birozdan keyin urinib ko‘ring.';
+
+  @override
+  String get billingHistory => 'TO‘LOVLAR TARIXI';
+
+  @override
+  String get billingNoOrders => 'Hali to‘lov qilinmagan';
+
+  @override
+  String get billingOpenFailed => 'Payme sahifasini ochib bo‘lmadi';
+
+  @override
+  String get orderTitle => 'To‘lov';
+
+  @override
+  String get orderPending => 'To‘lov kutilmoqda';
+
+  @override
+  String get orderPendingHint =>
+      'Payme sahifasida to‘lovni yakunlang. Bu sahifa o‘zi yangilanadi.';
+
+  @override
+  String get orderPaid => 'To‘lov qabul qilindi';
+
+  @override
+  String orderPaidPack(int count) {
+    return 'Hisobingizga $count ta e’lon qo‘shildi.';
+  }
+
+  @override
+  String orderPaidBoost(int count) {
+    return 'E’loningiz $count kun yuqorida turadi.';
+  }
+
+  @override
+  String get orderCancelled => 'To‘lov bekor qilindi';
+
+  @override
+  String get orderCancelledHint =>
+      'Pul yechilmadi. Qaytadan urinib ko‘rishingiz mumkin.';
+
+  @override
+  String get orderOpenPayme => 'Payme sahifasini ochish';
+
+  @override
+  String get orderDone => 'Tayyor';
+
+  @override
+  String get boostAction => 'Ko‘tarish';
+
+  @override
+  String get boostSheetTitle => 'E’lonni ko‘tarish';
+
+  @override
+  String get boostSheetHint =>
+      'E’loningiz lentada yuqorida, «Premium» belgisi bilan ko‘rinadi.';
+
+  @override
+  String get quotaTitle => 'Bepul e’lonlar tugadi';
+
+  @override
+  String get quotaBody =>
+      'Yangi e’lon joylash uchun e’lon paketini tanlang. Qoralama saqlanib qoladi.';
+
+  @override
+  String get quotaAction => 'Tariflarni ko‘rish';
 }

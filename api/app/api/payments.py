@@ -62,6 +62,8 @@ class OrderOut(ApiModel):
     amount_minor: int
     status: OrderStatus
     listing_id: uuid.UUID | None
+    quantity: int
+    duration_days: int | None
     created_at: datetime
     paid_at: datetime | None
     #: Faqat `pending` buyurtmada.
