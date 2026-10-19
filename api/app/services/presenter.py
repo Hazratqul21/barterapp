@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.common import Money
 from app.schemas.listing import ListingCard, ListingDetail
 from app.schemas.user import TraderBrief
+from app.services.billing import premium_now
 
 ONLINE_WINDOW = timedelta(minutes=5)
 
@@ -65,7 +66,7 @@ def listing_card(
         value=Money(minor=listing.value_minor, currency=listing.currency),
         distance_km=distance_km,
         cash_ok=listing.cash_ok,
-        is_premium=listing.is_premium,
+        is_premium=premium_now(listing),
         posted_at=listing.created_at,
         owner=owner,
         region=listing.region,

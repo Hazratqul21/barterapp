@@ -41,6 +41,8 @@ jobs:
       JWT_SECRET: ci-only-not-a-secret-ci-only-not-a-secret-123456
       OTP_DEBUG: "true"
       SMS_REQUIRED: "false"
+      PAYME_MERCHANT_ID: ci-merchant-0000
+      PAYME_KEY: ci-only-not-a-payme-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

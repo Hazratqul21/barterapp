@@ -42,6 +42,7 @@ for t in tests/test_config_guard.py \
          tests/test_feed_blocks.py \
          tests/test_admin_push.py \
          tests/test_firebase_setup.py \
+         tests/test_payme.py \
          tests/test_security_probe.py \
          tests/test_e2e_journey.py; do
   $PY -m app.seed >/dev/null 2>&1

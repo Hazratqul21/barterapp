@@ -36,6 +36,7 @@ from app.schemas.listing import (
 )
 from app.api.favorites import favorite_ids
 from app.models.event import EventKind
+from app.services import billing
 from app.services import events
 from app.services import moderation
 from app.services import stats
@@ -413,7 +414,10 @@ async def create_listing(
     # Input first: a bad region is a 422 even for someone out of free listings.
     region = _region_or_422(payload.region) if payload.region else me.region
 
-    if me.user_type != UserType.business and me.free_listings_left <= 0:
+    # The meter only runs once the admin turns paid listings on. Until prices
+    # are set there is nothing to buy, and a 402 with no way to pay is a wall.
+    metered = me.user_type != UserType.business and await billing.listing_fee_enabled(db)
+    if metered and me.free_listings_left <= 0:
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,
             "Bepul e’lonlar tugadi. Davom etish uchun tarif tanlang.",
@@ -485,7 +489,7 @@ async def create_listing(
             )
         )
 
-    if me.user_type != UserType.business:
+    if metered:
         me.free_listings_left -= 1
     me.last_seen_at = datetime.now(UTC)
     await db.commit()

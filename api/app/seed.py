@@ -26,6 +26,7 @@ from app.models.listing import (
     ListingWantTranslation,
 )
 from app.models.offer import Conversation, Message, Offer, OfferItem, OfferStatus
+from app.models.payment import PaymentOrder, PaymeTransaction
 from app.models.review import Review
 from app.models.social import Notification, PaymentMethod, VerificationStep
 from app.models.desire import Desire
@@ -518,6 +519,7 @@ async def run() -> None:
     async with SessionLocal() as db:
         # Idempotent: wipe the seeded world, keep the schema.
         for model in (
+            PaymeTransaction, PaymentOrder,
             Message, Conversation, OfferItem, Offer, Review, Notification,
             PaymentMethod, VerificationStep, Desire, ListingWantTranslation, ListingWant,
             ListingPhoto, ListingTranslation, Listing, User, OtpChallenge, RefreshToken,
