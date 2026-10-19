@@ -11,7 +11,7 @@ if [ "$DO_API" = 1 ]; then
   PY=$(cat "$APP/.python" 2>/dev/null || echo python3)
   sudo -u mab bash -c "cd $APP/api && { [ -d .venv ] || $PY -m venv .venv; } \
     && .venv/bin/pip install -q --upgrade pip && .venv/bin/pip install -q -r requirements.txt \
-    && set -a && . ./.env && set +a && .venv/bin/alembic upgrade head"
+    && .venv/bin/alembic upgrade head"
   systemctl restart mab-api
   systemctl start mab-push.timer mab-maintenance.timer
   for _ in $(seq 1 20); do

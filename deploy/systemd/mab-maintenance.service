@@ -6,6 +6,7 @@ After=postgresql.service
 Type=oneshot
 User=mab
 WorkingDirectory=/opt/mab/api
-EnvironmentFile=/opt/mab/api/.env
+# .env ni ilovaning o'zi o'qiydi (WorkingDirectory'dan). systemd yoki
+# bash orqali o'qitilsa CORS_ORIGINS dagi JSON qo'shtirnoqlari yo'qoladi.
 ExecStart=/opt/mab/api/.venv/bin/python -m app.events_prune
 ExecStart=/opt/mab/api/.venv/bin/python -m app.media_sweep
