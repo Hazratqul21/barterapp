@@ -1,0 +1,11 @@
+[Unit]
+Description=MAB: kunlik tozalash (eski hodisalar, egasiz rasmlar)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=mab
+WorkingDirectory=/opt/mab/api
+EnvironmentFile=/opt/mab/api/.env
+ExecStart=/opt/mab/api/.venv/bin/python -m app.events_prune
+ExecStart=/opt/mab/api/.venv/bin/python -m app.media_sweep
