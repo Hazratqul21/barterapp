@@ -19,6 +19,7 @@ from app.models.feed_block import (  # noqa: F401
     FeedBlock,
     FeedBlockText,
 )
+from app.models.legal import LegalDocument  # noqa: F401
 from app.models.listing import (  # noqa: F401
     Listing,
     ListingPhoto,
@@ -60,6 +61,7 @@ __all__ = [
     "FeedBlockText",
     "Device",
     "DevicePlatform",
+    "LegalDocument",
     "Listing",
     "ListingPhoto",
     "ListingTranslation",

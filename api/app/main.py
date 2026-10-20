@@ -19,6 +19,8 @@ from app.api import (
     events,
     favorites,
     feed_blocks,
+    legal,
+    legal_admin,
     listings,
     moderation,
     offers,
@@ -136,6 +138,8 @@ app.include_router(disputes_admin.router)
 app.include_router(payments.router)
 app.include_router(payme.router)
 app.include_router(billing_admin.router)
+app.include_router(legal.router)
+app.include_router(legal_admin.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
 # rather than on first upload so a fresh checkout can serve `/media` without

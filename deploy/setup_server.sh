@@ -96,8 +96,16 @@ systemctl daemon-reload
 systemctl enable mab-api.service mab-push.timer mab-maintenance.timer >/dev/null
 
 step "nginx"
-sed -e "s/__DOMAIN__/$DOMAIN/g" -e "s/__API_DOMAIN__/$API_DOMAIN/g" \
-  "$HERE/nginx/mab.conf" > /etc/nginx/sites-available/mab.conf
+install -D -m 644 "$HERE/nginx/mab-legal.conf" /etc/nginx/snippets/mab-legal.conf
+NGINX_CONF=/etc/nginx/sites-available/mab.conf
+# certbot HTTPS'ni shu faylga yozadi. Qayta ishga tushirishda uni ustidan
+# yozsak, sertifikat sozlamasi yo'qoladi va sayt https'da ochilmay qoladi.
+if [ -f "$NGINX_CONF" ] && grep -q "managed by Certbot" "$NGINX_CONF"; then
+  echo "Bor: $NGINX_CONF (certbot sozlagan) — tegilmadi."
+else
+  sed -e "s/__DOMAIN__/$DOMAIN/g" -e "s/__API_DOMAIN__/$API_DOMAIN/g" \
+    "$HERE/nginx/mab.conf" > "$NGINX_CONF"
+fi
 ln -sf /etc/nginx/sites-available/mab.conf /etc/nginx/sites-enabled/mab.conf
 rm -f /etc/nginx/sites-enabled/default
 [ -f "$WEB_DIR/index.html" ] || echo '<!doctype html><title>MAB</title><p>MAB tez orada.</p>' > "$WEB_DIR/index.html"

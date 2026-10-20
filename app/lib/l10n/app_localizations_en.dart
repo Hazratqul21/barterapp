@@ -1053,6 +1053,13 @@ class LEn extends L {
   String get legalTerms => 'Terms of Use';
 
   @override
+  String get legalOffer => 'Public offer';
+
+  @override
+  String get billingOfferAgree =>
+      'By paying, you accept the terms of the public offer';
+
+  @override
   String get deleteAccountConfirm =>
       'Are you sure you want to delete your account? This action cannot be undone and your data will be permanently deleted.';
 

@@ -95,6 +95,10 @@ class Settings(BaseSettings):
     #: raqami bilan almashtiriladi.
     payme_return_url: str = "https://mab.uz/payments/return?order={order_id}"
 
+    #: Ommaviy sayt. Huquqiy hujjatlar shu domenda ochiladi
+    #: (https://mab.uz/privacy — nginx ularni API'dan oladi).
+    public_web_url: str = "https://mab.uz"
+
     #: F01: also check the reverse direction (do they want what I have?) and
     #: rank two-way fits first. Off restores the one-way matcher.
     matching_mutual: bool = True

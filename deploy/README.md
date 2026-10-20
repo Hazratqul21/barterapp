@@ -84,6 +84,26 @@ sudo tail -n 50 /var/log/nginx/error.log
 - **Sertifikat olinmagan bo'lsa:** DNS tayyor bo'lgach `sudo certbot --nginx -d mab.uz -d www.mab.uz -d api.mab.uz --redirect -m <email> --agree-tos -n`.
 - **Moderator (admin) huquqi:** `sudo -u mab bash -c 'cd /opt/mab/api && .venv/bin/python -m app.grant_moderator +998XXXXXXXXX'`.
 
+## Admin panelga kirish
+
+1. Saytda yoki ilovada telefon raqamingiz bilan bir marta kiring — hisob yaratiladi.
+2. O'sha raqamga moderator huquqini bering (bir marta):
+   ```sh
+   ssh -t "$(cat deploy/.server)" "sudo -u mab bash -c 'cd /opt/mab/api && .venv/bin/python -m app.grant_moderator +998XXXXXXXXX'"
+   ```
+3. https://api.mab.uz/admin → raqam → «Kod olish» → SMS kodi → «Kirish».
+   `SMS_OPTIONAL=true` bo'lsa kod SMS'da emas, server logida:
+   ```sh
+   ssh -t "$(cat deploy/.server)" 'sudo journalctl -u mab-api -n 50 --no-pager | grep "quruq rejim"'
+   ```
+
+## Huquqiy hujjatlar
+
+Admin panel → **Hujjatlar**. Saqlangan matn darhol https://mab.uz/privacy,
+`/terms`, `/offer`, `/delete-account` da chiqadi: nginx bu manzillarni
+API'ga yo'naltiradi (`deploy/nginx/mab-legal.conf`). Bu qoida har
+deployda o'zi o'rnatiladi; certbot sozlagan HTTPS bloklariga tegilmaydi.
+
 ## Zaxira nusxa (tavsiya)
 
 ```sh

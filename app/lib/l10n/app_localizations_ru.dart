@@ -1052,6 +1052,13 @@ class LRu extends L {
   String get legalTerms => 'Условия использования';
 
   @override
+  String get legalOffer => 'Публичная оферта';
+
+  @override
+  String get billingOfferAgree =>
+      'Оплачивая, вы принимаете условия публичной оферты';
+
+  @override
   String get deleteAccountConfirm =>
       'Вы уверены, что хотите удалить свой аккаунт? Это действие нельзя отменить, и ваши данные будут безвозвратно удалены.';
 

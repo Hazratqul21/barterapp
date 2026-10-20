@@ -10,11 +10,27 @@ const termsOfUseUrl = String.fromEnvironment(
   'TERMS_URL',
   defaultValue: 'https://mab.uz/terms',
 );
+const publicOfferUrl = String.fromEnvironment(
+  'OFFER_URL',
+  defaultValue: 'https://mab.uz/offer',
+);
+
+/// The documents are edited in the admin panel in three languages; the page
+/// picks one from `?lang=`, so the reader sees the app's language, not the
+/// browser's.
+Uri legalUri(String url, String languageCode) {
+  final uri = Uri.parse(url);
+  return uri.replace(
+    queryParameters: {...uri.queryParameters, 'lang': languageCode},
+  );
+}
 
 Future<void> openLegalLink(BuildContext context, String url) async {
   var opened = false;
   try {
-    opened = await launchUrl(Uri.parse(url));
+    opened = await launchUrl(
+      legalUri(url, Localizations.localeOf(context).languageCode),
+    );
   } catch (_) {
     // Keep the user in the app with actionable feedback if no browser exists.
   }

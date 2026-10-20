@@ -70,8 +70,10 @@ step "Serverda o'rnatish"
 # Skript avval faylga yuboriladi, keyin `ssh -t` bilan ishga tushadi: sudo
 # parol so'rashi uchun terminal kerak, stdin orqali yuborilgan skriptda u yo'q.
 scp -q "$ROOT/deploy/remote_install.sh" "$SERVER:/tmp/mab-remote-install.sh"
+scp -q "$ROOT/deploy/nginx/mab-legal.conf" "$SERVER:/tmp/mab-legal.conf"
 ssh -t "$SERVER" "sudo DO_API=$DO_API DO_WEB=$DO_WEB bash /tmp/mab-remote-install.sh"
 
 green "Tayyor."
 if [ "$DO_WEB" = 1 ]; then echo "  Sayt:  https://mab.uz"; fi
+echo "  Hujjatlar: https://mab.uz/privacy  https://mab.uz/terms  https://mab.uz/offer"
 if [ "$DO_API" = 1 ]; then echo "  API:   $API_URL/health   Admin: $API_URL/admin"; fi

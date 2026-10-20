@@ -331,6 +331,8 @@
   "legalTitle": "LEGAL",
   "legalPrivacy": "Privacy Policy",
   "legalTerms": "Terms of Use",
+  "legalOffer": "Public offer",
+  "billingOfferAgree": "By paying, you accept the terms of the public offer",
   "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone and your data will be permanently deleted.",
   "profileVerifyAccount": "Verify your account",
   "profileVerifyDesc": "Verify your identity to increase trust.",
