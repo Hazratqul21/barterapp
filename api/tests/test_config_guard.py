@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pydantic import ValidationError
 
 from app.core.config import (
-    InsecureConfiguration, LOOPBACK_ORIGIN_REGEX, Settings, _guard_production,
+    GOOGLE_JWKS_URL, InsecureConfiguration, LOOPBACK_ORIGIN_REGEX, Settings,
+    _guard_production,
 )
 
 
@@ -27,6 +28,8 @@ GOOD = dict(
     eskiz_password="not-a-real-password",
     sms_required=True,
     cors_origins=("https://barter.example.uz",),
+    # CI sinov uchun GOOGLE_JWKS_URL ni o'zgartiradi; bu yerda production holati.
+    google_jwks_url=GOOGLE_JWKS_URL,
 )
 
 
