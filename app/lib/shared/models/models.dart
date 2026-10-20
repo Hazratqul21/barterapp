@@ -261,7 +261,8 @@ class Me {
     required this.name,
     required this.firstName,
     required this.lastName,
-    required this.phone,
+    this.phone,
+    this.email,
     required this.trustScore,
     required this.activeListings,
     required this.completedTrades,
@@ -286,7 +287,10 @@ class Me {
   final String lastName;
 
   final String? handle;
-  final String phone;
+
+  /// Empty for an account that signed in with Google and never added one.
+  final String? phone;
+  final String? email;
   final String? avatarUrl;
   final double? rating;
   final int reviewCount;
@@ -313,7 +317,8 @@ class Me {
     firstName: json['first_name'] as String? ?? '',
     lastName: json['last_name'] as String? ?? '',
     handle: json['handle'] as String?,
-    phone: json['phone'] as String,
+    phone: json['phone'] as String?,
+    email: json['email'] as String?,
     avatarUrl: json['avatar_url'] as String?,
     rating: (json['rating'] as num?)?.toDouble(),
     reviewCount: json['review_count'] as int? ?? 0,

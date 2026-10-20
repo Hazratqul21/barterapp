@@ -47,7 +47,14 @@ class User(Base, UUIDPrimaryKey, Timestamps):
 
     __tablename__ = "users"
 
-    phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    #: Telefon yoki Google — kamida bittasi bor (baza cheklovi). Google bilan
+    #: kirgan hisobda telefon bo'sh bo'lishi mumkin.
+    phone: Mapped[str | None] = mapped_column(String(20), unique=True)
+    #: Google hisobining o'zgarmas ID'si (`sub`). Email o'zgarishi mumkin,
+    #: `sub` — yo'q, shuning uchun hisob shu bo'yicha topiladi.
+    google_sub: Mapped[str | None] = mapped_column(String(64), unique=True)
+    #: Google tasdiqlagan email. Faqat aloqa va admin uchun; kirish emas.
+    email: Mapped[str | None] = mapped_column(String(254))
     first_name: Mapped[str] = mapped_column(String(80), nullable=False)
     last_name: Mapped[str] = mapped_column(String(80), nullable=False)
     user_type: Mapped[UserType] = mapped_column(
@@ -127,6 +134,10 @@ class User(Base, UUIDPrimaryKey, Timestamps):
         CheckConstraint(
             "user_type <> 'business' OR tax_id IS NOT NULL",
             name="business_needs_tax_id",
+        ),
+        CheckConstraint(
+            "phone IS NOT NULL OR google_sub IS NOT NULL",
+            name="has_sign_in",
         ),
     )
 

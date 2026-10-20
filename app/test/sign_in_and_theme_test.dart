@@ -57,6 +57,16 @@ Future<_Auth> _pump(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('no Google button until a client ID is configured', (
+    tester,
+  ) async {
+    await _pump(tester);
+    // Without GOOGLE_CLIENT_ID a tap would fail inside Google's SDK; the
+    // phone form must be the whole page instead.
+    expect(find.text('Google bilan davom etish'), findsNothing);
+    expect(find.text('Yoki telefon orqali'), findsNothing);
+  });
+
   testWidgets('Done on the phone field sends the code', (tester) async {
     final auth = await _pump(tester);
     await tester.enterText(find.byType(TextField).first, '+998901234122');

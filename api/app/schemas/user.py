@@ -44,7 +44,8 @@ class TraderProfile(TraderBrief):
 
 
 class Me(TraderProfile):
-    phone: str
+    phone: str | None
+    email: str | None = None
     first_name: str
     last_name: str
     region: str | None = None
@@ -85,6 +86,11 @@ class OtpRequestResult(ApiModel):
 class OtpVerify(ApiModel):
     phone: str = Field(pattern=r"^\+998\d{9}$")
     code: str = Field(min_length=4, max_length=6)
+
+
+class GoogleSignIn(ApiModel):
+    #: Ilova/sayt Google'dan olgan ID token (JWT).
+    id_token: str = Field(min_length=20, max_length=4096)
 
 
 class TokenPair(ApiModel):

@@ -9,7 +9,7 @@ boshqarishingiz mumkinligini tushuntiradi.
 
 Qisqacha mazmuni, uzun matnni o'qishga vaqtingiz bo'lmasa:
 
-- Biz **telefon raqamingizni** olamiz — usiz kirish mumkin emas.
+- Kirish uchun **telefon raqamingizni** yoki **Google hisobingizni** ishlatamiz.
 - Siz **o'zingiz yozgan narsalar** (e'lonlar, suratlar, xabarlar) saqlanadi.
 - **Viloyatingiz** olinadi, chunki yaqindagi savdolarni ko'rsatish kerak.
   Aniq GPS joylashuvingizni **so'ramaymiz**.
@@ -42,7 +42,8 @@ yozing. Javob **30 kun ichida** beriladi.
 
 | Nima | Qachon | Nima uchun |
 |---|---|---|
-| **Telefon raqami** | Ro'yxatdan o'tishda | Yagona kirish usuli. SMS orqali tasdiqlanadi. |
+| **Telefon raqami** | Telefon bilan kirishda | Kirish usuli. SMS orqali tasdiqlanadi. |
+| **Google hisobi**: ism, email, profil surati va Google ID | Google bilan kirishda | Kirish usuli. Google parolingiz bizga kelmaydi. Email boshqa foydalanuvchilarga ko'rsatilmaydi. |
 | Ism va familiya | Profilni to'ldirganda | Savdogar sifatida ko'rinishingiz uchun |
 | Profil surati va muqova | Ixtiyoriy | Profilingizda ko'rinadi |
 | O'zingiz haqingizda matn | Ixtiyoriy | Profilingizda ko'rinadi |
@@ -159,6 +160,7 @@ Aloqa faqat ilova ichidagi suhbat orqali.
 | Kim | Nima uchun | Nima yuboriladi |
 |---|---|---|
 | **Eskiz** (notify.eskiz.uz, O'zbekiston) | SMS tasdiqlash kodi | Telefon raqamingiz va kod matni |
+| **Google** (Google bilan kirsangiz) | Shaxsingizni tasdiqlash | Hech narsa yuborilmaydi — Google bizga ism, email va surat beradi |
 | **{{HOSTING_PROVAYDER}}** | Serverni joylashtirish | Barcha ma'lumot (saqlanadi) |
 | **Apple / Google** (Firebase) | Push-bildirishnoma yetkazish | Bildirishnoma matni va qurilma tokeni |
 | **Payme** (paycom.uz, O'zbekiston) | Pullik xizmatlar uchun to'lov | Buyurtma raqami va summa. Karta ma'lumotlarini faqat Payme sahifasida kiritasiz — ular bizga kelmaydi. |

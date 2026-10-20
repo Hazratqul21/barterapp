@@ -1,6 +1,7 @@
 """Moderator huquqini berish yoki olib qo'yish.
 
     python -m app.grant_moderator +998901234567
+    python -m app.grant_moderator ism@gmail.com       # Google bilan kirgan hisob
     python -m app.grant_moderator +998901234567 --revoke
 
 Ataylab CLI, endpoint emas. Hisobni moderatorga aylantira oladigan API —
@@ -20,10 +21,14 @@ from app.models.user import User
 
 
 async def main(phone: str, *, revoke: bool) -> int:
+    column = User.email if "@" in phone else User.phone
+    value = phone.strip().lower() if "@" in phone else phone
     async with SessionLocal() as db:
-        user = await db.scalar(select(User).where(User.phone == phone))
+        user = await db.scalar(
+            select(User).where(column == value, User.deleted_at.is_(None))
+        )
         if user is None:
-            print(f"Bunday raqamli hisob yo'q: {phone}")
+            print(f"Bunday hisob yo'q: {phone}")
             return 1
 
         user.is_moderator = not revoke
@@ -36,7 +41,7 @@ async def main(phone: str, *, revoke: bool) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phone", help="+998XXXXXXXXX")
+    parser.add_argument("phone", help="+998XXXXXXXXX yoki Google email")
     parser.add_argument(
         "--revoke", action="store_true", help="Huquqni olib qo'yish."
     )

@@ -44,6 +44,7 @@ for t in tests/test_config_guard.py \
          tests/test_firebase_setup.py \
          tests/test_payme.py \
          tests/test_legal.py \
+         tests/test_google_auth.py \
          tests/test_security_probe.py \
          tests/test_e2e_journey.py; do
   $PY -m app.seed >/dev/null 2>&1

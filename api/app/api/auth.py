@@ -21,8 +21,10 @@ from app.core.security import (
 from app.db.session import get_db
 from app.models.social import VerificationStep
 from app.models.user import OtpChallenge, RefreshToken, User
+from app.services.google_auth import GoogleTokenError, verify_id_token
 from app.services.sms import SmsError, get_sms, otp_text
 from app.schemas.user import (
+    GoogleSignIn,
     OtpRequest,
     OtpRequestResult,
     OtpVerify,
@@ -155,26 +157,9 @@ async def verify_otp(
     user = await db.scalar(select(User).where(User.phone == payload.phone))
     is_new = user is None
     if user is None:
-        user = User(
-            phone=payload.phone,
-            first_name="",
-            last_name="",
-            trust_score=20,
-            last_seen_at=now,
+        user = await _create_user(
+            db, phone=payload.phone, trust_score=20, phone_verified=True
         )
-        db.add(user)
-        await db.flush()
-
-        for step, hint, weight in STARTER_STEPS:
-            db.add(
-                VerificationStep(
-                    user_id=user.id,
-                    step=step,
-                    hint=hint,
-                    weight=weight,
-                    state="done" if step == "phone" else "todo",
-                )
-            )
     else:
         user.last_seen_at = now
 
@@ -187,6 +172,94 @@ async def verify_otp(
         refresh_token=pair.refresh_token,
         is_new_user=is_new,
     )
+
+
+@router.post("/google", response_model=TokenPair)
+async def google_sign_in(
+    payload: GoogleSignIn, db: AsyncSession = Depends(get_db)
+) -> TokenPair:
+    """
+    Google orqali kirish. Ilova Google'dan ID token oladi, biz uni tekshiramiz.
+
+    Hisob Google'ning o'zgarmas `sub` ID'si bo'yicha topiladi. Email bo'yicha
+    boshqa hisobga ulanmaydi: telefon bilan ochilgan hisobni bir xil email
+    bilan "egallab olish" imkoni bo'lmasligi kerak.
+    """
+    if not settings.google_enabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Google orqali kirish yoqilmagan.")
+    try:
+        identity = await verify_id_token(payload.id_token)
+    except GoogleTokenError as exc:
+        log.info("Google token rad etildi: %s", exc)
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "Google orqali kirib bo'lmadi. Qaytadan urining.",
+        ) from exc
+
+    now = datetime.now(UTC)
+    user = await db.scalar(select(User).where(User.google_sub == identity.sub))
+    is_new = user is None
+    if user is None:
+        user = await _create_user(
+            db,
+            google_sub=identity.sub,
+            email=identity.email if identity.email_verified else None,
+            first_name=identity.given_name,
+            last_name=identity.family_name,
+            avatar_url=identity.picture,
+        )
+    else:
+        user.last_seen_at = now
+        if identity.email_verified and identity.email:
+            user.email = identity.email
+
+    await db.commit()
+
+    pair = await _issue_tokens(db, user.id)
+    await db.commit()
+    return TokenPair(
+        access_token=pair.access_token,
+        refresh_token=pair.refresh_token,
+        is_new_user=is_new,
+    )
+
+
+async def _create_user(
+    db: AsyncSession,
+    *,
+    phone: str | None = None,
+    google_sub: str | None = None,
+    email: str | None = None,
+    first_name: str = "",
+    last_name: str = "",
+    avatar_url: str | None = None,
+    trust_score: int = 0,
+    phone_verified: bool = False,
+) -> User:
+    user = User(
+        phone=phone,
+        google_sub=google_sub,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        avatar_url=avatar_url,
+        trust_score=trust_score,
+        last_seen_at=datetime.now(UTC),
+    )
+    db.add(user)
+    await db.flush()
+
+    for step, hint, weight in STARTER_STEPS:
+        db.add(
+            VerificationStep(
+                user_id=user.id,
+                step=step,
+                hint=hint,
+                weight=weight,
+                state="done" if step == "phone" and phone_verified else "todo",
+            )
+        )
+    return user
 
 
 async def _issue_tokens(db: AsyncSession, user_id) -> TokenPair:

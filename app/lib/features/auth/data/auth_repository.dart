@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../shared/models/models.dart';
 import '../../trade/data/listing_draft.dart';
+import 'google_auth.dart';
 
 class AuthRepository {
   AuthRepository(this._api, this._session);
@@ -24,6 +25,21 @@ class AuthRepository {
     final tokens = await _api.post(
       '/auth/otp/verify',
       body: {'phone': phone, 'code': code},
+      parse: (data) => data as Map<String, dynamic>,
+    );
+    await _session.saveTokens(
+      tokens['access_token'] as String,
+      tokens['refresh_token'] as String,
+    );
+    return tokens['is_new_user'] as bool? ?? false;
+  }
+
+  /// Exchanges a Google ID token for our own session. Same shape as [verify]:
+  /// true when the account was created just now.
+  Future<bool> signInWithGoogle(String idToken) async {
+    final tokens = await _api.post(
+      '/auth/google',
+      body: {'id_token': idToken},
       parse: (data) => data as Map<String, dynamic>,
     );
     await _session.saveTokens(
@@ -67,7 +83,10 @@ class AuthRepository {
     parse: (d) => NotificationSettings.fromJson(d),
   );
 
-  Future<void> signOut() => _session.clear();
+  Future<void> signOut() async {
+    await _session.clear();
+    await GoogleAuth.signOut();
+  }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(

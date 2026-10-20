@@ -96,3 +96,9 @@ msg = refused(eskiz_email="", eskiz_password="", sms_required=False, sms_optiona
 ok("SMS_OPTIONAL=true bilan Eskiz'siz qabul qilinadi", msg is None, msg or "")
 msg = refused(eskiz_email="", sms_optional=True, otp_debug=True)
 ok("SMS_OPTIONAL boshqa tekshiruvlarni o'chirmaydi", msg is not None and "OTP_DEBUG" in msg, msg or "qabul qilindi")
+
+# ── Google: kalitlar manzili faqat Google'niki ───────────────────────────────
+msg = refused(google_jwks_url="http://127.0.0.1:8799/certs")
+ok("GOOGLE_JWKS_URL o'zgartirilsa rad etiladi", msg is not None and "GOOGLE_JWKS_URL" in msg, msg or "qabul qilindi")
+msg = refused(google_client_ids=("123.apps.googleusercontent.com",))
+ok("GOOGLE_CLIENT_IDS bilan qabul qilinadi", msg is None, msg or "")

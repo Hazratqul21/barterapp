@@ -197,7 +197,7 @@ async def list_orders(
     db: AsyncSession = Depends(get_db),
 ) -> list[OrderAdminOut]:
     query = (
-        select(PaymentOrder, User.phone)
+        select(PaymentOrder, func.coalesce(User.phone, User.email))
         .outerjoin(User, User.id == PaymentOrder.user_id)
         .order_by(PaymentOrder.created_at.desc())
         .limit(limit)
