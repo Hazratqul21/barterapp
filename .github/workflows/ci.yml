@@ -43,6 +43,8 @@ jobs:
       SMS_REQUIRED: "false"
       PAYME_MERCHANT_ID: ci-merchant-0000
       PAYME_KEY: ci-only-not-a-payme-key
+      GOOGLE_CLIENT_IDS: '["ci-google-client"]'
+      GOOGLE_JWKS_URL: http://127.0.0.1:8799/certs
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

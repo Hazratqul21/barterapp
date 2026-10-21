@@ -5,6 +5,8 @@ from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
+
 #: Repository root — `api/`, two levels up from this file.
 _API_ROOT = Path(__file__).resolve().parents[2]
 
@@ -95,6 +97,14 @@ class Settings(BaseSettings):
     #: raqami bilan almashtiriladi.
     payme_return_url: str = "https://mab.uz/payments/return?order={order_id}"
 
+    # Google orqali kirish. Bo'sh bo'lsa o'chiq: /auth/google 404 qaytaradi.
+    #: Google Cloud'dagi OAuth "Web application" client ID (ilova ham shuni
+    #: `serverClientId` sifatida ishlatadi, shuning uchun token aud'i shu).
+    #: Bir nechta bo'lishi mumkin: ["...web...", "...ios..."]. Bular maxfiy emas.
+    google_client_ids: tuple[str, ...] = ()
+    #: Google kalitlari. Faqat testda o'zgartiriladi.
+    google_jwks_url: str = GOOGLE_JWKS_URL
+
     #: Ommaviy sayt. Huquqiy hujjatlar shu domenda ochiladi
     #: (https://mab.uz/privacy — nginx ularni API'dan oladi).
     public_web_url: str = "https://mab.uz"
@@ -112,6 +122,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_ids)
 
     @property
     def payme_enabled(self) -> bool:
@@ -198,6 +212,12 @@ def production_problems(settings: Settings) -> list[str]:
         problems.append(
             "Payme yarim sozlangan: PAYME_MERCHANT_ID va PAYME_KEY ikkalasi "
             "ham to'ldirilishi (yoki ikkalasi ham bo'sh qolishi) kerak."
+        )
+    if settings.google_jwks_url != GOOGLE_JWKS_URL:
+        problems.append(
+            "GOOGLE_JWKS_URL o'zgartirilgan: Google tokenini boshqa kalit bilan "
+            "tekshirish istalgan odamga istalgan hisob bilan kirish imkonini "
+            "beradi. Bu qatorni .env dan olib tashlang."
         )
     if not settings.cors_origins:
         problems.append("CORS_ORIGINS bo'sh: veb-ilova domeni ko'rsatilmagan.")

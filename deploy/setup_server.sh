@@ -75,6 +75,9 @@ ESKIZ_PASSWORD=
 # ESKIZ_SENDER=4546
 # ESKIZ_OTP_TEMPLATE=MAB: tasdiqlash kodi {code}. Hech kimga aytmang.
 
+# Google orqali kirish — docs/GOOGLE-SIGNIN.md
+# GOOGLE_CLIENT_IDS=["...apps.googleusercontent.com"]
+
 # Payme — shartnomadan keyin.
 # PAYME_MERCHANT_ID=
 # PAYME_KEY=

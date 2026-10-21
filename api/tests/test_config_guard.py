@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pydantic import ValidationError
 
 from app.core.config import (
-    InsecureConfiguration, LOOPBACK_ORIGIN_REGEX, Settings, _guard_production,
+    GOOGLE_JWKS_URL, InsecureConfiguration, LOOPBACK_ORIGIN_REGEX, Settings,
+    _guard_production,
 )
 
 
@@ -27,6 +28,8 @@ GOOD = dict(
     eskiz_password="not-a-real-password",
     sms_required=True,
     cors_origins=("https://barter.example.uz",),
+    # CI sinov uchun GOOGLE_JWKS_URL ni o'zgartiradi; bu yerda production holati.
+    google_jwks_url=GOOGLE_JWKS_URL,
 )
 
 
@@ -96,3 +99,9 @@ msg = refused(eskiz_email="", eskiz_password="", sms_required=False, sms_optiona
 ok("SMS_OPTIONAL=true bilan Eskiz'siz qabul qilinadi", msg is None, msg or "")
 msg = refused(eskiz_email="", sms_optional=True, otp_debug=True)
 ok("SMS_OPTIONAL boshqa tekshiruvlarni o'chirmaydi", msg is not None and "OTP_DEBUG" in msg, msg or "qabul qilindi")
+
+# ── Google: kalitlar manzili faqat Google'niki ───────────────────────────────
+msg = refused(google_jwks_url="http://127.0.0.1:8799/certs")
+ok("GOOGLE_JWKS_URL o'zgartirilsa rad etiladi", msg is not None and "GOOGLE_JWKS_URL" in msg, msg or "qabul qilindi")
+msg = refused(google_client_ids=("123.apps.googleusercontent.com",))
+ok("GOOGLE_CLIENT_IDS bilan qabul qilinadi", msg is None, msg or "")

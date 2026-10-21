@@ -77,6 +77,7 @@ async def read_me(
     return Me(
         **profile.model_dump(),
         phone=me.phone,
+        email=me.email,
         first_name=me.first_name,
         last_name=me.last_name,
         region=me.region,

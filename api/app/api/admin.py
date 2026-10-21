@@ -70,7 +70,7 @@ def _who(user: User) -> str:
     queue identifies nobody. The phone number is what the moderator would look
     for anyway, so it stands in rather than a blank.
     """
-    return user.full_name.strip() or user.phone
+    return user.full_name.strip() or user.phone or user.email or "—"
 
 
 async def _labels(
