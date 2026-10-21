@@ -119,9 +119,10 @@ o'tkazishdan saqlaning.
 
 ## 7. To'lov
 
-Hozirda e'lon joylash bepul, kvota chegarasida. Kvotadan ortiq e'lonlar
-uchun to'lov joriy etilishi mumkin — bunday o'zgarish oldindan e'lon
-qilinadi va faqat yangi e'lonlarga taalluqli bo'ladi.
+E'lon joylash kvota chegarasida bepul. Qo'shimcha e'lonlar paketi va
+e'lonni ko'tarish kabi pullik xizmatlar [Ommaviy oferta](https://mab.uz/offer)
+asosida ko'rsatiladi. To'lov Payme orqali qabul qilinadi; karta
+ma'lumotlari bizga kelmaydi va bizda saqlanmaydi.
 
 ---
 
@@ -168,4 +169,4 @@ Nizolar {{SUD_YURISDIKSIYASI}} da ko'riladi.
 {{HUQUQIY_MANZIL}}
 {{ALOQA_EMAIL}} · {{ALOQA_TELEFON}}
 
-Maxfiylik masalalari: [Maxfiylik siyosati](PRIVACY-POLICY.md)
+Maxfiylik masalalari: [Maxfiylik siyosati](https://mab.uz/privacy)

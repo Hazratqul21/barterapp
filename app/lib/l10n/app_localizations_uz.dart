@@ -1056,6 +1056,13 @@ class LUz extends L {
   String get legalTerms => 'Foydalanish shartlari';
 
   @override
+  String get legalOffer => 'Ommaviy oferta';
+
+  @override
+  String get billingOfferAgree =>
+      'To‘lov qilib, siz Ommaviy oferta shartlariga rozilik bildirasiz';
+
+  @override
   String get deleteAccountConfirm =>
       'Haqiqatan ham hisobingizni o‘chirmoqchimisiz? Bu amalni bekor qilib bo‘lmaydi va ma’lumotlaringiz butunlay o‘chiriladi.';
 

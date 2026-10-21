@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/legal_links.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
@@ -105,7 +106,16 @@ class TariffsPage extends ConsumerWidget {
                 ),
                 Gap.h4,
                 const _SecureNote(),
-                Gap.h8,
+                Gap.h2,
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    icon: const Icon(Symbols.gavel_rounded, size: 18),
+                    onPressed: () => openLegalLink(context, publicOfferUrl),
+                    label: Text(l.billingOfferAgree),
+                  ),
+                ),
+                Gap.h6,
                 _Heading(l.billingHistory),
                 Gap.h3,
                 orders.maybeWhen(

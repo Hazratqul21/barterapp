@@ -27,6 +27,23 @@ if [ "$DO_API" = 1 ]; then
   fi
 fi
 
+# Huquqiy hujjatlar manzillari (mab.uz/privacy …) → API. Server avvalroq
+# o'rnatilgan bo'lsa, nginx sozlamasida bu qator hali yo'q — qo'shib qo'yamiz.
+if [ -f /tmp/mab-legal.conf ]; then
+  install -D -m 644 /tmp/mab-legal.conf /etc/nginx/snippets/mab-legal.conf
+  CONF=/etc/nginx/sites-available/mab.conf
+  if [ -f "$CONF" ] && ! grep -q "mab-legal.conf" "$CONF"; then
+    cp "$CONF" "$CONF.bak"
+    sed -i 's|^\(\s*\)root /var/www/mab;|&\n\1include snippets/mab-legal.conf;|' "$CONF"
+  fi
+  if nginx -t 2>/dev/null; then
+    systemctl reload nginx
+  elif [ -f "$CONF.bak" ]; then
+    echo "nginx sozlamasi xato bo'ldi — eski holatiga qaytarildi."
+    cp "$CONF.bak" "$CONF" && systemctl reload nginx
+  fi
+fi
+
 if [ "$DO_WEB" = 1 ]; then
   rsync -a --delete --exclude '.well-known' /tmp/mab-web/ /var/www/mab/
   chown -R www-data:www-data /var/www/mab

@@ -2073,6 +2073,18 @@ abstract class L {
   /// **'Foydalanish shartlari'**
   String get legalTerms;
 
+  /// No description provided for @legalOffer.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ommaviy oferta'**
+  String get legalOffer;
+
+  /// No description provided for @billingOfferAgree.
+  ///
+  /// In uz, this message translates to:
+  /// **'To‘lov qilib, siz Ommaviy oferta shartlariga rozilik bildirasiz'**
+  String get billingOfferAgree;
+
   /// No description provided for @deleteAccountConfirm.
   ///
   /// In uz, this message translates to:

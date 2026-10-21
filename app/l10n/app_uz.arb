@@ -428,6 +428,8 @@
   "legalTitle": "HUQUQIY",
   "legalPrivacy": "Maxfiylik siyosati",
   "legalTerms": "Foydalanish shartlari",
+  "legalOffer": "Ommaviy oferta",
+  "billingOfferAgree": "To‘lov qilib, siz Ommaviy oferta shartlariga rozilik bildirasiz",
   "deleteAccountConfirm": "Haqiqatan ham hisobingizni o‘chirmoqchimisiz? Bu amalni bekor qilib bo‘lmaydi va ma’lumotlaringiz butunlay o‘chiriladi.",
   "profileVerifyAccount": "Hisobingizni tasdiqlang",
   "profileVerifyDesc": "Ishonchni oshirish uchun shaxsingizni tasdiqlang.",

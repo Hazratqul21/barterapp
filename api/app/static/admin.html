@@ -70,6 +70,7 @@
     <button data-tab="disputes">Nizolar</button>
     <button data-tab="push">Bildirishnoma</button>
     <button data-tab="billing">To‘lovlar</button>
+    <button data-tab="legal">Hujjatlar</button>
     <button data-tab="stats">Tahlil</button>
     <button data-tab="setup">Sozlash</button>
   </nav>
@@ -439,6 +440,78 @@
   </section>
 
   <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
+  <!-- ── Huquqiy hujjatlar ─────────────────────────────────────────── -->
+  <section id="legal" class="hide">
+    <div class="card">
+      <h2>Hujjatlar</h2>
+      <p class="hint" style="margin:-6px 0 12px">Maxfiylik siyosati, shartlar, oferta va boshqalar.
+        Saqlangan zahoti saytda yangilanadi. Asosiy hujjatlarni o‘chirib yoki
+        yashirib bo‘lmaydi — ilova, do‘konlar va Payme ularga havola qiladi.</p>
+      <table><thead><tr><th>Hujjat</th><th>Manzil</th><th>Holat</th><th>Yangilangan</th><th></th></tr></thead>
+        <tbody id="legalRows"></tbody></table>
+      <div class="bar"><button class="act ghost" onclick="newLegal()">+ Yangi hujjat</button></div>
+    </div>
+
+    <div class="card hide" id="legalForm">
+      <h2 id="legalFormTitle">Hujjat</h2>
+      <div class="row">
+        <div>
+          <label>Manzil nomi (slug)</label>
+          <input id="lSlug" placeholder="masalan: cookies">
+          <p class="hint" id="lUrl"></p>
+        </div>
+        <div><label>Tartib (kichigi oldin)</label><input id="lPos" type="number" value="0"></div>
+        <div>
+          <label>Holati</label>
+          <select id="lPub"><option value="true">Saytda ko‘rinadi</option>
+            <option value="false">Yashirin</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Sarlavha (UZ)</label><input id="lTuz"></div>
+        <div><label>Sarlavha (RU)</label><input id="lTru"></div>
+        <div><label>Sarlavha (EN)</label><input id="lTen"></div>
+      </div>
+
+      <div class="bar" style="margin-top:18px">
+        <button class="act" data-lang="uz" onclick="legalLang('uz')">Matn: UZ</button>
+        <button class="act ghost" data-lang="ru" onclick="legalLang('ru')">RU</button>
+        <button class="act ghost" data-lang="en" onclick="legalLang('en')">EN</button>
+        <span style="flex:1"></span>
+        <label class="act ghost" style="margin:0;cursor:pointer;padding:10px 14px;border-radius:10px;
+               border:1px solid var(--line);font-size:14px;color:var(--soft)">
+          Fayldan yuklash (.md, .txt)
+          <input type="file" accept=".md,.markdown,.txt,text/plain,text/markdown"
+                 style="display:none" onchange="legalTextFile(this)"></label>
+      </div>
+      <textarea id="lBody" style="min-height:420px;font:13px/1.55 ui-monospace,Menlo,monospace;margin-top:10px"
+                oninput="legalBodies[legalCur] = this.value"></textarea>
+      <p class="hint">Markdown: <code># Sarlavha</code>, <code>## Bo‘lim</code>, <code>**qalin**</code>,
+        <code>- ro‘yxat</code>, <code>[matn](https://...)</code>, jadval <code>| a | b |</code>.
+        Tarjimasi bo‘sh til saytda o‘zbekcha matnni ko‘rsatadi.
+        <code>{{...}}</code> — hali to‘ldirilmagan joylar.</p>
+      <p class="hint" id="lPlaceholders" style="color:var(--money)"></p>
+
+      <label>PDF nusxa (ixtiyoriy, 10 MB gacha)</label>
+      <div class="bar" style="margin-top:4px;align-items:center">
+        <span id="lFile" class="hint" style="margin:0"></span>
+        <label class="act ghost" style="margin:0;cursor:pointer;padding:10px 14px;border-radius:10px;
+               border:1px solid var(--line);font-size:14px;color:var(--soft)">
+          PDF yuklash<input type="file" accept="application/pdf,.pdf" style="display:none"
+                             onchange="legalPdf(this)"></label>
+        <button class="act ghost hide" id="lFileDel" onclick="legalPdfDelete()">PDF ni olib tashlash</button>
+      </div>
+
+      <div class="bar">
+        <button class="act" onclick="saveLegal()">Saqlash</button>
+        <a class="act ghost" id="lOpen" target="_blank" rel="noopener"
+           style="text-decoration:none;padding:10px 18px;border-radius:10px">Saytda ochish</a>
+        <span style="flex:1"></span>
+        <button class="act danger hide" id="lDelete" onclick="deleteLegal()">O‘chirish</button>
+      </div>
+    </div>
+  </section>
+
   <section id="stats" class="hide">
     <div class="card">
       <h2>Voronka (30 kun)</h2>
@@ -528,7 +601,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'disputes', 'billing', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -545,7 +618,7 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'disputes', 'billing', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
@@ -553,6 +626,7 @@ function show(tab) {
   if (tab === 'reports') loadReports();
   if (tab === 'disputes') loadDisputes();
   if (tab === 'billing') loadBilling();
+  if (tab === 'legal') loadLegal();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
   if (tab === 'setup') loadFirebase();
@@ -1053,6 +1127,152 @@ resetForm();
 segChanged();
 resetProduct();
 if (TOKEN) start();
+
+// ── Huquqiy hujjatlar ────────────────────────────────────────────────
+
+let legalDocs = [];
+let legalSlug = null;          // tahrirlanayotgan hujjat; null — yangi
+let legalCur = 'uz';
+let legalBodies = { uz: '', ru: '', en: '' };
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('uz-UZ',
+    { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+async function loadLegal() {
+  try {
+    legalDocs = await api('/admin/legal');
+    $('legalRows').innerHTML = legalDocs.map(d => `<tr>
+      <td><b>${esc(d.title.uz)}</b>${d.has_placeholders
+        ? '<br><span class="pill off">to‘ldirilmagan joylar bor</span>' : ''}</td>
+      <td><a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.url.replace('https://', ''))}</a></td>
+      <td><span class="pill ${d.is_published ? 'live' : ''}">${d.is_published ? 'ochiq' : 'yashirin'}</span>
+        ${['ru', 'en'].filter(l => !d.body[l]).map(l =>
+          `<span class="pill">${l.toUpperCase()} yo‘q</span>`).join(' ')}</td>
+      <td>${fmtDate(d.updated_at)}</td>
+      <td><button class="act ghost" onclick="editLegal('${esc(d.slug)}')">Tahrirlash</button></td>
+    </tr>`).join('');
+    if (legalSlug) editLegal(legalSlug);
+  } catch (e) { say(e.message); }
+}
+
+function legalLang(lang) {
+  legalCur = lang;
+  $('lBody').value = legalBodies[lang] || '';
+  document.querySelectorAll('#legalForm [data-lang]').forEach(b =>
+    b.classList.toggle('ghost', b.dataset.lang !== lang));
+}
+
+function fillLegal(d) {
+  $('legalForm').classList.remove('hide');
+  $('legalFormTitle').textContent = d ? d.title.uz : 'Yangi hujjat';
+  $('lSlug').value = d ? d.slug : '';
+  $('lSlug').disabled = !!d;
+  $('lPos').value = d ? d.position : 100;
+  $('lPub').value = String(d ? d.is_published : true);
+  $('lPub').disabled = !!(d && d.is_core);
+  $('lTuz').value = d?.title.uz || '';
+  $('lTru').value = d?.title.ru || '';
+  $('lTen').value = d?.title.en || '';
+  legalBodies = { uz: d?.body.uz || '', ru: d?.body.ru || '', en: d?.body.en || '' };
+  legalLang('uz');
+  $('lUrl').textContent = d ? d.url : 'Manzil: https://mab.uz/legal/<slug>';
+  $('lOpen').href = d ? d.url : '#';
+  $('lOpen').classList.toggle('hide', !d);
+  $('lDelete').classList.toggle('hide', !d || d.is_core);
+  $('lFile').innerHTML = d?.file_url
+    ? `<a href="${esc(d.file_url)}" target="_blank" rel="noopener">Yuklangan PDF</a>`
+    : (d ? 'PDF yo‘q' : 'PDF ni hujjat saqlangandan keyin yuklang');
+  $('lFileDel').classList.toggle('hide', !d?.file_url);
+  const holes = d ? [...new Set(Object.values(d.body).join('\n').match(/\{\{[A-Z_]+\}\}/g) || [])] : [];
+  $('lPlaceholders').textContent = holes.length
+    ? 'To‘ldirilmagan: ' + holes.join(', ') : '';
+  $('legalForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editLegal(slug) {
+  legalSlug = slug;
+  fillLegal(legalDocs.find(d => d.slug === slug));
+}
+
+function newLegal() { legalSlug = null; fillLegal(null); }
+
+function legalTextFile(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (file.size > 1024 * 1024) { say('Matn fayli 1 MB dan oshmasin.'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    legalBodies[legalCur] = String(reader.result);
+    $('lBody').value = legalBodies[legalCur];
+    say(`${file.name} → ${legalCur.toUpperCase()} matniga qo‘yildi. Saqlashni unutmang.`, true);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+async function saveLegal() {
+  const slug = (legalSlug || $('lSlug').value.trim().toLowerCase());
+  if (!slug) { say('Manzil nomini yozing.'); return; }
+  if (!legalSlug && legalDocs.some(d => d.slug === slug)) {
+    say('Bu nomli hujjat bor — ro‘yxatdan tahrirlang.'); return;
+  }
+  try {
+    const d = await api('/admin/legal/' + encodeURIComponent(slug), {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: { uz: $('lTuz').value, ru: $('lTru').value, en: $('lTen').value },
+        body: legalBodies,
+        is_published: $('lPub').value === 'true',
+        position: Number($('lPos').value) || 0,
+      }),
+    });
+    legalSlug = d.slug;
+    say('Saqlandi. Saytda yangilandi.', true);
+    await loadLegal();
+  } catch (e) { say(e.message); }
+}
+
+async function deleteLegal() {
+  if (!legalSlug || !confirm('Hujjat butunlay o‘chirilsinmi?')) return;
+  try {
+    await api('/admin/legal/' + encodeURIComponent(legalSlug), { method: 'DELETE' });
+    legalSlug = null;
+    $('legalForm').classList.add('hide');
+    say('O‘chirildi.', true);
+    await loadLegal();
+  } catch (e) { say(e.message); }
+}
+
+async function legalPdf(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !legalSlug) { if (!legalSlug) say('Avval hujjatni saqlang.'); return; }
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch(API + '/admin/legal/' + encodeURIComponent(legalSlug) + '/file', {
+      method: 'POST', body: form, headers: { Authorization: 'Bearer ' + TOKEN },
+    });
+    if (!res.ok) {
+      let detail = 'Xatolik ' + res.status;
+      try { const b = await res.json(); if (b.detail) detail = b.detail; } catch {}
+      throw new Error(detail);
+    }
+    say('PDF yuklandi.', true);
+    await loadLegal();
+  } catch (e) { say(e.message); }
+}
+
+async function legalPdfDelete() {
+  if (!legalSlug) return;
+  try {
+    await api('/admin/legal/' + encodeURIComponent(legalSlug) + '/file', { method: 'DELETE' });
+    say('PDF olib tashlandi.', true);
+    await loadLegal();
+  } catch (e) { say(e.message); }
+}
 </script>
 </body>
 </html>

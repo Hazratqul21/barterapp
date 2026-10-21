@@ -52,6 +52,7 @@ yozing. Javob **30 kun ichida** beriladi.
 | E'lonlar: matn, suratlar, narx | E'lon joylaganda | Xizmatning asosiy mazmuni |
 | Xabarlar | Suhbatda | Savdo bo'yicha kelishish uchun |
 | Sharhlar va baholar | Savdodan keyin | Ishonch tizimi |
+| To'lovlar tarixi | Pullik xizmat sotib olganda | Buyurtma, summa va holat — hisob-kitob va soliq hisoboti uchun |
 | Shikoyat va bloklashlar | O'zingiz bosganda | Xavfsizlik |
 
 ### 2.2 Avtomatik yig'iladigan ma'lumot
@@ -159,7 +160,8 @@ Aloqa faqat ilova ichidagi suhbat orqali.
 |---|---|---|
 | **Eskiz** (notify.eskiz.uz, O'zbekiston) | SMS tasdiqlash kodi | Telefon raqamingiz va kod matni |
 | **{{HOSTING_PROVAYDER}}** | Serverni joylashtirish | Barcha ma'lumot (saqlanadi) |
-| **Apple / Google** *(rejalashtirilgan)* | Push-bildirishnoma yetkazish | Bildirishnoma matni va qurilma tokeni |
+| **Apple / Google** (Firebase) | Push-bildirishnoma yetkazish | Bildirishnoma matni va qurilma tokeni |
+| **Payme** (paycom.uz, O'zbekiston) | Pullik xizmatlar uchun to'lov | Buyurtma raqami va summa. Karta ma'lumotlarini faqat Payme sahifasida kiritasiz — ular bizga kelmaydi. |
 
 Bu ro'yxat to'liq. Boshqa hech kimga ma'lumot berilmaydi.
 
@@ -199,7 +201,7 @@ talab bo'lganda tegishli organga beriladi.
 so'rash kerak emas, elektron pochta yozish shart emas.
 
 Ilovaga kira olmasangiz: {{ALOQA_EMAIL}} ga o'sha telefon raqamidan
-yozing yoki {{VEB_SAYT}}/hisobni-ochirish sahifasidan foydalaning.
+yozing yoki https://mab.uz/hisobni-ochirish sahifasidan foydalaning.
 
 ### 7.2 Nima o'chadi
 
@@ -301,49 +303,3 @@ so'raymiz.
 **{{KOMPANIYA_NOMI}}**
 {{HUQUQIY_MANZIL}}
 {{ALOQA_EMAIL}} · {{ALOQA_TELEFON}}
-
----
----
-
-# ILOVA: Hisobni o'chirish sahifasi (veb uchun shablon)
-
-> Google Play alohida, **ilovasiz ham ochiladigan** veb-sahifa talab
-> qiladi. Quyidagi matnni `{{VEB_SAYT}}/hisobni-ochirish` manziliga
-> qo'ying va havolani Play Console → App content → Data deletion ga
-> kiriting.
-
----
-
-## MAB hisobini o'chirish
-
-### Eng tez yo'l — ilovaning o'zidan
-
-1. MAB ilovasini oching
-2. **Profil** → **Sozlamalar**
-3. Pastga tushing → **Hisobni o'chirish**
-4. Tasdiqlang
-
-Hisobingiz **darhol** o'chiriladi.
-
-### Ilovaga kira olmasangiz
-
-{{ALOQA_EMAIL}} ga **hisobingiz ro'yxatdan o'tgan telefon raqamdan**
-yozing. Mavzu: «Hisobni o'chirish».
-
-Xatingizda telefon raqamingizni ko'rsating. Shaxsingizni tasdiqlash uchun
-o'sha raqamga SMS kod yuboramiz.
-
-So'rov **30 kun ichida** bajariladi.
-
-### Nima o'chadi
-
-Ism, telefon raqami, profil surati, manzil, e'lonlaringiz, saqlangan
-e'lonlar va bildirishnoma sozlamalari.
-
-### Nima qoladi
-
-Yakunlangan savdolar, sharhlar va suhbatlardagi xabarlar — **ismingizsiz**.
-Ular savdo qilgan ikkinchi tomonga ham tegishli, shuning uchun
-saqlanadi, lekin sizga bog'lanmaydi.
-
-Batafsil: {{VEB_SAYT}}/maxfiylik

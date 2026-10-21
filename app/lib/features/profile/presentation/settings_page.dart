@@ -224,6 +224,12 @@ class SettingsPage extends ConsumerWidget {
                             title: l.legalTerms,
                             onTap: () => openLegalLink(context, termsOfUseUrl),
                           ),
+                          const _Divider(),
+                          _SettingsTile(
+                            icon: Symbols.gavel_rounded,
+                            title: l.legalOffer,
+                            onTap: () => openLegalLink(context, publicOfferUrl),
+                          ),
                         ],
                       ),
                     ),
