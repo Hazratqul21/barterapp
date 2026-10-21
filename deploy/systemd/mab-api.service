@@ -10,12 +10,36 @@ WorkingDirectory=/opt/mab/api
 # .env ni ilovaning o'zi o'qiydi (WorkingDirectory'dan). systemd yoki
 # bash orqali o'qitilsa CORS_ORIGINS dagi JSON qo'shtirnoqlari yo'qoladi.
 # Faqat lokal: tashqaridan nginx orqali (HTTPS) kiriladi.
-ExecStart=/opt/mab/api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8010 --workers 2 --proxy-headers --forwarded-allow-ips 127.0.0.1
+# Bitta jarayon (--workers 1): chat (WebSocket) va so'rov chegaralari
+# jarayon xotirasida. Ikkita jarayonda xabar boshqa jarayondagi odamga
+# yetmaydi, chegaralar esa ikki barobar bo'lib qoladi. Redis qo'shilguncha.
+ExecStart=/opt/mab/api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8010 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
 Restart=always
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=full
+PrivateDevices=true
+# Kod va .venv faqat o'qish uchun: API buzilsa ham o'z kodini qayta yozib
+# o'zini mustahkamlay olmasin. Yozish faqat yuklangan fayllarga.
+ProtectSystem=strict
+ReadWritePaths=/opt/mab/media
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+UMask=0027
+# Kod papkasi faqat o'qish uchun — Python .pyc yozishga urinmasin.
+Environment=PYTHONDONTWRITEBYTECODE=1
 
 [Install]
 WantedBy=multi-user.target

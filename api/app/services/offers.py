@@ -22,7 +22,10 @@ TRANSITIONS: dict[str, tuple[set[OfferStatus], OfferStatus, str]] = {
     # action: (allowed from, resulting status, who — "recipient" | "either")
     "accept": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.accepted, "recipient"),
     "decline": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.declined, "recipient"),
-    "counter": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.talking, "either"),
+    # Recipient only. A counter swaps the sides, so a sender allowed to counter
+    # their own offer became its recipient and could then accept it — at
+    # terms the other side never saw.
+    "counter": ({OfferStatus.pending, OfferStatus.talking}, OfferStatus.talking, "recipient"),
     # One side's confirmation; the deal completes only when both have
     # (services/agreements.confirm). `complete` is the legacy name.
     "confirm": ({OfferStatus.accepted}, OfferStatus.accepted, "either"),

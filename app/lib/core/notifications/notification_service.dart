@@ -92,8 +92,8 @@ class NotificationService {
   /// Called on sign-out. Without it a phone that was handed to somebody else
   /// keeps receiving the previous owner's notifications.
   Future<void> forget() async {
-    if (!_configured) return;
     try {
+      if (!_configured) return;
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
       await _apiClient.delete<dynamic>(

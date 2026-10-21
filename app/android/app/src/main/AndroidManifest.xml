@@ -12,7 +12,11 @@
          feed can say which one happened instead of showing one error for both. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <!-- allowBackup off: the session tokens live in app storage, and a cloud
+         backup restored on another phone would carry a live session there. -->
     <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
         android:label="MAB"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

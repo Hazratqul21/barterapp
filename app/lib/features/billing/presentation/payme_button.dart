@@ -80,11 +80,21 @@ class PaymeButton extends StatelessWidget {
 
 /// Opens the Payme page in the browser — card details go there, never into
 /// the app.
-Future<bool> openCheckout(String url) => launchUrl(
-  Uri.parse(url),
-  mode: LaunchMode.externalApplication,
-  webOnlyWindowName: '_self',
-);
+Future<bool> openCheckout(String url) async {
+  final uri = Uri.tryParse(url);
+  // Only Payme's own pages. The link comes from our server, but a wrong
+  // setting there must not turn the pay button into a redirect to anywhere.
+  if (uri == null || uri.scheme != 'https' || !paymeHosts.contains(uri.host)) {
+    return false;
+  }
+  return launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+    webOnlyWindowName: '_self',
+  );
+}
+
+const paymeHosts = {'checkout.paycom.uz', 'test.paycom.uz'};
 
 /// The browser hand-off, as a provider so tests can stand in for it.
 final checkoutLauncherProvider = Provider<Future<bool> Function(String url)>(

@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -272,7 +273,14 @@ async def write_review(
         target_id=offer.listing_id,
         avatar_url=me.avatar_url,
     )
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Ikki bosish bir vaqtda: ikkinchisi unique cheklovga uriladi.
+        await db.rollback()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "Bu savdoga allaqachon sharh yozgansiz."
+        )
 
     return ReviewOut(
         id=review.id,
@@ -404,3 +412,7 @@ async def delete_me(
 
     await account_deletion.delete_account(db, me)
     await db.commit()
+    # Open chat sockets die with the account, not when they next reconnect.
+    from app.api.chat import hub
+
+    await hub.kick(me.id)

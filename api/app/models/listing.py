@@ -116,6 +116,9 @@ class Listing(Base, UUIDPrimaryKey, Timestamps):
         # `sort=cheap|expensive` orders on value, which ix_listings_feed cannot
         # serve. `id` is part of the key because it is the cursor's tie-breaker.
         Index("ix_listings_price", "status", "value_minor", "id"),
+        # "Mening e'lonlarim", profil sahifasi va hisob o'chirish — hammasi
+        # egasi bo'yicha qidiradi.
+        Index("ix_listings_owner", "owner_id", "created_at"),
     )
 
 

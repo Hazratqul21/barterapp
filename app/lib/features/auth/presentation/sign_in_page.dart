@@ -172,7 +172,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     if (!mounted) return;
     setState(() {
       _codeSent = true;
-      if (code != null) _code.text = code;
+      // Only a development server returns the code; a release build never
+      // types it in, even if a server is misconfigured to send it.
+      if (code != null && !kReleaseMode) _code.text = code;
     });
     _startResendCountdown();
   });

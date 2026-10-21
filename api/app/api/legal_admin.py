@@ -206,10 +206,7 @@ async def upload_file(
     name = f"{slug}-{secrets.token_hex(4)}.pdf"
     (folder / name).write_bytes(raw)
     _remove_file(doc.file_url)
-    doc.file_url = (
-        str(request.base_url).rstrip("/")
-        + f"{settings.media_url_prefix}/{_FILE_DIR}/{name}"
-    )
+    doc.file_url = f"{settings.api_base(request)}{settings.media_url_prefix}/{_FILE_DIR}/{name}"
     doc.updated_by = me.id
     await db.commit()
     await db.refresh(doc)

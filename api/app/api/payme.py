@@ -30,12 +30,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import get_db
+from app.models.listing import Listing, ListingStatus
 from app.models.payment import (
     OrderStatus,
     PaymentOrder,
     PaymeTransaction,
     Product,
+    ProductKind,
 )
+from app.models.user import User
 from app.services import billing
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -141,13 +144,17 @@ def _authorized(request: Request) -> bool:
     if not header.startswith("Basic "):
         return False
     try:
-        decoded = base64.b64decode(header[6:]).decode()
+        decoded = base64.b64decode(header[6:], validate=True).decode()
     except (ValueError, UnicodeDecodeError):
         return False
     login, _, password = decoded.partition(":")
     # Login har doim "Paycom"; kalit — kassa kaliti. Vaqt bo'yicha teng
     # taqqoslash: kalitni harfma-harf taxmin qilib bo'lmasin.
-    return login == "Paycom" and hmac.compare_digest(password, settings.payme_key)
+    # Baytlar bo'yicha: compare_digest ASCII bo'lmagan matnda xato beradi,
+    # ya'ni "ключ" kabi parol 500 qaytarardi, -32504 emas.
+    return login == "Paycom" and hmac.compare_digest(
+        password.encode(), settings.payme_key.encode()
+    )
 
 
 def _order_id(params: dict) -> uuid.UUID | None:
@@ -210,6 +217,18 @@ async def _check_order(db: AsyncSession, params: dict) -> PaymentOrder:
         raise _order_unavailable()
     if amount != order.amount_minor:
         raise _wrong_amount()
+    # Pul yechilishidan oldin: xizmat haqiqatan berila oladimi. O'chirilgan
+    # hisobga paket yoki arxivlangan e'longa boost uchun to'lov olinmasin.
+    user = await db.get(User, order.user_id) if order.user_id else None
+    if user is None or user.deleted_at is not None:
+        raise _order_unavailable()
+    if order.kind == ProductKind.boost:
+        listing = await db.get(Listing, order.listing_id) if order.listing_id else None
+        if listing is None or listing.owner_id != user.id or listing.status not in (
+            ListingStatus.active,
+            ListingStatus.in_negotiation,
+        ):
+            raise _order_unavailable()
     return order
 
 

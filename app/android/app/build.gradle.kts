@@ -59,6 +59,15 @@ android {
         release {
             signingConfig = if (hasReleaseKeys) {
                 signingConfigs.getByName("release")
+            } else if (gradle.startParameter.taskNames.any {
+                    it.contains("Bundle", ignoreCase = true)
+                }) {
+                // An .aab is only ever built for Play; one signed with the
+                // debug key is useless there, so fail now, not at upload.
+                throw GradleException(
+                    "MAB: android/key.properties topilmadi — .aab faqat reliz " +
+                    "kaliti bilan quriladi. android/key.properties.example ga qarang."
+                )
             } else {
                 logger.warn(
                     "\n  MAB: android/key.properties topilmadi — reliz " +

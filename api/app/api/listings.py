@@ -6,12 +6,12 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
-from app.core.ratelimit import listings as listing_limit, source
+from app.core.ratelimit import listings as listing_limit, search as search_limit, source
 from app.core.security import current_user, optional_user
 from app.db.session import get_db
 from app.models.desire import Desire
@@ -186,6 +186,7 @@ async def _owners_for(
 
 @router.get("", response_model=Page[ListingCard])
 async def list_listings(
+    request: Request,
     tag: ListingTag | None = None,
     q: str | None = Query(default=None, max_length=120),
     min_value: int | None = Query(default=None, ge=0),
@@ -262,6 +263,7 @@ async def list_listings(
         # `%` and `_` are wildcards to LIKE, so a search for "50%" or "_" was
         # read as a pattern and matched everything. Escaped here, with the
         # escape character declared on each clause.
+        search_limit.check(source(request, viewer))
         safe = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         needle = f"%{safe}%"
         query = query.where(
@@ -333,6 +335,30 @@ async def list_listings(
     return Page[ListingCard](items=items, next_cursor=next_cursor)
 
 
+async def _may_see(db: AsyncSession, listing: Listing, viewer: User | None) -> bool:
+    """
+    Drafts and archived listings are not public. A moderator taking a scam
+    listing down meant nothing while its link still opened it; the owner, the
+    other side of a deal on it, and moderators still see it.
+    """
+    if listing.status not in (ListingStatus.draft, ListingStatus.archived):
+        return True
+    if viewer is None:
+        return False
+    if viewer.id == listing.owner_id or viewer.is_moderator:
+        return True
+    party = await db.scalar(
+        select(Offer.id)
+        .join(OfferItem, OfferItem.offer_id == Offer.id, isouter=True)
+        .where(
+            or_(Offer.from_user_id == viewer.id, Offer.to_user_id == viewer.id),
+            or_(Offer.listing_id == listing.id, OfferItem.listing_id == listing.id),
+        )
+        .limit(1)
+    )
+    return party is not None
+
+
 @router.get("/{listing_id}", response_model=ListingDetail)
 async def get_listing(
     listing_id: uuid.UUID,
@@ -349,7 +375,7 @@ async def get_listing(
         )
         .where(Listing.id == listing_id)
     )
-    if listing is None:
+    if listing is None or not await _may_see(db, listing, viewer):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "E’lon topilmadi.")
 
     owner = await db.get(User, listing.owner_id)
@@ -417,11 +443,22 @@ async def create_listing(
     # The meter only runs once the admin turns paid listings on. Until prices
     # are set there is nothing to buy, and a 402 with no way to pay is a wall.
     metered = me.user_type != UserType.business and await billing.listing_fee_enabled(db)
-    if metered and me.free_listings_left <= 0:
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            "Bepul e’lonlar tugadi. Davom etish uchun tarif tanlang.",
+    if metered:
+        # Spent here, in one statement, inside this transaction: reading the
+        # count and writing it back later let eight parallel requests publish
+        # four listings on one credit — and a stale write could wipe a pack
+        # bought in between. If anything below fails, the rollback returns it.
+        spent = await db.scalar(
+            update(User)
+            .where(User.id == me.id, User.free_listings_left > 0)
+            .values(free_listings_left=User.free_listings_left - 1)
+            .returning(User.free_listings_left)
         )
+        if spent is None:
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                "Bepul e’lonlar tugadi. Davom etish uchun tarif tanlang.",
+            )
 
     district = (payload.district or "").strip() or (
         None if payload.region else me.district
@@ -489,8 +526,6 @@ async def create_listing(
             )
         )
 
-    if metered:
-        me.free_listings_left -= 1
     me.last_seen_at = datetime.now(UTC)
     await db.commit()
 
@@ -505,7 +540,14 @@ async def create_listing(
 
 #: An offer that is still live. A listing tangled in one of these cannot be
 #: edited out from under the person negotiating for it.
-_LIVE_OFFERS = (OfferStatus.pending, OfferStatus.talking, OfferStatus.accepted)
+# `disputed` too: a listing under dispute is still held — editing or archiving
+# it while an operator decides would change what the deal was about.
+_LIVE_OFFERS = (
+    OfferStatus.pending,
+    OfferStatus.talking,
+    OfferStatus.accepted,
+    OfferStatus.disputed,
+)
 
 
 async def _owned_listing(

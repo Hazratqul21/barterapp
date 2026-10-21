@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     #: (journalctl -u mab-api) ko'rinadi, ya'ni faqat jamoa kira oladi.
     #: Eskiz ulangach albatta o'chiring.
     sms_optional: bool = False
+    #: SMS_OPTIONAL paytida kod faqat shu raqamlarga beriladi (jamoa).
+    #: Qolganlarga ochiq aytiladi: "SMS vaqtincha ishlamayapti". Bo'sh —
+    #: hamma so'ray oladi (kod baribir faqat logda).
+    sms_optional_phones: tuple[str, ...] = ()
 
     # Payme (Merchant API). Bo'sh bo'lsa to'lov o'chiq: buyurtma yaratib
     # bo'lmaydi va Payme endpoint'i har so'rovni avtorizatsiya xatosi bilan
@@ -105,6 +109,11 @@ class Settings(BaseSettings):
     #: Google kalitlari. Faqat testda o'zgartiriladi.
     google_jwks_url: str = GOOGLE_JWKS_URL
 
+    #: API'ning ochiq manzili (https://api.mab.uz). Yuklangan fayl havolalari
+    #: shundan yasaladi — so'rovdagi Host sarlavhasidan emas, chunki uni
+    #: istalgan odam yozib yuboradi. Bo'sh bo'lsa (lokal) so'rov manzili.
+    public_api_url: str = ""
+
     #: Ommaviy sayt. Huquqiy hujjatlar shu domenda ochiladi
     #: (https://mab.uz/privacy — nginx ularni API'dan oladi).
     public_web_url: str = "https://mab.uz"
@@ -122,6 +131,9 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    def api_base(self, request) -> str:
+        return (self.public_api_url or str(request.base_url)).rstrip("/")
 
     @property
     def google_enabled(self) -> bool:

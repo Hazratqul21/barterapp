@@ -6,11 +6,17 @@ import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select, update
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.ratelimit import (
+    otp_request_ip,
+    otp_verify_ip,
+    sms_global,
+    source,
+)
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -36,6 +42,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 MAX_ATTEMPTS = 5
 
+#: Wrong codes allowed for one phone in a day, across every code it was sent.
+#: Per-code attempts alone reset with each new code: five codes in fifteen
+#: minutes, five guesses each, is 2,400 guesses a day at one account.
+MAX_FAILED_PER_DAY = 15
+
 # The steps every account starts with; weights add up to the trust score.
 STARTER_STEPS = [
     ("phone", "SMS orqali tasdiqlangan", 20),
@@ -58,9 +69,33 @@ def _hash_code(code: str) -> str:
 
 @router.post("/otp/request", response_model=OtpRequestResult)
 async def request_otp(
-    payload: OtpRequest, db: AsyncSession = Depends(get_db)
+    payload: OtpRequest, request: Request, db: AsyncSession = Depends(get_db)
 ) -> OtpRequestResult:
     now = datetime.now(UTC)
+
+    # Per address as well as per phone: spraying codes at many numbers from
+    # one machine is both a brute-force and a way to run up the SMS bill.
+    # Not while OTP_DEBUG is on (development and the test suite, which sign in
+    # hundreds of times from one address); production refuses OTP_DEBUG.
+    if not settings.otp_debug:
+        otp_request_ip.check(source(request, None))
+
+    if settings.sms_optional and settings.sms_optional_phones and (
+        payload.phone not in settings.sms_optional_phones
+    ):
+        # SMS hali ulanmagan: kod hech kimga bormaydi. Ro'yxatdan tashqari
+        # odam kod kutib o'tirmasin — ochiq aytiladi.
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "SMS orqali kirish vaqtincha ishlamayapti. Google orqali kiring "
+            "yoki birozdan so'ng urinib ko'ring.",
+        )
+
+    # One phone's requests are counted and inserted one at a time; without
+    # this, forty parallel requests all read "under the limit" and all send.
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:k))"), {"k": "otp:" + payload.phone}
+    )
 
     # Rate limit per phone. Count the codes already asked for in the window;
     # past the ceiling, refuse — this is what stops a caller from making the
@@ -80,6 +115,10 @@ async def request_otp(
             "Juda ko‘p kod so‘raldi. Birozdan so‘ng qayta urining.",
             headers={"Retry-After": str(settings.otp_rate_window_seconds)},
         )
+
+    # A ceiling for the whole service: a bug or an attack must not be able to
+    # spend the SMS budget in an afternoon.
+    sms_global.check("all")
 
     code = f"{secrets.randbelow(1_000_000):06d}"
 
@@ -121,9 +160,31 @@ async def request_otp(
 
 @router.post("/otp/verify", response_model=TokenPair)
 async def verify_otp(
-    payload: OtpVerify, db: AsyncSession = Depends(get_db)
+    payload: OtpVerify, request: Request, db: AsyncSession = Depends(get_db)
 ) -> TokenPair:
     now = datetime.now(UTC)
+
+    if not settings.otp_debug:
+        otp_verify_ip.check(source(request, None))
+
+    # Every guess for one phone is checked in turn. Concurrent guesses used to
+    # all read `attempts` before any of them wrote it back, so sixty parallel
+    # requests got thirty-seven tries at a five-try code.
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:k))"), {"k": "otp:" + payload.phone}
+    )
+
+    failed_today = await db.scalar(
+        select(func.coalesce(func.sum(OtpChallenge.attempts), 0)).where(
+            OtpChallenge.phone == payload.phone,
+            OtpChallenge.created_at > now - timedelta(days=1),
+        )
+    )
+    if (failed_today or 0) >= MAX_FAILED_PER_DAY:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Juda ko‘p noto‘g‘ri urinish. Ertaga qayta urining.",
+        )
 
     challenge = await db.scalar(
         select(OtpChallenge)
@@ -134,6 +195,7 @@ async def verify_otp(
         )
         .order_by(OtpChallenge.created_at.desc())
         .limit(1)
+        .with_for_update()
     )
     if challenge is None:
         raise HTTPException(
@@ -349,3 +411,7 @@ async def logout_all(
         .values(revoked_at=datetime.now(UTC))
     )
     await db.commit()
+    # "Sign out everywhere" includes the chat sockets already open.
+    from app.api.chat import hub
+
+    await hub.kick(me.id)

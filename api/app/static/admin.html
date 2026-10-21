@@ -535,8 +535,8 @@ const API = location.origin;
 let TOKEN = localStorage.getItem('barter_admin_token') || '';
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function say(text, ok) {
   const m = $('msg');
@@ -666,6 +666,7 @@ function resetForm() {
 async function loadBlocks() {
   try {
     const rows = await api('/admin/feed-blocks');
+    blockCache = rows;
     $('blockRows').innerHTML = rows.length ? rows.map(b => `
       <tr>
         <td><b>${esc(b.title.uz)}</b><br><span class="pill">${esc(b.id.slice(0,8))}</span></td>
@@ -675,16 +676,22 @@ async function loadBlocks() {
         <td><span class="pill ${b.is_active ? 'live' : 'off'}">${
           b.is_active ? 'yoqilgan' : "o'chirilgan"}</span></td>
         <td style="white-space:nowrap">
-          <button class="act ghost" onclick='editBlock(${JSON.stringify(JSON.stringify(b))})'>Tahrir</button>
-          <button class="act danger" onclick="delBlock('${b.id}')">O'chirish</button>
+          <button class="act ghost" onclick="editBlock('${esc(b.id)}')">Tahrir</button>
+          <button class="act danger" onclick="delBlock('${esc(b.id)}')">O'chirish</button>
         </td>
       </tr>`).join('') :
       '<tr><td colspan="6" style="color:var(--faint)">Hali bo‘lak yo‘q.</td></tr>';
   } catch (e) { say(e.message); }
 }
 
-function editBlock(json) {
-  const b = JSON.parse(json);
+// Ro'yxatdan id bo'yicha olinadi. Ilgari butun bo'lak JSON qilib onclick
+// ichiga yozilardi: sarlavhadagi ' belgisi atributdan chiqib, skript
+// bo'lib ishga tushardi (va oddiy "O'zbekiston" tugmani buzardi).
+let blockCache = [];
+
+function editBlock(id) {
+  const b = blockCache.find(x => x.id === id);
+  if (!b) return;
   $('bId').value = b.id;
   $('bKind').value = b.kind;
   $('bSlot').value = b.slot;
@@ -759,9 +766,9 @@ async function loadReports() {
         <td>${esc(r.reporter_name)}</td>
         <td style="white-space:nowrap">
           ${r.target_type === 'listing'
-            ? `<button class="act danger" onclick="archive('${r.target_id}','${r.id}')">E'lonni yechish</button>`
+            ? `<button class="act danger" onclick="archive('${esc(r.target_id)}','${esc(r.id)}')">E'lonni yechish</button>`
             : ''}
-          <button class="act ghost" onclick="decide('${r.id}','dismissed')">Rad etish</button>
+          <button class="act ghost" onclick="decide('${esc(r.id)}','dismissed')">Rad etish</button>
         </td>
       </tr>`).join('') :
       '<tr><td colspan="6" style="color:var(--faint)">Ochiq shikoyat yo‘q.</td></tr>';
@@ -816,8 +823,8 @@ async function loadDisputes() {
               (d.value_minor / 100).toLocaleString('uz') + ' so‘m'}</td>
         <td>${esc(WHY[d.decided_by_rule] || d.decided_by_rule || '')}</td>
         <td style="white-space:nowrap">
-          <button class="act danger" onclick="resolveDispute('${d.id}','cancel')">Bekor qilish</button>
-          <button class="act ghost" onclick="resolveDispute('${d.id}','complete')">Savdo kuchda</button>
+          <button class="act danger" onclick="resolveDispute('${esc(d.id)}','cancel')">Bekor qilish</button>
+          <button class="act ghost" onclick="resolveDispute('${esc(d.id)}','complete')">Savdo kuchda</button>
         </td>
       </tr>`).join('') :
       '<tr><td colspan="5" style="color:var(--faint)">Navbat bo‘sh.</td></tr>';

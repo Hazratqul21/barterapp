@@ -104,10 +104,41 @@ Admin panel → **Hujjatlar**. Saqlangan matn darhol https://mab.uz/privacy,
 API'ga yo'naltiradi (`deploy/nginx/mab-legal.conf`). Bu qoida har
 deployda o'zi o'rnatiladi; certbot sozlagan HTTPS bloklariga tegilmaydi.
 
-## Zaxira nusxa (tavsiya)
+## Zaxira nusxa
+
+Har kuni 03:30 da avtomatik (`mab-backup.timer`): baza (`pg_dump -Fc`) va
+`/opt/mab/media` → `/var/backups/mab`, 14 kun saqlanadi. Har deploydan oldin
+ham alohida nusxa olinadi (`mab-…-pre-deploy-….dump`).
 
 ```sh
-sudo -u postgres pg_dump mab | gzip > mab-$(date +%F).sql.gz
+sudo mab-backup                                   # qo'lda
+ls -lh /var/backups/mab                           # ro'yxat
+# Tiklash:
+sudo -u postgres pg_restore --clean --if-exists -d mab /var/backups/mab/<fayl>.dump
+sudo tar -xzf /var/backups/mab/media-<sana>.tar.gz -C /opt/mab
 ```
+
+Server butunlay buzilsa ham nusxa qolishi uchun haftada bir marta
+noutbukka ko'chirib qo'ying:
+`scp -r "$(cat deploy/.server)":/var/backups/mab ~/mab-backups/` (root
+egaligida bo'lgani uchun avval `sudo chmod -R a+rX /var/backups/mab` yoki
+`sudo cp` bilan uy papkangizga).
+
+## Xavfsizlik — bir martalik qadamlar
+
+1. **SSH faqat kalit bilan** (kalit bilan kirish ishlayotganini tekshirgandan keyin):
+   ```sh
+   ssh -t "$(cat deploy/.server)" 'printf "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin no\n" | sudo tee /etc/ssh/sshd_config.d/10-mab.conf && sudo sshd -t && sudo systemctl reload ssh'
+   ```
+   Keyin server parolini almashtiring: `passwd`.
+2. **`.env` ga qo'shing** (`sudo nano /opt/mab/api/.env`, keyin `sudo systemctl restart mab-api`):
+   ```
+   PUBLIC_API_URL=https://api.mab.uz
+   SMS_OPTIONAL_PHONES=["+998XXXXXXXXX"]   # SMS_OPTIONAL paytida kod faqat shu raqamlarga
+   ```
+3. fail2ban, avtomatik xavfsizlik yangilanishlari va log muddati (14 kun)
+   `setup_server.sh` da. Eski serverda bir marta: `sudo apt install -y fail2ban unattended-upgrades`.
+
+Batafsil: [docs/SECURITY-AUDIT-2026-10-21.md](../docs/SECURITY-AUDIT-2026-10-21.md).
 
 Ilova ID'si (`uz.mab.app`) va domenlar haqida: `README.md` → "Domen va identifikatorlar".

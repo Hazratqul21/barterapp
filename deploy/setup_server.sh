@@ -22,7 +22,7 @@ step "Paketlar"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 apt-get install -y -q postgresql nginx certbot python3-certbot-nginx rsync ufw curl \
-  software-properties-common python3 python3-venv
+  software-properties-common python3 python3-venv fail2ban unattended-upgrades
 
 # Server Python 3.11+ talab qiladi. Ubuntu 22.04 da 3.10 — 3.12 qo'shiladi.
 PY=python3
@@ -36,7 +36,7 @@ echo "Python: $($PY --version)"
 
 step "Foydalanuvchi va papkalar"
 id -u "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home \
-  --home-dir "$APP_DIR" --shell /bin/bash "$APP_USER"
+  --home-dir "$APP_DIR" --shell /usr/sbin/nologin "$APP_USER"
 mkdir -p "$APP_DIR/api" "$APP_DIR/media" "$WEB_DIR"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 echo "$PY" > "$APP_DIR/.python"
@@ -49,7 +49,9 @@ if [ ! -f "$DB_PASS_FILE" ]; then
 fi
 DB_PASS=$(cat "$DB_PASS_FILE")
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='mab'" | grep -q 1 \
-  || sudo -u postgres psql -c "CREATE ROLE mab LOGIN PASSWORD '$DB_PASS'"
+  || sudo -u postgres psql -q -v pw="$DB_PASS" <<'SQL'
+CREATE ROLE mab LOGIN PASSWORD :'pw';
+SQL
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='mab'" | grep -q 1 \
   || sudo -u postgres createdb -O mab mab
 
@@ -65,11 +67,13 @@ JWT_SECRET=$JWT
 OTP_DEBUG=false
 CORS_ORIGINS=["https://$DOMAIN","https://www.$DOMAIN"]
 MEDIA_ROOT=$APP_DIR/media
+PUBLIC_API_URL=https://$API_DOMAIN
 
 # SMS (Eskiz) — to'ldirilmaguncha production rejimi server ishga tushishiga
 # yo'l qo'ymaydi: SMS bo'lmasa hech kim kira olmaydi.
 SMS_REQUIRED=true
 # Eskiz kelguncha vaqtincha: SMS_OPTIONAL=true (kodlar: journalctl -u mab-api)
+# va kod faqat jamoaga: SMS_OPTIONAL_PHONES=["+998901234567"]
 ESKIZ_EMAIL=
 ESKIZ_PASSWORD=
 # ESKIZ_SENDER=4546
@@ -91,15 +95,18 @@ fi
 
 step "systemd: API va fon vazifalari"
 install -m 644 "$HERE/systemd/mab-api.service" /etc/systemd/system/mab-api.service
-for unit in mab-push mab-maintenance; do
+install -m 755 "$HERE/backup.sh" /usr/local/sbin/mab-backup
+for unit in mab-push mab-maintenance mab-backup; do
   install -m 644 "$HERE/systemd/$unit.service" "/etc/systemd/system/$unit.service"
   install -m 644 "$HERE/systemd/$unit.timer" "/etc/systemd/system/$unit.timer"
 done
 systemctl daemon-reload
-systemctl enable mab-api.service mab-push.timer mab-maintenance.timer >/dev/null
+systemctl enable mab-api.service mab-push.timer mab-maintenance.timer mab-backup.timer >/dev/null
 
 step "nginx"
 install -D -m 644 "$HERE/nginx/mab-legal.conf" /etc/nginx/snippets/mab-legal.conf
+install -D -m 644 "$HERE/nginx/mab-web-headers.conf" /etc/nginx/snippets/mab-web-headers.conf
+install -D -m 644 "$HERE/nginx/mab-http.conf" /etc/nginx/conf.d/mab-http.conf
 NGINX_CONF=/etc/nginx/sites-available/mab.conf
 # certbot HTTPS'ni shu faylga yozadi. Qayta ishga tushirishda uni ustidan
 # yozsak, sertifikat sozlamasi yo'qoladi va sayt https'da ochilmay qoladi.
@@ -113,6 +120,22 @@ ln -sf /etc/nginx/sites-available/mab.conf /etc/nginx/sites-enabled/mab.conf
 rm -f /etc/nginx/sites-enabled/default
 [ -f "$WEB_DIR/index.html" ] || echo '<!doctype html><title>MAB</title><p>MAB tez orada.</p>' > "$WEB_DIR/index.html"
 nginx -t && systemctl reload nginx
+
+step "Xavfsizlik: avtomatik yangilanishlar, fail2ban, log muddati"
+# Xavfsizlik yamoqlari o'zi o'rnatiladi.
+dpkg-reconfigure -f noninteractive unattended-upgrades >/dev/null 2>&1 || true
+# SSH'ga parol terib ko'ruvchilar 10 daqiqaga bloklanadi.
+cat > /etc/fail2ban/jail.d/mab-sshd.conf <<'JAIL'
+[sshd]
+enabled = true
+maxretry = 5
+bantime = 10m
+JAIL
+systemctl enable --now fail2ban >/dev/null 2>&1 || true
+# Loglar (SMS_OPTIONAL paytida — kirish kodlari ham) uzoq saqlanmasin.
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nMaxRetentionSec=14day\n' > /etc/systemd/journald.conf.d/mab.conf
+systemctl restart systemd-journald || true
 
 step "Firewall"
 ufw allow OpenSSH >/dev/null

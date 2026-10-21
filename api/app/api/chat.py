@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import uuid
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -20,7 +21,11 @@ from sqlalchemy.orm import selectinload
 
 from app.core.locale import resolve_locale
 from app.core.ratelimit import messages as message_limit, source
-from app.core.security import create_socket_token, current_user, decode_token
+from app.core.security import (
+    create_socket_token,
+    current_user,
+    decode_claims,
+)
 from app.db.session import SessionLocal, get_db
 from app.models.offer import Conversation, Message, Offer
 from app.models.social import NotifyKind, NotifyTargetType
@@ -63,6 +68,17 @@ class Hub:
             if not self._sockets[user_id]:
                 self._sockets.pop(user_id, None)
 
+    async def kick(self, user_id: uuid.UUID) -> None:
+        """Close every live socket of an account — on deletion or "sign out
+        everywhere", so a stolen device stops receiving messages at once."""
+        async with self._lock:
+            sockets = self._sockets.pop(user_id, set())
+        for socket in sockets:
+            try:
+                await socket.close(code=status.WS_1008_POLICY_VIOLATION)
+            except Exception:
+                pass
+
     async def send(self, user_id: uuid.UUID, payload: dict) -> None:
         for socket in list(self._sockets.get(user_id, ())):
             try:
@@ -73,6 +89,21 @@ class Hub:
 
 
 hub = Hub()
+
+#: Socket tickets already used, by id, until they expire. The ticket travels
+#: in a query string — where proxies and logs can see it — so it opens one
+#: socket and no more. In-process: the API runs as one process (see Hub).
+_used_tickets: dict[str, float] = {}
+
+
+def _spend_ticket(jti: str | None, expires: float) -> bool:
+    now = time.time()
+    for stale in [k for k, exp in _used_tickets.items() if exp < now]:
+        del _used_tickets[stale]
+    if not jti or jti in _used_tickets:
+        return False
+    _used_tickets[jti] = expires
+    return True
 
 
 async def _peer_id(thread: Conversation, me_id: uuid.UUID) -> uuid.UUID:
@@ -321,14 +352,18 @@ async def live(websocket: WebSocket, token: str = "") -> None:
     place tokens leak into logs, so what leaks here expires in seconds.
     """
     try:
-        user_id = decode_token(token, "socket")
+        claims = decode_claims(token, "socket")
     except HTTPException:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
+    if not _spend_ticket(claims.get("jti"), float(claims.get("exp", 0))):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+    user_id = claims["sub"]
 
     async with SessionLocal() as db:
         user = await db.scalar(select(User).where(User.id == user_id))
-        if user is None:
+        if user is None or user.deleted_at is not None:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 

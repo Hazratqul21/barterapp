@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../shared/models/models.dart';
 import '../../trade/data/listing_draft.dart';
+import '../../../core/notifications/notification_service.dart';
 import 'google_auth.dart';
 
 class AuthRepository {
@@ -84,6 +87,19 @@ class AuthRepository {
   );
 
   Future<void> signOut() async {
+    // Revoke the refresh token on the server, so a copy of it (a backup, a
+    // stolen phone image) stops working too. Best-effort: offline sign-out
+    // still clears this device.
+    final refresh = _session.refreshToken;
+    if (refresh != null) {
+      try {
+        await _api.post<void>(
+          '/auth/logout',
+          body: {'refresh_token': refresh},
+          parse: (_) {},
+        );
+      } catch (_) {}
+    }
     await _session.clear();
     await GoogleAuth.signOut();
   }
@@ -102,9 +118,22 @@ class AuthState extends Notifier<bool> {
   @override
   bool build() => ref.watch(sessionStoreProvider).accessToken != null;
 
-  Future<void> signedIn() async => state = true;
+  Future<void> signedIn() async {
+    state = true;
+    // Push registration needs an account; at launch there may not have been
+    // one, so the device is registered now rather than on the next restart.
+    unawaited(
+      ref
+          .read(notificationServiceProvider)
+          .init(locale: ref.read(localeProvider)),
+    );
+  }
 
   Future<void> signOut() async {
+    // Before the token is dropped: unregistering the device is an
+    // authenticated call. Otherwise the next person on this phone keeps
+    // getting the previous owner's notifications.
+    await ref.read(notificationServiceProvider).forget();
     await ref.read(authRepositoryProvider).signOut();
     // A shared phone must not hand the next person this one's half-written
     // listing. A merely expired session keeps it: same person, signing back in.

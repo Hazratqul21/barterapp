@@ -7,6 +7,8 @@ chaqiradi, narx mantiqi esa bitta joyda qoladi.
 
 from __future__ import annotations
 
+from sqlalchemy import update
+
 import base64
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -94,9 +96,13 @@ async def fulfil(db: AsyncSession, order: PaymentOrder) -> None:
     order.paid_at = now
 
     if order.kind == ProductKind.listing_pack and order.user_id:
-        user = await db.get(User, order.user_id, with_for_update=True)
-        if user is not None:
-            user.free_listings_left += order.quantity
+        # One statement, so a listing published at the same moment (which
+        # spends a credit the same way) cannot overwrite the purchase.
+        await db.execute(
+            update(User)
+            .where(User.id == order.user_id)
+            .values(free_listings_left=User.free_listings_left + order.quantity)
+        )
 
     elif order.kind == ProductKind.boost and order.listing_id:
         listing = await db.get(Listing, order.listing_id, with_for_update=True)

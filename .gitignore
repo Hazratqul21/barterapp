@@ -2,6 +2,10 @@ api/.venv/
 api/__pycache__/
 api/**/__pycache__/
 api/.env
+# Har qanday .env nusxasi (.env.prod, .env.local …) — faqat namuna repoda.
+.env*
+!.env.example
+!**/.env.example
 app/build/
 app/.dart_tool/
 app/ios/Pods/

@@ -1,0 +1,10 @@
+[Unit]
+Description=MAB: baza va yuklangan fayllar zaxira nusxasi
+After=postgresql.service
+
+[Service]
+Type=oneshot
+# root: postgres nomidan pg_dump qiladi va /var/backups ga yozadi.
+ExecStart=/usr/local/sbin/mab-backup
+Nice=10
+IOSchedulingClass=idle

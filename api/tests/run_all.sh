@@ -19,6 +19,7 @@ for t in tests/test_config_guard.py \
          tests/test_counter_offer.py \
          tests/test_reviews.py \
          tests/test_otp_security.py \
+         tests/test_otp_races.py \
          tests/test_token_security.py \
          tests/test_trade_integrity.py \
          tests/test_agreements.py \
@@ -45,6 +46,7 @@ for t in tests/test_config_guard.py \
          tests/test_payme.py \
          tests/test_legal.py \
          tests/test_google_auth.py \
+         tests/test_integrity.py \
          tests/test_security_probe.py \
          tests/test_e2e_journey.py; do
   $PY -m app.seed >/dev/null 2>&1

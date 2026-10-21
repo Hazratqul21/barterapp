@@ -15,7 +15,7 @@ from app.db.session import get_db
 from app.models.feed_block import BlockAction, BlockKind, FeedBlock, FeedBlockText
 from app.models.listing import Listing, ListingStatus
 from app.models.user import User
-from app.schemas.common import ApiModel
+from app.schemas.common import ApiModel, HttpsUrl
 from app.schemas.listing import ListingCard
 from app.services import stats
 from app.services.presenter import listing_card, trader_brief
@@ -78,7 +78,7 @@ class BlockIn(ApiModel):
     subtitle: TriOptional | None = None
     cta: TriOptional | None = None
 
-    image_url: str | None = None
+    image_url: HttpsUrl | None = None
     background: str | None = Field(default=None, max_length=9)
 
     action: BlockAction = BlockAction.none

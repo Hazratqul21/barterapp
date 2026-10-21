@@ -52,3 +52,4 @@ with httpx.Client(base_url=BASE, timeout=20) as c:
 check("soket chipta bilan ochiladi", asyncio.run(dials(ticket)))
 check("soket access tokenni rad etadi", not asyncio.run(dials(at)))
 check("soket axlat tokenni rad etadi", not asyncio.run(dials("not-a-token")))
+check("bitta chipta ikkinchi marta ishlamaydi", not asyncio.run(dials(ticket)))
