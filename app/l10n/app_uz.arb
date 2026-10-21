@@ -569,5 +569,21 @@
   "boostSheetHint": "E’loningiz lentada yuqorida, «Premium» belgisi bilan ko‘rinadi.",
   "quotaTitle": "Bepul e’lonlar tugadi",
   "quotaBody": "Yangi e’lon joylash uchun e’lon paketini tanlang. Qoralama saqlanib qoladi.",
-  "quotaAction": "Tariflarni ko‘rish"
+  "quotaAction": "Tariflarni ko‘rish",
+  "authPassword": "Parol bilan kirish",
+  "authIdentifier": "Telefon raqami yoki email",
+  "authPasswordLabel": "Parol",
+  "authCurrentPassword": "Joriy parol (o‘rnatilgan bo‘lsa)",
+  "authNewPassword": "Yangi parol — kamida 12 belgi",
+  "authConfirmPassword": "Parolni takrorlang",
+  "authPasswordMismatch": "Parollar bir xil va kamida 12 belgidan iborat bo‘lsin.",
+  "authForgotPassword": "Parolni unutdingizmi?",
+  "authManagePassword": "Parolni o‘rnatish yoki o‘zgartirish",
+  "authPasswordSaved": "Parol saqlandi. Boshqa sessiyalar yangilanishi bekor qilindi.",
+  "authPhoneUnavailable": "SMS orqali kirish va parolni tiklash hozircha mavjud emas.",
+  "authMethodsUnavailable": "Kirish usullari yuklanmadi. Qayta urinib ko‘ring.",
+  "authSetupPending": "Yangi hisob ochish vaqtincha mavjud emas. Kirish xizmatlari sozlanmoqda.",
+  "authPasswordHelp": "Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.",
+  "authSavePassword": "Parolni saqlash",
+  "authShowPassword": "Parolni ko‘rsatish/yashirish"
 }

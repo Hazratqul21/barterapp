@@ -57,5 +57,12 @@ for t in tests/test_config_guard.py \
     echo "FAIL"; echo "$out" | tail -5; fail=1
   fi
 done
+# pytest uslubidagi testlar (to'liq oqim faqat mab_auth_audit_* bazada ishlaydi).
+printf '%-42s ' "test_auth_methods.py"
+if out=$($PY -m pytest -q tests/test_auth_methods.py 2>&1); then
+  echo "OK   ($(echo "$out" | tail -1))"
+else
+  echo "FAIL"; echo "$out" | tail -15; fail=1
+fi
 $PY -m app.seed >/dev/null 2>&1
 exit $fail

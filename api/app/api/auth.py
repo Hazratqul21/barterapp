@@ -4,10 +4,11 @@ import hashlib
 import hmac
 import logging
 import secrets
+import httpx
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import func, select, text, update
+from sqlalchemy import delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -26,11 +27,11 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models.social import VerificationStep
-from app.models.user import OtpChallenge, RefreshToken, User
-from app.services.google_auth import GoogleTokenError, verify_id_token
+from app.models.user import LoginAttempt, OtpChallenge, RefreshToken, User
+from app.services.login_credentials import check_password, hash_password, google_identity
+from app.schemas.user import GoogleLogin, PasswordLogin, PasswordSet, PasswordReset
 from app.services.sms import SmsError, get_sms, otp_text
 from app.schemas.user import (
-    GoogleSignIn,
     OtpRequest,
     OtpRequestResult,
     OtpVerify,
@@ -71,7 +72,12 @@ def _hash_code(code: str) -> str:
 async def request_otp(
     payload: OtpRequest, request: Request, db: AsyncSession = Depends(get_db)
 ) -> OtpRequestResult:
+    if not settings.phone_login_enabled:
+        raise HTTPException(503, "Telefon orqali kirish SMS xizmati ulangach ochiladi.")
     now = datetime.now(UTC)
+    # One phone's requests are counted and inserted one at a time; without
+    # this, forty parallel requests all read "under the limit" and all send.
+    await _lock_identifier(db, payload.phone)
 
     # Per address as well as per phone: spraying codes at many numbers from
     # one machine is both a brute-force and a way to run up the SMS bill.
@@ -80,22 +86,14 @@ async def request_otp(
     if not settings.otp_debug:
         otp_request_ip.check(source(request, None))
 
-    if settings.sms_optional and settings.sms_optional_phones and (
-        payload.phone not in settings.sms_optional_phones
-    ):
-        # SMS hali ulanmagan: kod hech kimga bormaydi. Ro'yxatdan tashqari
-        # odam kod kutib o'tirmasin — ochiq aytiladi.
+    if not settings.phone_allowed(payload.phone):
+        # SMS hali ulanmagan (SMS_OPTIONAL): kod faqat jamoa raqamlariga,
+        # server logida. Boshqalar kod kutib o'tirmasin — ochiq aytiladi.
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "SMS orqali kirish vaqtincha ishlamayapti. Google orqali kiring "
             "yoki birozdan so'ng urinib ko'ring.",
         )
-
-    # One phone's requests are counted and inserted one at a time; without
-    # this, forty parallel requests all read "under the limit" and all send.
-    await db.execute(
-        text("SELECT pg_advisory_xact_lock(hashtext(:k))"), {"k": "otp:" + payload.phone}
-    )
 
     # Rate limit per phone. Count the codes already asked for in the window;
     # past the ceiling, refuse — this is what stops a caller from making the
@@ -122,6 +120,9 @@ async def request_otp(
 
     code = f"{secrets.randbelow(1_000_000):06d}"
 
+    await db.execute(update(OtpChallenge).where(
+        OtpChallenge.phone == payload.phone, OtpChallenge.consumed_at.is_(None)
+    ).values(consumed_at=now))
     db.add(
         OtpChallenge(
             phone=payload.phone,
@@ -136,10 +137,10 @@ async def request_otp(
     delivered = True
     try:
         await get_sms().send(payload.phone, otp_text(code))
-    except SmsError as exc:
+    except (SmsError, httpx.HTTPError) as exc:
         # Sabab logda qoladi, foydalanuvchiga chiqmaydi: provayder xatosi
         # unga hech narsa demaydi, lekin xizmat haqidagi ma'lumot beradi.
-        log.warning("OTP SMS yuborilmadi (%s): %s", payload.phone, exc)
+        log.warning("OTP SMS delivery failed: %s", type(exc).__name__)
         delivered = False
 
         if settings.sms_required:
@@ -163,58 +164,7 @@ async def verify_otp(
     payload: OtpVerify, request: Request, db: AsyncSession = Depends(get_db)
 ) -> TokenPair:
     now = datetime.now(UTC)
-
-    if not settings.otp_debug:
-        otp_verify_ip.check(source(request, None))
-
-    # Every guess for one phone is checked in turn. Concurrent guesses used to
-    # all read `attempts` before any of them wrote it back, so sixty parallel
-    # requests got thirty-seven tries at a five-try code.
-    await db.execute(
-        text("SELECT pg_advisory_xact_lock(hashtext(:k))"), {"k": "otp:" + payload.phone}
-    )
-
-    failed_today = await db.scalar(
-        select(func.coalesce(func.sum(OtpChallenge.attempts), 0)).where(
-            OtpChallenge.phone == payload.phone,
-            OtpChallenge.created_at > now - timedelta(days=1),
-        )
-    )
-    if (failed_today or 0) >= MAX_FAILED_PER_DAY:
-        raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            "Juda ko‘p noto‘g‘ri urinish. Ertaga qayta urining.",
-        )
-
-    challenge = await db.scalar(
-        select(OtpChallenge)
-        .where(
-            OtpChallenge.phone == payload.phone,
-            OtpChallenge.consumed_at.is_(None),
-            OtpChallenge.expires_at > now,
-        )
-        .order_by(OtpChallenge.created_at.desc())
-        .limit(1)
-        .with_for_update()
-    )
-    if challenge is None:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Kod muddati tugagan yoki yuborilmagan. Yangi kod so‘rang.",
-        )
-
-    if challenge.attempts >= MAX_ATTEMPTS:
-        raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            "Juda ko‘p urinish. Yangi kod so‘rang.",
-        )
-
-    if not secrets.compare_digest(challenge.code_hash, _hash_code(payload.code)):
-        challenge.attempts += 1
-        await db.commit()
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kod noto‘g‘ri.")
-
-    challenge.consumed_at = now
+    await _check_code(db, request, payload.phone, payload.code, now=now)
 
     user = await db.scalar(select(User).where(User.phone == payload.phone))
     is_new = user is None
@@ -236,54 +186,64 @@ async def verify_otp(
     )
 
 
-@router.post("/google", response_model=TokenPair)
-async def google_sign_in(
-    payload: GoogleSignIn, db: AsyncSession = Depends(get_db)
-) -> TokenPair:
+async def _check_code(
+    db: AsyncSession, request: Request, phone: str, code: str, *, now: datetime
+) -> None:
     """
-    Google orqali kirish. Ilova Google'dan ID token oladi, biz uni tekshiramiz.
-
-    Hisob Google'ning o'zgarmas `sub` ID'si bo'yicha topiladi. Email bo'yicha
-    boshqa hisobga ulanmaydi: telefon bilan ochilgan hisobni bir xil email
-    bilan "egallab olish" imkoni bo'lmasligi kerak.
+    Check one SMS code and consume it, or raise. Shared by sign-in and
+    password reset, so both get the same limits.
     """
-    if not settings.google_enabled:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Google orqali kirish yoqilmagan.")
-    try:
-        identity = await verify_id_token(payload.id_token)
-    except GoogleTokenError as exc:
-        log.info("Google token rad etildi: %s", exc)
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            "Google orqali kirib bo'lmadi. Qaytadan urining.",
-        ) from exc
+    if not settings.phone_login_enabled or not settings.phone_allowed(phone):
+        raise HTTPException(503, "Telefon orqali kirish SMS xizmati ulangach ochiladi.")
+    # Every guess for one phone is checked in turn. Concurrent guesses used to
+    # all read `attempts` before any of them wrote it back, so sixty parallel
+    # requests got thirty-seven tries at a five-try code.
+    await _lock_identifier(db, phone)
 
-    now = datetime.now(UTC)
-    user = await db.scalar(select(User).where(User.google_sub == identity.sub))
-    is_new = user is None
-    if user is None:
-        user = await _create_user(
-            db,
-            google_sub=identity.sub,
-            email=identity.email if identity.email_verified else None,
-            first_name=identity.given_name,
-            last_name=identity.family_name,
-            avatar_url=identity.picture,
+    if not settings.otp_debug:
+        otp_verify_ip.check(source(request, None))
+
+    failed_today = await db.scalar(
+        select(func.coalesce(func.sum(OtpChallenge.attempts), 0)).where(
+            OtpChallenge.phone == phone,
+            OtpChallenge.created_at > now - timedelta(days=1),
         )
-    else:
-        user.last_seen_at = now
-        if identity.email_verified and identity.email:
-            user.email = identity.email
-
-    await db.commit()
-
-    pair = await _issue_tokens(db, user.id)
-    await db.commit()
-    return TokenPair(
-        access_token=pair.access_token,
-        refresh_token=pair.refresh_token,
-        is_new_user=is_new,
     )
+    if (failed_today or 0) >= MAX_FAILED_PER_DAY:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Juda ko‘p noto‘g‘ri urinish. Ertaga qayta urining.",
+        )
+
+    challenge = await db.scalar(
+        select(OtpChallenge)
+        .where(
+            OtpChallenge.phone == phone,
+            OtpChallenge.consumed_at.is_(None),
+            OtpChallenge.expires_at > now,
+        )
+        .order_by(OtpChallenge.created_at.desc())
+        .limit(1)
+        .with_for_update()
+    )
+    if challenge is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Kod muddati tugagan yoki yuborilmagan. Yangi kod so‘rang.",
+        )
+
+    if challenge.attempts >= MAX_ATTEMPTS:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Juda ko‘p urinish. Yangi kod so‘rang.",
+        )
+
+    if not secrets.compare_digest(challenge.code_hash, _hash_code(code)):
+        challenge.attempts += 1
+        await db.commit()
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Kod noto‘g‘ri.")
+
+    challenge.consumed_at = now
 
 
 async def _create_user(
@@ -347,7 +307,7 @@ async def refresh(
     user_id, jti = decode_refresh(payload.refresh_token)
     now = datetime.now(UTC)
 
-    row = await db.scalar(select(RefreshToken).where(RefreshToken.id == jti))
+    row = await db.scalar(select(RefreshToken).where(RefreshToken.id == jti).with_for_update())
 
     # Unknown jti: the row was swept, or the token was forged around a real
     # signature it never had. Either way it is not a live session.
@@ -377,6 +337,10 @@ async def refresh(
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, "Sessiya muddati tugagan. Qaytadan kiring."
         )
+
+    user = await db.scalar(select(User).where(User.id == user_id))
+    if user is None or user.is_deleted:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Hisob mavjud emas.")
 
     # Rotate: retire this token, hand back a new pair.
     row.revoked_at = now
@@ -415,3 +379,113 @@ async def logout_all(
     from app.api.chat import hub
 
     await hub.kick(me.id)
+
+
+async def _lock_identifier(db: AsyncSession, identifier: str) -> None:
+    # Serialize checks across workers; an in-process counter is insufficient.
+    # Transaction-scoped: released at commit/rollback.
+    key = int.from_bytes(hashlib.sha256(identifier.encode()).digest()[:8], 'big', signed=True)
+    await db.execute(text('SELECT pg_advisory_xact_lock(:key)'), {'key': key})
+
+
+@router.get('/methods')
+async def login_methods():
+    return {'phone': settings.phone_login_enabled, 'password': True,
+            'google': bool(settings.google_client_ids),
+            'google_client_id': settings.google_client_ids[0] if settings.google_client_ids else None}
+
+
+async def _throttle_password(db: AsyncSession, identifier: str):
+    await _lock_identifier(db, identifier)
+    now = datetime.now(UTC)
+    digest = _hash_code(identifier)
+    count = await db.scalar(select(func.count()).select_from(LoginAttempt).where(
+        LoginAttempt.identifier_hash == digest,
+        LoginAttempt.created_at > now - timedelta(minutes=15)))
+    if (count or 0) >= 5:
+        raise HTTPException(429, "Ko'p urinish. 15 daqiqadan so'ng qaytadan urinib ko'ring.", headers={'Retry-After': '900'})
+    await db.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now - timedelta(days=1)))
+    db.add(LoginAttempt(identifier_hash=digest, created_at=now))
+    await db.commit()
+
+
+@router.post('/password/login', response_model=TokenPair)
+async def password_login(
+    payload: PasswordLogin, request: Request, db: AsyncSession = Depends(get_db)
+):
+    identifier = payload.identifier.strip().lower()
+    # Per account (below) and per address: one machine trying a common
+    # password against many accounts is stopped here.
+    if not settings.otp_debug:
+        otp_verify_ip.check(source(request, None))
+    await _throttle_password(db, identifier)
+    user = await db.scalar(select(User).where(or_(User.phone == identifier, User.email == identifier)))
+    valid = await check_password(user.password_hash if user and not user.is_deleted else None, payload.password)
+    if not valid:
+        raise HTTPException(401, "Telefon/email yoki parol noto'g'ri.")
+    user.last_seen_at = datetime.now(UTC)
+    pair = await _issue_tokens(db, user.id)
+    await db.commit()
+    return pair
+
+
+@router.post('/password/set', response_model=TokenPair)
+async def password_set(payload: PasswordSet, me: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    # A password can only be created after Google/SMS verified ownership.
+    await _throttle_password(db, 'set:' + str(me.id))
+    me = await db.scalar(select(User).where(User.id == me.id).with_for_update())
+    if me.password_hash and not await check_password(me.password_hash, payload.current_password or ''):
+        raise HTTPException(401, "Joriy parol noto'g'ri.")
+    me.password_hash = await hash_password(payload.password)
+    await db.execute(update(RefreshToken).where(RefreshToken.user_id == me.id).values(revoked_at=datetime.now(UTC)))
+    pair = await _issue_tokens(db, me.id)
+    await db.commit()
+    return pair
+
+
+@router.post('/password/reset', response_model=TokenPair)
+async def password_reset(
+    payload: PasswordReset, request: Request, db: AsyncSession = Depends(get_db)
+):
+    # Same limits as sign-in; the code is consumed here, no account is created.
+    await _check_code(db, request, payload.phone, payload.code, now=datetime.now(UTC))
+    user = await db.scalar(
+        select(User).where(User.phone == payload.phone, User.deleted_at.is_(None)).with_for_update()
+    )
+    if user is None:
+        await db.commit()
+        raise HTTPException(404, "Bu raqam bilan hisob topilmadi.")
+    user.password_hash = await hash_password(payload.password)
+    await db.execute(update(RefreshToken).where(RefreshToken.user_id == user.id).values(revoked_at=datetime.now(UTC)))
+    pair = await _issue_tokens(db, user.id)
+    await db.commit()
+    return pair
+
+
+@router.post('/google', response_model=TokenPair)
+async def google_login(payload: GoogleLogin, db: AsyncSession = Depends(get_db)):
+    identity = await google_identity(payload.id_token)
+    subject = identity['sub']
+    await _lock_identifier(db, 'google:' + subject)
+    user = await db.scalar(select(User).where(User.google_sub == subject))
+    is_new = user is None
+    if user is None:
+        email = identity['email'].strip().lower()
+        await _lock_identifier(db, 'email:' + email)
+        # Never silently attach a Google identity to an existing local account.
+        existing = await db.scalar(select(User.id).where(User.email == email))
+        if existing:
+            raise HTTPException(409, 'Bu email boshqa hisobga biriktirilgan. Avval o‘sha hisobga kiring.')
+        user = await _create_user(
+            db,
+            google_sub=subject,
+            email=email,
+            first_name=str(identity.get('given_name', ''))[:80],
+            last_name=str(identity.get('family_name', ''))[:80],
+        )
+    if user.is_deleted:
+        raise HTTPException(401, "Hisob o'chirilgan.")
+    user.last_seen_at = datetime.now(UTC)
+    pair = await _issue_tokens(db, user.id)
+    await db.commit()
+    return TokenPair(access_token=pair.access_token, refresh_token=pair.refresh_token, is_new_user=is_new)

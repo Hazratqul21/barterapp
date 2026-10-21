@@ -22,3 +22,6 @@ api/media/
 __pycache__/
 *.pyc
 tools/__pycache__/
+
+# Flutter golden xatoliklari (flutter test yaratadi)
+app/test/failures/

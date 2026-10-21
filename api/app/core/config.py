@@ -83,9 +83,9 @@ class Settings(BaseSettings):
     #: (journalctl -u mab-api) ko'rinadi, ya'ni faqat jamoa kira oladi.
     #: Eskiz ulangach albatta o'chiring.
     sms_optional: bool = False
-    #: SMS_OPTIONAL paytida kod faqat shu raqamlarga beriladi (jamoa).
-    #: Qolganlarga ochiq aytiladi: "SMS vaqtincha ishlamayapti". Bo'sh —
-    #: hamma so'ray oladi (kod baribir faqat logda).
+    #: SMS_OPTIONAL paytida (Eskiz hali yo'q) telefon orqali kirish faqat shu
+    #: raqamlarga ochiq (jamoa): kod server logida ko'rinadi. Bo'sh bo'lsa
+    #: productionda telefon orqali kirish butunlay o'chiq (503).
     sms_optional_phones: tuple[str, ...] = ()
 
     # Payme (Merchant API). Bo'sh bo'lsa to'lov o'chiq: buyurtma yaratib
@@ -127,6 +127,22 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:8080",
     )
+
+    @property
+    def phone_login_enabled(self) -> bool:
+        return (
+            bool(self.eskiz_email and self.eskiz_password)
+            or not self.is_production
+            or bool(self.sms_optional and self.sms_optional_phones)
+        )
+
+    def phone_allowed(self, phone: str) -> bool:
+        """Eskiz ulanmagan productionda — faqat jamoa raqamlari."""
+        if self.eskiz_email and self.eskiz_password:
+            return True
+        if not self.is_production:
+            return True
+        return self.sms_optional and phone in self.sms_optional_phones
 
     @property
     def is_production(self) -> bool:
@@ -265,8 +281,7 @@ def get_settings() -> Settings:
         if settings.sms_optional:
             import warnings
             warnings.warn(
-                "SMS_OPTIONAL=true: SMS yuborilmaydi, tasdiqlash kodlari faqat "
-                "server logida. Eskiz ulangach o'chiring.",
+                "SMS_OPTIONAL=true: telefon orqali kirish SMS sozlanguncha o'chirilgan.",
                 stacklevel=2,
             )
     else:

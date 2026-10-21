@@ -8,7 +8,8 @@ productionda bu sozlama o'zgartirilsa, server ishga tushmaydi
 - to'g'ri token → hisob ochiladi (`is_new_user`), ism va email Google'dan;
 - shu `sub` bilan qayta kirish → o'sha hisob;
 - boshqa `aud`, boshqa kalit, muddati o'tgan, boshqa `iss` → 401;
-- telefon bilan ochilgan hisob bir xil email bilan egallab olinmaydi;
+- email boshqa hisobda bo'lsa — 409 (jimgina ulanmaydi, egallab olinmaydi);
+- Google tasdiqlamagan email bilan kirib bo'lmaydi;
 - hisob o'chirilsa, Google bilan qayta kirish yangi hisob ochadi.
 
 Talab: server GOOGLE_CLIENT_IDS='["ci-google-client"]' va
@@ -121,6 +122,8 @@ def main() -> None:
         check("boshqa iss → 401", google(c, token(sub, iss="https://evil.example")).status_code == 401)
         check("buzilgan token → 401", google(c, token(sub)[:-6] + "AAAAAA").status_code == 401)
         check("bo'sh token → 422", google(c, "").status_code == 422)
+        check("tasdiqlanmagan email → 401",
+              google(c, token("g" + uuid.uuid4().hex[:20], email_verified=False)).status_code == 401)
 
         # Telefon bilan ochilgan hisob: Google email'i bir xil bo'lsa ham
         # unga ulanmaydi — alohida hisob ochiladi.
@@ -134,11 +137,7 @@ def main() -> None:
         asyncio.run(set_email(phone_me["id"], shared))
         other = "g" + uuid.uuid4().hex[:20]
         r = google(c, token(other, email=shared))
-        other_me = c.get(
-            "/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}
-        ).json()
-        check("email bo'yicha boshqa hisobga ulanmaydi",
-              r.json()["is_new_user"] is True and other_me["id"] != phone_me["id"])
+        check("email boshqa hisobda → 409, ulanmaydi", r.status_code == 409, str(r.status_code))
 
         deleted = c.request(
             "DELETE", "/me", json={"confirm": True},

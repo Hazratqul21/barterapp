@@ -14,8 +14,9 @@ Ilova / sayt ──POST /auth/google {id_token}──► API ──► token Goo
 
 - Hisob Google'ning o'zgarmas ID'si (`sub`) bo'yicha topiladi. Yangi bo'lsa —
   yaratiladi, ism, familiya va surat Google'dan olinadi, keyin onboarding.
-- Telefon bilan ochilgan hisobga **email bo'yicha ulanmaydi** — bu boshqa
-  odamning hisobini egallab olishning oldini oladi.
+- Mavjud hisobga **email bo'yicha jimgina ulanmaydi**: email boshqa hisobda
+  bo'lsa, 409 — avval o'sha hisobga kirish kerak. Bu boshqa odamning hisobini
+  egallab olishning oldini oladi. Email Google tomonidan tasdiqlangan bo'lishi shart.
 - Google parol bizga kelmaydi. API Google'ga so'rov yubormaydi, faqat
   uning ochiq kalitlarini (googleapis.com) vaqti-vaqti bilan oladi.
 
@@ -56,13 +57,8 @@ GOOGLE_CLIENT_IDS=["1234…-abc.apps.googleusercontent.com"]
 ```
 keyin `sudo systemctl restart mab-api`.
 
-**Sayt va ilova** — repoga fayl:
-```sh
-echo '1234…-abc.apps.googleusercontent.com' > deploy/google_client_id
-bash deploy/deploy.sh --web        # sayt
-bash app/scripts/build_apk.sh      # APK
-```
-Play uchun `.aab`: `flutter build appbundle --release --dart-define=GOOGLE_CLIENT_ID=$(cat ../deploy/google_client_id)`.
+**Sayt va ilova** hech narsa talab qilmaydi: ular client ID'ni serverdan
+oladi (`GET /auth/methods`). Server sozlangach, tugma o'zi paydo bo'ladi.
 
 ## 3. Tekshirish
 
@@ -79,8 +75,8 @@ Hozircha o'chiq. Yoqish uchun: iOS turidagi client ID, `Info.plist` da
 
 | Belgi | Sabab |
 |---|---|
-| Tugma yo'q | `GOOGLE_CLIENT_ID` build'ga berilmagan |
+| Tugma yo'q | Serverda `GOOGLE_CLIENT_IDS` bo'sh (`curl https://api.mab.uz/auth/methods`) |
 | Android: «Developer console is not set up correctly» / `[28444]` | SHA-1 yoki package nomi Android client'da noto'g'ri |
 | Sayt: `origin_mismatch` | Web client'da `https://mab.uz` origin yo'q |
 | API 401 «Google orqali kirib bo'lmadi» | Serverdagi `GOOGLE_CLIENT_IDS` ilovadagi ID bilan bir xil emas |
-| API 404 | Serverda `GOOGLE_CLIENT_IDS` bo'sh |
+| API 503 | Serverda `GOOGLE_CLIENT_IDS` bo'sh yoki Google kalitlari olinmadi |

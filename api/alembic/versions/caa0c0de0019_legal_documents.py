@@ -4,8 +4,8 @@ Boshlang'ich matn `app/legal_defaults/*.md` dan olinadi. Keyin u faqat
 admin panelda o'zgaradi; bu migratsiya qayta ishlasa ham mavjud matnga
 tegmaydi.
 
-Revision ID: c9a0c0de0018
-Revises: c8a0c0de0017
+Revision ID: caa0c0de0019
+Revises: c9a0c0de0018
 """
 
 from pathlib import Path
@@ -14,8 +14,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "c9a0c0de0018"
-down_revision = "c8a0c0de0017"
+revision = "caa0c0de0019"
+down_revision = "c9a0c0de0018"
 branch_labels = None
 depends_on = None
 

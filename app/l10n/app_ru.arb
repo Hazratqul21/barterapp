@@ -438,5 +438,21 @@
   "boostSheetHint": "Объявление будет выше в ленте и с отметкой «Premium».",
   "quotaTitle": "Бесплатные объявления закончились",
   "quotaBody": "Чтобы разместить объявление, выберите пакет. Черновик сохранится.",
-  "quotaAction": "Посмотреть тарифы"
+  "quotaAction": "Посмотреть тарифы",
+  "authPassword": "Войти с паролем",
+  "authIdentifier": "Номер телефона или email",
+  "authPasswordLabel": "Пароль",
+  "authCurrentPassword": "Текущий пароль (если установлен)",
+  "authNewPassword": "Новый пароль — минимум 12 символов",
+  "authConfirmPassword": "Повторите пароль",
+  "authPasswordMismatch": "Пароли должны совпадать и содержать минимум 12 символов.",
+  "authForgotPassword": "Забыли пароль?",
+  "authManagePassword": "Установить или изменить пароль",
+  "authPasswordSaved": "Пароль сохранён. Продление других сеансов отключено.",
+  "authPhoneUnavailable": "Вход и восстановление пароля по SMS пока недоступны.",
+  "authMethodsUnavailable": "Не удалось загрузить способы входа. Повторите попытку.",
+  "authSetupPending": "Регистрация временно недоступна. Настраиваем службы входа.",
+  "authPasswordHelp": "Установите пароль в настройках после входа. Для Google-аккаунта можно снова войти через Google.",
+  "authSavePassword": "Сохранить пароль",
+  "authShowPassword": "Показать/скрыть пароль"
 }

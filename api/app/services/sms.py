@@ -118,6 +118,13 @@ class LogSms:
         # warning, not info: uvicorn shows warnings by default, and in
         # production without a provider (SMS_OPTIONAL) this log line is the
         # only place the team can read a sign-in code.
+        # Productionda provayder yo'q bo'lsa, kod faqat SMS_OPTIONAL_PHONES
+        # (jamoa) raqamlari uchun logga yoziladi — `journalctl -u mab-api`.
+        # Boshqa hech kimning kodi logga tushmaydi.
+        if settings.is_production and not (
+            settings.sms_optional and phone in settings.sms_optional_phones
+        ):
+            raise SmsError("SMS provayderi sozlanmagan.")
         log.warning("sms (quruq rejim) → %s: %s", phone, text)
 
 

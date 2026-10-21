@@ -63,10 +63,7 @@ flutter gen-l10n || { red "flutter gen-l10n xato berdi."; exit 1; }
 step "APK qurish (birinchi marta 5–10 daqiqa)"
 OUT="build/app/outputs/flutter-apk/app-profile.apk"
 rm -f "$OUT"
-# Google orqali kirish: deploy/google_client_id dagi Web client ID (bo'lsa).
-GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-$(cat "$APP_DIR/../deploy/google_client_id" 2>/dev/null || true)}
-if ! flutter build apk --profile --dart-define=API_BASE_URL="$API" \
-     --dart-define=GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID"; then
+if ! flutter build apk --profile --dart-define=API_BASE_URL="$API"; then
   red "APK qurilmadi. Odatiy sabablar:"
   red "  • Android SDK/litsenziya:  flutter doctor --android-licenses"
   red "  • Java versiyasi:          flutter doctor -v  (JDK 17 kerak)"

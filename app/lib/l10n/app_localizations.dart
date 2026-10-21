@@ -2726,6 +2726,102 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Tariflarni ko‘rish'**
   String get quotaAction;
+
+  /// No description provided for @authPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parol bilan kirish'**
+  String get authPassword;
+
+  /// No description provided for @authIdentifier.
+  ///
+  /// In uz, this message translates to:
+  /// **'Telefon raqami yoki email'**
+  String get authIdentifier;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parol'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authCurrentPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Joriy parol (o‘rnatilgan bo‘lsa)'**
+  String get authCurrentPassword;
+
+  /// No description provided for @authNewPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi parol — kamida 12 belgi'**
+  String get authNewPassword;
+
+  /// No description provided for @authConfirmPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni takrorlang'**
+  String get authConfirmPassword;
+
+  /// No description provided for @authPasswordMismatch.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parollar bir xil va kamida 12 belgidan iborat bo‘lsin.'**
+  String get authPasswordMismatch;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni unutdingizmi?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authManagePassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni o‘rnatish yoki o‘zgartirish'**
+  String get authManagePassword;
+
+  /// No description provided for @authPasswordSaved.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parol saqlandi. Boshqa sessiyalar yangilanishi bekor qilindi.'**
+  String get authPasswordSaved;
+
+  /// No description provided for @authPhoneUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'SMS orqali kirish va parolni tiklash hozircha mavjud emas.'**
+  String get authPhoneUnavailable;
+
+  /// No description provided for @authMethodsUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kirish usullari yuklanmadi. Qayta urinib ko‘ring.'**
+  String get authMethodsUnavailable;
+
+  /// No description provided for @authSetupPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi hisob ochish vaqtincha mavjud emas. Kirish xizmatlari sozlanmoqda.'**
+  String get authSetupPending;
+
+  /// No description provided for @authPasswordHelp.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.'**
+  String get authPasswordHelp;
+
+  /// No description provided for @authSavePassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni saqlash'**
+  String get authSavePassword;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In uz, this message translates to:
+  /// **'Parolni ko‘rsatish/yashirish'**
+  String get authShowPassword;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

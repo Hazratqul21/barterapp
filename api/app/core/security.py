@@ -78,18 +78,21 @@ def decode_refresh(token: str) -> tuple[uuid.UUID, uuid.UUID]:
 def _decode(token: str, expected: str) -> dict:
     try:
         payload = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm],
+            options={"require": ["sub", "typ", "iat", "exp"]},
         )
+        payload["sub"] = uuid.UUID(payload["sub"])
+        if "jti" in payload:
+            uuid.UUID(str(payload["jti"]))
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED, "Sessiya muddati tugagan. Qaytadan kiring."
         )
-    except jwt.PyJWTError:
+    except (jwt.PyJWTError, ValueError, TypeError, KeyError):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token yaroqsiz.")
 
     if payload.get("typ") != expected:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token turi mos emas.")
-    payload["sub"] = uuid.UUID(payload["sub"])
     return payload
 
 
