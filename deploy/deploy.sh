@@ -53,8 +53,6 @@ if [ "$DO_WEB" = 1 ]; then
   (cd "$ROOT/app" && flutter pub get >/dev/null && flutter gen-l10n >/dev/null \
     && flutter build web --release --no-web-resources-cdn \
          --dart-define=API_BASE_URL="$API_URL")
-  # flutter build bu faylni o'zgartiradi; repoda o'zgarish qolmasin.
-  (cd "$ROOT" && git checkout -q -- app/analysis_options.yaml 2>/dev/null || true)
   rsync -az --delete "$ROOT/app/build/web/" "$SERVER:/tmp/mab-web/"
 fi
 

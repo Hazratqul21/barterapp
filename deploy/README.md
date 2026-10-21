@@ -58,7 +58,11 @@ sudo systemctl restart mab-api
 curl -s http://127.0.0.1:8010/health
 ```
 
-Eskiz hali bo'lmasa, vaqtincha `.env` ga `SMS_OPTIONAL=true` yozing. Shunda API SMS'siz ishga tushadi, tasdiqlash kodlari esa faqat server logida ko'rinadi (`sudo journalctl -u mab-api -f | grep "quruq rejim"`). Bu rejimda faqat jamoa kira oladi. Eskiz ulangach qatorni o'chiring.
+Eskiz hali bo'lmasa, `.env` ga `SMS_OPTIONAL=true` yozish mumkin. API ishlaydi, ammo telefon orqali kirish va parolni tiklash o'chiriladi (503). Kodlar logga yozilmaydi. Frontend `/auth/methods` orqali mavjud usullarni ko'rsatadi.
+
+Google uchun server `.env` faylida `GOOGLE_CLIENT_IDS=["WEB_CLIENT_ID.apps.googleusercontent.com"]` belgilanadi. Google Cloud web originlari: `https://mab.uz`, `https://www.mab.uz`. Android uchun `uz.mab.app` paketiga mos client va signing SHA; iOS uchun bundle ID, iOS client ID va reversed URL scheme alohida sozlanadi. iOS build `--dart-define=GOOGLE_IOS_CLIENT_ID=...` oladi. Client secret bu ID-token oqimida ishlatilmaydi.
+
+Parol faqat Google/SMS bilan tasdiqlangan sessiyadan Sozlamalar orqali yaratiladi (kamida 12 belgi). Telefon/email va parol bilan kirish, joriy parol bilan o'zgartirish va SMS bilan tiklash mavjud. Ikkala provayder ham sozlanmagan bo'lsa yangi hisob ochish mavjud emas.
 
 ## 3. Keyingi yangilanishlar
 

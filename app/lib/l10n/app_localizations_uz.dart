@@ -1414,4 +1414,58 @@ class LUz extends L {
 
   @override
   String get quotaAction => 'Tariflarni ko‘rish';
+
+  @override
+  String get authPassword => 'Parol bilan kirish';
+
+  @override
+  String get authIdentifier => 'Telefon raqami yoki email';
+
+  @override
+  String get authPasswordLabel => 'Parol';
+
+  @override
+  String get authCurrentPassword => 'Joriy parol (o‘rnatilgan bo‘lsa)';
+
+  @override
+  String get authNewPassword => 'Yangi parol — kamida 12 belgi';
+
+  @override
+  String get authConfirmPassword => 'Parolni takrorlang';
+
+  @override
+  String get authPasswordMismatch =>
+      'Parollar bir xil va kamida 12 belgidan iborat bo‘lsin.';
+
+  @override
+  String get authForgotPassword => 'Parolni unutdingizmi?';
+
+  @override
+  String get authManagePassword => 'Parolni o‘rnatish yoki o‘zgartirish';
+
+  @override
+  String get authPasswordSaved =>
+      'Parol saqlandi. Boshqa sessiyalar yangilanishi bekor qilindi.';
+
+  @override
+  String get authPhoneUnavailable =>
+      'SMS orqali kirish va parolni tiklash hozircha mavjud emas.';
+
+  @override
+  String get authMethodsUnavailable =>
+      'Kirish usullari yuklanmadi. Qayta urinib ko‘ring.';
+
+  @override
+  String get authSetupPending =>
+      'Yangi hisob ochish vaqtincha mavjud emas. Kirish xizmatlari sozlanmoqda.';
+
+  @override
+  String get authPasswordHelp =>
+      'Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.';
+
+  @override
+  String get authSavePassword => 'Parolni saqlash';
+
+  @override
+  String get authShowPassword => 'Parolni ko‘rsatish/yashirish';
 }

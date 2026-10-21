@@ -72,6 +72,9 @@ async def delete_account(db: AsyncSession, user: User) -> None:
 
     # --- 1. Shaxsiy ma'lumot ------------------------------------------------
 
+    user.email = None
+    user.google_sub = None
+    user.password_hash = None
     user.deleted_at = now
     user.phone = freed_phone(user.id)
     user.first_name = ""

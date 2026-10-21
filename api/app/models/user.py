@@ -47,7 +47,10 @@ class User(Base, UUIDPrimaryKey, Timestamps):
 
     __tablename__ = "users"
 
-    phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(20), unique=True)
+    email: Mapped[str | None] = mapped_column(String(320), unique=True)
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True)
+    password_hash: Mapped[str | None] = mapped_column(Text)
     first_name: Mapped[str] = mapped_column(String(80), nullable=False)
     last_name: Mapped[str] = mapped_column(String(80), nullable=False)
     user_type: Mapped[UserType] = mapped_column(
@@ -188,3 +191,9 @@ class RefreshToken(Base, UUIDPrimaryKey):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
+
+
+class LoginAttempt(Base, UUIDPrimaryKey):
+    __tablename__ = "login_attempts"
+    identifier_hash: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

@@ -81,6 +81,7 @@ class Settings(BaseSettings):
     #: (journalctl -u mab-api) ko'rinadi, ya'ni faqat jamoa kira oladi.
     #: Eskiz ulangach albatta o'chiring.
     sms_optional: bool = False
+    google_client_ids: tuple[str, ...] = ()
 
     # Payme (Merchant API). Bo'sh bo'lsa to'lov o'chiq: buyurtma yaratib
     # bo'lmaydi va Payme endpoint'i har so'rovni avtorizatsiya xatosi bilan
@@ -104,6 +105,10 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:8080",
     )
+
+    @property
+    def phone_login_enabled(self) -> bool:
+        return bool(self.eskiz_email and self.eskiz_password) or not self.is_production
 
     @property
     def is_production(self) -> bool:
@@ -229,8 +234,7 @@ def get_settings() -> Settings:
         if settings.sms_optional:
             import warnings
             warnings.warn(
-                "SMS_OPTIONAL=true: SMS yuborilmaydi, tasdiqlash kodlari faqat "
-                "server logida. Eskiz ulangach o'chiring.",
+                "SMS_OPTIONAL=true: telefon orqali kirish SMS sozlanguncha o'chirilgan.",
                 stacklevel=2,
             )
     else:

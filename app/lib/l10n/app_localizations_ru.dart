@@ -1410,4 +1410,58 @@ class LRu extends L {
 
   @override
   String get quotaAction => 'Посмотреть тарифы';
+
+  @override
+  String get authPassword => 'Войти с паролем';
+
+  @override
+  String get authIdentifier => 'Номер телефона или email';
+
+  @override
+  String get authPasswordLabel => 'Пароль';
+
+  @override
+  String get authCurrentPassword => 'Текущий пароль (если установлен)';
+
+  @override
+  String get authNewPassword => 'Новый пароль — минимум 12 символов';
+
+  @override
+  String get authConfirmPassword => 'Повторите пароль';
+
+  @override
+  String get authPasswordMismatch =>
+      'Пароли должны совпадать и содержать минимум 12 символов.';
+
+  @override
+  String get authForgotPassword => 'Забыли пароль?';
+
+  @override
+  String get authManagePassword => 'Установить или изменить пароль';
+
+  @override
+  String get authPasswordSaved =>
+      'Пароль сохранён. Продление других сеансов отключено.';
+
+  @override
+  String get authPhoneUnavailable =>
+      'Вход и восстановление пароля по SMS пока недоступны.';
+
+  @override
+  String get authMethodsUnavailable =>
+      'Не удалось загрузить способы входа. Повторите попытку.';
+
+  @override
+  String get authSetupPending =>
+      'Регистрация временно недоступна. Настраиваем службы входа.';
+
+  @override
+  String get authPasswordHelp =>
+      'Установите пароль в настройках после входа. Для Google-аккаунта можно снова войти через Google.';
+
+  @override
+  String get authSavePassword => 'Сохранить пароль';
+
+  @override
+  String get authShowPassword => 'Показать/скрыть пароль';
 }

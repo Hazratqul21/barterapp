@@ -118,7 +118,9 @@ class LogSms:
         # warning, not info: uvicorn shows warnings by default, and in
         # production without a provider (SMS_OPTIONAL) this log line is the
         # only place the team can read a sign-in code.
-        log.warning("sms (quruq rejim) → %s: %s", phone, text)
+        if settings.is_production:
+            raise SmsError("SMS provayderi sozlanmagan.")
+        log.debug("Development SMS suppressed; use OTP_DEBUG for local tests.")
 
 
 _client: EskizClient | LogSms | None = None

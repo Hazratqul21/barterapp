@@ -313,7 +313,7 @@ class Me {
     firstName: json['first_name'] as String? ?? '',
     lastName: json['last_name'] as String? ?? '',
     handle: json['handle'] as String?,
-    phone: json['phone'] as String,
+    phone: json['phone'] as String? ?? '',
     avatarUrl: json['avatar_url'] as String?,
     rating: (json['rating'] as num?)?.toDouble(),
     reviewCount: json['review_count'] as int? ?? 0,

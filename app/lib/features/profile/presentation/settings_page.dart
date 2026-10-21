@@ -12,6 +12,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../auth/presentation/password_page.dart';
 import '../../../core/theme/haptics.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -44,6 +45,16 @@ class SettingsPage extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(Gap.x5),
               children: [
+                if (ref.watch(authStateProvider))
+                  ListTile(
+                    leading: const Icon(Icons.password),
+                    title: Text(l.authManagePassword),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const PasswordPage(manage: true),
+                      ),
+                    ),
+                  ),
                 _SectionHeading(l.settingsGeneral),
                 BouncingClayCard(
                   clayMode: true,

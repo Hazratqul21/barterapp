@@ -44,7 +44,8 @@ class TraderProfile(TraderBrief):
 
 
 class Me(TraderProfile):
-    phone: str
+    phone: str | None
+    email: str | None = None
     first_name: str
     last_name: str
     region: str | None = None
@@ -84,7 +85,7 @@ class OtpRequestResult(ApiModel):
 
 class OtpVerify(ApiModel):
     phone: str = Field(pattern=r"^\+998\d{9}$")
-    code: str = Field(min_length=4, max_length=6)
+    code: str = Field(pattern=r"^[0-9]{6}$")
 
 
 class TokenPair(ApiModel):
@@ -96,3 +97,21 @@ class TokenPair(ApiModel):
 
 class RefreshRequest(ApiModel):
     refresh_token: str
+
+
+class GoogleLogin(ApiModel):
+    id_token: str = Field(min_length=20, max_length=8192)
+
+
+class PasswordLogin(ApiModel):
+    identifier: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class PasswordSet(ApiModel):
+    password: str = Field(min_length=12, max_length=128)
+    current_password: str | None = Field(default=None, max_length=128)
+
+
+class PasswordReset(OtpVerify):
+    password: str = Field(min_length=12, max_length=128)

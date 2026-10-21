@@ -437,5 +437,21 @@
   "boostSheetHint": "Your listing shows higher in the feed with a Premium badge.",
   "quotaTitle": "Free listings used up",
   "quotaBody": "Pick a listing pack to publish. Your draft is kept.",
-  "quotaAction": "See plans"
+  "quotaAction": "See plans",
+  "authPassword": "Sign in with password",
+  "authIdentifier": "Phone number or email",
+  "authPasswordLabel": "Password",
+  "authCurrentPassword": "Current password (if already set)",
+  "authNewPassword": "New password — at least 12 characters",
+  "authConfirmPassword": "Confirm password",
+  "authPasswordMismatch": "Passwords must match and contain at least 12 characters.",
+  "authForgotPassword": "Forgot password?",
+  "authManagePassword": "Set or change password",
+  "authPasswordSaved": "Password saved. Other sessions can no longer refresh.",
+  "authPhoneUnavailable": "SMS sign-in and password recovery are currently unavailable.",
+  "authMethodsUnavailable": "Could not load sign-in methods. Please retry.",
+  "authSetupPending": "New account registration is temporarily unavailable while sign-in services are configured.",
+  "authPasswordHelp": "Set a password in Settings after signing in. For a Google account, you can sign in again with Google.",
+  "authSavePassword": "Save password",
+  "authShowPassword": "Show/hide password"
 }

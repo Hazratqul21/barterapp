@@ -1407,4 +1407,58 @@ class LEn extends L {
 
   @override
   String get quotaAction => 'See plans';
+
+  @override
+  String get authPassword => 'Sign in with password';
+
+  @override
+  String get authIdentifier => 'Phone number or email';
+
+  @override
+  String get authPasswordLabel => 'Password';
+
+  @override
+  String get authCurrentPassword => 'Current password (if already set)';
+
+  @override
+  String get authNewPassword => 'New password — at least 12 characters';
+
+  @override
+  String get authConfirmPassword => 'Confirm password';
+
+  @override
+  String get authPasswordMismatch =>
+      'Passwords must match and contain at least 12 characters.';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authManagePassword => 'Set or change password';
+
+  @override
+  String get authPasswordSaved =>
+      'Password saved. Other sessions can no longer refresh.';
+
+  @override
+  String get authPhoneUnavailable =>
+      'SMS sign-in and password recovery are currently unavailable.';
+
+  @override
+  String get authMethodsUnavailable =>
+      'Could not load sign-in methods. Please retry.';
+
+  @override
+  String get authSetupPending =>
+      'New account registration is temporarily unavailable while sign-in services are configured.';
+
+  @override
+  String get authPasswordHelp =>
+      'Set a password in Settings after signing in. For a Google account, you can sign in again with Google.';
+
+  @override
+  String get authSavePassword => 'Save password';
+
+  @override
+  String get authShowPassword => 'Show/hide password';
 }

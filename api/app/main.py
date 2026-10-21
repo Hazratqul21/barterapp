@@ -35,6 +35,9 @@ log = logging.getLogger("barter")
 app = FastAPI(
     title="MAB API",
     version="0.1.0",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
     description=(
         "Cash-free barter marketplace. Every response is already in one language — "
         "send Accept-Language: uz | ru | en."

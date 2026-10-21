@@ -33,6 +33,42 @@ class AuthRepository {
     return tokens['is_new_user'] as bool? ?? false;
   }
 
+  Future<Map<String, dynamic>> methods() => _api.get(
+    '/auth/methods',
+    parse: (data) => Map<String, dynamic>.from(data),
+  );
+
+  Future<bool> _credentials(String path, Map<String, dynamic> body) async {
+    final data = await _api.post(
+      path,
+      body: body,
+      parse: (data) => Map<String, dynamic>.from(data),
+    );
+    await _session.saveTokens(
+      data['access_token'] as String,
+      data['refresh_token'] as String,
+    );
+    return data['is_new_user'] as bool? ?? false;
+  }
+
+  Future<bool> google(String token) =>
+      _credentials('/auth/google', {'id_token': token});
+  Future<bool> passwordLogin(String identifier, String password) =>
+      _credentials('/auth/password/login', {
+        'identifier': identifier,
+        'password': password,
+      });
+  Future<bool> setPassword(String password, String current) => _credentials(
+    '/auth/password/set',
+    {'password': password, if (current.isNotEmpty) 'current_password': current},
+  );
+  Future<bool> resetPassword(String phone, String code, String password) =>
+      _credentials('/auth/password/reset', {
+        'phone': phone,
+        'code': code,
+        'password': password,
+      });
+
   Future<Me> me() => _api.get(
     '/me',
     parse: (data) => Me.fromJson(data as Map<String, dynamic>),
@@ -67,7 +103,22 @@ class AuthRepository {
     parse: (d) => NotificationSettings.fromJson(d),
   );
 
-  Future<void> signOut() => _session.clear();
+  Future<void> signOut() async {
+    final refresh = _session.refreshToken;
+    try {
+      if (refresh != null) {
+        await _api.post(
+          '/auth/logout',
+          body: {'refresh_token': refresh},
+          parse: (_) {},
+        );
+      }
+    } catch (_) {
+      // Offline sign-out still removes this device's credentials.
+    } finally {
+      await _session.clear();
+    }
+  }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(
@@ -116,4 +167,8 @@ final meProvider = FutureProvider.autoDispose<Me?>((ref) async {
 /// form should not wait on a round trip every time it is opened.
 final regionsProvider = FutureProvider<List<String>>(
   (ref) => ref.watch(authRepositoryProvider).regions(),
+);
+
+final loginMethodsProvider = FutureProvider.autoDispose<Map<String, dynamic>>(
+  (ref) => ref.watch(authRepositoryProvider).methods(),
 );

@@ -11,6 +11,8 @@ import '../../../core/widgets/common.dart';
 import '../../../core/widgets/legal_links.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
+import 'google_login_button.dart';
+import 'password_page.dart';
 import '../../../core/theme/haptics.dart';
 
 class _OtpInput extends StatefulWidget {
@@ -161,6 +163,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _sendCode() => _run(() async {
+    if (ref.read(loginMethodsProvider).value?['phone'] != true) return;
     final code = await ref
         .read(authRepositoryProvider)
         .requestCode(_cleanPhone);
@@ -207,6 +210,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
+    final methods = ref.watch(loginMethodsProvider);
+    final phoneEnabled = methods.value?['phone'] == true;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -231,24 +236,62 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   Text(
                     _codeSent
                         ? l.authCodeSubtitle(_cleanPhone)
-                        : l.authSubtitle,
+                        : l.authPasswordHelp,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: p.inkSoft,
                     ),
                   ),
                   Gap.h6,
 
-                  // if (!_codeSent) ...[
-                  //   _SocialButton(icon: Icons.apple, label: l.authWithApple, backgroundColor: Colors.black, textColor: Colors.white, onPressed: () => _notYet(l)),
-                  //   Gap.h3,
-                  //   _SocialButton(icon: Icons.g_mobiledata, label: l.authWithGoogle, backgroundColor: Colors.white, textColor: Colors.black87, borderColor: theme.colorScheme.outlineVariant, iconSize: 32, onPressed: () => _notYet(l)),
-                  //   Gap.h6,
-                  //   Row(children: [const Expanded(child: Divider()), Padding(padding: const EdgeInsets.symmetric(horizontal: Gap.x4), child: Text(l.authOrPhone, style: theme.textTheme.bodySmall?.copyWith(color: p.inkFaint))), const Expanded(child: Divider())]),
-                  //   Gap.h6,
-                  // ].animate(interval: 50.ms).fadeIn().slideY(begin: 0.1, end: 0),
+                  if (!_codeSent) ...[
+                    if (methods.isLoading) const LinearProgressIndicator(),
+                    if (methods.hasError) ...[
+                      Text(l.authMethodsUnavailable),
+                      TextButton(
+                        onPressed: () => ref.invalidate(loginMethodsProvider),
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (methods.value?['google'] == true)
+                      GoogleLoginButton(
+                        clientId: methods.value!['google_client_id'] as String,
+                        onToken: (token) => _run(() async {
+                          final fresh = await ref
+                              .read(authRepositoryProvider)
+                              .google(token);
+                          await ref.read(authStateProvider.notifier).signedIn();
+                          ref.invalidate(meProvider);
+                          if (context.mounted) {
+                            context.go(fresh ? '/onboarding' : '/home');
+                          }
+                        }),
+                      ),
+                    Gap.h3,
+                    OutlinedButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const PasswordPage(),
+                              ),
+                            ),
+                      icon: const Icon(Icons.lock_outline),
+                      label: Text(l.authPassword),
+                    ),
+                    Gap.h3,
+                    if (methods.hasValue && !phoneEnabled)
+                      Text(l.authPhoneUnavailable),
+                    if (methods.hasValue &&
+                        !phoneEnabled &&
+                        methods.value?['google'] != true) ...[
+                      Gap.h3,
+                      Text(l.authSetupPending),
+                    ],
+                    Gap.h4,
+                  ],
                   TextField(
                     controller: _phone,
-                    enabled: !_codeSent && !_busy,
+                    enabled: phoneEnabled && !_codeSent && !_busy,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.telephoneNumber],
@@ -308,7 +351,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
                   Gap.h6,
                   FilledButton(
-                    onPressed: _busy || (!_codeSent && !_phoneLooksValid)
+                    onPressed:
+                        !phoneEnabled ||
+                            _busy ||
+                            (!_codeSent && !_phoneLooksValid)
                         ? null
                         : () {
                             Haptics.success();
