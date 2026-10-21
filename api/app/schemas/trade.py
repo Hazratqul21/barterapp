@@ -8,7 +8,7 @@ from pydantic import Field
 from app.models.agreement import DisputeReason, DisputeResolution, DisputeStatus
 from app.models.offer import OfferStatus
 from app.models.social import NotifyKind, NotifyTargetType, VerificationState
-from app.schemas.common import ApiModel, Money
+from app.schemas.common import ApiModel, MediaUrl, Money
 from app.schemas.listing import ListingCard
 from app.schemas.user import TraderBrief
 
@@ -18,7 +18,8 @@ class OfferCreate(ApiModel):
     #: Listings the sender puts on their own side of the trade.
     offered_listing_ids: list[uuid.UUID] = Field(min_length=1, max_length=5)
     #: Positive tops up the sender's side; 0 means a straight swap.
-    cash_delta_minor: int = 0
+    #: ±10 mlrd so'm (tiyinda) — bazadagi BIGINT'dan ancha kichik, real savdodan katta.
+    cash_delta_minor: int = Field(default=0, ge=-10**12, le=10**12)
     currency: str = Field(default="UZS", min_length=3, max_length=3)
     message: str | None = Field(default=None, max_length=1000)
 
@@ -32,7 +33,7 @@ class OfferAction(ApiModel):
     action: str = Field(
         pattern="^(accept|decline|counter|confirm|complete|dispute)$"
     )
-    cash_delta_minor: int | None = None
+    cash_delta_minor: int | None = Field(default=None, ge=-10**12, le=10**12)
     message: str | None = Field(default=None, max_length=1000)
     #: Required with `dispute`.
     dispute_reason: DisputeReason | None = None
@@ -83,7 +84,7 @@ class MessageOut(ApiModel):
 
 class MessageCreate(ApiModel):
     body: str = Field(min_length=1, max_length=2000)
-    photo_url: str | None = None
+    photo_url: MediaUrl | None = None
 
 
 class ConversationSummary(ApiModel):

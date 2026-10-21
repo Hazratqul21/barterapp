@@ -37,9 +37,19 @@ final _rootKey = GlobalKey<NavigatorState>();
 /// Tab screens live inside the shell; everything else is pushed on top of it,
 /// which is what makes "back" return to wherever the user actually came from.
 GoRouter buildRouter() {
+  final plainId = RegExp(r'^[A-Za-z0-9_-]{1,64}$');
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/',
+    // IDs from a link go straight into API paths (`/listings/<id>`). A crafted
+    // link with an encoded `../` would otherwise steer a signed-in request at
+    // another endpoint, so anything that is not a plain id goes home.
+    redirect: (context, state) =>
+        state.pathParameters.values.every(plainId.hasMatch) &&
+            (state.uri.queryParameters['order'] == null ||
+                plainId.hasMatch(state.uri.queryParameters['order']!))
+        ? null
+        : '/',
     errorPageBuilder: (context, state) => MaterialPage(
       key: state.pageKey,
       child: Scaffold(

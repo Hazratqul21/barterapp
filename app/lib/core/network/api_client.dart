@@ -107,6 +107,8 @@ class SessionStore {
   }
 }
 
+enum _Refresh { ok, rejected, offline }
+
 class ApiClient {
   ApiClient(
     this._session, {
@@ -139,15 +141,34 @@ class ApiClient {
         onError: (e, handler) async {
           final is401 = e.response?.statusCode == 401;
           final isAuthCall = e.requestOptions.path.contains('/auth/');
-          if (!is401 || isAuthCall || _session.refreshToken == null) {
+          // A request already retried once after a refresh does not get a
+          // second go: a 401 that survives a fresh token is a real refusal,
+          // and retrying would rotate the refresh token in a loop forever.
+          final retried = e.requestOptions.extra['retried'] == true;
+          if (!is401 ||
+              isAuthCall ||
+              retried ||
+              _session.refreshToken == null) {
             return handler.next(e);
           }
 
           final refreshed = await _refreshOnce();
-          if (!refreshed) return handler.next(e);
+          if (refreshed == _Refresh.offline) {
+            // The refresh never reached the server. The session may be fine;
+            // report "no connection" instead of signing the person out.
+            return handler.next(
+              DioException(
+                requestOptions: e.requestOptions,
+                type: DioExceptionType.connectionError,
+                error: e.error,
+              ),
+            );
+          }
+          if (refreshed != _Refresh.ok) return handler.next(e);
 
           try {
             final opts = e.requestOptions;
+            opts.extra['retried'] = true;
             opts.headers['Authorization'] = 'Bearer ${_session.accessToken}';
             final retry = await _dio.fetch<dynamic>(opts);
             return handler.resolve(retry);
@@ -166,18 +187,24 @@ class ApiClient {
   /// expires; they all await the same exchange instead of each spending the
   /// refresh token — which, with rotation on the server, would look like reuse
   /// and drop every session.
-  Future<bool>? _refreshing;
+  Future<_Refresh>? _refreshing;
 
-  Future<bool> _refreshOnce() =>
+  Future<_Refresh> _refreshOnce() =>
       _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
 
-  Future<bool> _doRefresh() async {
+  Future<_Refresh> _doRefresh() async {
     final token = _session.refreshToken;
-    if (token == null) return false;
+    if (token == null) return _Refresh.rejected;
     try {
       // A bare client, so the request carries no stale Authorization header and
       // cannot recurse back into this interceptor.
-      final bare = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
+      final bare = Dio(
+        BaseOptions(
+          baseUrl: _dio.options.baseUrl,
+          connectTimeout: _dio.options.connectTimeout,
+          receiveTimeout: _dio.options.receiveTimeout,
+        ),
+      );
       final response = await bare.post<dynamic>(
         '/auth/refresh',
         data: {'refresh_token': token},
@@ -187,12 +214,17 @@ class ApiClient {
         data['access_token'] as String,
         data['refresh_token'] as String,
       );
-      return true;
-    } on DioException {
-      return false;
+      return _Refresh.ok;
+    } on DioException catch (e) {
+      // Only the server saying no ends the session. A timeout on rural data
+      // while the hourly token happens to expire must not sign anyone out.
+      final status = e.response?.statusCode;
+      return status == 401 || status == 403
+          ? _Refresh.rejected
+          : _Refresh.offline;
     } catch (e) {
       // P3-3: Token save fail fallback (e.g. out of storage)
-      return false;
+      return _Refresh.rejected;
     }
   }
 

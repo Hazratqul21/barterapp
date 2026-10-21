@@ -34,7 +34,9 @@ from app.models.listing import Listing, ListingStatus
 from app.models.moderation import Block
 from app.models.notify_pref import NotificationSetting
 from app.models.offer import Offer, OfferStatus
+from app.models.payment import OrderStatus, PaymentOrder
 from app.models.user import RefreshToken, User
+from app.services import agreements
 
 #: Bekor qilinishi kerak bo'lgan savdo holatlari. Yakunlanganiga tegilmaydi —
 #: u tarix, ochig'i esa qarshi tomonni javob kutib qoldirmasligi kerak.
@@ -123,14 +125,27 @@ async def delete_account(db: AsyncSession, user: User) -> None:
     )
 
     # Ochiq takliflar bekor qilinadi — qarshi tomon hech qachon kelmaydigan
-    # javobni kutib qolmasin.
-    await db.execute(
-        update(Offer)
-        .where(
-            Offer.status.in_(_LIVE),
-            (Offer.from_user_id == user.id) | (Offer.to_user_id == user.id),
+    # javobni kutib qolmasin. Qabul qilingan (yoki nizodagi) savdoning
+    # e'lonlari band qilingan: band olib tashlanadi va qarshi tomonning e'loni
+    # yana sotuvga chiqadi. Ilgari faqat holat o'zgarardi, e'lon esa abadiy
+    # "kelishilmoqda" bo'lib qolardi.
+    live = (
+        await db.scalars(
+            select(Offer).where(
+                Offer.status.in_(_LIVE + (OfferStatus.disputed,)),
+                (Offer.from_user_id == user.id) | (Offer.to_user_id == user.id),
+            )
         )
-        .values(status=OfferStatus.expired)
+    ).all()
+    for offer in live:
+        await agreements._release(db, offer, "account_deleted", relist=True, now=now)
+        offer.status = OfferStatus.expired
+
+    # To'lanmagan buyurtmalar yopiladi: o'chirilgan hisob uchun pul olinmasin.
+    await db.execute(
+        update(PaymentOrder)
+        .where(PaymentOrder.user_id == user.id, PaymentOrder.status == OrderStatus.pending)
+        .values(status=OrderStatus.cancelled, cancelled_at=now)
     )
 
     # --- 4. Faqat shu odamga tegishli narsalar -------------------------------

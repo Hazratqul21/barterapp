@@ -50,12 +50,20 @@ def create_socket_token(user_id: uuid.UUID) -> str:
     """A few-seconds ticket for the WebSocket handshake. The long-lived access
     token never travels in a query string; this throwaway does instead."""
     return _encode(
-        str(user_id), "socket", timedelta(seconds=settings.socket_token_seconds)
+        str(user_id),
+        "socket",
+        timedelta(seconds=settings.socket_token_seconds),
+        jti=uuid.uuid4().hex,
     )
 
 
 def decode_token(token: str, expected: str) -> uuid.UUID:
     return _decode(token, expected)["sub"]
+
+
+def decode_claims(token: str, expected: str) -> dict:
+    """All verified claims (`sub` already a UUID) — for the socket ticket's `jti`."""
+    return _decode(token, expected)
 
 
 def decode_refresh(token: str) -> tuple[uuid.UUID, uuid.UUID]:

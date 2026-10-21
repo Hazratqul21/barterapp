@@ -35,6 +35,11 @@ from app.db.session import SessionLocal
 log = logging.getLogger("barter")
 
 app = FastAPI(
+    # Productionda ochiq API xaritasi kerak emas: u hujumchiga har endpoint
+    # va maydonni tayyor ro'yxat qilib beradi.
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
     title="MAB API",
     version="0.1.0",
     description=(
@@ -46,6 +51,21 @@ app = FastAPI(
 #: Eng katta so'rov tanasi. Surat chegarasi 12 MB, qolgan hamma narsa —
 #: JSON, ya'ni ancha kichik. Zaxira bilan 16 MB.
 MAX_BODY_BYTES = 16 * 1024 * 1024
+
+
+#: Faqat fayl yuklash katta tana oladi. Qolgan hammasi JSON: e'lon, xabar,
+#: hodisalar — bir megabaytga bemalol sig'adi. Admin hujjat matni (uch tilda)
+#: bir necha megabaytgacha bo'lishi mumkin.
+MAX_JSON_BYTES = 1024 * 1024
+MAX_ADMIN_BYTES = 4 * 1024 * 1024
+
+
+def _body_limit(path: str) -> int:
+    if path.startswith("/uploads") or (path.startswith("/admin/legal/") and path.endswith("/file")):
+        return MAX_BODY_BYTES
+    if path.startswith("/admin"):
+        return MAX_ADMIN_BYTES
+    return MAX_JSON_BYTES
 
 
 @app.middleware("http")
@@ -63,12 +83,29 @@ async def limit_body_size(request: Request, call_next) -> Response:
     bu yerdagi tekshiruv esa oddiy holatni arzon to'xtatadi.
     """
     declared = request.headers.get("content-length")
-    if declared and declared.isdigit() and int(declared) > MAX_BODY_BYTES:
+    if declared and declared.isdigit() and int(declared) > _body_limit(request.url.path):
         return JSONResponse(
             status_code=413,
             content={"detail": "So'rov juda katta."},
         )
     return await call_next(request)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next) -> Response:
+    """
+    Har javobga: brauzer turini o'zi "taxmin" qilmasin (nosniff — yuklangan
+    fayl HTML bo'lib ochilmasin), yuklangan fayllar sahifa sifatida
+    ishlamasin, va productionda faqat HTTPS (HSTS).
+    """
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.url.path.startswith(settings.media_url_prefix):
+        response.headers.setdefault("Content-Security-Policy", "default-src 'none'; sandbox")
+    if settings.is_production:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    return response
 
 
 @app.middleware("http")
@@ -161,9 +198,29 @@ app.mount(
 _ADMIN_PAGE = Path(__file__).resolve().parent / "static" / "admin.html"
 
 
+#: Panel faqat o'z API'si bilan gaplashadi. Boshqa saytga ramka ichida
+#: ko'rsatilmaydi (clickjacking: "hammaga push yuborish" tugmasi), tashqi
+#: skript yuklanmaydi. `unsafe-inline` — sahifa ichidagi onclick'lar uchun.
+_ADMIN_CSP = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; connect-src 'self'; "
+    "img-src 'self' https: data:; frame-ancestors 'none'; "
+    "base-uri 'none'; form-action 'none'; object-src 'none'"
+)
+
+
 @app.get("/admin", include_in_schema=False)
 async def admin_panel() -> FileResponse:
-    return FileResponse(_ADMIN_PAGE, media_type="text/html")
+    return FileResponse(
+        _ADMIN_PAGE,
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": _ADMIN_CSP,
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "no-referrer",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @app.get("/health", tags=["meta"])

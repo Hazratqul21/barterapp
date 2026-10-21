@@ -89,3 +89,19 @@ offers = Limiter(limit=30, window_seconds=3600, name="offers")
 
 #: Shikoyat. Moderator navbatini ko'mib tashlashning oldini oladi.
 reports = Limiter(limit=20, window_seconds=3600, name="reports")
+
+#: Matnli qidiruv. Har biri barcha tillar bo'yicha ILIKE — eng qimmat
+#: ochiq so'rov. Daqiqasiga 60 ta odam yozishidan ancha ko'p.
+search = Limiter(limit=60, window_seconds=60, name="search")
+
+#: SMS kod so'rash, bitta manzildan. Bitta uydagi bir necha odamga yetadi;
+#: minglab raqamga kod sochishga yetmaydi.
+otp_request_ip = Limiter(limit=10, window_seconds=3600, name="otp_request_ip")
+
+#: Kodni tekshirish, bitta manzildan. Telefon bo'yicha chegaradan tashqari:
+#: ko'p raqamni navbatma-navbat taxmin qilishni to'xtatadi.
+otp_verify_ip = Limiter(limit=30, window_seconds=600, name="otp_verify_ip")
+
+#: Butun xizmat bo'yicha soatiga SMS. Xato yoki hujum SMS byudjetini bir
+#: kunda yeb qo'ymasin.
+sms_global = Limiter(limit=1000, window_seconds=3600, name="sms_global")

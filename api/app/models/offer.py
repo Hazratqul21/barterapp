@@ -69,6 +69,10 @@ class Offer(Base, UUIDPrimaryKey, Timestamps):
     __table_args__ = (
         CheckConstraint("from_user_id <> to_user_id", name="no_self_offer"),
         Index("ix_offers_inbox", "to_user_id", "status", "created_at"),
+        # Yuborilganlar (`from_user_id = me OR to_user_id = me`) va e'lon
+        # bo'yicha takliflar.
+        Index("ix_offers_outbox", "from_user_id", "status", "created_at"),
+        Index("ix_offers_listing", "listing_id"),
     )
 
 

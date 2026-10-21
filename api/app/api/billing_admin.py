@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import Field, field_validator
@@ -30,7 +31,9 @@ class ProductIn(ApiModel):
     kind: ProductKind
     #: Kamida o'zbekcha nom; qolgan tillar bo'sh bo'lsa o'zbekchasi ko'rsatiladi.
     title: dict[str, str]
-    price_minor: int = Field(ge=0)
+    #: Yuqori chegara — 1 mlrd so'm (tiyinda); undan kattasi bazada sig'maydi
+    #: yoki xato kiritilgan.
+    price_minor: int = Field(ge=0, le=100_000_000_000)
     discount_percent: int = Field(default=0, ge=0, le=100)
     discount_until: datetime | None = None
     quantity: int = Field(default=1, ge=1, le=10_000)
@@ -40,6 +43,15 @@ class ProductIn(ApiModel):
     mxik_code: str | None = Field(default=None, max_length=20)
     package_code: str | None = Field(default=None, max_length=20)
     vat_percent: int = Field(default=0, ge=0, le=100)
+
+    @field_validator("discount_until")
+    @classmethod
+    def _aware(cls, value: datetime | None) -> datetime | None:
+        # Vaqt mintaqasisiz sana Toshkent vaqti deb olinadi — admin shunday
+        # o'ylaydi. Ilgari UTC deb saqlanardi va javob 500 bilan qaytardi.
+        if value is not None and value.tzinfo is None:
+            value = value.replace(tzinfo=ZoneInfo("Asia/Tashkent"))
+        return value
 
     @field_validator("title")
     @classmethod

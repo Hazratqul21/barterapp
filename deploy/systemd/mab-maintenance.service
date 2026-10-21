@@ -1,5 +1,5 @@
 [Unit]
-Description=MAB: kunlik tozalash (eski hodisalar, egasiz rasmlar)
+Description=MAB: kunlik tozalash (eski hodisalar, egasiz rasmlar, eskirgan kodlar va sessiyalar)
 After=postgresql.service
 
 [Service]
@@ -10,3 +10,28 @@ WorkingDirectory=/opt/mab/api
 # bash orqali o'qitilsa CORS_ORIGINS dagi JSON qo'shtirnoqlari yo'qoladi.
 ExecStart=/opt/mab/api/.venv/bin/python -m app.events_prune
 ExecStart=/opt/mab/api/.venv/bin/python -m app.media_sweep
+ExecStart=/opt/mab/api/.venv/bin/python -m app.auth_prune
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+# Kod va .venv faqat o'qish uchun: API buzilsa ham o'z kodini qayta yozib
+# o'zini mustahkamlay olmasin. Yozish faqat yuklangan fayllarga.
+ProtectSystem=strict
+ReadWritePaths=/opt/mab/media
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+UMask=0027
+# Kod papkasi faqat o'qish uchun — Python .pyc yozishga urinmasin.
+Environment=PYTHONDONTWRITEBYTECODE=1

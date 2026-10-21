@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import time
 import uuid
 from collections import deque
@@ -69,6 +71,11 @@ class _RateLimiter:
 _limiter = _RateLimiter()
 
 
+#: Bitta hodisa yuki (JSON matni). Qidiruv so'zi, filtr, ekran nomi —
+#: hammasi bir necha yuz belgiga sig'adi.
+MAX_PAYLOAD_CHARS = 2000
+
+
 class EventIn(ApiModel):
     kind: EventKind
     target_type: str | None = Field(default=None, max_length=20)
@@ -91,6 +98,9 @@ class EventIn(ApiModel):
         """
         if len(value) > 20:
             raise ValueError("payload juda katta (20 dan ortiq maydon).")
+        # Maydonlar soni emas, hajm ham: bitta 5 MB'lik qator ham "1 maydon".
+        if len(json.dumps(value, ensure_ascii=False, default=str)) > MAX_PAYLOAD_CHARS:
+            raise ValueError("payload juda katta.")
         return value
 
 

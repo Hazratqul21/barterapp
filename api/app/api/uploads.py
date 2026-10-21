@@ -5,6 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from PIL import Image, UnidentifiedImageError
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.core.ratelimit import source, uploads as upload_limit
@@ -26,6 +27,15 @@ MAX_EDGE = 1600
 #: quality a 1600px edge lands close to that for typical subjects.
 JPEG_QUALITY = 82
 
+#: Pixel ceiling, checked from the header before anything is decoded. A
+#: 164 KB PNG can declare 13000×13000 pixels and decode to most of a gigabyte;
+#: the biggest phone cameras are around 50 MP.
+MAX_PIXELS = 50_000_000
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS
+
+Image.init()  # registers the decoders, so `formats=` below can name them
+_FORMATS = tuple(f for f in ("JPEG", "MPO", "PNG", "WEBP") if f in Image.OPEN)
+
 
 class UploadResult(ApiModel):
     #: Absolute, so the client can hand it straight to an image widget.
@@ -44,14 +54,30 @@ def _process(raw: bytes) -> tuple[bytes, int, int]:
     these files are served back out over HTTP, and trusting the client's label
     is how an upload endpoint becomes a way to host someone else's payload.
     """
+    not_image = HTTPException(
+        status.HTTP_400_BAD_REQUEST,
+        "Bu fayl rasm emas. JPG yoki PNG yuklang.",
+    )
+    too_big = HTTPException(
+        status.HTTP_413_CONTENT_TOO_LARGE,
+        "Rasm o'lchami juda katta. Kichikroq rasm yuklang.",
+    )
     try:
-        image = Image.open(io.BytesIO(raw))
+        # Only photo formats: Pillow would otherwise also parse EPS, PSD, ICO
+        # and others, each its own decoder an attacker can aim at.
+        image = Image.open(io.BytesIO(raw), formats=_FORMATS)
+    except Image.DecompressionBombError:
+        raise too_big
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise not_image
+    if image.width * image.height > MAX_PIXELS:
+        raise too_big
+    try:
         image.load()
-    except (UnidentifiedImageError, OSError):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Bu fayl rasm emas. JPG yoki PNG yuklang.",
-        )
+    except Image.DecompressionBombError:
+        raise too_big
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise not_image
 
     # Phone photos carry an orientation tag instead of rotated pixels; without
     # this every second listing arrives sideways.
@@ -102,7 +128,9 @@ async def upload_photo(
             "Rasm juda katta. 12 MB dan kichik rasm yuklang.",
         )
 
-    processed, width, height = _process(raw)
+    # Decoding takes real CPU time; off the event loop, so one big photo does
+    # not stall every other request this worker is serving.
+    processed, width, height = await run_in_threadpool(_process, raw)
 
     # Named by the server, never by the client: an uploaded filename is
     # attacker-controlled text and has no business deciding a path on disk.
@@ -112,7 +140,7 @@ async def upload_photo(
     destination.write_bytes(processed)
 
     return UploadResult(
-        url=str(request.base_url).rstrip("/") + f"{settings.media_url_prefix}/{name}",
+        url=f"{settings.api_base(request)}{settings.media_url_prefix}/{name}",
         width=width,
         height=height,
         bytes=len(processed),

@@ -147,6 +147,12 @@ async def resolve_dispute(
     offer = await db.scalar(
         select(Offer).where(Offer.id == dispute.offer_id).with_for_update()
     )
+    if me.id in (offer.from_user_id, offer.to_user_id):
+        # O'z savdosi bo'yicha hakam bo'lib bo'lmaydi.
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Bu nizoda o'zingiz qatnashchisiz — boshqa moderator hal qilsin.",
+        )
     now = datetime.now(UTC)
     try:
         await agreements.resolve(
