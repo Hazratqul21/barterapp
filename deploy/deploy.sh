@@ -19,9 +19,6 @@ if [ -z "$SERVER" ]; then
   exit 1
 fi
 API_URL=${API_URL:-https://api.mab.uz}
-# Google orqali kirish (ixtiyoriy): Google Cloud'dagi "Web application"
-# client ID. Maxfiy emas. Bo'sh bo'lsa saytda Google tugmasi chiqmaydi.
-GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-$(cat "$ROOT_EARLY/deploy/google_client_id" 2>/dev/null || true)}
 EMAIL=${EMAIL:-}
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -60,8 +57,7 @@ if [ "$DO_WEB" = 1 ]; then
   command -v flutter >/dev/null || { red "flutter topilmadi."; exit 1; }
   (cd "$ROOT/app" && flutter pub get >/dev/null && flutter gen-l10n >/dev/null \
     && flutter build web --release --no-web-resources-cdn \
-         --dart-define=API_BASE_URL="$API_URL" \
-         --dart-define=GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID")
+         --dart-define=API_BASE_URL="$API_URL")
   # flutter build bu faylni o'zgartiradi; repoda o'zgarish qolmasin.
   (cd "$ROOT" && git checkout -q -- app/analysis_options.yaml 2>/dev/null || true)
   rsync -az --delete "$ROOT/app/build/web/" "$SERVER:$STAGE/web/"

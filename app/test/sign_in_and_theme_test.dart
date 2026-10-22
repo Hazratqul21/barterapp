@@ -13,7 +13,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Found by running the app: a mistyped number left no way back, the
 /// keyboard's Done did nothing, and dark mode reset on every launch.
 class _Auth implements AuthRepository {
+  _Auth({this.phone = true});
+  final bool phone;
   final requested = <String>[];
+
+  @override
+  Future<Map<String, dynamic>> methods() async => {
+    'phone': phone,
+    'google': false,
+    'password': true,
+  };
 
   @override
   Future<String?> requestCode(String phone) async {
@@ -25,13 +34,13 @@ class _Auth implements AuthRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<_Auth> _pump(WidgetTester tester) async {
+Future<_Auth> _pump(WidgetTester tester, {bool phone = true}) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  final auth = _Auth();
+  final auth = _Auth(phone: phone);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -100,6 +109,24 @@ void main() {
     expect(find.text('Telefon raqamingiz'), findsOneWidget);
     final phone = tester.widget<TextField>(find.byType(TextField).first);
     expect(phone.enabled, isTrue);
+  });
+
+  testWidgets('unconfigured SMS is disabled rather than pretending to send', (
+    tester,
+  ) async {
+    final auth = await _pump(tester, phone: false);
+    await tester.pump();
+    expect(
+      find.text('SMS orqali kirish va parolni tiklash hozircha mavjud emas.'),
+      findsOneWidget,
+    );
+    final field = tester.widget<TextField>(find.byType(TextField).first);
+    expect(field.enabled, isFalse);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Kod yuborish'),
+    );
+    expect(button.onPressed, isNull);
+    expect(auth.requested, isEmpty);
   });
 
   test('dark mode survives a restart', () async {

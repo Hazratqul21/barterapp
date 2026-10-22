@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -13,10 +12,9 @@ import '../../../core/widgets/common.dart';
 import '../../../core/widgets/legal_links.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
-import '../data/google_auth.dart';
+import 'google_login_button.dart';
+import 'password_page.dart';
 import '../../../core/theme/haptics.dart';
-import 'google_web_button_stub.dart'
-    if (dart.library.js_interop) 'google_web_button_web.dart';
 
 class _OtpInput extends StatefulWidget {
   const _OtpInput({
@@ -166,6 +164,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _sendCode() => _run(() async {
+    if (ref.read(loginMethodsProvider).value?['phone'] != true) return;
     final code = await ref
         .read(authRepositoryProvider)
         .requestCode(_cleanPhone);
@@ -203,28 +202,19 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final isNewUser = await ref
         .read(authRepositoryProvider)
         .verify(_cleanPhone, _code.text.trim());
-    await _signedIn(isNewUser);
-  });
-
-  Future<void> _google(String idToken) => _run(() async {
-    final isNewUser = await ref
-        .read(authRepositoryProvider)
-        .signInWithGoogle(idToken);
-    await _signedIn(isNewUser);
-  });
-
-  Future<void> _signedIn(bool isNewUser) async {
     await ref.read(authStateProvider.notifier).signedIn();
     ref.invalidate(meProvider);
     if (!mounted) return;
     context.go(isNewUser ? '/onboarding' : '/home');
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = palette(context);
     final theme = Theme.of(context);
+    final methods = ref.watch(loginMethodsProvider);
+    final phoneEnabled = methods.value?['phone'] == true;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -249,23 +239,62 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   Text(
                     _codeSent
                         ? l.authCodeSubtitle(_cleanPhone)
-                        : l.authSubtitle,
+                        : l.authPasswordHelp,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: p.inkSoft,
                     ),
                   ),
                   Gap.h6,
 
-                  if (!_codeSent && googleSignInAvailable)
-                    _GoogleSignIn(
-                      enabled: !_busy,
-                      onIdToken: _google,
-                      onError: (e) =>
-                          setState(() => _error = errorMessage(context, e)),
+                  if (!_codeSent) ...[
+                    if (methods.isLoading) const LinearProgressIndicator(),
+                    if (methods.hasError) ...[
+                      Text(l.authMethodsUnavailable),
+                      TextButton(
+                        onPressed: () => ref.invalidate(loginMethodsProvider),
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (methods.value?['google'] == true)
+                      GoogleLoginButton(
+                        clientId: methods.value!['google_client_id'] as String,
+                        onToken: (token) => _run(() async {
+                          final fresh = await ref
+                              .read(authRepositoryProvider)
+                              .google(token);
+                          await ref.read(authStateProvider.notifier).signedIn();
+                          ref.invalidate(meProvider);
+                          if (context.mounted) {
+                            context.go(fresh ? '/onboarding' : '/home');
+                          }
+                        }),
+                      ),
+                    Gap.h3,
+                    OutlinedButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const PasswordPage(),
+                              ),
+                            ),
+                      icon: const Icon(Icons.lock_outline),
+                      label: Text(l.authPassword),
                     ),
+                    Gap.h3,
+                    if (methods.hasValue && !phoneEnabled)
+                      Text(l.authPhoneUnavailable),
+                    if (methods.hasValue &&
+                        !phoneEnabled &&
+                        methods.value?['google'] != true) ...[
+                      Gap.h3,
+                      Text(l.authSetupPending),
+                    ],
+                    Gap.h4,
+                  ],
                   TextField(
                     controller: _phone,
-                    enabled: !_codeSent && !_busy,
+                    enabled: phoneEnabled && !_codeSent && !_busy,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.telephoneNumber],
@@ -325,7 +354,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
                   Gap.h6,
                   FilledButton(
-                    onPressed: _busy || (!_codeSent && !_phoneLooksValid)
+                    onPressed:
+                        !phoneEnabled ||
+                            _busy ||
+                            (!_codeSent && !_phoneLooksValid)
                         ? null
                         : () {
                             Haptics.success();
@@ -350,135 +382,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// "Continue with Google". On Android a button of our own opens the account
-/// picker; on the web Google insists on drawing its button itself, and the
-/// token arrives on a stream instead of as a return value.
-class _GoogleSignIn extends StatefulWidget {
-  const _GoogleSignIn({
-    required this.enabled,
-    required this.onIdToken,
-    required this.onError,
-  });
-  final bool enabled;
-  final Future<void> Function(String idToken) onIdToken;
-  final void Function(Object error) onError;
-
-  @override
-  State<_GoogleSignIn> createState() => _GoogleSignInState();
-}
-
-class _GoogleSignInState extends State<_GoogleSignIn> {
-  StreamSubscription<String>? _tokens;
-  bool _ready = !kIsWeb;
-
-  /// Google's script did not load (blocked network, ad blocker). The phone
-  /// form still works, so the section quietly goes away rather than leaving
-  /// an error above a perfectly good way in.
-  bool _unavailable = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (kIsWeb) {
-      GoogleAuth.ensureInitialized().then(
-        (_) {
-          if (!mounted) return;
-          _tokens = GoogleAuth.idTokens().listen(
-            widget.onIdToken,
-            onError: widget.onError,
-          );
-          setState(() => _ready = true);
-        },
-        onError: (Object _) {
-          if (mounted) setState(() => _unavailable = true);
-        },
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _tokens?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _tap() async {
-    try {
-      final token = await GoogleAuth.signIn();
-      if (token != null) await widget.onIdToken(token);
-    } catch (e) {
-      widget.onError(e);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_unavailable) return const SizedBox.shrink();
-    final l = L.of(context);
-    final theme = Theme.of(context);
-    final Widget button;
-    if (kIsWeb) {
-      button = _ready
-          ? Center(
-              child: googleWebButton(
-                locale: Localizations.localeOf(context).languageCode,
-              ),
-            )
-          : const SizedBox(height: 44);
-    } else {
-      button = OutlinedButton(
-        onPressed: widget.enabled ? _tap : null,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          shape: const StadiumBorder(),
-          side: BorderSide(color: theme.colorScheme.outlineVariant),
-          foregroundColor: theme.colorScheme.onSurface,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'assets/brand/google_g.svg',
-              width: 20,
-              height: 20,
-            ),
-            Gap.w3,
-            Text(
-              l.authWithGoogle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        button,
-        Gap.h6,
-        Row(
-          children: [
-            const Expanded(child: Divider()),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Gap.x4),
-              child: Text(
-                l.authOrPhone,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: palette(context).inkFaint,
-                ),
-              ),
-            ),
-            const Expanded(child: Divider()),
-          ],
-        ),
-        Gap.h6,
-      ],
     );
   }
 }

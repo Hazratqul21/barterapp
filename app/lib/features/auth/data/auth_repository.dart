@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../shared/models/models.dart';
 import '../../trade/data/listing_draft.dart';
 import '../../../core/notifications/notification_service.dart';
-import 'google_auth.dart';
 
 class AuthRepository {
   AuthRepository(this._api, this._session);
@@ -37,20 +37,41 @@ class AuthRepository {
     return tokens['is_new_user'] as bool? ?? false;
   }
 
-  /// Exchanges a Google ID token for our own session. Same shape as [verify]:
-  /// true when the account was created just now.
-  Future<bool> signInWithGoogle(String idToken) async {
-    final tokens = await _api.post(
-      '/auth/google',
-      body: {'id_token': idToken},
-      parse: (data) => data as Map<String, dynamic>,
+  Future<Map<String, dynamic>> methods() => _api.get(
+    '/auth/methods',
+    parse: (data) => Map<String, dynamic>.from(data),
+  );
+
+  Future<bool> _credentials(String path, Map<String, dynamic> body) async {
+    final data = await _api.post(
+      path,
+      body: body,
+      parse: (data) => Map<String, dynamic>.from(data),
     );
     await _session.saveTokens(
-      tokens['access_token'] as String,
-      tokens['refresh_token'] as String,
+      data['access_token'] as String,
+      data['refresh_token'] as String,
     );
-    return tokens['is_new_user'] as bool? ?? false;
+    return data['is_new_user'] as bool? ?? false;
   }
+
+  Future<bool> google(String token) =>
+      _credentials('/auth/google', {'id_token': token});
+  Future<bool> passwordLogin(String identifier, String password) =>
+      _credentials('/auth/password/login', {
+        'identifier': identifier,
+        'password': password,
+      });
+  Future<bool> setPassword(String password, String current) => _credentials(
+    '/auth/password/set',
+    {'password': password, if (current.isNotEmpty) 'current_password': current},
+  );
+  Future<bool> resetPassword(String phone, String code, String password) =>
+      _credentials('/auth/password/reset', {
+        'phone': phone,
+        'code': code,
+        'password': password,
+      });
 
   Future<Me> me() => _api.get(
     '/me',
@@ -88,20 +109,27 @@ class AuthRepository {
 
   Future<void> signOut() async {
     // Revoke the refresh token on the server, so a copy of it (a backup, a
-    // stolen phone image) stops working too. Best-effort: offline sign-out
-    // still clears this device.
+    // stolen phone image) stops working too.
     final refresh = _session.refreshToken;
-    if (refresh != null) {
-      try {
+    try {
+      if (refresh != null) {
         await _api.post<void>(
           '/auth/logout',
           body: {'refresh_token': refresh},
           parse: (_) {},
         );
-      } catch (_) {}
+      }
+    } catch (_) {
+      // Offline sign-out still removes this device's credentials.
+    } finally {
+      await _session.clear();
     }
-    await _session.clear();
-    await GoogleAuth.signOut();
+    // The next person on this device gets Google's account picker, not this
+    // account signed straight back in. Best-effort: Google may never have
+    // been initialised on this device.
+    try {
+      await GoogleSignIn.instance.signOut().timeout(const Duration(seconds: 2));
+    } catch (_) {}
   }
 }
 
@@ -164,4 +192,8 @@ final meProvider = FutureProvider.autoDispose<Me?>((ref) async {
 /// form should not wait on a round trip every time it is opened.
 final regionsProvider = FutureProvider<List<String>>(
   (ref) => ref.watch(authRepositoryProvider).regions(),
+);
+
+final loginMethodsProvider = FutureProvider.autoDispose<Map<String, dynamic>>(
+  (ref) => ref.watch(authRepositoryProvider).methods(),
 );

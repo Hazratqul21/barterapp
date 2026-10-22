@@ -47,14 +47,15 @@ class User(Base, UUIDPrimaryKey, Timestamps):
 
     __tablename__ = "users"
 
-    #: Telefon yoki Google — kamida bittasi bor (baza cheklovi). Google bilan
-    #: kirgan hisobda telefon bo'sh bo'lishi mumkin.
+    #: Telefon yoki Google — kamida bittasi bor (baza cheklovi `has_sign_in`).
+    #: Google bilan kirgan hisobda telefon bo'sh bo'lishi mumkin.
     phone: Mapped[str | None] = mapped_column(String(20), unique=True)
-    #: Google hisobining o'zgarmas ID'si (`sub`). Email o'zgarishi mumkin,
-    #: `sub` — yo'q, shuning uchun hisob shu bo'yicha topiladi.
-    google_sub: Mapped[str | None] = mapped_column(String(64), unique=True)
-    #: Google tasdiqlagan email. Faqat aloqa va admin uchun; kirish emas.
-    email: Mapped[str | None] = mapped_column(String(254))
+    #: Google tasdiqlagan email; parol bilan kirishda ham login bo'la oladi.
+    email: Mapped[str | None] = mapped_column(String(320), unique=True)
+    #: Google hisobining o'zgarmas ID'si (`sub`). Hisob shu bo'yicha topiladi.
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True)
+    #: argon2 hash. Parol faqat Google/SMS bilan tasdiqlangan sessiyadan qo'yiladi.
+    password_hash: Mapped[str | None] = mapped_column(Text)
     first_name: Mapped[str] = mapped_column(String(80), nullable=False)
     last_name: Mapped[str] = mapped_column(String(80), nullable=False)
     user_type: Mapped[UserType] = mapped_column(
@@ -199,3 +200,9 @@ class RefreshToken(Base, UUIDPrimaryKey):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
+
+
+class LoginAttempt(Base, UUIDPrimaryKey):
+    __tablename__ = "login_attempts"
+    identifier_hash: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

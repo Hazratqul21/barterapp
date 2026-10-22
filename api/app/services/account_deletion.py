@@ -74,12 +74,13 @@ async def delete_account(db: AsyncSession, user: User) -> None:
 
     # --- 1. Shaxsiy ma'lumot ------------------------------------------------
 
+    # Google hisobi, email va parol ham bo'shatiladi: o'sha odam qayta kirsa,
+    # yangi hisob ochiladi, o'chirilgani tirilmaydi.
+    user.email = None
+    user.google_sub = None
+    user.password_hash = None
     user.deleted_at = now
     user.phone = freed_phone(user.id)
-    # Google hisobi ham bo'shatiladi: o'sha odam qayta kirsa, yangi hisob
-    # ochiladi, o'chirilgani tirilmaydi.
-    user.google_sub = None
-    user.email = None
     user.first_name = ""
     user.last_name = ""
     user.handle = None

@@ -95,6 +95,15 @@
     </div>
     <p class="hint">Moderator huquqi serverdan beriladi:
       <code>python -m app.grant_moderator +998...</code></p>
+    <details style="margin-top:14px">
+      <summary class="hint" style="cursor:pointer">Parol bilan kirish</summary>
+      <label>Telefon yoki email</label>
+      <input id="pwId" autocomplete="username" placeholder="+998901234567">
+      <label>Parol</label>
+      <input id="pwPass" type="password" autocomplete="current-password">
+      <div class="bar"><button class="act" onclick="doPasswordLogin()">Kirish</button></div>
+      <p class="hint">Parol ilovada o'rnatiladi: Sozlamalar → Parol.</p>
+    </details>
   </section>
 
   <!-- ── Lenta bo'laklari ───────────────────────────────────────────── -->
@@ -555,7 +564,7 @@ async function api(path, options = {}) {
       ...(options.headers || {}),
     },
   });
-  if (res.status === 401) { signOut(); throw new Error('Sessiya tugadi.'); }
+  if (res.status === 401 && !path.startsWith('/auth/')) { signOut(); throw new Error('Sessiya tugadi.'); }
   if (res.status === 404 && path.startsWith('/admin')) {
     throw new Error('Moderator huquqi yo‘q.');
   }
@@ -592,6 +601,19 @@ async function doLogin() {
       localStorage.setItem('barter_admin_token', TOKEN);
       await start();
     }
+  } catch (e) { say(e.message); }
+}
+
+async function doPasswordLogin() {
+  try {
+    const r = await api('/auth/password/login', {
+      method: 'POST',
+      body: JSON.stringify({ identifier: $('pwId').value.trim(), password: $('pwPass').value }),
+    });
+    $('pwPass').value = '';
+    TOKEN = r.access_token;
+    localStorage.setItem('barter_admin_token', TOKEN);
+    await start();
   } catch (e) { say(e.message); }
 }
 
