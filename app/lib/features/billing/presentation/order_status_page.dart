@@ -9,6 +9,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/theme/haptics.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/motion_fx.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../feed/data/listing_repository.dart';
@@ -121,22 +122,28 @@ class _OrderStatusPageState extends ConsumerState<OrderStatusPage>
 
     return Scaffold(
       appBar: AppBar(title: Text(l.orderTitle)),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Padding(
-            padding: const EdgeInsets.all(Gap.x6),
-            child: order == null
-                ? (_error != null
-                      ? ErrorState(
-                          message: errorMessage(context, _error!),
-                          retryLabel: l.retry,
-                          onRetry: _load,
-                        )
-                      : const CircularProgressIndicator())
-                : _Body(order: order, onRefresh: _load, onDone: _close),
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.all(Gap.x6),
+                child: order == null
+                    ? (_error != null
+                          ? ErrorState(
+                              message: errorMessage(context, _error!),
+                              retryLabel: l.retry,
+                              onRetry: _load,
+                            )
+                          : const CircularProgressIndicator())
+                    : _Body(order: order, onRefresh: _load, onDone: _close),
+              ),
+            ),
           ),
-        ),
+          if (order?.status == OrderStatus.paid)
+            const Positioned.fill(child: Celebration()),
+        ],
       ),
     );
   }
@@ -193,13 +200,21 @@ class _Body extends ConsumerWidget {
       children: [
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: Icon(
-            icon,
-            key: ValueKey(order.status),
-            size: 72,
-            color: color,
-            fill: 1,
-          ),
+          // Paid is the moment the person was waiting for: the check draws
+          // itself instead of just appearing.
+          child: order.status == OrderStatus.paid
+              ? AnimatedCheck(
+                  key: const ValueKey('paid'),
+                  color: color,
+                  onColor: theme.colorScheme.onPrimary,
+                )
+              : Icon(
+                  icon,
+                  key: ValueKey(order.status),
+                  size: 72,
+                  color: color,
+                  fill: 1,
+                ),
         ),
         Gap.h4,
         Text(

@@ -14,6 +14,7 @@ import '../../../core/widgets/deal_timeline.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/motion_fx.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../data/trade_repository.dart';
@@ -34,6 +35,9 @@ class ChatPage extends ConsumerStatefulWidget {
 
 class _ChatPageState extends ConsumerState<ChatPage>
     with WidgetsBindingObserver {
+  /// Bumped on each swap moment; keys a fresh [Celebration].
+  int _celebration = 0;
+
   final _controller = TextEditingController();
   final _scroll = ScrollController();
   StreamSubscription<LiveEvent>? _live;
@@ -208,6 +212,24 @@ class _ChatPageState extends ConsumerState<ChatPage>
     final theme = Theme.of(context);
     final state = ref.watch(conversationProvider(widget.conversationId));
 
+    // The swap moments — the other side said yes, or both confirmed the
+    // handover — are celebrated once, when they happen here. Opening an old,
+    // long-agreed deal does not throw confetti every time.
+    ref.listen(conversationProvider(widget.conversationId), (prev, next) {
+      final before = prev?.value?.offer.status;
+      final after = next.value?.offer.status;
+      if (before == null || after == null || before == after) return;
+      final agreed =
+          after == OfferStatus.accepted &&
+          (before == OfferStatus.pending || before == OfferStatus.talking);
+      final done =
+          after == OfferStatus.completed && before == OfferStatus.accepted;
+      if (agreed || done) {
+        Haptics.success();
+        setState(() => _celebration++);
+      }
+    });
+
     return Scaffold(
       appBar: widget.embedded
           ? null
@@ -219,121 +241,132 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 error: (_, _) => const SizedBox.shrink(),
               ),
             ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
-          child: state.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => ErrorState(
-              message: errorMessage(context, e),
-              retryLabel: l.retry,
-              onRetry: () =>
-                  ref.invalidate(conversationProvider(widget.conversationId)),
-            ),
-            data: (detail) {
-              final offer = detail.offer;
-              return Column(
-                children: [
-                  if (widget.embedded)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Gap.x4,
-                        vertical: Gap.x3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerLowest,
-                        border: Border(bottom: BorderSide(color: p.hair)),
-                      ),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: _PeerHeader(peer: detail.summary.peer),
-                      ),
-                    ),
-                  _DealPanel(
-                    offer: offer,
-                    onAccept: () => _act(offer.id, 'accept'),
-                    onDecline: () => _act(offer.id, 'decline'),
-                    onCounter: () => _counter(offer),
-                    onComplete: () => _act(offer.id, 'confirm'),
-                    onDispute: () => _dispute(offer),
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: Sizes.contentMax),
+              child: state.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => ErrorState(
+                  message: errorMessage(context, e),
+                  retryLabel: l.retry,
+                  onRetry: () => ref.invalidate(
+                    conversationProvider(widget.conversationId),
                   ),
-                  Expanded(
-                    child: detail.messages.isEmpty
-                        ? EmptyState(
-                            icon: Symbols.forum_rounded,
-                            title: l.chatPlaceholder,
-                            hint: '',
-                          )
-                        : ListView.builder(
-                            controller: _scroll,
-                            reverse: true,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: Gap.x4,
-                              vertical: Gap.x4,
-                            ),
-                            itemCount: detail.messages.length,
-                            itemBuilder: (context, index) {
-                              final message = detail
-                                  .messages[detail.messages.length - 1 - index];
-                              return _Bubble(
-                                    key: ValueKey(message.id),
-                                    message: message,
-                                  )
-                                  .animate(key: ValueKey('anim_${message.id}'))
-                                  .fadeIn(duration: 200.ms)
-                                  .slideY(
-                                    begin: 0.05,
-                                    end: 0,
-                                    curve: M3Motion.emphasizedDecelerate,
-                                  );
-                            },
+                ),
+                data: (detail) {
+                  final offer = detail.offer;
+                  return Column(
+                    children: [
+                      if (widget.embedded)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: Gap.x4,
+                            vertical: Gap.x3,
                           ),
-                  ),
-                  if (_peerTyping)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        Gap.x5,
-                        0,
-                        Gap.x5,
-                        Gap.x2,
-                      ),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              l.chatTyping,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: p.give,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Gap.w1,
-                            for (var i = 0; i < 3; i++)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 2),
-                                child: _TypingDot(
-                                  color: p.give,
-                                  index: i,
-                                  reduceMotion: shouldReduceMotion(context),
-                                ),
-                              ),
-                          ],
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLowest,
+                            border: Border(bottom: BorderSide(color: p.hair)),
+                          ),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: _PeerHeader(peer: detail.summary.peer),
+                          ),
                         ),
+                      _DealPanel(
+                        offer: offer,
+                        onAccept: () => _act(offer.id, 'accept'),
+                        onDecline: () => _act(offer.id, 'decline'),
+                        onCounter: () => _counter(offer),
+                        onComplete: () => _act(offer.id, 'confirm'),
+                        onDispute: () => _dispute(offer),
                       ),
-                    ),
-                  _Composer(
-                    controller: _controller,
-                    sending: _sending,
-                    onChanged: _onTextChanged,
-                    onSend: _send,
-                  ),
-                ],
-              );
-            },
+                      Expanded(
+                        child: detail.messages.isEmpty
+                            ? EmptyState(
+                                icon: Symbols.forum_rounded,
+                                title: l.chatPlaceholder,
+                                hint: '',
+                              )
+                            : ListView.builder(
+                                controller: _scroll,
+                                reverse: true,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: Gap.x4,
+                                  vertical: Gap.x4,
+                                ),
+                                itemCount: detail.messages.length,
+                                itemBuilder: (context, index) {
+                                  final message =
+                                      detail.messages[detail.messages.length -
+                                          1 -
+                                          index];
+                                  return _Bubble(
+                                        key: ValueKey(message.id),
+                                        message: message,
+                                      )
+                                      .animate(
+                                        key: ValueKey('anim_${message.id}'),
+                                      )
+                                      .fadeIn(duration: 200.ms)
+                                      .slideY(
+                                        begin: 0.05,
+                                        end: 0,
+                                        curve: M3Motion.emphasizedDecelerate,
+                                      );
+                                },
+                              ),
+                      ),
+                      if (_peerTyping)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            Gap.x5,
+                            0,
+                            Gap.x5,
+                            Gap.x2,
+                          ),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l.chatTyping,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: p.give,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Gap.w1,
+                                for (var i = 0; i < 3; i++)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 2),
+                                    child: _TypingDot(
+                                      color: p.give,
+                                      index: i,
+                                      reduceMotion: shouldReduceMotion(context),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      _Composer(
+                        controller: _controller,
+                        sending: _sending,
+                        onChanged: _onTextChanged,
+                        onSend: _send,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+          if (_celebration > 0)
+            Positioned.fill(child: Celebration(key: ValueKey(_celebration))),
+        ],
       ),
     );
   }

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../widgets/motion_fx.dart';
+import '../theme/motion.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/section_theme.dart';
 import '../theme/app_theme.dart';
@@ -248,30 +250,50 @@ class _Destination extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
+              // The pill grows out from the icon's centre and the glyph pops,
+              // so changing tab reads as arriving somewhere rather than a
+              // colour swap.
+              SizedBox(
                 width: 48,
                 height: 30,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? colors.primaryContainer
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  size: 25,
-                  fill: selected ? 1 : 0,
-                  color: color,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: Motion.standard.durationOf(context),
+                      curve: Motion.standard.curve,
+                      width: selected ? 48 : 18,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? colors.primaryContainer
+                            : colors.primaryContainer.withValues(alpha: 0),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    PopOnActivate(
+                      active: selected,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(end: selected ? 1 : 0),
+                        duration: Motion.fast.durationOf(context),
+                        builder: (context, fill, _) =>
+                            Icon(icon, size: 25, fill: fill, color: color),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              AnimatedDefaultTextStyle(
+                duration: Motion.fast.durationOf(context),
+                style: Theme.of(context).textTheme.labelSmall!.copyWith(
                   color: color,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
