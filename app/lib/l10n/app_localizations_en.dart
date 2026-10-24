@@ -1416,6 +1416,13 @@ class LEn extends L {
   String get quotaAction => 'See plans';
 
   @override
+  String get quotaBodyStore =>
+      'You have used up your free listings. Your draft is kept — archive an older listing to make room.';
+
+  @override
+  String get quotaOk => 'Got it';
+
+  @override
   String get authPassword => 'Sign in with password';
 
   @override

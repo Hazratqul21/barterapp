@@ -570,6 +570,8 @@
   "quotaTitle": "Bepul e’lonlar tugadi",
   "quotaBody": "Yangi e’lon joylash uchun e’lon paketini tanlang. Qoralama saqlanib qoladi.",
   "quotaAction": "Tariflarni ko‘rish",
+  "quotaBodyStore": "Bepul e’lonlar soni tugadi. Qoralama saqlanib qoladi — eskiroq e’loningizni arxivlab, joy ochishingiz mumkin.",
+  "quotaOk": "Tushunarli",
   "authPassword": "Parol bilan kirish",
   "authIdentifier": "Telefon raqami yoki email",
   "authPasswordLabel": "Parol",

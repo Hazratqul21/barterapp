@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/widgets/legal_links.dart';
+import '../../billing/payments_availability.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
@@ -179,18 +180,20 @@ class SettingsPage extends ConsumerWidget {
                             title: l.verifyTitle,
                             onTap: () => context.push('/settings/verify'),
                           ),
-                          const _Divider(),
-                          _SettingsTile(
-                            icon: Symbols.sell_rounded,
-                            title: l.billingTitle,
-                            onTap: () => context.push('/tariffs'),
-                          ),
-                          const _Divider(),
-                          _SettingsTile(
-                            icon: Symbols.account_balance_wallet_rounded,
-                            title: l.paymentsTitle,
-                            onTap: () => context.push('/settings/payments'),
-                          ),
+                          if (paymentsInApp) ...[
+                            const _Divider(),
+                            _SettingsTile(
+                              icon: Symbols.sell_rounded,
+                              title: l.billingTitle,
+                              onTap: () => context.push('/tariffs'),
+                            ),
+                            const _Divider(),
+                            _SettingsTile(
+                              icon: Symbols.account_balance_wallet_rounded,
+                              title: l.paymentsTitle,
+                              onTap: () => context.push('/settings/payments'),
+                            ),
+                          ],
                           const _Divider(),
                           _SettingsTile(
                             icon: Symbols.block_rounded,

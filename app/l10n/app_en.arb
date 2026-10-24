@@ -440,6 +440,8 @@
   "quotaTitle": "Free listings used up",
   "quotaBody": "Pick a listing pack to publish. Your draft is kept.",
   "quotaAction": "See plans",
+  "quotaBodyStore": "You have used up your free listings. Your draft is kept — archive an older listing to make room.",
+  "quotaOk": "Got it",
   "authPassword": "Sign in with password",
   "authIdentifier": "Phone number or email",
   "authPasswordLabel": "Password",

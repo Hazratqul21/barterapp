@@ -2727,6 +2727,18 @@ abstract class L {
   /// **'Tariflarni ko‘rish'**
   String get quotaAction;
 
+  /// No description provided for @quotaBodyStore.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bepul e’lonlar soni tugadi. Qoralama saqlanib qoladi — eskiroq e’loningizni arxivlab, joy ochishingiz mumkin.'**
+  String get quotaBodyStore;
+
+  /// No description provided for @quotaOk.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tushunarli'**
+  String get quotaOk;
+
   /// No description provided for @authPassword.
   ///
   /// In uz, this message translates to:
