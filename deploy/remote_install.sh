@@ -91,10 +91,16 @@ install -D -m 644 "$STAGE/nginx/mab-http.conf" /etc/nginx/conf.d/mab-http.conf
 CONF=/etc/nginx/sites-available/mab.conf
 if [ -f "$CONF" ]; then
   cp "$CONF" "$BACKUP/nginx-mab.conf"
+  # `root /var/www/mab;` certbot/qo'lda `root /var/www/mab/ ;` bo'lib ham qolishi mumkin.
+  ROOT_RE='^\(\s*\)root\s\+/var/www/mab/\?\s*;'
   grep -q "mab-legal.conf" "$CONF" \
-    || sed -i 's|^\(\s*\)root /var/www/mab;|&\n\1include snippets/mab-legal.conf;|' "$CONF"
+    || sed -i "s|$ROOT_RE|&\n\1include snippets/mab-legal.conf;|" "$CONF"
+  grep -q "mab-legal.conf" "$CONF" || {
+    echo "DIQQAT: $CONF da 'root /var/www/mab;' topilmadi — mab.uz/privacy, /offer"
+    echo "ochilmaydi. Sayt bloki ichiga qo'lda qo'shing: include snippets/mab-legal.conf;"
+  }
   grep -q "mab-web-headers.conf" "$CONF" || {
-    sed -i 's|^\(\s*\)root /var/www/mab;|&\n\1include snippets/mab-web-headers.conf;|' "$CONF"
+    sed -i "s|$ROOT_RE|&\n\1include snippets/mab-web-headers.conf;|" "$CONF"
     sed -i 's|^\(\s*\)add_header Cache-Control "no-cache";|&\n\1include snippets/mab-web-headers.conf;|' "$CONF"
   }
   # .well-known fayllari .json qoidasiga tushib qolmasin.
