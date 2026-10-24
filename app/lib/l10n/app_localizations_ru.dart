@@ -1419,6 +1419,13 @@ class LRu extends L {
   String get quotaAction => 'Посмотреть тарифы';
 
   @override
+  String get quotaBodyStore =>
+      'Бесплатные объявления закончились. Черновик сохранится — можно снять с публикации старое объявление.';
+
+  @override
+  String get quotaOk => 'Понятно';
+
+  @override
   String get authPassword => 'Войти с паролем';
 
   @override

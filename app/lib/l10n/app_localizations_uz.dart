@@ -1423,6 +1423,13 @@ class LUz extends L {
   String get quotaAction => 'Tariflarni ko‘rish';
 
   @override
+  String get quotaBodyStore =>
+      'Bepul e’lonlar soni tugadi. Qoralama saqlanib qoladi — eskiroq e’loningizni arxivlab, joy ochishingiz mumkin.';
+
+  @override
+  String get quotaOk => 'Tushunarli';
+
+  @override
   String get authPassword => 'Parol bilan kirish';
 
   @override
