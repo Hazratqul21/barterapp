@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
 import '../../profile/presentation/favorites_page.dart';
+import '../../../core/widgets/motion_fx.dart';
 import '../../trade/data/trade_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/analytics/analytics_service.dart';
@@ -407,7 +408,7 @@ class _Content extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(Gap.x5, Gap.x5, Gap.x5, Gap.x8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: _staggered([
           Text(listing.title, style: theme.textTheme.headlineMedium),
           Gap.h2,
           Wrap(
@@ -562,7 +563,7 @@ class _Content extends StatelessWidget {
               ),
             ],
           ),
-        ],
+        ]),
       ),
     );
     final photo = Hero(
@@ -998,11 +999,21 @@ class _OverPhotoButton extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
-      child: Icon(
-        icon,
-        size: 22,
-        fill: filled ? 1 : 0,
+      // Only the save toggle ever turns `filled` on, so the pop and sparks
+      // mark exactly one moment: saving.
+      child: BurstOnActivate(
+        active: filled,
         color: color ?? Colors.white,
+        radius: 24,
+        child: PopOnActivate(
+          active: filled,
+          child: Icon(
+            icon,
+            size: 22,
+            fill: filled ? 1 : 0,
+            color: color ?? Colors.white,
+          ),
+        ),
       ),
     );
     // Without onPressed this is the face of a PopupMenuButton, which
@@ -1018,4 +1029,17 @@ class _OverPhotoButton extends StatelessWidget {
       icon: glyph,
     );
   }
+}
+
+/// The detail's sections arrive top to bottom behind the photo instead of all
+/// at once — title and price first, the long text last. Spacing stays put so
+/// nothing reflows while they settle.
+List<Widget> _staggered(List<Widget> children) {
+  var index = 0;
+  return [
+    for (final child in children)
+      child is SizedBox
+          ? child
+          : AnimatedListItem(index: index++, child: child),
+  ];
 }
