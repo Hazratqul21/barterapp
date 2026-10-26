@@ -5,7 +5,9 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../../core/art/category_marks.dart';
 import '../../../core/theme/motion.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/theme/haptics.dart';
 import '../../../core/widgets/common.dart';
+import '../../../core/widgets/motion_fx.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 
@@ -375,7 +377,11 @@ class _Heart extends StatelessWidget {
       label: saved ? l.listingSaved : l.listingSave,
       excludeSemantics: true,
       child: InkResponse(
-        onTap: onTap,
+        onTap: () {
+          // Saving is the small "yes" of the feed; a tap the hand can feel.
+          if (!saved) Haptics.light();
+          onTap();
+        },
         radius: 24,
         child: SizedBox.square(
           dimension: 48,
@@ -388,15 +394,33 @@ class _Heart extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: AnimatedScale(
-                scale: saved ? 1 : 0.9,
-                duration: Motion.bouncy.durationOf(context),
-                curve: Motion.bouncy.curve,
-                child: Icon(
-                  Symbols.favorite_rounded,
-                  size: 18,
-                  fill: saved ? 1 : 0,
-                  color: saved ? colors.error : colors.onSurfaceVariant,
+              child: BurstOnActivate(
+                active: saved,
+                color: colors.error,
+                radius: 20,
+                child: PopOnActivate(
+                  active: saved,
+                  // At rest the empty heart sits a touch smaller, so the
+                  // filled one reads as having grown.
+                  child: AnimatedScale(
+                    scale: saved ? 1 : 0.9,
+                    duration: Motion.fast.durationOf(context),
+                    curve: Motion.fast.curve,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(end: saved ? 1 : 0),
+                      duration: Motion.fast.durationOf(context),
+                      builder: (context, fill, _) => Icon(
+                        Symbols.favorite_rounded,
+                        size: 18,
+                        fill: fill,
+                        color: Color.lerp(
+                          colors.onSurfaceVariant,
+                          colors.error,
+                          fill,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
