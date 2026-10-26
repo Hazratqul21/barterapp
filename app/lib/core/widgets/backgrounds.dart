@@ -337,7 +337,7 @@ class SwapBanner extends StatelessWidget {
         child: ColoredBox(
           color: BrandColors.mist,
           child: Image.asset(
-            'assets/images/feed_header_hero.png',
+            'assets/images/feed_header_hero.webp',
             fit: BoxFit.cover,
             alignment: Alignment.topRight,
             width: double.infinity,
