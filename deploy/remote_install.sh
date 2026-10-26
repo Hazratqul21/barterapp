@@ -86,6 +86,7 @@ fi
 # yetishmayotgan `include` qatorlari qo'shiladi; xato bo'lsa — qaytariladi.
 install -D -m 644 "$STAGE/nginx/mab-legal.conf" /etc/nginx/snippets/mab-legal.conf
 install -D -m 644 "$STAGE/nginx/mab-web-headers.conf" /etc/nginx/snippets/mab-web-headers.conf
+install -D -m 644 "$STAGE/nginx/mab-gzip.conf" /etc/nginx/snippets/mab-gzip.conf
 install -D -m 644 "$STAGE/nginx/mab-http.conf" /etc/nginx/conf.d/mab-http.conf
 # harden_server.sh ning eski sarlavha fayli: endi mab-web-headers.conf (sayt)
 # va API'ning o'zi (main.py) beradi. Ikki marta yuborilmasin.
@@ -105,6 +106,11 @@ if [ -f "$CONF" ]; then
   grep -q "mab-web-headers.conf" "$CONF" || {
     sed -i "s|$ROOT_RE|&\n\1include snippets/mab-web-headers.conf;|" "$CONF"
     sed -i 's|^\(\s*\)add_header Cache-Control "no-cache";|&\n\1include snippets/mab-web-headers.conf;|' "$CONF"
+  }
+  # Siqish: sayt (root qatori) va API (client_max_body_size qatori) bloklariga.
+  grep -q "mab-gzip.conf" "$CONF" || {
+    sed -i "s|$ROOT_RE|&\n\1include snippets/mab-gzip.conf;|" "$CONF"
+    sed -i 's|^\(\s*\)client_max_body_size 16m;|&\n\1include snippets/mab-gzip.conf;|' "$CONF"
   }
   # .well-known fayllari .json qoidasiga tushib qolmasin.
   sed -i 's|^\(\s*\)location /.well-known/ {|\1location ^~ /.well-known/ {|' "$CONF"

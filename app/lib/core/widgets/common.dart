@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:cached_network_image/cached_network_image.dart';
+import 'net_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -142,12 +142,12 @@ class RemoteImage extends StatelessWidget {
   Widget _network(BuildContext context, Widget placeholder, int? cacheWidth) {
     final p = palette(context);
     final scheme = Theme.of(context).colorScheme;
-    return CachedNetworkImage(
-      imageUrl: url!,
+    return netImage(
+      url: url!,
       fit: fit,
-      memCacheWidth: cacheWidth,
-      placeholder: (_, _) => placeholder,
-      errorWidget: (_, _, _) => Semantics(
+      cacheWidth: cacheWidth,
+      placeholder: placeholder,
+      error: Semantics(
         label: L.of(context).errorNoImage,
         child: Container(
           decoration: BoxDecoration(
@@ -193,11 +193,7 @@ class RemoteImage extends StatelessWidget {
           ),
         ),
       ),
-      imageBuilder: (_, provider) => Semantics(
-        label: semanticLabel,
-        image: true,
-        child: Image(image: provider, fit: fit),
-      ),
+      semanticLabel: semanticLabel,
     );
   }
 }
@@ -1074,12 +1070,12 @@ Widget _tilePicture(ListingTag? tag, String? uploaded, Widget mark) {
     children: [
       Center(child: mark),
       if (uploaded != null)
-        CachedNetworkImage(
-          imageUrl: uploaded,
+        netImage(
+          url: uploaded,
           fit: BoxFit.cover,
-          memCacheWidth: 280,
-          placeholder: (_, _) => fallback ?? const SizedBox.shrink(),
-          errorWidget: (_, _, _) => fallback ?? const SizedBox.shrink(),
+          cacheWidth: 280,
+          placeholder: fallback ?? const SizedBox.shrink(),
+          error: fallback ?? const SizedBox.shrink(),
         )
       else
         ?fallback,

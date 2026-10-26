@@ -66,7 +66,7 @@ flutter:
   assets:
     - assets/brand/
     - assets/images/
-    - assets/media/
+    # assets/media/ — ishlatilmaydigan 17 MB eskiz va videolar; paketga kirmaydi.
 
   #
   # Both are variable fonts with a single weight axis: one file covers 300–900,

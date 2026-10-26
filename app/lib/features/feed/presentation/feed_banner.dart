@@ -74,7 +74,7 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
         l.bannerCreateAction,
         '/create',
         Symbols.add_box_rounded,
-        'assets/images/banner_create_listing.png',
+        'assets/images/banner_create_listing.webp',
       ),
       _Nudge.verify => (
         l.bannerVerifyTitle,
@@ -82,7 +82,7 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
         l.bannerVerifyAction,
         '/settings/verify',
         Symbols.verified_user_rounded,
-        'assets/images/banner_verify_profile.png',
+        'assets/images/banner_verify_profile.webp',
       ),
     };
 

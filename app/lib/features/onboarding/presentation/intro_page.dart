@@ -55,17 +55,17 @@ class _IntroPageState extends ConsumerState<IntroPage> {
 
     final slides = <({String imagePath, String title, String body})>[
       (
-        imagePath: 'assets/images/intro_swap.png',
+        imagePath: 'assets/images/intro_swap.webp',
         title: l.introTitle1,
         body: l.introBody1,
       ),
       (
-        imagePath: 'assets/images/intro_match.png',
+        imagePath: 'assets/images/intro_match.webp',
         title: l.introTitle2,
         body: l.introBody2,
       ),
       (
-        imagePath: 'assets/images/intro_trust.png',
+        imagePath: 'assets/images/intro_trust.webp',
         title: l.introTitle3,
         body: l.introBody3,
       ),
