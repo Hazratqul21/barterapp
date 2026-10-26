@@ -12,6 +12,7 @@ from app.api import (
     account,
     admin,
     billing_admin,
+    categories_admin,
     disputes_admin,
     auth,
     chat,
@@ -61,7 +62,11 @@ MAX_ADMIN_BYTES = 4 * 1024 * 1024
 
 
 def _body_limit(path: str) -> int:
-    if path.startswith("/uploads") or (path.startswith("/admin/legal/") and path.endswith("/file")):
+    if (
+        path.startswith("/uploads")
+        or (path.startswith("/admin/legal/") and path.endswith("/file"))
+        or (path.startswith("/admin/categories/") and path.endswith("/image"))
+    ):
         return MAX_BODY_BYTES
     if path.startswith("/admin"):
         return MAX_ADMIN_BYTES
@@ -177,6 +182,7 @@ app.include_router(payme.router)
 app.include_router(billing_admin.router)
 app.include_router(legal.router)
 app.include_router(legal_admin.router)
+app.include_router(categories_admin.router)
 
 # Uploaded photos are served straight off disk. The directory is created here
 # rather than on first upload so a fresh checkout can serve `/media` without

@@ -71,6 +71,7 @@
     <button data-tab="push">Bildirishnoma</button>
     <button data-tab="billing">To‘lovlar</button>
     <button data-tab="legal">Hujjatlar</button>
+    <button data-tab="cats">Kategoriyalar</button>
     <button data-tab="stats">Tahlil</button>
     <button data-tab="setup">Sozlash</button>
   </nav>
@@ -449,6 +450,18 @@
   </section>
 
   <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
+  <!-- ── Kategoriya rasmlari ───────────────────────────────────────── -->
+  <section id="cats" class="hide">
+    <div class="card">
+      <h2>Kategoriya rasmlari</h2>
+      <p class="hint" style="margin:-6px 0 12px">Ilova va saytdagi kategoriya plitkalari.
+        Rasm markazdan kvadrat qilib kesiladi (600×600) — kvadrat rasm yuklang.
+        Yuklangan zahoti hamma joyda yangilanadi; «Standart» ilova o‘zi bilan
+        kelgan rasmni qaytaradi.</p>
+      <div id="catGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px"></div>
+    </div>
+  </section>
+
   <!-- ── Huquqiy hujjatlar ─────────────────────────────────────────── -->
   <section id="legal" class="hide">
     <div class="card">
@@ -623,7 +636,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -640,7 +653,7 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
@@ -649,6 +662,7 @@ function show(tab) {
   if (tab === 'disputes') loadDisputes();
   if (tab === 'billing') loadBilling();
   if (tab === 'legal') loadLegal();
+  if (tab === 'cats') loadCats();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
   if (tab === 'setup') loadFirebase();
@@ -1300,6 +1314,60 @@ async function legalPdfDelete() {
     await api('/admin/legal/' + encodeURIComponent(legalSlug) + '/file', { method: 'DELETE' });
     say('PDF olib tashlandi.', true);
     await loadLegal();
+  } catch (e) { say(e.message); }
+}
+// ── Kategoriya rasmlari ───────────────────────────────────────────────
+async function loadCats() {
+  try { renderCats(await api('/admin/categories')); } catch (e) { say(e.message); }
+}
+
+function renderCats(rows) {
+  $('catGrid').innerHTML = rows.map(c => `<div style="display:flex;flex-direction:column;gap:8px">
+    <div style="aspect-ratio:1;border-radius:22px;padding:3px;
+         background:linear-gradient(135deg,#F0DFCB,#C9B07A 55%,#9C8250)">
+      ${c.image_url
+        ? `<img src="${esc(c.image_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:19px;display:block">`
+        : `<div style="width:100%;height:100%;border-radius:19px;background:var(--line);display:flex;
+             align-items:center;justify-content:center;text-align:center;font-size:13px;color:var(--soft)">
+             Standart<br>(ilovadagi rasm)</div>`}
+    </div>
+    <b>${esc(c.name.uz)}</b>
+    <div class="bar" style="margin:0">
+      <label class="act ghost" style="margin:0;cursor:pointer;padding:8px 12px;border-radius:10px;
+             border:1px solid var(--line);font-size:13px;color:var(--soft)">
+        Rasm yuklash<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
+                           data-cat="${esc(c.id)}" onchange="catUpload(this)"></label>
+      ${c.image_url ? `<button class="act ghost" style="padding:8px 12px;font-size:13px" data-cat="${esc(c.id)}" onclick="catReset(this)">Standart</button>` : ''}
+    </div>
+  </div>`).join('');
+}
+
+async function catUpload(input) {
+  const file = input.files[0];
+  const tag = input.dataset.cat;
+  input.value = '';
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch(API + '/admin/categories/' + encodeURIComponent(tag) + '/image', {
+      method: 'POST', body: form, headers: { Authorization: 'Bearer ' + TOKEN },
+    });
+    if (!res.ok) {
+      let detail = 'Xatolik ' + res.status;
+      try { const b = await res.json(); if (b.detail) detail = b.detail; } catch {}
+      throw new Error(detail);
+    }
+    renderCats(await res.json());
+    say('Rasm yangilandi.', true);
+  } catch (e) { say(e.message); }
+}
+
+async function catReset(button) {
+  try {
+    renderCats(await api('/admin/categories/' + encodeURIComponent(button.dataset.cat) + '/image',
+                         { method: 'DELETE' }));
+    say('Standart rasm qaytarildi.', true);
   } catch (e) { say(e.message); }
 }
 </script>
