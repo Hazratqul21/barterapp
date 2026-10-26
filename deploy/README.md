@@ -146,3 +146,14 @@ egaligida bo'lgani uchun avval `sudo chmod -R a+rX /var/backups/mab` yoki
 Batafsil: [docs/SECURITY-AUDIT-2026-10-21.md](../docs/SECURITY-AUDIT-2026-10-21.md).
 
 Ilova ID'si (`uz.mab.app`) va domenlar haqida: `README.md` → "Domen va identifikatorlar".
+
+## Demo ma'lumotlar
+
+Lenta, profillar va sharhlar bo'sh ko'rinmasligi uchun 10 ta demo hisob,
+24 ta e'lon (har kategoriyada 4 ta, rasmlari bilan) va 8 ta sharh qo'shiladi.
+Haqiqiy foydalanuvchilarga tegilmaydi; demo hisoblar `+99877000…` raqamlarida.
+
+```sh
+sudo -u mab bash -c "cd /opt/mab/api && .venv/bin/python -m app.demo_seed"            # qo'shish / yangilash
+sudo -u mab bash -c "cd /opt/mab/api && .venv/bin/python -m app.demo_seed --remove"   # olib tashlash
+```
