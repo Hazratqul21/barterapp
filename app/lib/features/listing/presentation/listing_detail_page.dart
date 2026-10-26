@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../billing/presentation/boost_sheet.dart';
+import '../../billing/payments_availability.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -275,26 +276,28 @@ class _ListingDetailPageState extends ConsumerState<ListingDetailPage> {
                                 ),
                               ),
                             ),
-                            Gap.w3,
                             // Paid placement: Payme, priced by the admin.
-                            Expanded(
-                              child: FilledButton.tonalIcon(
-                                onPressed: () {
-                                  Haptics.light();
-                                  showBoostSheet(context, listing.id);
-                                },
-                                icon: const Icon(
-                                  Symbols.rocket_launch_rounded,
-                                  size: Sizes.iconMd,
-                                ),
-                                label: Text(l.boostAction),
-                                style: FilledButton.styleFrom(
-                                  minimumSize: const Size.fromHeight(
-                                    Sizes.buttonLg,
+                            if (paymentsInApp) ...[
+                              Gap.w3,
+                              Expanded(
+                                child: FilledButton.tonalIcon(
+                                  onPressed: () {
+                                    Haptics.light();
+                                    showBoostSheet(context, listing.id);
+                                  },
+                                  icon: const Icon(
+                                    Symbols.rocket_launch_rounded,
+                                    size: Sizes.iconMd,
+                                  ),
+                                  label: Text(l.boostAction),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(
+                                      Sizes.buttonLg,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         )
                       // The decision bar: what it is worth and what they want,

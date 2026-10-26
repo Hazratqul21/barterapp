@@ -11,6 +11,7 @@ import '../../features/listing/presentation/listing_detail_page.dart';
 import '../../features/onboarding/presentation/intro_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/profile/presentation/payments_page.dart';
+import '../../features/billing/payments_availability.dart';
 import '../../features/profile/presentation/profile_edit_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/profile/presentation/settings_page.dart';
@@ -233,12 +234,14 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/settings/payments',
         parentNavigatorKey: _rootKey,
+        redirect: (context, state) => paymentsInApp ? null : '/',
         pageBuilder: (context, state) =>
             forwardPage(key: state.pageKey, child: const PaymentsPage()),
       ),
       GoRoute(
         path: '/tariffs',
         parentNavigatorKey: _rootKey,
+        redirect: (context, state) => paymentsInApp ? null : '/',
         pageBuilder: (context, state) =>
             forwardPage(key: state.pageKey, child: const TariffsPage()),
       ),

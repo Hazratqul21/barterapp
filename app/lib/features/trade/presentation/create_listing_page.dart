@@ -10,6 +10,7 @@ import '../../../core/theme/haptics.dart';
 import '../../../core/theme/motion.dart';
 import '../../feed/presentation/listing_card_tile.dart';
 import '../../../core/theme/tokens.dart';
+import '../../billing/payments_availability.dart';
 import '../../../core/widgets/common.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
@@ -418,6 +419,25 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
   Future<void> _offerPlans() async {
     final l = L.of(context);
+    if (!paymentsInApp) {
+      // A store build sells nothing (see payments_availability.dart), and
+      // pointing to where it is sold is not allowed there either.
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          icon: const Icon(Symbols.sell_rounded),
+          title: Text(l.quotaTitle),
+          content: Text(l.quotaBodyStore),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l.quotaOk),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     final go = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
