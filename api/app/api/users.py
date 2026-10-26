@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -15,6 +15,7 @@ from app.core.locale import resolve_locale
 from app.core.regions import coordinates_for, region_names
 from app.core.security import current_user
 from app.db.session import get_db
+from app.services import category_images
 from app.models.listing import Listing, ListingStatus
 from app.models.offer import Offer, OfferStatus
 from app.models.review import Review
@@ -46,7 +47,8 @@ class CategoryOut(ApiModel):
     id: str
     #: Already resolved to the requested language.
     name: str
-    image_url: str
+    #: The admin-uploaded picture; null means the app shows its bundled one.
+    image_url: str | None
 
 
 async def _profile(db: AsyncSession, user: User) -> TraderProfile:
@@ -104,7 +106,9 @@ async def list_regions() -> list[str]:
 
 @router.get("/categories", response_model=list[CategoryOut], tags=["meta"])
 async def list_categories(
+    request: Request,
     locale: str = Depends(resolve_locale),
+    db: AsyncSession = Depends(get_db),
 ) -> list[CategoryOut]:
     """
     The six categories a listing can be filed under, already in one language.
@@ -118,7 +122,8 @@ async def list_categories(
     An `id` here is a `ListingTag`, so it can be passed straight back as the
     `tag` filter on `/listings`.
     """
-    return [CategoryOut(**row) for row in categories(locale)]
+    images = await category_images.image_urls(db, request)
+    return [CategoryOut(**row) for row in categories(locale, images)]
 
 
 @router.patch("/me", response_model=Me)

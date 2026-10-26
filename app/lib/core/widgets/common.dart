@@ -917,6 +917,10 @@ class CategoryCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Side of the framed picture, ring included.
+  static const tile = 84.0;
+  static const radius = 22.0;
+
   /// Wide enough for the longest word, so a long Russian name
   /// ("Животноводство") wraps between words instead of inside one.
   double _widthFor(BuildContext context, TextStyle? style) {
@@ -934,7 +938,7 @@ class CategoryCard extends StatelessWidget {
       widest = widest < painter.width ? painter.width : widest;
       painter.dispose();
     }
-    return (widest + 12).clamp(80.0, 280.0);
+    return (widest + 12).clamp(tile + 12, 280.0);
   }
 
   @override
@@ -968,64 +972,66 @@ class CategoryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
               children: [
+                // A framed picture: a gold ring around a rounded square, the
+                // same look as the brand's category artwork. Selected: the
+                // ring thickens and glows in the category's own colour.
                 AnimatedContainer(
                   duration: Motion.fast.durationOf(context),
                   curve: Motion.fast.curve,
-                  width: 56,
-                  height: 56,
-                  // Clay: lit from the top, a soft shadow in the tile's own
-                  // hue underneath — a small object, not a flat swatch.
+                  width: CategoryCard.tile,
+                  height: CategoryCard.tile,
+                  padding: EdgeInsets.all(selected ? 3.5 : 2.5),
                   decoration: ShapeDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color.lerp(
-                          style?.tint ?? p.giveSoft,
-                          Colors.white,
-                          p.isDark ? 0.04 : 0.55,
-                        )!,
-                        style?.tint ?? p.giveSoft,
+                        BrandColors.goldLight,
+                        BrandColors.gold500,
+                        BrandColors.goldDeep,
                       ],
+                      stops: [0, 0.55, 1],
                     ),
-                    shadows: selected || p.isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: accent.withValues(alpha: 0.22),
-                              blurRadius: 14,
-                              spreadRadius: -5,
-                              offset: const Offset(0, 7),
-                            ),
-                          ],
-                    shape: RoundedSuperellipseBorder(
-                      borderRadius: Radii.rLg,
-                      side: BorderSide(
-                        color: selected ? accent : Colors.transparent,
-                        width: 2,
+                    shadows: [
+                      BoxShadow(
+                        color: (selected ? accent : BrandColors.goldDeep)
+                            .withValues(alpha: selected ? 0.45 : 0.22),
+                        blurRadius: selected ? 16 : 10,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                    shape: const RoundedSuperellipseBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(CategoryCard.radius),
                       ),
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: _tilePicture(
-                      tag,
-                      style == null
-                          ? Icon(
-                              Symbols.category_rounded,
-                              color: accent,
-                              size: 26,
-                            )
-                          : CategoryMarkIcon(
-                              mark: style.mark,
-                              color: style.color,
-                              size: 30,
-                            ),
+                  child: ClipRSuperellipse(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(CategoryCard.radius - 3),
+                    ),
+                    child: ColoredBox(
+                      color: style?.tint ?? p.giveSoft,
+                      child: _tilePicture(
+                        tag,
+                        category.imageUrl,
+                        style == null
+                            ? Icon(
+                                Symbols.category_rounded,
+                                color: accent,
+                                size: 34,
+                              )
+                            : CategoryMarkIcon(
+                                mark: style.mark,
+                                color: style.color,
+                                size: 40,
+                              ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   category.name,
                   textAlign: TextAlign.center,
@@ -1042,32 +1048,42 @@ class CategoryCard extends StatelessWidget {
   }
 }
 
-/// Bundled photography with the category mark as a graceful fallback.
-Widget _tilePicture(ListingTag? tag, Widget mark) {
-  final url = tag == null ? null : categoryImage(tag);
-  if (url == null) return mark;
-  return ClipRSuperellipse(
-    borderRadius: Radii.rLg,
-    child: Stack(
-      fit: StackFit.expand,
-      children: [
-        Center(child: mark),
-        Image.asset(
-          url,
+/// The admin's uploaded picture when there is one, else the bundled
+/// photograph, with the category mark underneath as the last fallback.
+Widget _tilePicture(ListingTag? tag, String? uploaded, Widget mark) {
+  final bundled = tag == null ? null : categoryImage(tag);
+  Widget fade(BuildContext context, Widget child, int? frame, bool sync) => sync
+      ? child
+      : AnimatedOpacity(
+          opacity: frame == null ? 0 : 1,
+          duration: Motion.standard.durationOf(context),
+          child: child,
+        );
+  final Widget? fallback = bundled == null
+      ? null
+      : Image.asset(
+          bundled,
           fit: BoxFit.cover,
-          cacheWidth: 200,
+          cacheWidth: 280,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
-          frameBuilder: (context, child, frame, sync) => sync
-              ? child
-              : AnimatedOpacity(
-                  opacity: frame == null ? 0 : 1,
-                  duration: Motion.standard.durationOf(context),
-                  child: child,
-                ),
-        ),
-      ],
-    ),
+          frameBuilder: fade,
+        );
+  return Stack(
+    fit: StackFit.expand,
+    children: [
+      Center(child: mark),
+      if (uploaded != null)
+        CachedNetworkImage(
+          imageUrl: uploaded,
+          fit: BoxFit.cover,
+          memCacheWidth: 280,
+          placeholder: (_, _) => fallback ?? const SizedBox.shrink(),
+          errorWidget: (_, _, _) => fallback ?? const SizedBox.shrink(),
+        )
+      else
+        ?fallback,
+    ],
   );
 }
 

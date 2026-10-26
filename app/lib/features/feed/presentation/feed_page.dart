@@ -472,13 +472,16 @@ class _Categories extends ConsumerWidget {
           ),
         ),
         SizedBox(
-          height: 74 + MediaQuery.textScalerOf(context).scale(12) * 2.6,
+          height:
+              CategoryCard.tile +
+              20 +
+              MediaQuery.textScalerOf(context).scale(12) * 2.6,
           child: categories.when(
             data: (items) => ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 4),
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
               itemBuilder: (_, index) => CategoryCard(
                 category: items[index],
                 selected: selected == items[index].id,
