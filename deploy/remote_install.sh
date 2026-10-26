@@ -45,6 +45,9 @@ if [ "$DO_API" = 1 ]; then
   rsync -a --exclude .venv --exclude media "$APP/api/" "$BACKUP/api/"
 
   chown -R mab:mab "$STAGE/api"
+  # STAGE 700 (mktemp -d): mab ichidagi api/ ga yetib bora olsin. 711 —
+  # faqat o'tish huquqi: papka ro'yxatini boshqalar ko'ra olmaydi.
+  chmod 711 "$STAGE"
   PY=$(cat "$APP/.python" 2>/dev/null || echo python3)
   [ -d "$APP/api/.venv" ] || sudo -u mab "$PY" -m venv "$APP/api/.venv"
   # Kutubxonalar kod almashishidan OLDIN: o'rnatish yiqilsa, eski kod ishlab turadi.
