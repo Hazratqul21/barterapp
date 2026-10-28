@@ -1,5 +1,5 @@
 # Sinov uchun Android APK. `build/apk` tarmog'iga push qilinganda quriladi va
-# Actions → apk → Artifacts → mab-apk sifatida 7 kun saqlanadi.
+# Releases → «apk-test» → MAB.apk (va Actions → Artifacts) sifatida chiqadi.
 # Reliz kaliti yo'q bo'lsa, APK debug kalit bilan imzolanadi — telefonga
 # o'rnatib sinash uchun yetarli, Play'ga yuklash uchun emas (u .aab va reliz
 # kalitini talab qiladi, docs/GOOGLE-PLAY.md).
@@ -8,6 +8,9 @@ name: apk
 on:
   push:
     branches: ['build/apk', 'build/apk-*']
+
+permissions:
+  contents: write
 
 jobs:
   apk:
@@ -33,3 +36,14 @@ jobs:
           name: mab-apk
           path: app/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
+      # Telefondan to'g'ridan-to'g'ri yuklab olish uchun: «apk-test»
+      # pre-release'iga MAB.apk bo'lib qo'yiladi (har safar yangilanadi).
+      - name: Release'ga qo'yish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk MAB.apk
+          gh release view apk-test >/dev/null 2>&1 || gh release create apk-test \
+            --prerelease --target "$GITHUB_SHA" --title "MAB — sinov APK" \
+            --notes "Telefonga o'rnatib sinash uchun. Play'ga yuklanmaydi."
+          gh release upload apk-test MAB.apk --clobber
