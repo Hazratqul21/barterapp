@@ -1412,7 +1412,8 @@ class BrandMark extends StatelessWidget {
     Widget top = Image.asset(
       dark
           ? 'assets/brand/mab-wordmark-gold.png'
-          : 'assets/brand/mab-wordmark-olive.png',
+          // Light grounds: the raised, bevelled mark (as on the brand tile).
+          : 'assets/brand/mab-wordmark-emboss.webp',
       fit: BoxFit.contain,
       semanticLabel: 'MAB',
       filterQuality: FilterQuality.high,
