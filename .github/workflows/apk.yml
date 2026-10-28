@@ -1,0 +1,35 @@
+# Sinov uchun Android APK. `build/apk` tarmog'iga push qilinganda quriladi va
+# Actions → apk → Artifacts → mab-apk sifatida 7 kun saqlanadi.
+# Reliz kaliti yo'q bo'lsa, APK debug kalit bilan imzolanadi — telefonga
+# o'rnatib sinash uchun yetarli, Play'ga yuklash uchun emas (u .aab va reliz
+# kalitini talab qiladi, docs/GOOGLE-PLAY.md).
+name: apk
+
+on:
+  push:
+    branches: ['build/apk', 'build/apk-*']
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mab-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
