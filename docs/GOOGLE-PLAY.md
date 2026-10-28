@@ -1,98 +1,147 @@
-# MAB'ni Google Play'ga chiqarish
+# MAB'ni Google Play'ga joylash — to'liq qo'llanma
 
-Paket ID: `uz.mab.app`. Versiya `app/pubspec.yaml` dagi `version: 1.0.0+1`
-(`+` dan keyingi raqam — versionCode; har yangi yuklashda bittaga oshiring).
+Bu qo'llanma **hammasi tayyor bo'lganda** bir marta, boshidan oxirigacha
+bajariladi. Har bir qadam tartib bilan: oldingisi tugamasdan keyingisiga
+o'tmang.
 
-## 0. Play Console hisobi
+- Paket ID: `uz.mab.app` (o'zgarmaydi — Play'ga bir marta yuklangach,
+  almashtirib bo'lmaydi)
+- Versiya: `app/pubspec.yaml` → `version: 1.0.0+1`. `+` dan keyingi raqam
+  (versionCode) **har yangi yuklashda bittaga oshadi**: `1.0.1+2`, `1.0.2+3`…
+- Do'kon matnlari, ikonka va banner: `docs/play/`
 
-1. https://play.google.com/console → ro'yxatdan o'tish (bir martalik $25).
-2. Hisob turi:
-   - **Shaxsiy** — tez ochiladi, lekin yangi shaxsiy hisoblar production'ga
-     chiqishdan oldin **yopiq test** o'tkazishi shart: kamida 12 tester,
-     ketma-ket 14 kun.
-   - **Tashkilot** (MChJ) — D-U-N-S raqami kerak, lekin 12 tester talabi yo'q.
-3. Shaxsni tasdiqlash (pasport) bir necha kun olishi mumkin.
+---
 
-## 1. Imzo kaliti (Mac'da, bir marta)
+## 0-bosqich. Chiqarishdan oldingi tekshiruv ro'yxati
 
-```sh
-keytool -genkey -v -keystore ~/mab-upload.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-cd ~/Desktop/barter-platform/app
-cp android/key.properties.example android/key.properties
-# key.properties ichida parollarni va storeFile=/Users/<siz>/mab-upload.jks ni yozing
-```
+Bularning hammasi ✅ bo'lmaguncha Play'ga yuklamang:
 
-`mab-upload.jks` va parolni parol menejeriga + zaxiraga saqlang. Git'ga
-tushmaydi (`android/.gitignore`).
+- [ ] mab.uz va api.mab.uz ishlayapti, sayt tez ochiladi
+- [ ] **SMS (Eskiz) yoqilgan** — aks holda odamlar telefon bilan kira olmaydi
+      (`deploy/README.md` → Eskiz bo'limi)
+- [ ] Huquqiy hujjatlardagi `{{...}}` joylar to'ldirilgan (admin panel →
+      Hujjatlar): kompaniya nomi, manzil, aloqa
+- [ ] https://mab.uz/privacy va https://mab.uz/delete-account ochiladi
+- [ ] Admin paroli kuchli parolga almashtirilgan
+- [ ] Ilova haqiqiy Android telefonda sinab ko'rilgan (3-bosqich): kirish,
+      e'lon yaratish, rasm yuklash, taklif, chat, hisobni o'chirish
+- [ ] (ixtiyoriy) Google bilan kirish sozlangan (7-bosqich)
 
-## 2. Paketni qurish
+## 1-bosqich. Play Console hisobi
 
-```sh
-cd ~/Desktop/barter-platform/app
-git pull origin develop
-flutter clean && flutter pub get
-flutter build appbundle --release
-# natija: build/app/outputs/bundle/release/app-release.aab
-```
+1. https://play.google.com/console — hisob tasdiqlangan bo'lishi kerak.
+2. **Shaxsiy hisob** bo'lsa: production'dan oldin **yopiq test** majburiy —
+   kamida **12 tester**, ketma-ket **14 kun**. Testerlarni (do'stlar,
+   hamkasblar — Gmail manzillari) oldindan yig'ib qo'ying.
+   **Tashkilot hisobi** bo'lsa, bu talab yo'q.
 
-Reliz sukut bo'yicha `https://api.mab.uz` ga ulanadi, hujjatlar
-`https://mab.uz/privacy`, `/terms`, `/offer` ga ochiladi. Kalit yo'q bo'lsa,
-build ataylab to'xtaydi — debug kalit bilan imzolangan .aab'ni Play qabul
-qilmaydi.
-
-## 3. Play Console'da ilova yaratish
-
-1. **Create app** → nomi `MAB`, til o'zbek, App, Free.
-2. **Testing → Internal testing → Create release** → `app-release.aab` ni
-   yuklang. "Play App Signing" taklifini qabul qiling.
-3. Testerlar ro'yxatiga o'z Gmail'ingizni qo'shing, havola orqali telefonga
-   o'rnatib tekshiring.
-
-## 4. "App content" bo'limi (majburiy)
-
-| Band | Nima yoziladi |
-|---|---|
-| Privacy policy | `https://mab.uz/privacy` |
-| App access | Ko'rib chiquvchi uchun kirish usuli: test telefon raqami + kod yoki parolli hisob. Bu yozilmasa, ilova rad etiladi |
-| Ads | Yo'q |
-| Content rating | So'rovnoma: foydalanuvchilar o'zaro yozishadi (chat), foydalanuvchi kontenti bor |
-| Target audience | 18+ |
-| Data safety | Telefon, ism, email (Google), rasmlar, xabarlar; shifrlangan uzatish (HTTPS); hisobni o'chirish mumkin |
-| Account deletion | Ilova ichida: Sozlamalar → Hisobni o'chirish; veb: `https://mab.uz/delete-account` |
-| Government / Financial features | Moliyaviy xizmat emas |
-
-## 5. Do'kon sahifasi (Main store listing)
-
-- Qisqa tavsif (≤80 belgi), to'liq tavsif (≤4000)
-- Ikonka 512×512 PNG
-- Feature graphic 1024×500
-- Telefon skrinshotlari: kamida 2 ta (9:16)
-
-## 6. Google orqali kirish (Android)
-
-Play'ga birinchi yuklashdan keyin: **Play Console → Test and release →
-App integrity → App signing** dan **SHA-1** ni oling. So'ng Google Cloud
-Console → Credentials → **Android** OAuth client: paket `uz.mab.app` + shu
-SHA-1. Upload kalitning SHA-1 sini ham qo'shing (lokal test uchun):
+## 2-bosqich. Imzo kaliti (Mac'da, faqat bir marta)
 
 ```sh
-keytool -list -v -keystore ~/mab-upload.jks -alias upload | grep SHA1
+keytool -genkey -v -keystore ~/mab-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+cd ~/Desktop/barter-platform/app && cp android/key.properties.example android/key.properties
+open -e android/key.properties
 ```
 
-## 7. To'lovlar haqida muhim eslatma
+`key.properties` ichida to'ldiring:
 
-Google Play qoidasi: ilova ichida **raqamli** xizmat (e'lonni ko'tarish,
-qo'shimcha e'lon kvotasi) sotilsa, Google Play Billing ishlatilishi shart.
-Payme orqali to'lov Android ilovada qoidani buzadi va ilova rad etilishi
-mumkin. Variantlar:
+```
+storePassword=<keytool so'ragan parol>
+keyPassword=<o'sha parol>
+keyAlias=upload
+storeFile=/Users/<Mac foydalanuvchi nomingiz>/mab-upload.jks
+```
 
-1. Birinchi relizda Android ilovada tariflar/to'lov bo'limini yashirish
-   (to'lov faqat mab.uz saytida qoladi).
-2. Google Play Billing'ni qo'shish (alohida ish).
+⚠️ `mab-upload.jks` faylini va parolni **zaxiralang** (flesh, parol
+menejeri). Git'ga tushmaydi.
 
-## 8. Production'ga chiqarish
+## 3-bosqich. Paketni qurish va telefonda sinash
 
-Internal → (shaxsiy hisob bo'lsa: Closed testing, 12 tester × 14 kun) →
-**Production → Create release** → o'sha .aab → Review. Ko'rib chiqish
-odatda 1–7 kun.
+```sh
+cd ~/Desktop/barter-platform && git checkout develop && git pull origin develop
+cd app && flutter clean && flutter pub get && flutter build appbundle --release
+```
+
+Natija: `app/build/app/outputs/bundle/release/app-release.aab`
+
+Telefonda sinash uchun (USB bilan ulangan Android, «Developer options →
+USB debugging» yoqilgan):
+
+```sh
+flutter run --release
+```
+
+## 4-bosqich. Ko'rib chiquvchi uchun test hisobi
+
+Google xodimi ilovaga kira olishi kerak. Serverda (Mac Terminal'da):
+
+```sh
+cd ~/Desktop/barter-platform && ssh -t $(cat deploy/.server) 'sudo -u mab bash -c "cd /opt/mab/api && .venv/bin/python -m app.grant_moderator +998770009999 --create --password REVIEW-Parol-2026 && .venv/bin/python -m app.grant_moderator +998770009999 --revoke"'
+```
+
+(Birinchi buyruq hisobni ochadi va parol qo'yadi, ikkinchisi moderator
+huquqini olib qo'yadi — oddiy foydalanuvchi qoladi.)
+
+## 5-bosqich. Play Console'da ilova yaratish
+
+1. **Create app** → App name: `MAB — barter maydoni`, Default language:
+   *Uzbek*, App, Free → shartlarga belgi → Create.
+2. **Grow → Store presence → Main store listing**:
+   - nom, qisqa va to'liq tavsif — `docs/play/LISTING.md` dan nusxa
+   - App icon — `docs/play/icon-512.png`
+   - Feature graphic — `docs/play/feature-graphic-1024x500.png`
+   - Phone screenshots — telefondan 4–8 ta (lenta, e'lon, chat, profil,
+     e'lon yaratish)
+   - Rus va ingliz tillarini **Translations → Add** orqali qo'shing
+3. **Policy → App content** — har bir bandni `docs/play/LISTING.md` dagi
+   jadval bo'yicha to'ldiring (Privacy policy, App access + test hisobi,
+   Ads, Content rating, Target audience, Data safety, Account deletion).
+4. **Store settings**: Category — *Shopping*; aloqa emaili va sayt
+   `https://mab.uz`.
+
+## 6-bosqich. Yuklash va test
+
+1. **Test and release → Testing → Internal testing → Create new release**
+   → `app-release.aab` ni yuklang → «Play App Signing» ni qabul qiling →
+   Release name: `1.0.0` → Save → Review → **Start rollout**.
+2. **Testers** → o'z Gmail'ingizni qo'shing → havolani telefonda ochib,
+   ilovani Play orqali o'rnating va tekshiring.
+3. Shaxsiy hisob bo'lsa: **Closed testing** → yangi trek → shu .aab → 12+
+   tester Gmail'larini qo'shing → ular havola orqali o'rnatsin va 14 kun
+   ishlatsin.
+
+## 7-bosqich. Google bilan kirish (ixtiyoriy, lekin tavsiya qilinadi)
+
+1. **Test and release → Setup → App signing** → «App signing key
+   certificate» dagi **SHA-1** ni nusxalang.
+2. https://console.cloud.google.com → APIs & Services → Credentials →
+   **Create credentials → OAuth client ID → Android**: package
+   `uz.mab.app`, SHA-1 — yuqoridagi. Lokal sinov uchun upload kalitining
+   SHA-1 sini ham qo'shing:
+   ```sh
+   keytool -list -v -keystore ~/mab-upload.jks -alias upload | grep SHA1
+   ```
+3. Server `.env` dagi `GOOGLE_CLIENT_IDS` ga **Web** client ID yoziladi
+   (`docs/GOOGLE-SIGNIN.md`). Sozlanmaguncha tugma ilovada ko'rinmaydi —
+   bu xato emas.
+
+## 8-bosqich. Production
+
+1. **Production → Create new release** → o'sha .aab (yoki yangi
+   versionCode bilan) → **Countries**: Uzbekistan (+ kerakli davlatlar) →
+   Review → **Start rollout to Production**.
+2. Ko'rib chiqish odatda 1–7 kun. Rad etilsa, Google sababini emailga
+   yozadi — menga yuboring, tuzatamiz.
+
+## Keyingi yangilanishlar
+
+1. `app/pubspec.yaml` da versiyani oshiring: `1.0.1+2`
+2. `flutter build appbundle --release`
+3. Play Console → Production → Create new release → yangi .aab
+
+## To'lovlar haqida
+
+Google Play ilova ichida raqamli xizmat (e'lonni ko'tarish, e'lon paketi)
+faqat Play Billing orqali sotilishini talab qiladi. Shuning uchun Android va
+iOS ilovalarida to'lov bo'limi yashirilgan (#42); to'lov faqat mab.uz
+saytida. Bu qoidaga mos.

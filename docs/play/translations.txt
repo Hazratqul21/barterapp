@@ -1,0 +1,39 @@
+Language: Russian (ru-RU)
+
+App name: MAB — бартерная площадка
+
+Short description: Обмен без денег: техника, скот, урожай и товары — меняйтесь напрямую.
+
+Full description:
+MAB — бартерная площадка по всему Узбекистану. Разместите то, что у вас лишнее, укажите, что хотите взамен, — MAB подберёт подходящий обмен.
+
+• Техника, транспорт, животноводство, сельхозпродукция, стройматериалы и электроника
+• «Совпадения» — люди, у которых есть нужное вам и которым нужно ваше, находятся автоматически
+• При необходимости разница доплачивается деньгами
+• Чат и предложения внутри приложения
+• Этапы сделки: предложение → согласовано → передано → завершено
+• Рейтинг доверия, проверенные профили и отзывы
+• На узбекском, русском и английском
+
+Не продавайте — меняйтесь.
+
+----------------------------------------
+
+Language: English (en-US)
+
+App name: MAB — barter marketplace
+
+Short description: Trade without cash: swap machinery, livestock, harvest and goods directly.
+
+Full description:
+MAB is a barter marketplace across Uzbekistan. List what you have spare, say what you want in return, and MAB finds a matching swap.
+
+• Machinery, transport, livestock, farm produce, building materials and electronics
+• "Matches" — people who have what you need and need what you have are found automatically
+• Settle the difference in cash when the values don't line up
+• In-app chat and offers
+• Deal stages: offered → agreed → handed over → completed
+• Trust score, verified profiles and reviews
+• In Uzbek, Russian and English
+
+Don't sell — swap.
