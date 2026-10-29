@@ -40,6 +40,10 @@ abstract final class BrandColors {
   static const goldLight = Color(0xFFF0DFCB);
   static const goldDeep = Color(0xFF9C8250);
 
+  /// The sand face of the raised logo tile, lit from the top-left.
+  static const sandLight = Color(0xFFF6F1E2);
+  static const sandDeep = Color(0xFFE4DCC3);
+
   // Surfaces that used to be hard-coded at their call sites.
   static const glassDark = Color(0xFF1B1E12);
   static const glassDarkRaised = Color(0xFF232717);
