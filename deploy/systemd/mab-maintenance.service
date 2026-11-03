@@ -1,5 +1,5 @@
 [Unit]
-Description=MAB: kunlik tozalash (eski hodisalar, egasiz rasmlar, eskirgan kodlar va sessiyalar)
+Description=MAB: kunlik tozalash (eski hodisalar, egasiz rasmlar, eskirgan kodlar va sessiyalar) va oylik bepul e'lonlar
 After=postgresql.service
 
 [Service]
@@ -11,6 +11,7 @@ WorkingDirectory=/opt/mab/api
 ExecStart=/opt/mab/api/.venv/bin/python -m app.events_prune
 ExecStart=/opt/mab/api/.venv/bin/python -m app.media_sweep
 ExecStart=/opt/mab/api/.venv/bin/python -m app.auth_prune
+ExecStart=/opt/mab/api/.venv/bin/python -m app.quota_refill
 NoNewPrivileges=true
 PrivateTmp=true
 PrivateDevices=true
