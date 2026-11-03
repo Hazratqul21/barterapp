@@ -23,6 +23,23 @@
 
 ---
 
+## 2026-11-03
+
+### 🔧 Demo e'lonlar: har biriga mos rasm
+
+`app.demo_seed` dagi rasmlar ko'zdan kechirilib almashtirildi. Avval bir
+rasm bir necha e'longa ishlatilgan va ba'zilari umuman mos emas edi
+(«Hisori qo'y» — cho'chqa, «g'isht» — qal'a, «Sement» va «Armatura» — qurilish
+maydoni, Malika profilida erkak surati). Endi har bir e'lonning o'z rasmi bor,
+Malika, Sevara va Gulnora profillarida ayol surati.
+
+Rasm kalitlari yangi nom oldi: serverdagi `media/demo/` eski fayllarni
+qayta ishlatmaydi, skript yangilarini yuklab oladi.
+
+**UI da nima kerak:** hech narsa. API shakli o'zgarmadi.
+
+---
+
 ## 2026-08-22
 
 ### 🔧 Xavfsizlik: chastota chegaralari va so'rov hajmi
