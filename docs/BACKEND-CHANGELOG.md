@@ -25,6 +25,37 @@
 
 ## 2026-11-03
 
+### 🆕 Kategoriyalar endi bazada — admin qo'shadi, tahrirlaydi, yashiradi, o'chiradi
+
+Oltita qattiq yozilgan kategoriya (`ListingTag` enum) o'rniga yangi
+`categories` jadvali. Migratsiya `cca0c0de0021` mavjud oltitasini jadvalga
+ko'chiradi — kodlari o'zgarmaydi (`agri`, `livestock`, `machinery`,
+`transport`, `electronics`, `construction`), eski e'lonlar joyida qoladi.
+
+Admin panelning «Kategoriyalar» bo'limida:
+
+| So'rov | Nima qiladi |
+|---|---|
+| `GET /admin/categories` | Hammasi, yashirilganlari bilan |
+| `POST /admin/categories` `{name: {uz, ru?, en?}}` | Yangi kategoriya, ro'yxat oxiriga. Kod nomdan yasaladi |
+| `PATCH /admin/categories/{id}` `{name?, is_active?, position?}` | Nomini o'zgartirish, yashirish/ko'rsatish, tartibini surish |
+| `DELETE /admin/categories/{id}` | O'chirish. E'loni bor kategoriya **409** — uni faqat yashirish mumkin |
+| `POST/DELETE /admin/categories/{id}/image` | Rasm (avvalgidek) |
+
+`GET /categories` endi jadvaldan o'qiydi va yashirilganlarini bermaydi.
+E'lon yaratish/tahrirlashda `tag` endi erkin satr: bazada bo'lmagan yoki
+yashirilgan kod **422** qaytaradi.
+
+**UI da nima kerak:**
+- Ilova kategoriyalar ro'yxatini faqat `GET /categories` dan olsin, o'zida
+  nusxa saqlamasin — yangi kategoriya darhol ko'rinishi uchun.
+- `tag` ni enum sifatida emas, satr sifatida o'qing: ilova bilmagan kod kelishi
+  mumkin. Ro'yxatda topilmasa — umumiy ikonka/nom ko'rsating.
+- Yashirilgan kategoriyadagi eski e'lonlar lentada qoladi, lekin uni filtr
+  sifatida tanlab bo'lmaydi.
+
+---
+
 ### 🔧 Demo e'lonlar: har biriga mos rasm
 
 `app.demo_seed` dagi rasmlar ko'zdan kechirilib almashtirildi. Avval bir

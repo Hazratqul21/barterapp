@@ -3,20 +3,26 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from typing import ClassVar
+from typing import Annotated, ClassVar
 
 from pydantic import Field, model_validator
 
-from app.models.listing import ListingStatus, ListingTag
+from app.models.listing import ListingStatus
 from app.schemas.common import ApiModel, MediaUrl, Money
 from app.schemas.user import TraderBrief
+
+
+
+#: `categories.id`. Mavjudligi va ko'rinib turgani endpointda tekshiriladi:
+#: ro'yxat bazada, admin uni o'zgartiradi.
+CategoryId = Annotated[str, Field(min_length=1, max_length=40)]
 
 
 class ListingCard(ApiModel):
     """What the feed needs — nothing more, so the list endpoint stays cheap."""
 
     id: uuid.UUID
-    tag: ListingTag
+    tag: CategoryId
     title: str
     image_url: str | None = None
     image_alt: str
@@ -112,7 +118,7 @@ class DesireIn(ApiModel):
 
     #: Null means "any offer" — the open desire the spec expects most people to
     #: pick, and which the matcher still admits, just scored lower.
-    category: ListingTag | None = None
+    category: CategoryId | None = None
     min_value_minor: int | None = Field(default=None, ge=0)
     max_value_minor: int | None = Field(default=None, ge=0)
     #: The owner will top up in cash to reach something dearer.
@@ -129,7 +135,7 @@ class DesireIn(ApiModel):
 
 
 class ListingCreate(ApiModel):
-    tag: ListingTag
+    tag: CategoryId
     title: Text160
     description: TranslatedText
     image_alt: Text200
@@ -167,7 +173,7 @@ class ListingUpdate(ApiModel):
     behind in a locale the author did not touch.
     """
 
-    tag: ListingTag | None = None
+    tag: CategoryId | None = None
     title: Text160 | None = None
     description: TranslatedText | None = None
     image_alt: Text200 | None = None

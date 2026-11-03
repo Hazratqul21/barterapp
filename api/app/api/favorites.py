@@ -82,7 +82,7 @@ async def add_favorite(
             user_id=me.id,
             target_type="listing",
             target_id=listing_id,
-            payload={"tag": listing.tag.value, "value_minor": listing.value_minor},
+            payload={"tag": listing.tag, "value_minor": listing.value_minor},
         )
         await db.commit()
 

@@ -6,16 +6,16 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
-    Enum,
     ForeignKey,
     Index,
     Integer,
+    String,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, UUIDPrimaryKey
-from app.models.listing import Listing, ListingTag
+from app.models.listing import Listing
 
 
 class Desire(Base, UUIDPrimaryKey):
@@ -36,8 +36,8 @@ class Desire(Base, UUIDPrimaryKey):
     )
 
     #: Null means "anything" — the open offer the spec expects most people to use.
-    category: Mapped[ListingTag | None] = mapped_column(
-        Enum(ListingTag, name="listing_tag", create_type=False)
+    category: Mapped[str | None] = mapped_column(
+        String(40), ForeignKey("categories.id", onupdate="CASCADE", ondelete="SET NULL")
     )
 
     min_value_minor: Mapped[int | None] = mapped_column(BigInteger)

@@ -29,6 +29,13 @@ if TYPE_CHECKING:
 
 
 class ListingTag(str, enum.Enum):
+    """Boshlang'ich oltita kategoriya — seed va demo ma'lumotlar uchun.
+
+    Haqiqiy ro'yxat `categories` jadvalida: admin yangisini qo'shishi yoki
+    bularni yashirishi mumkin, shuning uchun API kirishni shu enum bilan
+    emas, jadval bilan tekshiradi.
+    """
+
     agri = "agri"
     livestock = "livestock"
     machinery = "machinery"
@@ -59,8 +66,12 @@ class Listing(Base, UUIDPrimaryKey, Timestamps):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    tag: Mapped[ListingTag] = mapped_column(
-        Enum(ListingTag, name="listing_tag"), nullable=False
+    #: `categories.id`. Kategoriya yashirilsa ham e'lon unda qoladi; e'loni
+    #: bor kategoriyani o'chirib bo'lmaydi.
+    tag: Mapped[str] = mapped_column(
+        String(40),
+        ForeignKey("categories.id", onupdate="CASCADE", ondelete="RESTRICT"),
+        nullable=False,
     )
     status: Mapped[ListingStatus] = mapped_column(
         Enum(ListingStatus, name="listing_status"),

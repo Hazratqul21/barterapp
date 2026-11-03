@@ -450,15 +450,31 @@
   </section>
 
   <!-- ── Tahlil ─────────────────────────────────────────────────────── -->
-  <!-- ── Kategoriya rasmlari ───────────────────────────────────────── -->
+  <!-- ── Kategoriyalar ─────────────────────────────────────────────── -->
   <section id="cats" class="hide">
     <div class="card">
-      <h2>Kategoriya rasmlari</h2>
-      <p class="hint" style="margin:-6px 0 12px">Ilova va saytdagi kategoriya plitkalari.
-        Rasm markazdan kvadrat qilib kesiladi (600×600) — kvadrat rasm yuklang.
-        Yuklangan zahoti hamma joyda yangilanadi; «Standart» ilova o‘zi bilan
-        kelgan rasmni qaytaradi.</p>
-      <div id="catGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px"></div>
+      <h2 id="catFormTitle">Yangi kategoriya</h2>
+      <p class="hint" style="margin:-6px 0 12px">O‘zbekcha nom majburiy; ruscha va inglizcha
+        bo‘lmasa, o‘sha tillarda ham o‘zbekchasi ko‘rinadi. Qo‘shilgan zahoti ilova va
+        saytda chiqadi.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <label>O‘zbekcha<input id="catUz" maxlength="60" placeholder="Masalan: Kosmonavtika"></label>
+        <label>Ruscha<input id="catRu" maxlength="60" placeholder="Космонавтика"></label>
+        <label>Inglizcha<input id="catEn" maxlength="60" placeholder="Space"></label>
+      </div>
+      <div class="bar">
+        <button class="act" id="catSave" onclick="catSave()">+ Qo‘shish</button>
+        <button class="act ghost hide" id="catCancel" onclick="catEditCancel()">Bekor qilish</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Kategoriyalar</h2>
+      <p class="hint" style="margin:-6px 0 12px">Ilova va saytdagi tartibda.
+        <b>Yashirish</b> — kategoriya ilova va saytdan yo‘qoladi, unga yangi e’lon qo‘yib
+        bo‘lmaydi, eski e’lonlar joyida qoladi. <b>O‘chirish</b> — faqat e’loni yo‘q
+        kategoriya uchun. Rasm markazdan kvadrat qilib kesiladi (600×600);
+        «Standart» ilova o‘zi bilan kelgan rasmni qaytaradi.</p>
+      <div id="catGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px"></div>
     </div>
   </section>
 
@@ -1316,13 +1332,19 @@ async function legalPdfDelete() {
     await loadLegal();
   } catch (e) { say(e.message); }
 }
-// ── Kategoriya rasmlari ───────────────────────────────────────────────
+// ── Kategoriyalar ─────────────────────────────────────────────────────
+let catRows = [];
+let catEditing = null;
+
 async function loadCats() {
   try { renderCats(await api('/admin/categories')); } catch (e) { say(e.message); }
 }
 
 function renderCats(rows) {
-  $('catGrid').innerHTML = rows.map(c => `<div style="display:flex;flex-direction:column;gap:8px">
+  catRows = rows;
+  const small = 'padding:7px 11px;font-size:13px';
+  $('catGrid').innerHTML = rows.map((c, i) => `<div style="display:flex;flex-direction:column;gap:8px;
+       ${c.is_active ? '' : 'opacity:.55'}">
     <div style="aspect-ratio:1;border-radius:22px;padding:3px;
          background:linear-gradient(135deg,#F0DFCB,#C9B07A 55%,#9C8250)">
       ${c.image_url
@@ -1331,15 +1353,90 @@ function renderCats(rows) {
              align-items:center;justify-content:center;text-align:center;font-size:13px;color:var(--soft)">
              Standart<br>(ilovadagi rasm)</div>`}
     </div>
-    <b>${esc(c.name.uz)}</b>
-    <div class="bar" style="margin:0">
-      <label class="act ghost" style="margin:0;cursor:pointer;padding:8px 12px;border-radius:10px;
-             border:1px solid var(--line);font-size:13px;color:var(--soft)">
-        Rasm yuklash<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
-                           data-cat="${esc(c.id)}" onchange="catUpload(this)"></label>
-      ${c.image_url ? `<button class="act ghost" style="padding:8px 12px;font-size:13px" data-cat="${esc(c.id)}" onclick="catReset(this)">Standart</button>` : ''}
+    <div><b>${esc(c.name.uz)}</b>${c.is_active ? '' : ' <span class="hint">· yashirilgan</span>'}
+      <div class="hint">${esc(c.id)} · ${c.listing_count} ta e’lon</div></div>
+    <div class="bar" style="margin:0;flex-wrap:wrap;gap:6px">
+      <label class="act ghost" style="margin:0;cursor:pointer;${small};border-radius:10px;
+             border:1px solid var(--line);color:var(--soft)">
+        Rasm<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
+                   data-cat="${esc(c.id)}" onchange="catUpload(this)"></label>
+      ${c.image_url ? `<button class="act ghost" style="${small}" data-cat="${esc(c.id)}" onclick="catReset(this)">Standart</button>` : ''}
+      <button class="act ghost" style="${small}" data-cat="${esc(c.id)}" onclick="catEdit(this)">Nomi</button>
+      <button class="act ghost" style="${small}" data-cat="${esc(c.id)}" onclick="catToggle(this)">${c.is_active ? 'Yashirish' : 'Ko‘rsatish'}</button>
+      ${i > 0 ? `<button class="act ghost" style="${small}" title="Oldinga" data-cat="${esc(c.id)}" data-pos="${i - 1}" onclick="catMove(this)">↑</button>` : ''}
+      ${i < rows.length - 1 ? `<button class="act ghost" style="${small}" title="Orqaga" data-cat="${esc(c.id)}" data-pos="${i + 1}" onclick="catMove(this)">↓</button>` : ''}
+      ${c.listing_count === 0 ? `<button class="act danger" style="${small}" data-cat="${esc(c.id)}" onclick="catDelete(this)">O‘chirish</button>` : ''}
     </div>
   </div>`).join('');
+}
+
+const catPath = id => '/admin/categories/' + encodeURIComponent(id);
+
+function catName() {
+  return { uz: $('catUz').value.trim(), ru: $('catRu').value.trim() || null, en: $('catEn').value.trim() || null };
+}
+
+function catEditCancel() {
+  catEditing = null;
+  $('catUz').value = $('catRu').value = $('catEn').value = '';
+  $('catFormTitle').textContent = 'Yangi kategoriya';
+  $('catSave').textContent = '+ Qo‘shish';
+  $('catCancel').classList.add('hide');
+}
+
+function catEdit(button) {
+  const c = catRows.find(r => r.id === button.dataset.cat);
+  if (!c) return;
+  catEditing = c.id;
+  $('catUz').value = c.name.uz || '';
+  $('catRu').value = c.name.ru || '';
+  $('catEn').value = c.name.en || '';
+  $('catFormTitle').textContent = '«' + c.name.uz + '» nomini o‘zgartirish';
+  $('catSave').textContent = 'Saqlash';
+  $('catCancel').classList.remove('hide');
+  $('catUz').focus();
+}
+
+async function catSave() {
+  const name = catName();
+  if (!name.uz) { say('O‘zbekcha nomni yozing.'); return; }
+  try {
+    if (catEditing) {
+      renderCats(await api(catPath(catEditing), { method: 'PATCH', body: JSON.stringify({ name }) }));
+      say('Nomi saqlandi.', true);
+    } else {
+      renderCats(await api('/admin/categories', { method: 'POST', body: JSON.stringify({ name }) }));
+      say('Kategoriya qo‘shildi.', true);
+    }
+    catEditCancel();
+  } catch (e) { say(e.message); }
+}
+
+async function catToggle(button) {
+  const c = catRows.find(r => r.id === button.dataset.cat);
+  if (!c) return;
+  if (c.is_active && !confirm('«' + c.name.uz + '» ilova va saytdan yashirilsinmi? Eski e’lonlar joyida qoladi.')) return;
+  try {
+    renderCats(await api(catPath(c.id), { method: 'PATCH', body: JSON.stringify({ is_active: !c.is_active }) }));
+    say(c.is_active ? 'Yashirildi.' : 'Yana ko‘rinadi.', true);
+  } catch (e) { say(e.message); }
+}
+
+async function catMove(button) {
+  try {
+    renderCats(await api(catPath(button.dataset.cat),
+      { method: 'PATCH', body: JSON.stringify({ position: Number(button.dataset.pos) }) }));
+  } catch (e) { say(e.message); }
+}
+
+async function catDelete(button) {
+  const c = catRows.find(r => r.id === button.dataset.cat);
+  if (!c || !confirm('«' + c.name.uz + '» butunlay o‘chirilsinmi? Buni qaytarib bo‘lmaydi.')) return;
+  try {
+    renderCats(await api(catPath(c.id), { method: 'DELETE' }));
+    if (catEditing === c.id) catEditCancel();
+    say('O‘chirildi.', true);
+  } catch (e) { say(e.message); }
 }
 
 async function catUpload(input) {

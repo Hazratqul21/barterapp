@@ -4,7 +4,10 @@
 - rasm yuklanmagan bo'lsa `image_url` null (ilova o'z rasmini ko'rsatadi);
 - moderator rasm yuklaydi → kvadrat JPEG, `/categories` da darhol chiqadi;
 - «standartga qaytarish» rasmni o'chiradi va faylni ham olib tashlaydi;
-- moderator bo'lmagan odam endpointni ko'rmaydi (404), rasm bo'lmagan fayl 400.
+- moderator bo'lmagan odam endpointni ko'rmaydi (404), rasm bo'lmagan fayl 400;
+- admin yangi kategoriya qo'shadi, nomini o'zgartiradi, tartibini suradi;
+- yashirilgan kategoriya ro'yxatdan chiqadi va unga yangi e'lon qo'yib bo'lmaydi;
+- e'loni bor kategoriya o'chirilmaydi (409), bo'shi o'chiriladi.
 """
 
 import asyncio
@@ -56,6 +59,10 @@ def png(width: int, height: int) -> bytes:
     buffer = io.BytesIO()
     Image.new("RGB", (width, height), (90, 110, 60)).save(buffer, format="PNG")
     return buffer.getvalue()
+
+
+def tri_(text: str) -> dict[str, str]:
+    return {"uz": text, "ru": text, "en": text}
 
 
 def by_id(rows: list[dict]) -> dict[str, dict]:
@@ -144,5 +151,85 @@ with httpx.Client(base_url=BASE, timeout=30) as c:
           by_id(c.get("/categories").json())["agri"]["image_url"] is None)
     second_file = settings.media_root / second.split(settings.media_url_prefix + "/", 1)[1]
     check("fayl ham o'chirildi", not second_file.exists())
+
+    # --- Admin: qo'shish, tahrirlash, yashirish, o'chirish --------------------
+    for row in c.get("/admin/categories", headers=mod).json():  # oldingi ishga tushirishdan qolgani
+        if row["id"].startswith("kosmonavtika"):
+            c.delete(f"/admin/categories/{row['id']}", headers=mod)
+
+    check("oddiy foydalanuvchi qo'sha olmaydi (404)",
+          c.post("/admin/categories", headers=user,
+                 json={"name": {"uz": "Kosmonavtika"}}).status_code == 404)
+    check("o'zbekcha nomsiz → 422",
+          c.post("/admin/categories", headers=mod,
+                 json={"name": {"uz": "  ", "ru": "Космос"}}).status_code == 422)
+
+    made = c.post("/admin/categories", headers=mod,
+                  json={"name": {"uz": "Kosmonavtika", "ru": "Космонавтика", "en": ""}})
+    check("moderator kategoriya qo'shadi", made.status_code == 201, made.text[:200])
+    space = by_id(made.json()).get("kosmonavtika")
+    check("kod nomdan yasaldi, oxirida, e'lonsiz",
+          space is not None and space["position"] == len(made.json()) - 1
+          and space["listing_count"] == 0 and space["is_active"], str(space))
+    check("bo'sh tarjima saqlanmadi", space["name"] == {"uz": "Kosmonavtika", "ru": "Космонавтика"},
+          str(space["name"]))
+
+    uz_list = c.get("/categories", headers={"Accept-Language": "uz"}).json()
+    en_list = c.get("/categories", headers={"Accept-Language": "en"}).json()
+    check("ochiq ro'yxatda darhol chiqadi", uz_list[-1]["id"] == "kosmonavtika")
+    check("tarjimasi yo'q tilda o'zbekchasi", en_list[-1]["name"] == "Kosmonavtika", en_list[-1]["name"])
+
+    twin = c.post("/admin/categories", headers=mod, json={"name": {"uz": "Kosmonavtika"}})
+    check("bir xil nom — yangi kod", "kosmonavtika-2" in by_id(twin.json()), str(list(by_id(twin.json()))))
+
+    renamed = c.patch("/admin/categories/kosmonavtika", headers=mod,
+                      json={"name": {"uz": "Koinot", "en": "Space"}})
+    check("nomi o'zgaradi, kodi o'zgarmaydi",
+          by_id(renamed.json())["kosmonavtika"]["name"] == {"uz": "Koinot", "en": "Space"})
+
+    moved = c.patch("/admin/categories/kosmonavtika", headers=mod, json={"position": 0})
+    order = [row["id"] for row in moved.json()]
+    check("tartib suriladi", order[0] == "kosmonavtika" and order[1] == "agri", str(order[:3]))
+    check("ilovada ham birinchi", c.get("/categories").json()[0]["id"] == "kosmonavtika")
+
+    listing = {
+        "tag": "kosmonavtika", "title": tri_("Raketa modeli"), "description": tri_("Sinov"),
+        "image_alt": tri_("Raketa"), "category": tri_("Model"), "condition": tri_("Yangi"),
+        "quantity": tri_("1"), "wants_summary": tri_("Noutbuk"),
+        "value": {"minor": 1_000_000_00, "currency": "UZS"}, "cash_ok": True,
+        "desires": [{"category": "kosmonavtika", "will_add_cash": False, "wants_cash": False}],
+    }
+    created = c.post("/listings", headers=user, json=listing)
+    check("yangi kategoriyaga e'lon qo'yiladi", created.status_code == 201, created.text[:200])
+    listing_id = created.json()["id"]
+    feed = c.get("/listings", params={"tag": "kosmonavtika"}).json()["items"]
+    check("lenta filtri yangi kategoriyani biladi", [i["id"] for i in feed] == [listing_id])
+    check("noma'lum kategoriyaga e'lon → 422",
+          c.post("/listings", headers=user, json={**listing, "tag": "yoq-narsa"}).status_code == 422)
+    check("noma'lum kategoriya filtri — bo'sh, xato emas",
+          c.get("/listings", params={"tag": "yoq-narsa"}).json()["items"] == [])
+
+    blocked = c.delete("/admin/categories/kosmonavtika", headers=mod)
+    check("e'loni bor kategoriya o'chirilmaydi (409)", blocked.status_code == 409, blocked.text[:200])
+
+    hidden = c.patch("/admin/categories/kosmonavtika", headers=mod, json={"is_active": False})
+    check("yashiriladi", not by_id(hidden.json())["kosmonavtika"]["is_active"])
+    check("ochiq ro'yxatdan chiqdi",
+          "kosmonavtika" not in by_id(c.get("/categories").json()))
+    check("yashirilganga yangi e'lon → 422",
+          c.post("/listings", headers=user, json=listing).status_code == 422)
+    check("eski e'lon joyida", c.get(f"/listings/{listing_id}").status_code == 200)
+    edit = c.patch(f"/listings/{listing_id}", headers=user, json={"title": tri_("Raketa, 1:50")})
+    check("eski e'lon tahrirlanaveradi", edit.status_code == 200, edit.text[:200])
+
+    shown = c.patch("/admin/categories/kosmonavtika", headers=mod, json={"is_active": True})
+    check("qayta ko'rsatiladi", by_id(shown.json())["kosmonavtika"]["is_active"]
+          and "kosmonavtika" in by_id(c.get("/categories").json()))
+
+    c.delete(f"/listings/{listing_id}", headers=user)
+    gone = c.delete("/admin/categories/kosmonavtika-2", headers=mod)
+    check("bo'sh kategoriya o'chiriladi", gone.status_code == 200
+          and "kosmonavtika-2" not in by_id(gone.json()))
+    check("o'chirilgani 404", c.delete("/admin/categories/kosmonavtika-2", headers=mod).status_code == 404)
 
 print("\nHammasi o'tdi.")
