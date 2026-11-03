@@ -10,7 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The feed card v2 in a phone-width grid: two columns, swap chip, price.
+/// The feed card v2 in a phone-width grid: two columns, swap chip, price,
+/// and the Premium badge on a boosted listing.
 ///
 ///   flutter test --update-goldens test/listing_card_golden_test.dart
 ListingCard _card(
@@ -20,6 +21,7 @@ ListingCard _card(
   String wants,
   int som, {
   bool verified = false,
+  bool premium = false,
   double? km,
 }) => ListingCard(
   id: id,
@@ -29,7 +31,7 @@ ListingCard _card(
   wantsSummary: wants,
   value: Money(minor: som * 100, currency: 'UZS'),
   cashOk: true,
-  isPremium: false,
+  isPremium: premium,
   postedAt: DateTime.utc(2026, 10, 6, 9),
   distanceKm: km,
   owner: TraderBrief(id: 'o$id', name: 'Aziz', isVerified: verified),
@@ -59,6 +61,7 @@ final _cards = [
     'MTZ-80 traktor, 2015-yil, yaxshi holatda',
     'Yengil mashina',
     95000000,
+    premium: true,
   ),
   _card(
     '4',
@@ -134,6 +137,8 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'no overflow at $name');
       // The barter half is always present — an empty wish reads "any offer".
       expect(find.byType(SwapChip), findsNWidgets(4));
+      // Boost: only the paid listing carries the badge.
+      expect(find.byType(PremiumBadge), findsOneWidget);
       await expectLater(
         find.byType(Scaffold),
         matchesGoldenFile('goldens/listing_card_grid_$name.png'),

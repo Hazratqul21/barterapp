@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../core/art/category_marks.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/motion.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/theme/haptics.dart';
@@ -116,6 +117,8 @@ class _ListingCardTileState extends State<ListingCardTile> {
       borderRadius: Radii.rLg,
       side: _focused
           ? BorderSide(color: p.give, width: 2)
+          : listing.isPremium
+          ? const BorderSide(color: BrandColors.gold500, width: 1.5)
           : BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
     );
     return AnimatedContainer(
@@ -141,6 +144,7 @@ class _ListingCardTileState extends State<ListingCardTile> {
             listing.title,
             listing.value.format(locale),
             '${l.listingWants}: ${listing.wantsSummary.trim().isEmpty ? l.createWantAny : listing.wantsSummary}',
+            if (listing.isPremium) l.feedPremium,
             if (listing.owner.isVerified) l.traderVerified,
             meta,
           ].join('. '),
@@ -219,6 +223,14 @@ class _ListingCardTileState extends State<ListingCardTile> {
                             ),
                           ),
                         ),
+                      // Boost: paid placement says so — at the top of the
+                      // feed it must not pass for an ordinary listing.
+                      if (listing.isPremium)
+                        const Positioned(
+                          left: Gap.x2,
+                          bottom: Gap.x2,
+                          child: ExcludeSemantics(child: PremiumBadge()),
+                        ),
                       if (onFavorite != null)
                         Positioned(
                           right: Gap.x1,
@@ -272,6 +284,56 @@ class _ListingCardTileState extends State<ListingCardTile> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "★ Premium" on a boosted listing, in the logo's champagne gold.
+class PremiumBadge extends StatelessWidget {
+  const PremiumBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+      decoration: ShapeDecoration(
+        gradient: const LinearGradient(
+          colors: [BrandColors.goldLight, BrandColors.gold500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: const StadiumBorder(
+          side: BorderSide(color: BrandColors.goldDeep, width: 0.8),
+        ),
+        shadows: [
+          BoxShadow(
+            color: BrandColors.olive900.withValues(alpha: 0.25),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Symbols.star_rounded,
+            size: 14,
+            fill: 1,
+            color: BrandColors.olive900,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            L.of(context).feedPremium,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: BrandColors.olive900,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }
