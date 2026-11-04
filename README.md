@@ -76,7 +76,8 @@ Android emulator default API manzili `10.0.2.2:8010`, iOS simulator/web `127.0.0
 | Sayt / ulashish havolalari | `https://mab.uz` (`/l/<id>`) |
 | API | `https://api.mab.uz` |
 | Maxfiylik siyosati / shartlar | `https://mab.uz/privacy`, `https://mab.uz/terms` |
-| Android `applicationId`, iOS bundle ID | `uz.mab.app` (Play'ga yuklangandan keyin o'zgarmaydi) |
+| Android `applicationId` | `mab.app` (Play Console talabi; yuklangandan keyin o'zgarmaydi) |
+| iOS bundle ID, Android `namespace` | `uz.mab.app` |
 | Production CORS | `CORS_ORIGINS=["https://mab.uz","https://www.mab.uz"]` |
 
 ## Tekshiruvlar

@@ -4,7 +4,7 @@ Bu qo'llanma **hammasi tayyor bo'lganda** bir marta, boshidan oxirigacha
 bajariladi. Har bir qadam tartib bilan: oldingisi tugamasdan keyingisiga
 o'tmang.
 
-- Paket ID: `uz.mab.app` (o'zgarmaydi — Play'ga bir marta yuklangach,
+- Paket ID (Android): `mab.app` (o'zgarmaydi — Play'ga bir marta yuklangach,
   almashtirib bo'lmaydi)
 - Versiya: `app/pubspec.yaml` → `version: 1.0.0+1`. `+` dan keyingi raqam
   (versionCode) **har yangi yuklashda bittaga oshadi**: `1.0.1+2`, `1.0.2+3`…
@@ -116,7 +116,7 @@ huquqini olib qo'yadi — oddiy foydalanuvchi qoladi.)
    certificate» dagi **SHA-1** ni nusxalang.
 2. https://console.cloud.google.com → APIs & Services → Credentials →
    **Create credentials → OAuth client ID → Android**: package
-   `uz.mab.app`, SHA-1 — yuqoridagi. Lokal sinov uchun upload kalitining
+   `mab.app`, SHA-1 — yuqoridagi. Lokal sinov uchun upload kalitining
    SHA-1 sini ham qo'shing:
    ```sh
    keytool -list -v -keystore ~/mab-upload.jks -alias upload | grep SHA1

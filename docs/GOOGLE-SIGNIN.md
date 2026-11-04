@@ -36,8 +36,8 @@ https://console.cloud.google.com → yangi loyiha (masalan, «MAB»).
 | Turi | Sozlama | Nima uchun |
 |---|---|---|
 | **Web application** | Authorized JavaScript origins: `https://mab.uz`, `https://www.mab.uz` | Sayt va **asosiy ID** — API va ilova shuni ishlatadi |
-| **Android** | Package: `uz.mab.app`, SHA-1: **upload** kaliti | O'zingiz yig'gan APK |
-| **Android** | Package: `uz.mab.app`, SHA-1: **Play App Signing** kaliti | Play'dan o'rnatilgan ilova |
+| **Android** | Package: `mab.app`, SHA-1: **upload** kaliti | O'zingiz yig'gan APK |
+| **Android** | Package: `mab.app`, SHA-1: **Play App Signing** kaliti | Play'dan o'rnatilgan ilova |
 
 SHA-1 qayerdan:
 - upload kaliti: `keytool -list -v -keystore ~/mab-upload.jks -alias upload`
