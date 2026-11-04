@@ -22,7 +22,15 @@ FCM_SERVICE_ACCOUNT = "fcm_service_account"
 #: ilova ichida bo'ladi va Google hujjatlari ham ularni ochiq deb ataydi.
 FIREBASE_CLIENT = "firebase_client"
 
-SECRET_KEYS = {FCM_SERVICE_ACCOUNT}
+#: Eskiz hisobi: email, parol, jo'natuvchi va OTP shabloni (JSON). Parol
+#: bor, shuning uchun maxfiy — panelga faqat holati qaytadi.
+ESKIZ = "eskiz"
+
+#: Google OAuth client ID'lari (JSON): web va Android. Maxfiy emas — web ID
+#: baribir sayt sahifasida ochiq turadi.
+GOOGLE_CLIENT = "google_client"
+
+SECRET_KEYS = {FCM_SERVICE_ACCOUNT, ESKIZ}
 
 
 async def get(db: AsyncSession, key: str) -> str | None:

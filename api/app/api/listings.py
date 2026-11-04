@@ -19,7 +19,6 @@ from app.models.listing import (
     Listing,
     ListingPhoto,
     ListingStatus,
-    ListingTag,
     ListingTranslation,
     ListingWant,
     ListingWantTranslation,
@@ -37,6 +36,7 @@ from app.schemas.listing import (
 from app.api.favorites import favorite_ids
 from app.models.event import EventKind
 from app.services import billing
+from app.services import categories
 from app.services import events
 from app.services import moderation
 from app.services import stats
@@ -187,7 +187,7 @@ async def _owners_for(
 @router.get("", response_model=Page[ListingCard])
 async def list_listings(
     request: Request,
-    tag: ListingTag | None = None,
+    tag: str | None = Query(default=None, max_length=40),
     q: str | None = Query(default=None, max_length=120),
     min_value: int | None = Query(default=None, ge=0),
     max_value: int | None = Query(default=None, ge=0),
@@ -317,7 +317,7 @@ async def list_listings(
             user_id=viewer.id if viewer else None,
             payload={
                 "q": q[:120],
-                "tag": tag.value if tag else None,
+                "tag": tag,
                 "sort": sort.value,
                 "results": len(rows),
                 "has_price_filter": min_value is not None or max_value is not None,
@@ -399,7 +399,7 @@ async def get_listing(
         user_id=viewer.id if viewer else None,
         target_type="listing",
         target_id=listing.id,
-        payload={"tag": listing.tag.value, "value_minor": listing.value_minor},
+        payload={"tag": listing.tag, "value_minor": listing.value_minor},
         locale=locale,
     )
     await db.commit()
@@ -439,6 +439,9 @@ async def create_listing(
 
     # Input first: a bad region is a 422 even for someone out of free listings.
     region = _region_or_422(payload.region) if payload.region else me.region
+    await categories.require_active(db, payload.tag)
+    for desire in payload.desires:
+        await categories.require_active(db, desire.category)
 
     # The meter only runs once the admin turns paid listings on. Until prices
     # are set there is nothing to buy, and a 402 with no way to pay is a wall.
@@ -611,8 +614,15 @@ async def update_listing(
             "Bu e’lon ochiq taklifda turibdi. Avval taklifni yakunlang yoki rad eting.",
         )
 
-    if payload.tag is not None:
+    if payload.tag is not None and payload.tag != listing.tag:
+        # O'z kategoriyasida qolayotgan e'lon, kategoriya yashirilgan bo'lsa ham,
+        # tahrirlanaveradi; boshqasiga faqat ko'rinib turganiga o'tadi.
+        await categories.require_active(db, payload.tag)
         listing.tag = payload.tag
+    for desire in payload.desires or []:
+        # Tahrir oynasi eski istaklarni qayta yuboradi: yashirilgan kategoriyadagi
+        # istak shu sabab bilan rad etilmasin, faqat mavjud bo'lsin.
+        await categories.require_active(db, desire.category, allow_hidden=True)
     if payload.value is not None:
         listing.value_minor = payload.value.minor
         listing.currency = payload.value.currency

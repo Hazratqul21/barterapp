@@ -10,12 +10,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.categories import categories
 from app.core.locale import resolve_locale
 from app.core.regions import coordinates_for, region_names
 from app.core.security import current_user
 from app.db.session import get_db
-from app.services import category_images
+from app.services import categories
 from app.models.listing import Listing, ListingStatus
 from app.models.offer import Offer, OfferStatus
 from app.models.review import Review
@@ -43,7 +42,7 @@ class ReviewOut(ApiModel):
 
 
 class CategoryOut(ApiModel):
-    #: A `ListingTag` value, so it doubles as the `tag` filter on `/listings`.
+    #: `categories.id`, so it doubles as the `tag` filter on `/listings`.
     id: str
     #: Already resolved to the requested language.
     name: str
@@ -111,19 +110,21 @@ async def list_categories(
     db: AsyncSession = Depends(get_db),
 ) -> list[CategoryOut]:
     """
-    The six categories a listing can be filed under, already in one language.
+    The categories a listing can be filed under, already in one language.
 
-    The clients were carrying their own copy of this list because the endpoint
-    did not exist — hardcoded Uzbek names that stayed Uzbek on the Russian and
-    English builds, and photo ids that had rotted until half the strip showed a
-    broken image. Serving it puts the names next to every other translated
-    string the API owns and makes a fix a deploy rather than three releases.
-
-    An `id` here is a `ListingTag`, so it can be passed straight back as the
-    `tag` filter on `/listings`.
+    The list lives in the `categories` table: the admin panel adds, renames,
+    reorders and hides them, and the change shows on every client at once.
+    Hidden ones are left out. An `id` can be passed straight back as the `tag`
+    filter on `/listings`.
     """
-    images = await category_images.image_urls(db, request)
-    return [CategoryOut(**row) for row in categories(locale, images)]
+    return [
+        CategoryOut(
+            id=row.id,
+            name=categories.localized(row, locale),
+            image_url=categories.image_url(request, row),
+        )
+        for row in await categories.all_categories(db)
+    ]
 
 
 @router.patch("/me", response_model=Me)

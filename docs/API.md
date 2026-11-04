@@ -838,6 +838,30 @@ Idempotent.
 
 ---
 
+### SMS va Google sozlamasi 🔒 (moderator)
+
+Kalit `.env` da emas, admin panelda qo'yiladi va qayta ishga tushirmasdan
+ishlaydi. Panel ustun, keyin `.env`.
+
+| So'rov | Tana | Natija |
+|---|---|---|
+| `GET /admin/sms` | — | `SmsStatus` — parol hech qachon qaytmaydi |
+| `PUT /admin/sms` | `{email, password, sender?, otp_template?}` | Eskiz'ga login qilib ko'radi, keyin saqlaydi. `400` noto'g'ri hisob, `502` Eskiz bilan aloqa yo'q, `422` shablonda `{code}` yo'q yoki 160 belgidan uzun |
+| `DELETE /admin/sms` | — | Panel kaliti olib tashlanadi |
+| `POST /admin/sms/test` | `{phone}` | OTP shabloni bilan haqiqiy SMS |
+| `GET /admin/google` | — | `GoogleStatus` |
+| `PUT /admin/google` | `{web_client_id?, android_client_ids[]}` | `422` ID shakli noto'g'ri yoki bir ID ikkala maydonda |
+
+`SmsStatus`: `ready`, `source` (`panel`/`env`/null), `email_hint`, `sender`,
+`otp_template`, `fingerprint`, `phone_login_open`, `sms_optional`.
+
+`GoogleStatus`: `enabled`, `source`, `web_client_id` (mijozlarga beriladigani),
+`android_client_ids`, `panel_web_client_id`, `panel_android_client_ids`.
+
+`GET /auth/methods` → `{phone, password, google, google_client_id}` panel
+qiymatlarini ham hisobga oladi. `google_client_id` — har doim **web** ID;
+Android ID tugmani yoqmaydi, faqat token auditoriyasiga qo'shiladi.
+
 ## 7.10 Hodisalar (tahlil uchun)
 
 ### `POST /events` → `{ "accepted": n, "duplicates": n }`

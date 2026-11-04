@@ -30,7 +30,8 @@ from app.models.social import VerificationStep
 from app.models.user import LoginAttempt, OtpChallenge, RefreshToken, User
 from app.services.login_credentials import check_password, hash_password, google_identity
 from app.schemas.user import GoogleLogin, PasswordLogin, PasswordSet, PasswordReset
-from app.services.sms import SmsError, get_sms, otp_text
+from app.services import google_clients
+from app.services.sms import SmsError, eskiz_ready, otp_text_for, sms_for
 from app.schemas.user import (
     OtpRequest,
     OtpRequestResult,
@@ -72,7 +73,8 @@ def _hash_code(code: str) -> str:
 async def request_otp(
     payload: OtpRequest, request: Request, db: AsyncSession = Depends(get_db)
 ) -> OtpRequestResult:
-    if not settings.phone_login_enabled:
+    eskiz = await eskiz_ready(db)
+    if not settings.phone_login_open(eskiz):
         raise HTTPException(503, "Telefon orqali kirish SMS xizmati ulangach ochiladi.")
     now = datetime.now(UTC)
     # One phone's requests are counted and inserted one at a time; without
@@ -86,7 +88,7 @@ async def request_otp(
     if not settings.otp_debug:
         otp_request_ip.check(source(request, None))
 
-    if not settings.phone_allowed(payload.phone):
+    if not settings.phone_allowed(payload.phone, eskiz):
         # SMS hali ulanmagan (SMS_OPTIONAL): kod faqat jamoa raqamlariga,
         # server logida. Boshqalar kod kutib o'tirmasin — ochiq aytiladi.
         raise HTTPException(
@@ -136,14 +138,17 @@ async def request_otp(
     # Faqat hash saqlanadi; ochiq kod shu yerdan nariga chiqmaydi.
     delivered = True
     try:
-        await get_sms().send(payload.phone, otp_text(code))
+        sms = await sms_for(db)
+        await sms.send(payload.phone, await otp_text_for(db, code))
     except (SmsError, httpx.HTTPError) as exc:
         # Sabab logda qoladi, foydalanuvchiga chiqmaydi: provayder xatosi
         # unga hech narsa demaydi, lekin xizmat haqidagi ma'lumot beradi.
         log.warning("OTP SMS delivery failed: %s", type(exc).__name__)
         delivered = False
 
-        if settings.sms_required:
+        # Haqiqiy provayder ulangan productionda ham: SMS_OPTIONAL qolib
+        # ketgan bo'lsa ham, odam kelmaydigan kodni kutib o'tirmasin.
+        if settings.sms_required or (eskiz and settings.is_production):
             # Ishlab chiqarishda jimgina davom etish eng yomon holat: odam
             # kod kutadi, kod kelmaydi va nima bo'lgani hech qayerda
             # ko'rinmaydi. Shuning uchun ochiq aytiladi.
@@ -193,7 +198,8 @@ async def _check_code(
     Check one SMS code and consume it, or raise. Shared by sign-in and
     password reset, so both get the same limits.
     """
-    if not settings.phone_login_enabled or not settings.phone_allowed(phone):
+    eskiz = await eskiz_ready(db)
+    if not settings.phone_login_open(eskiz) or not settings.phone_allowed(phone, eskiz):
         raise HTTPException(503, "Telefon orqali kirish SMS xizmati ulangach ochiladi.")
     # Every guess for one phone is checked in turn. Concurrent guesses used to
     # all read `attempts` before any of them wrote it back, so sixty parallel
@@ -389,10 +395,12 @@ async def _lock_identifier(db: AsyncSession, identifier: str) -> None:
 
 
 @router.get('/methods')
-async def login_methods():
-    return {'phone': settings.phone_login_enabled, 'password': True,
-            'google': bool(settings.google_client_ids),
-            'google_client_id': settings.google_client_ids[0] if settings.google_client_ids else None}
+async def login_methods(db: AsyncSession = Depends(get_db)):
+    # Admin panelda kalit qo'yilgach tugma darhol paydo bo'lsin — keshsiz.
+    google = await google_clients.resolve(db)
+    return {'phone': settings.phone_login_open(await eskiz_ready(db)), 'password': True,
+            'google': google.enabled,
+            'google_client_id': google.client_id}
 
 
 async def _throttle_password(db: AsyncSession, identifier: str):
@@ -464,7 +472,11 @@ async def password_reset(
 
 @router.post('/google', response_model=TokenPair)
 async def google_login(payload: GoogleLogin, db: AsyncSession = Depends(get_db)):
-    identity = await google_identity(payload.id_token)
+    google = await google_clients.resolve(db)
+    # Web ID'siz tugma ko'rinmaydi; faqat Android ID bilan ham ochilmaydi.
+    identity = await google_identity(
+        payload.id_token, google.audience if google.enabled else []
+    )
     subject = identity['sub']
     await _lock_identifier(db, 'google:' + subject)
     user = await db.scalar(select(User).where(User.google_sub == subject))

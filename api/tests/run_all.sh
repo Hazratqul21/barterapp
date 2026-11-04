@@ -39,6 +39,7 @@ for t in tests/test_config_guard.py \
          tests/test_favorites_pagination.py \
          tests/test_admin_reports.py \
          tests/test_sms.py \
+         tests/test_integrations_admin.py \
          tests/test_events.py \
          tests/test_account_deletion.py \
          tests/test_feed_blocks.py \

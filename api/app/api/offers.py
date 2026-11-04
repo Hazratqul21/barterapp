@@ -156,7 +156,7 @@ async def create_offer(
         target_type="listing",
         target_id=wanted.id,
         payload={
-            "tag": wanted.tag.value,
+            "tag": wanted.tag,
             "offered_count": len(offered),
             "cash_delta_minor": payload.cash_delta_minor,
             "with_message": bool(payload.message),

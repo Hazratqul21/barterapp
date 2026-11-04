@@ -25,11 +25,11 @@ def test_google_token_validation(monkeypatch):
               'iss': 'https://accounts.google.com', 'aud': 'test-client',
               'iat': datetime.now(UTC), 'exp': datetime.now(UTC) + timedelta(minutes=5)}
     async def check():
-        valid = await login_credentials.google_identity(jwt.encode(claims, private, algorithm='RS256'))
+        valid = await login_credentials.google_identity(jwt.encode(claims, private, algorithm='RS256'), ['test-client'])
         assert valid['sub'] == 'google-test-subject'
         for change in [{'aud': 'attacker-client'}, {'iss': 'https://attacker.invalid'}, {'email_verified': False}, {'exp': datetime.now(UTC)-timedelta(seconds=1)}]:
             with pytest.raises(HTTPException) as error:
-                await login_credentials.google_identity(jwt.encode({**claims, **change}, private, algorithm='RS256'))
+                await login_credentials.google_identity(jwt.encode({**claims, **change}, private, algorithm='RS256'), ['test-client'])
             assert error.value.status_code == 401
     asyncio.run(check())
 
@@ -81,7 +81,7 @@ def test_auth_flows(monkeypatch):
             failures = [(await client.post('/auth/password/login',json={'identifier':identifier,'password':'incorrect'})).status_code for _ in range(6)]
             assert failures == [401]*5+[429]
             from app.api import auth
-            async def fake_identity(_):
+            async def fake_identity(*_):
                 return {'sub': 'audit-'+uuid.uuid4().hex, 'email': uuid.uuid4().hex+'@gmail.com', 'given_name':'Audit','family_name':'User'}
             monkeypatch.setattr(auth, 'google_identity', fake_identity)
             response = await client.post('/auth/google',json={'id_token':'dummy-token-for-test-only'})
