@@ -23,6 +23,37 @@
 
 ---
 
+## 2026-11-04
+
+### 🆕 Eskiz (SMS) va Google kalitlari admin paneldan
+
+«Sozlash» bo'limida ikkita yangi karta:
+
+- **SMS — Eskiz.** Eskiz email, parol, jo'natuvchi nomi va OTP shabloni.
+  Saqlashdan **oldin** server Eskiz'ga kirib ko'radi — noto'g'ri bo'lsa
+  saqlanmaydi va sababi aytiladi. Saqlangach serverni qayta ishga tushirish
+  shart emas, keyingi kod SMS bilan ketadi. «Sinov SMS» tugmasi shablon
+  Eskiz'da tasdiqlanganini tekshiradi. Parol qayta o'qilmaydi.
+- **Google orqali kirish.** Web va Android client ID'lari alohida maydonda.
+  Android ID `299383835355-bpv12h6ija8ju4gnuakr5o2v6et9jhv6…` standart
+  qo'yilgan.
+
+Panel qiymati `.env` dan ustun. Eskiz panelda ulangach productionda telefon
+orqali kirish hamma uchun ochiladi (`SMS_OPTIONAL=true` qolgan bo'lsa ham),
+va Eskiz yiqilsa OTP so'rovi **503** qaytaradi — kod kelmaydigan holatda
+jim davom etmaydi. Eskiz so'rovi 10 soniyada uziladi, kirish sahifasi qotmaydi.
+
+Yangi endpointlar — [API.md §7.9](API.md).
+
+**UI da nima kerak:**
+- Hech narsa majburiy emas: ilova `GET /auth/methods` dan oladi, panelda
+  kalit qo'yilgach telefon va Google tugmalari o'zi paydo bo'ladi.
+- ⚠️ `google_client_id` — **web** client ID, ilova uni `serverClientId`
+  sifatida ishlatadi. Android client ID ilova kodiga yozilmaydi: Google uni
+  package (`uz.mab.app`) va SHA-1 bo'yicha taniydi.
+
+---
+
 ## 2026-11-03
 
 ### 🆕 Kategoriyalar endi bazada — admin qo'shadi, tahrirlaydi, yashiradi, o'chiradi

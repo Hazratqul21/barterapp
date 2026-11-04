@@ -106,6 +106,12 @@ class Settings(BaseSettings):
     #: `serverClientId` sifatida ishlatadi, shuning uchun token aud'i shu).
     #: Bir nechta bo'lishi mumkin: ["...web...", "...ios..."]. Bular maxfiy emas.
     google_client_ids: tuple[str, ...] = ()
+    #: Android OAuth client ID'lari. Ilova ularni ishlatmaydi — Google ularni
+    #: package nomi va SHA-1 bo'yicha taniydi; server faqat qabul qiladigan
+    #: auditoriyaga qo'shadi. **Tugmani yoqmaydi**: buning uchun web ID kerak.
+    google_android_client_ids: tuple[str, ...] = (
+        "299383835355-bpv12h6ija8ju4gnuakr5o2v6et9jhv6.apps.googleusercontent.com",
+    )
     #: Google kalitlari. Faqat testda o'zgartiriladi.
     google_jwks_url: str = GOOGLE_JWKS_URL
 
@@ -130,15 +136,20 @@ class Settings(BaseSettings):
 
     @property
     def phone_login_enabled(self) -> bool:
+        """Faqat `.env` bo'yicha. Panel kalitini hisobga olish: `phone_login_open`."""
+        return self.phone_login_open(False)
+
+    def phone_login_open(self, eskiz_in_panel: bool) -> bool:
         return (
-            bool(self.eskiz_email and self.eskiz_password)
+            eskiz_in_panel
+            or bool(self.eskiz_email and self.eskiz_password)
             or not self.is_production
             or bool(self.sms_optional and self.sms_optional_phones)
         )
 
-    def phone_allowed(self, phone: str) -> bool:
+    def phone_allowed(self, phone: str, eskiz_in_panel: bool = False) -> bool:
         """Eskiz ulanmagan productionda — faqat jamoa raqamlari."""
-        if self.eskiz_email and self.eskiz_password:
+        if eskiz_in_panel or (self.eskiz_email and self.eskiz_password):
             return True
         if not self.is_production:
             return True

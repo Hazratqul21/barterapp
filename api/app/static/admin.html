@@ -310,6 +310,58 @@
   <!-- ── Sozlash ──────────────────────────────────────────────────── -->
   <section id="setup" class="hide">
     <div class="card">
+      <h2>SMS — Eskiz (telefon orqali kirish)</h2>
+      <div class="stat" id="smsStat"></div>
+      <p class="hint" id="smsHint"></p>
+
+      <p class="hint"><a href="https://my.eskiz.uz" target="_blank" rel="noopener">my.eskiz.uz</a>
+        hisobingizning email va parolini kiriting. Saqlashdan oldin server
+        Eskiz'ga kirib ko'radi — noto'g'ri bo'lsa, shu yerda aytiladi.
+        Saqlangach serverni qayta ishga tushirish shart emas.</p>
+      <div class="row">
+        <div><label>Eskiz email</label><input id="esEmail" autocomplete="off"></div>
+        <div><label>Eskiz parol</label><input id="esPassword" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="row">
+        <div><label>Jo‘natuvchi nomi</label><input id="esSender" placeholder="4546"></div>
+      </div>
+      <label>SMS matni — Eskiz'da tasdiqlangan shablon, <code>{code}</code> bilan</label>
+      <input id="esTemplate" maxlength="300">
+      <p class="hint">⚠️ Eskiz faqat <b>oldindan tasdiqlangan</b> matnni yetkazadi.
+        Shablonni Eskiz kabinetida tasdiqlatib, aynan shu so‘zlar bilan yozing.
+        «4546» — Eskizning sinov nomi; o‘z nomingiz (masalan, MAB) tasdiqlangach
+        uni qo‘ying. Parol saqlangach <b>qayta o‘qib bo‘lmaydi</b>.</p>
+      <div class="bar">
+        <button class="act" onclick="saveSms()">Saqlash</button>
+        <button class="act danger" onclick="clearSms()">Olib tashlash</button>
+      </div>
+
+      <label>Sinov SMS — shu raqamga haqiqiy kod yuboriladi</label>
+      <div class="bar">
+        <input id="esTestPhone" placeholder="+998901234567" style="max-width:220px">
+        <button class="act ghost" onclick="testSms()">Sinov SMS yuborish</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Google orqali kirish</h2>
+      <div class="stat" id="ggStat"></div>
+      <p class="hint" id="ggHint"></p>
+      <p class="hint">Google Cloud Console → <b>APIs &amp; Services → Credentials</b>.
+        Ikki xil ID bor, ularni <b>almashtirmang</b>:</p>
+      <label>Web client ID — turi «Web application» (tugmani shu yoqadi)</label>
+      <input id="ggWeb" placeholder="1234…-abc….apps.googleusercontent.com">
+      <label>Android client ID'lar — turi «Android», har biri yangi qatorda</label>
+      <textarea id="ggAndroid" style="min-height:70px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+      <p class="hint">Android client'da package <code>uz.mab.app</code> va SHA-1 bo‘lishi
+        kerak. Play'dan o‘rnatilgan ilova uchun SHA-1 — <b>Play Console → App integrity →
+        App signing key</b>; o‘zingiz yig‘gan APK uchun — upload kaliti. Ikkalasiga
+        alohida Android client oching.</p>
+      <div class="bar">
+        <button class="act" onclick="saveGoogle()">Saqlash</button>
+      </div>
+    </div>
+    <div class="card">
       <h2>Firebase — holat</h2>
       <div class="stat" id="fbStat"></div>
       <p class="hint" id="fbHint"></p>
@@ -681,7 +733,7 @@ function show(tab) {
   if (tab === 'cats') loadCats();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
-  if (tab === 'setup') loadFirebase();
+  if (tab === 'setup') { loadSms(); loadGoogle(); loadFirebase(); }
 }
 
 document.querySelectorAll('#nav button').forEach(b =>
@@ -962,6 +1014,93 @@ async function sendPush(dry) {
       ? `Bu xabar ${r.recipients} ta odamga tegadi. Hali yuborilmadi.`
       : `${r.queued} ta bildirishnoma navbatga qo‘yildi.`, true);
     if (!dry) loadPush();
+  } catch (e) { say(e.message); }
+}
+
+// ── SMS (Eskiz) va Google ─────────────────────────────────────────────
+
+async function loadSms() {
+  try {
+    const s = await api('/admin/sms');
+    $('smsStat').innerHTML = [
+      ['Holat', s.ready ? 'ulangan' : 'yo‘q'],
+      ['Qayerdan', s.source === 'panel' ? 'panel' : s.source === 'env' ? '.env' : '—'],
+      ['Hisob', s.email_hint || '—'],
+      ['Jo‘natuvchi', s.sender || '—'],
+    ].map(([k, v]) => `<div><b style="font-size:15px">${esc(v)}</b><span>${k}</span></div>`).join('');
+    $('smsHint').innerHTML = s.ready
+      ? '✅ Kodlar SMS bilan boradi. Telefon orqali kirish hamma uchun ochiq.'
+      : (s.phone_login_open
+          ? '⚠️ Eskiz ulanmagan: kodlar SMS bilan bormaydi (faqat jamoa raqamlari, server logida).'
+          : '⚠️ Eskiz ulanmagan: ilovada telefon orqali kirish yopiq. Kalitni kiriting.');
+    $('esTemplate').value = s.otp_template || '';
+    $('esSender').value = s.sender || '4546';
+  } catch (e) { say(e.message); }
+}
+
+async function saveSms() {
+  const email = $('esEmail').value.trim(), password = $('esPassword').value;
+  if (!email || !password) { say('Email va parolni kiriting.'); return; }
+  try {
+    await api('/admin/sms', {
+      method: 'PUT',
+      body: JSON.stringify({
+        email, password,
+        sender: $('esSender').value.trim() || '4546',
+        otp_template: $('esTemplate').value.trim(),
+      }),
+    });
+    $('esPassword').value = '';
+    say('Eskiz ulandi. Keyingi kod SMS bilan boradi.', true);
+    loadSms();
+  } catch (e) { say(e.message); }
+}
+
+async function clearSms() {
+  if (!confirm('Eskiz hisobi olib tashlanadi — kodlar SMS bilan bormaydi.')) return;
+  try {
+    await api('/admin/sms', { method: 'DELETE' });
+    say('Olib tashlandi.', true); loadSms();
+  } catch (e) { say(e.message); }
+}
+
+async function testSms() {
+  const phone = $('esTestPhone').value.trim().replace(/[\s-]/g, '');
+  if (!/^\+998\d{9}$/.test(phone)) { say('Raqam +998XXXXXXXXX shaklida bo‘lsin.'); return; }
+  try {
+    await api('/admin/sms/test', { method: 'POST', body: JSON.stringify({ phone }) });
+    say('Yuborildi. SMS kelmasa — shablon Eskiz\'da tasdiqlanmagan bo‘lishi mumkin.', true);
+  } catch (e) { say(e.message); }
+}
+
+async function loadGoogle() {
+  try {
+    const g = await api('/admin/google');
+    $('ggStat').innerHTML = [
+      ['Tugma', g.enabled ? 'ko‘rinadi' : 'yo‘q'],
+      ['Web ID', g.web_client_id ? 'bor' : 'yo‘q'],
+      ['Android ID', String(g.android_client_ids.length)],
+    ].map(([k, v]) => `<div><b style="font-size:15px">${esc(v)}</b><span>${k}</span></div>`).join('');
+    $('ggHint').innerHTML = g.enabled
+      ? '✅ Google tugmasi ilovada va saytda ko‘rinadi.'
+      : '⚠️ Web client ID yo‘q — Google tugmasi ko‘rinmaydi. Android ID yolg‘iz yetmaydi.';
+    $('ggWeb').value = g.panel_web_client_id || '';
+    $('ggAndroid').value = (g.panel_android_client_ids.length
+      ? g.panel_android_client_ids : g.android_client_ids).join('\n');
+  } catch (e) { say(e.message); }
+}
+
+async function saveGoogle() {
+  try {
+    await api('/admin/google', {
+      method: 'PUT',
+      body: JSON.stringify({
+        web_client_id: $('ggWeb').value.trim() || null,
+        android_client_ids: $('ggAndroid').value.split(/\s+/).filter(Boolean),
+      }),
+    });
+    say('Saqlandi. Ilova va sayt keyingi ochilishda oladi.', true);
+    loadGoogle();
   } catch (e) { say(e.message); }
 }
 

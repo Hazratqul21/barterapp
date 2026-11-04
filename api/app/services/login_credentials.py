@@ -24,13 +24,14 @@ async def check_password(stored: str | None, password: str) -> bool:
             return False
     return await run_in_threadpool(verify)
 
-async def google_identity(token: str) -> dict:
-    if not settings.google_client_ids:
+async def google_identity(token: str, audience: list[str]) -> dict:
+    """`audience` — `google_clients.resolve(db).audience`: web va Android ID'lar."""
+    if not audience:
         raise HTTPException(503, 'Google orqali kirish hali sozlanmagan.')
     def verify():
         key = _keys.get_signing_key_from_jwt(token).key
         claims = jwt.decode(token, key, algorithms=['RS256'],
-            audience=list(settings.google_client_ids),
+            audience=audience,
             issuer=['https://accounts.google.com', 'accounts.google.com'],
             options={'require': ['exp', 'iat', 'sub', 'aud', 'iss', 'email']})
         if claims.get('email_verified') is not True:

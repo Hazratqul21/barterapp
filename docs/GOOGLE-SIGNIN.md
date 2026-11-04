@@ -51,6 +51,13 @@ package nomi va SHA-1 bo'yicha o'zi taniydi.
 
 Web client ID (`1234…-abc.apps.googleusercontent.com`) maxfiy emas.
 
+**Eng oson yo'l — admin panel:** `https://api.mab.uz/admin` → **Sozlash →
+Google orqali kirish** → web ID'ni qo'ying → Saqlash. Qayta ishga tushirish
+shart emas. Android ID (`299383835355-bpv12h6ija8ju4gnuakr5o2v6et9jhv6…`)
+standart qo'yilgan — u faqat qabul qilinadi, tugmani yoqmaydi.
+
+Yoki `.env` orqali:
+
 **Server** — `/opt/mab/api/.env` ga:
 ```
 GOOGLE_CLIENT_IDS=["1234…-abc.apps.googleusercontent.com"]
