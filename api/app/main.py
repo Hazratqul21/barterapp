@@ -14,6 +14,7 @@ from app.api import (
     billing_admin,
     categories_admin,
     disputes_admin,
+    email_auth,
     auth,
     chat,
     devices,
@@ -109,6 +110,12 @@ async def security_headers(request: Request, call_next) -> Response:
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     if request.url.path.startswith(settings.media_url_prefix):
         response.headers.setdefault("Content-Security-Policy", "default-src 'none'; sandbox")
+        # Fayl nomlari takrorlanmaydi (uuid, xesh yoki yangi nom), demak
+        # mazmuni o'zgarmaydi: brauzer va telefon qayta yuklamasin.
+        if response.status_code == 200:
+            response.headers.setdefault(
+                "Cache-Control", "public, max-age=2592000, immutable"
+            )
     if settings.is_production:
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
     return response
@@ -165,6 +172,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(email_auth.router)
 app.include_router(users.router)
 app.include_router(listings.router)
 app.include_router(offers.router)

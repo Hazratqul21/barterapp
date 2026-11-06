@@ -137,7 +137,8 @@ class User(Base, UUIDPrimaryKey, Timestamps):
             name="business_needs_tax_id",
         ),
         CheckConstraint(
-            "phone IS NOT NULL OR google_sub IS NOT NULL",
+            "phone IS NOT NULL OR google_sub IS NOT NULL "
+            "OR (email IS NOT NULL AND password_hash IS NOT NULL)",
             name="has_sign_in",
         ),
     )
@@ -173,6 +174,31 @@ class OtpChallenge(Base, UUIDPrimaryKey):
         DateTime(timezone=True), nullable=False
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+
+
+class EmailChallenge(Base, UUIDPrimaryKey):
+    """
+    Emailga yuborilgan tasdiqlash kodi — ro'yxatdan o'tish yoki parolni
+    tiklash uchun. `OtpChallenge` bilan bir xil qoidalar: faqat HMAC saqlanadi,
+    bir marta ishlatiladi, urinishlar sanaladi.
+    """
+
+    __tablename__ = "email_challenges"
+    __table_args__ = (
+        CheckConstraint("purpose IN ('register', 'reset')", name="email_purpose"),
+    )
+
+    email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    purpose: Mapped[str] = mapped_column(String(16), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class RefreshToken(Base, UUIDPrimaryKey):

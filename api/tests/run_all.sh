@@ -26,6 +26,7 @@ for t in tests/test_config_guard.py \
          tests/test_socket_ticket.py \
          tests/test_chat_archive.py \
          tests/test_media_sweep.py \
+         tests/test_thumbs.py \
          tests/test_listing_edit.py \
          tests/test_categories.py \
          tests/test_demo_seed.py \
@@ -40,6 +41,7 @@ for t in tests/test_config_guard.py \
          tests/test_admin_reports.py \
          tests/test_sms.py \
          tests/test_integrations_admin.py \
+         tests/test_email_auth.py \
          tests/test_events.py \
          tests/test_account_deletion.py \
          tests/test_feed_blocks.py \

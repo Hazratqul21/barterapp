@@ -30,7 +30,7 @@ from app.models.social import VerificationStep
 from app.models.user import LoginAttempt, OtpChallenge, RefreshToken, User
 from app.services.login_credentials import check_password, hash_password, google_identity
 from app.schemas.user import GoogleLogin, PasswordLogin, PasswordSet, PasswordReset
-from app.services import google_clients
+from app.services import google_clients, mailer
 from app.services.sms import SmsError, eskiz_ready, otp_text_for, sms_for
 from app.schemas.user import (
     OtpRequest,
@@ -263,11 +263,13 @@ async def _create_user(
     avatar_url: str | None = None,
     trust_score: int = 0,
     phone_verified: bool = False,
+    password_hash: str | None = None,
 ) -> User:
     user = User(
         phone=phone,
         google_sub=google_sub,
         email=email,
+        password_hash=password_hash,
         first_name=first_name,
         last_name=last_name,
         avatar_url=avatar_url,
@@ -399,6 +401,7 @@ async def login_methods(db: AsyncSession = Depends(get_db)):
     # Admin panelda kalit qo'yilgach tugma darhol paydo bo'lsin — keshsiz.
     google = await google_clients.resolve(db)
     return {'phone': settings.phone_login_open(await eskiz_ready(db)), 'password': True,
+            'email': await mailer.email_signup_open(db),
             'google': google.enabled,
             'google_client_id': google.client_id}
 
@@ -484,17 +487,30 @@ async def google_login(payload: GoogleLogin, db: AsyncSession = Depends(get_db))
     if user is None:
         email = identity['email'].strip().lower()
         await _lock_identifier(db, 'email:' + email)
-        # Never silently attach a Google identity to an existing local account.
-        existing = await db.scalar(select(User.id).where(User.email == email))
-        if existing:
+        existing = await db.scalar(select(User).where(User.email == email))
+        if (
+            existing is not None
+            and existing.google_sub is None
+            and existing.phone is None
+            and existing.password_hash is not None
+        ):
+            # Faqat email bilan ro'yxatdan o'tgan hisob: uning emaili kod bilan
+            # tasdiqlangan, Google ham shu emailni tasdiqladi — egasi bitta
+            # odam. Ulaymiz. Telefon hisobidagi email esa tasdiqlanmagan
+            # bo'lishi mumkin — u yerda 409 qoladi (egallab olinmasin).
+            existing.google_sub = subject
+            user, is_new = existing, False
+        elif existing is not None:
+            # Boshqa Google hisobi shu emailni egallagan — jimgina ulamaymiz.
             raise HTTPException(409, 'Bu email boshqa hisobga biriktirilgan. Avval o‘sha hisobga kiring.')
-        user = await _create_user(
-            db,
-            google_sub=subject,
-            email=email,
-            first_name=str(identity.get('given_name', ''))[:80],
-            last_name=str(identity.get('family_name', ''))[:80],
-        )
+        else:
+            user = await _create_user(
+                db,
+                google_sub=subject,
+                email=email,
+                first_name=str(identity.get('given_name', ''))[:80],
+                last_name=str(identity.get('family_name', ''))[:80],
+            )
     if user.is_deleted:
         raise HTTPException(401, "Hisob o'chirilgan.")
     user.last_seen_at = datetime.now(UTC)

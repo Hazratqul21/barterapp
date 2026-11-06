@@ -8,6 +8,7 @@ from PIL import Image, UnidentifiedImageError
 from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
+from app.services import thumbs
 from app.core.ratelimit import source, uploads as upload_limit
 from app.core.security import current_user
 from app.models.user import User
@@ -138,6 +139,9 @@ async def upload_photo(
     destination = settings.media_root / name
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(processed)
+    # Lenta kartochkasi uchun kichik nusxa (thumbs.py). Bo'lmasa ham yuklash
+    # muvaffaqiyatli — kartochka asl suratni oladi.
+    await run_in_threadpool(thumbs.make, destination)
 
     return UploadResult(
         url=f"{settings.api_base(request)}{settings.media_url_prefix}/{name}",

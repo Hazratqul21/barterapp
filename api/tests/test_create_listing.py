@@ -72,7 +72,7 @@ new = {
 }
 st, created = call("POST", "/listings", new, token=tok)
 ok("yangi payload qabul qilindi", st == 201, created.get("title") if st == 201 else created)
-ok("surat biriktirildi", created["image_url"] == up["url"])
+ok("surat biriktirildi", created["image_url"] in (up["url"], up["url"][:-4] + "-t.jpg"), created["image_url"])
 ok("uch til saqlandi", created["title"] == "MacBook Air M2")
 
 st, mine = call("GET", "/me/listings", token=tok)

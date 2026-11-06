@@ -169,7 +169,8 @@ with httpx.Client(base_url=BASE, timeout=40) as c:
     )
     check("e'lon joylandi", r.status_code == 201, r.text[:200])
     wheat = r.json()["id"]
-    check("surat biriktirildi", r.json()["image_url"] == photo["url"])
+    # Kartochka lenta uchun kichik nusxani oladi (thumbs.py).
+    check("surat biriktirildi", r.json()["image_url"] in (photo["url"], photo["url"][:-4] + "-t.jpg"), r.json()["image_url"])
 
     r = c.post(
         "/listings",

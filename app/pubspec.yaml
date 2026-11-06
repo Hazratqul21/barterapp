@@ -1,7 +1,7 @@
 name: barter_app
 description: "MAB — cash-free trading for farms, workshops and individuals."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.12.2

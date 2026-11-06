@@ -1329,6 +1329,12 @@ abstract class L {
   /// **'Barter yaratish'**
   String get createTitle;
 
+  /// No description provided for @createSignInReason.
+  ///
+  /// In uz, this message translates to:
+  /// **'E\'lon joylash uchun hisobga kiring yoki ro‘yxatdan o‘ting — suratlar shu hisobga yuklanadi.'**
+  String get createSignInReason;
+
   /// No description provided for @createGive.
   ///
   /// In uz, this message translates to:
@@ -2820,7 +2826,7 @@ abstract class L {
   /// No description provided for @authPasswordHelp.
   ///
   /// In uz, this message translates to:
-  /// **'Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.'**
+  /// **'Telefon raqami yoki email va parolingiz bilan kiring. Hisobingiz bo‘lmasa — ro‘yxatdan o‘ting.'**
   String get authPasswordHelp;
 
   /// No description provided for @authSavePassword.
@@ -2834,6 +2840,96 @@ abstract class L {
   /// In uz, this message translates to:
   /// **'Parolni ko‘rsatish/yashirish'**
   String get authShowPassword;
+
+  /// No description provided for @authRegister.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ro‘yxatdan o‘tish'**
+  String get authRegister;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingiz yo‘qmi?'**
+  String get authNoAccount;
+
+  /// No description provided for @authRegisterSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qulay usulni tanlang — bir daqiqa oladi.'**
+  String get authRegisterSubtitle;
+
+  /// No description provided for @authRegisterEmail.
+  ///
+  /// In uz, this message translates to:
+  /// **'Email bilan'**
+  String get authRegisterEmail;
+
+  /// No description provided for @authRegisterPhone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Telefon raqam bilan'**
+  String get authRegisterPhone;
+
+  /// No description provided for @authRegisterPhoneHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kirish sahifasida raqamingizni kiriting — SMS kod bilan hisob avtomatik ochiladi.'**
+  String get authRegisterPhoneHint;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Email'**
+  String get authEmailLabel;
+
+  /// No description provided for @authNameLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ismingiz'**
+  String get authNameLabel;
+
+  /// No description provided for @authEmailCodeSent.
+  ///
+  /// In uz, this message translates to:
+  /// **'{email} manziliga 6 xonali kod yuborildi. Spam papkasini ham tekshiring.'**
+  String authEmailCodeSent(String email);
+
+  /// No description provided for @authEmailUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Email orqali ro‘yxatdan o‘tish hozircha yopiq. Google yoki telefon orqali kiring.'**
+  String get authEmailUnavailable;
+
+  /// No description provided for @authChangeEmail.
+  ///
+  /// In uz, this message translates to:
+  /// **'Emailni o‘zgartirish'**
+  String get authChangeEmail;
+
+  /// No description provided for @authCreateAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisob ochish'**
+  String get authCreateAccount;
+
+  /// No description provided for @authHaveAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingiz bormi? Kirish'**
+  String get authHaveAccount;
+
+  /// No description provided for @authGoogleFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Google orqali kirib bo‘lmadi: {reason}'**
+  String authGoogleFailed(String reason);
+
+  /// No description provided for @authResetIdentifier.
+  ///
+  /// In uz, this message translates to:
+  /// **'Telefon raqami yoki email'**
+  String get authResetIdentifier;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

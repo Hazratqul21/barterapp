@@ -344,6 +344,40 @@
     </div>
 
     <div class="card">
+      <h2>Pochta — email orqali ro‘yxatdan o‘tish</h2>
+      <div class="stat" id="mailStat"></div>
+      <p class="hint" id="mailHint"></p>
+      <p class="hint">Ro‘yxatdan o‘tishda emailga tasdiqlash kodi shu pochta orqali boradi.
+        <b>Google Workspace / Gmail:</b> host <code>smtp.gmail.com</code>, port <code>465</code>, SSL,
+        login — to‘liq email, parol — <b>App password</b> (Google hisobi → Xavfsizlik →
+        2 bosqichli tekshiruv → App passwords). Oddiy parol ishlamaydi.
+        Saqlashdan oldin server pochtaga ulanib ko‘radi.</p>
+      <div class="row">
+        <div><label>SMTP host</label><input id="mlHost" placeholder="smtp.gmail.com"></div>
+        <div><label>Port</label><input id="mlPort" inputmode="numeric" placeholder="465"></div>
+        <div><label>Xavfsizlik</label>
+          <select id="mlSec"><option value="ssl">SSL (465)</option><option value="starttls">STARTTLS (587)</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Login (email)</label><input id="mlUser" autocomplete="off"></div>
+        <div><label>Parol / App password</label><input id="mlPass" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="row">
+        <div><label>Jo‘natuvchi email (bo‘sh — login)</label><input id="mlFrom" placeholder="no-reply@mab.uz"></div>
+        <div><label>Jo‘natuvchi nomi</label><input id="mlName" placeholder="MAB"></div>
+      </div>
+      <div class="bar">
+        <button class="act" onclick="saveMail()">Saqlash</button>
+        <button class="act danger" onclick="clearMail()">Olib tashlash</button>
+      </div>
+      <label>Sinov xati</label>
+      <div class="bar">
+        <input id="mlTestTo" placeholder="siz@gmail.com" style="max-width:260px">
+        <button class="act ghost" onclick="testMail()">Sinov xati yuborish</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Google orqali kirish</h2>
       <div class="stat" id="ggStat"></div>
       <p class="hint" id="ggHint"></p>
@@ -733,7 +767,7 @@ function show(tab) {
   if (tab === 'cats') loadCats();
   if (tab === 'stats') loadStats();
   if (tab === 'push') loadPush();
-  if (tab === 'setup') { loadSms(); loadGoogle(); loadFirebase(); }
+  if (tab === 'setup') { loadSms(); loadMail(); loadGoogle(); loadFirebase(); }
 }
 
 document.querySelectorAll('#nav button').forEach(b =>
@@ -1070,6 +1104,60 @@ async function testSms() {
   try {
     await api('/admin/sms/test', { method: 'POST', body: JSON.stringify({ phone }) });
     say('Yuborildi. SMS kelmasa — shablon Eskiz\'da tasdiqlanmagan bo‘lishi mumkin.', true);
+  } catch (e) { say(e.message); }
+}
+
+async function loadMail() {
+  try {
+    const m = await api('/admin/email');
+    $('mailStat').innerHTML = [
+      ['Holat', m.ready ? 'ulangan' : 'yo‘q'],
+      ['Server', m.host ? `${m.host}:${m.port}` : '—'],
+      ['Login', m.username_hint || '—'],
+      ['Jo‘natuvchi', m.from_email || '—'],
+    ].map(([k, v]) => `<div><b style="font-size:15px">${esc(v)}</b><span>${k}</span></div>`).join('');
+    $('mailHint').innerHTML = m.ready
+      ? '✅ Email orqali ro‘yxatdan o‘tish ochiq — kodlar xat bilan boradi.'
+      : '⚠️ Pochta ulanmagan: ilovada email orqali ro‘yxatdan o‘tish yopiq.';
+    if (m.host) { $('mlHost').value = m.host; $('mlPort').value = m.port; $('mlSec').value = m.security; }
+    if (m.from_email) $('mlFrom').value = m.from_email;
+    if (m.from_name) $('mlName').value = m.from_name;
+  } catch (e) { say(e.message); }
+}
+
+async function saveMail() {
+  const username = $('mlUser').value.trim(), password = $('mlPass').value;
+  if (!username || !password) { say('Login va parolni kiriting.'); return; }
+  try {
+    await api('/admin/email', {
+      method: 'PUT',
+      body: JSON.stringify({
+        host: $('mlHost').value.trim() || 'smtp.gmail.com',
+        port: Number($('mlPort').value) || 465,
+        security: $('mlSec').value,
+        username, password,
+        from_email: $('mlFrom').value.trim() || null,
+        from_name: $('mlName').value.trim() || 'MAB',
+      }),
+    });
+    $('mlPass').value = '';
+    say('Pochta ulandi. Email orqali ro‘yxatdan o‘tish ochildi.', true);
+    loadMail();
+  } catch (e) { say(e.message); }
+}
+
+async function clearMail() {
+  if (!confirm('Pochta hisobi olib tashlanadi — email orqali ro‘yxatdan o‘tish yopiladi.')) return;
+  try { await api('/admin/email', { method: 'DELETE' }); say('Olib tashlandi.', true); loadMail(); }
+  catch (e) { say(e.message); }
+}
+
+async function testMail() {
+  const to = $('mlTestTo').value.trim();
+  if (!to.includes('@')) { say('Email manzilini yozing.'); return; }
+  try {
+    await api('/admin/email/test', { method: 'POST', body: JSON.stringify({ to }) });
+    say('Sinov xati yuborildi. Spam papkasini ham tekshiring.', true);
   } catch (e) { say(e.message); }
 }
 

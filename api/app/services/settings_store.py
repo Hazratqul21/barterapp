@@ -30,7 +30,10 @@ ESKIZ = "eskiz"
 #: baribir sayt sahifasida ochiq turadi.
 GOOGLE_CLIENT = "google_client"
 
-SECRET_KEYS = {FCM_SERVICE_ACCOUNT, ESKIZ}
+#: SMTP hisobi (JSON): host, port, login, parol, jo'natuvchi. Maxfiy.
+SMTP = "smtp"
+
+SECRET_KEYS = {FCM_SERVICE_ACCOUNT, ESKIZ, SMTP}
 
 
 async def get(db: AsyncSession, key: str) -> str | None:

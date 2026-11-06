@@ -297,6 +297,7 @@
   "notificationsEmptyHint": "Taklif, moslik va xabarlar shu yerda ko‘rinadi.",
   "notificationsMarkAll": "Hammasini o‘qilgan qilish",
   "createTitle": "Barter yaratish",
+  "createSignInReason": "E'lon joylash uchun hisobga kiring yoki ro‘yxatdan o‘ting — suratlar shu hisobga yuklanadi.",
   "createGive": "Nima beraman",
   "createTake": "Nima olmoqchiman",
   "createFieldTitle": "Sarlavha",
@@ -585,7 +586,36 @@
   "authPhoneUnavailable": "SMS orqali kirish va parolni tiklash hozircha mavjud emas.",
   "authMethodsUnavailable": "Kirish usullari yuklanmadi. Qayta urinib ko‘ring.",
   "authSetupPending": "Yangi hisob ochish vaqtincha mavjud emas. Kirish xizmatlari sozlanmoqda.",
-  "authPasswordHelp": "Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.",
+  "authPasswordHelp": "Telefon raqami yoki email va parolingiz bilan kiring. Hisobingiz bo‘lmasa — ro‘yxatdan o‘ting.",
   "authSavePassword": "Parolni saqlash",
-  "authShowPassword": "Parolni ko‘rsatish/yashirish"
+  "authShowPassword": "Parolni ko‘rsatish/yashirish",
+  "authRegister": "Ro‘yxatdan o‘tish",
+  "authNoAccount": "Hisobingiz yo‘qmi?",
+  "authRegisterSubtitle": "Qulay usulni tanlang — bir daqiqa oladi.",
+  "authRegisterEmail": "Email bilan",
+  "authRegisterPhone": "Telefon raqam bilan",
+  "authRegisterPhoneHint": "Kirish sahifasida raqamingizni kiriting — SMS kod bilan hisob avtomatik ochiladi.",
+  "authEmailLabel": "Email",
+  "authNameLabel": "Ismingiz",
+  "authEmailCodeSent": "{email} manziliga 6 xonali kod yuborildi. Spam papkasini ham tekshiring.",
+  "@authEmailCodeSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authEmailUnavailable": "Email orqali ro‘yxatdan o‘tish hozircha yopiq. Google yoki telefon orqali kiring.",
+  "authChangeEmail": "Emailni o‘zgartirish",
+  "authCreateAccount": "Hisob ochish",
+  "authHaveAccount": "Hisobingiz bormi? Kirish",
+  "authGoogleFailed": "Google orqali kirib bo‘lmadi: {reason}",
+  "@authGoogleFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "authResetIdentifier": "Telefon raqami yoki email"
 }

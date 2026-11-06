@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.services import thumbs
 from app.models.listing import ListingPhoto
 from app.models.offer import Message
 from app.models.social import Notification
@@ -60,6 +61,8 @@ async def referenced_names(db: AsyncSession) -> set[str]:
             name = _local_name(url)
             if name is not None:
                 names.add(name)
+                # Kichik nusxa asl surat bilan birga yashaydi va o'chadi.
+                names.add(thumbs.thumb_name(name))
     return names
 
 

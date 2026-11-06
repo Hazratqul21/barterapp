@@ -61,6 +61,10 @@ if [ "$DO_API" = 1 ]; then
     echo "Migratsiya yiqildi. Oldingi kod qaytarildi; baza nusxasi: $BACKUP/database.dump"
     exit 1
   fi
+  # Lenta uchun kichik suratlar (eskilari va demo). Yiqilsa ham deploy
+  # davom etadi — kartochka asl suratni ko'rsatadi.
+  sudo -u mab bash -c "cd $APP/api && .venv/bin/python -m app.make_thumbs" \
+    || echo "Kichik suratlar yaratilmadi — keyinroq: python -m app.make_thumbs"
 
   systemctl restart mab-api
   healthy=0

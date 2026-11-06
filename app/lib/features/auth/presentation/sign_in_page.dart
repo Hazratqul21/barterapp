@@ -14,6 +14,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
 import 'google_login_button.dart';
 import 'password_page.dart';
+import 'register_page.dart';
 import '../../../core/theme/haptics.dart';
 
 class _OtpInput extends StatefulWidget {
@@ -374,6 +375,28 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           )
                         : Text(_codeSent ? l.authVerify : l.authSendCode),
                   ),
+                  if (!_codeSent) ...[
+                    Gap.h6,
+                    Text(
+                      l.authNoAccount,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: p.inkSoft,
+                      ),
+                    ),
+                    Gap.h2,
+                    OutlinedButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const RegisterPage(),
+                              ),
+                            ),
+                      icon: const Icon(Symbols.person_add_rounded),
+                      label: Text(l.authRegister),
+                    ),
+                  ],
                   Gap.h4,
                   const LegalLinks(),
                 ],

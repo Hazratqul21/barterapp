@@ -667,6 +667,10 @@ class LRu extends L {
   String get createTitle => 'Создать обмен';
 
   @override
+  String get createSignInReason =>
+      'Чтобы разместить объявление, войдите или зарегистрируйтесь — фото загружаются в ваш аккаунт.';
+
+  @override
   String get createGive => 'Что я отдаю';
 
   @override
@@ -1471,11 +1475,63 @@ class LRu extends L {
 
   @override
   String get authPasswordHelp =>
-      'Установите пароль в настройках после входа. Для Google-аккаунта можно снова войти через Google.';
+      'Войдите по номеру телефона или email и паролю. Нет аккаунта — зарегистрируйтесь.';
 
   @override
   String get authSavePassword => 'Сохранить пароль';
 
   @override
   String get authShowPassword => 'Показать/скрыть пароль';
+
+  @override
+  String get authRegister => 'Регистрация';
+
+  @override
+  String get authNoAccount => 'Нет аккаунта?';
+
+  @override
+  String get authRegisterSubtitle =>
+      'Выберите удобный способ — это займёт минуту.';
+
+  @override
+  String get authRegisterEmail => 'По email';
+
+  @override
+  String get authRegisterPhone => 'По номеру телефона';
+
+  @override
+  String get authRegisterPhoneHint =>
+      'Введите номер на странице входа — аккаунт создастся автоматически по SMS-коду.';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authNameLabel => 'Ваше имя';
+
+  @override
+  String authEmailCodeSent(String email) {
+    return 'Код из 6 цифр отправлен на $email. Проверьте также папку «Спам».';
+  }
+
+  @override
+  String get authEmailUnavailable =>
+      'Регистрация по email пока закрыта. Войдите через Google или по телефону.';
+
+  @override
+  String get authChangeEmail => 'Изменить email';
+
+  @override
+  String get authCreateAccount => 'Создать аккаунт';
+
+  @override
+  String get authHaveAccount => 'Уже есть аккаунт? Войти';
+
+  @override
+  String authGoogleFailed(String reason) {
+    return 'Не удалось войти через Google: $reason';
+  }
+
+  @override
+  String get authResetIdentifier => 'Номер телефона или email';
 }
