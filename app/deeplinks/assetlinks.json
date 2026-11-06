@@ -1,10 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
-      "package_name": "uz.mab.app",
-      "sha256_cert_fingerprints": ["__RELEASE_SHA256_FINGERPRINT__"]
+      "package_name": "mab.app",
+      "sha256_cert_fingerprints": [
+        "BB:78:61:E3:C1:90:99:22:1D:4D:3E:20:EC:71:3C:F4:CD:63:16:74:B0:51:4E:B7:8D:0C:D4:4E:45:27:3C:40",
+        "__PLAY_APP_SIGNING_SHA256__"
+      ]
     }
   }
 ]
