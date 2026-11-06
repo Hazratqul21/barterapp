@@ -73,6 +73,33 @@ class AuthRepository {
         'password': password,
       });
 
+  /// Emailga kod yuboradi: `purpose` — "register" yoki "reset". Sinov
+  /// serverida kodning o'zini qaytaradi, productionda har doim null.
+  Future<String?> requestEmailCode(String email, {String purpose = 'register'}) =>
+      _api.post(
+        '/auth/email/code',
+        body: {'email': email, 'purpose': purpose},
+        parse: (data) =>
+            (data as Map<String, dynamic>)['debug_code'] as String?,
+      );
+  Future<bool> registerEmail(
+    String email,
+    String code,
+    String password, {
+    String firstName = '',
+  }) => _credentials('/auth/email/register', {
+    'email': email,
+    'code': code,
+    'password': password,
+    'first_name': firstName,
+  });
+  Future<bool> resetEmailPassword(String email, String code, String password) =>
+      _credentials('/auth/email/reset', {
+        'email': email,
+        'code': code,
+        'password': password,
+      });
+
   Future<Me> me() => _api.get(
     '/me',
     parse: (data) => Me.fromJson(data as Map<String, dynamic>),

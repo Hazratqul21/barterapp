@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.common import Money
 from app.schemas.listing import ListingCard, ListingDetail
 from app.schemas.user import TraderBrief
+from app.services import thumbs
 from app.services.billing import premium_now
 
 ONLINE_WINDOW = timedelta(minutes=5)
@@ -60,7 +61,7 @@ def listing_card(
         id=listing.id,
         tag=listing.tag,
         title=text.title,
-        image_url=listing.photos[0].url if listing.photos else None,
+        image_url=thumbs.card_url(listing.photos[0].url) if listing.photos else None,
         image_alt=text.image_alt,
         wants_summary=text.wants_summary,
         value=Money(minor=listing.value_minor, currency=listing.currency),

@@ -46,7 +46,7 @@ from app.models.social import (  # noqa: F401
     PaymentMethod,
     VerificationStep,
 )
-from app.models.user import OtpChallenge, User, UserType  # noqa: F401
+from app.models.user import EmailChallenge, OtpChallenge, User, UserType  # noqa: F401
 
 __all__ = [
     "AppSetting",
@@ -75,6 +75,7 @@ __all__ = [
     "Offer",
     "OfferItem",
     "OrderStatus",
+    "EmailChallenge",
     "OtpChallenge",
     "PaymeTransaction",
     "PaymentOrder",

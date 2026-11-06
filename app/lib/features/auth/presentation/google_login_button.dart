@@ -25,7 +25,11 @@ class _GoogleLoginButtonState extends State<GoogleLoginButton> {
   StreamSubscription<GoogleSignInAuthenticationEvent>? _events;
   bool _ready = false;
   bool _busy = false;
-  bool _failed = false;
+  /// Oxirgi xatoning sababi. Ilgari har qanday xato tugmani butunlay
+  /// yo'qotib, «Kirish usullari yuklanmadi» deb qo'yardi — nima bo'lganini
+  /// ham, qayta urinish yo'lini ham ko'rsatmasdi.
+  String? _problem;
+  bool _initFailed = false;
   @override
   void initState() {
     super.initState();
@@ -46,10 +50,13 @@ class _GoogleLoginButtonState extends State<GoogleLoginButton> {
           if (event is GoogleSignInAuthenticationEventSignIn && !_busy) {
             final token = event.user.authentication.idToken;
             if (token == null) {
-              setState(() => _failed = true);
+              setState(() => _problem = 'ID token yo‘q');
               return;
             }
-            setState(() => _busy = true);
+            setState(() {
+              _busy = true;
+              _problem = null;
+            });
             try {
               await widget.onToken(token);
             } finally {
@@ -58,14 +65,34 @@ class _GoogleLoginButtonState extends State<GoogleLoginButton> {
           }
         },
         onError: (Object e) {
-          if (mounted) setState(() => _failed = true);
+          if (mounted) setState(() => _problem = _describe(e));
         },
       );
-      setState(() => _ready = true);
-    } catch (_) {
+      setState(() {
+        _ready = true;
+        _initFailed = false;
+      });
+    } catch (e) {
       _initialization = null;
-      if (mounted) setState(() => _failed = true);
+      if (mounted) {
+        setState(() {
+          _initFailed = true;
+          _problem = _describe(e);
+        });
+      }
     }
+  }
+
+  /// Odam o'qiy oladigan sabab. Kod qoldiriladi: «[28444]» kabi raqam
+  /// Google Cloud'dagi qaysi sozlama noto'g'riligini aniq aytadi.
+  String _describe(Object e) {
+    if (e is GoogleSignInException) {
+      final detail = e.description?.trim();
+      return detail == null || detail.isEmpty
+          ? e.code.name
+          : '${e.code.name}: $detail';
+    }
+    return e.toString();
   }
 
   @override
@@ -77,20 +104,50 @@ class _GoogleLoginButtonState extends State<GoogleLoginButton> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    if (_failed) return Text(l.authMethodsUnavailable);
+    final problem = _problem == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              l.authGoogleFailed(_problem!),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          );
+    if (_initFailed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OutlinedButton(
+            onPressed: () {
+              setState(() => _problem = null);
+              _init();
+            },
+            child: Text(l.retry),
+          ),
+          ?problem,
+        ],
+      );
+    }
     if (!_ready) return const LinearProgressIndicator();
     if (kIsWeb) {
-      return AbsorbPointer(absorbing: _busy, child: googleWebButton());
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AbsorbPointer(absorbing: _busy, child: googleWebButton()),
+          ?problem,
+        ],
+      );
     }
-    return OutlinedButton(
+    final button = OutlinedButton(
       onPressed: _busy
           ? null
           : () async {
+              setState(() => _problem = null);
               try {
                 await GoogleSignIn.instance.authenticate();
               } on GoogleSignInException catch (e) {
                 if (mounted && e.code != GoogleSignInExceptionCode.canceled) {
-                  setState(() => _failed = true);
+                  setState(() => _problem = _describe(e));
                 }
               }
             },
@@ -106,6 +163,10 @@ class _GoogleLoginButtonState extends State<GoogleLoginButton> {
           Text(l.authWithGoogle),
         ],
       ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [button, ?problem],
     );
   }
 }

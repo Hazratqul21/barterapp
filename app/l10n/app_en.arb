@@ -207,6 +207,7 @@
   "notificationsEmptyHint": "Offers, matches and messages show up here.",
   "notificationsMarkAll": "Mark all as read",
   "createTitle": "Create barter",
+  "createSignInReason": "Sign in or create an account to post a listing — photos are uploaded to your account.",
   "createGive": "What I offer",
   "createTake": "What I want in return",
   "createFieldTitle": "Title",
@@ -455,7 +456,36 @@
   "authPhoneUnavailable": "SMS sign-in and password recovery are currently unavailable.",
   "authMethodsUnavailable": "Could not load sign-in methods. Please retry.",
   "authSetupPending": "New account registration is temporarily unavailable while sign-in services are configured.",
-  "authPasswordHelp": "Set a password in Settings after signing in. For a Google account, you can sign in again with Google.",
+  "authPasswordHelp": "Sign in with your phone number or email and password. No account yet — sign up.",
   "authSavePassword": "Save password",
-  "authShowPassword": "Show/hide password"
+  "authShowPassword": "Show/hide password",
+  "authRegister": "Sign up",
+  "authNoAccount": "No account yet?",
+  "authRegisterSubtitle": "Pick a way that suits you — it takes a minute.",
+  "authRegisterEmail": "With email",
+  "authRegisterPhone": "With phone number",
+  "authRegisterPhoneHint": "Enter your number on the sign-in page — the account is created with the SMS code.",
+  "authEmailLabel": "Email",
+  "authNameLabel": "Your name",
+  "authEmailCodeSent": "A 6-digit code was sent to {email}. Check the spam folder too.",
+  "@authEmailCodeSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authEmailUnavailable": "Email sign-up is closed for now. Use Google or your phone.",
+  "authChangeEmail": "Change email",
+  "authCreateAccount": "Create account",
+  "authHaveAccount": "Have an account? Sign in",
+  "authGoogleFailed": "Google sign-in failed: {reason}",
+  "@authGoogleFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "authResetIdentifier": "Phone number or email"
 }

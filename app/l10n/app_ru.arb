@@ -206,6 +206,7 @@
   "notificationsEmptyHint": "Предложения, совпадения и сообщения появятся здесь.",
   "notificationsMarkAll": "Отметить всё прочитанным",
   "createTitle": "Создать обмен",
+  "createSignInReason": "Чтобы разместить объявление, войдите или зарегистрируйтесь — фото загружаются в ваш аккаунт.",
   "createGive": "Что я отдаю",
   "createTake": "Что я хочу получить",
   "createFieldTitle": "Заголовок",
@@ -454,7 +455,36 @@
   "authPhoneUnavailable": "Вход и восстановление пароля по SMS пока недоступны.",
   "authMethodsUnavailable": "Не удалось загрузить способы входа. Повторите попытку.",
   "authSetupPending": "Регистрация временно недоступна. Настраиваем службы входа.",
-  "authPasswordHelp": "Установите пароль в настройках после входа. Для Google-аккаунта можно снова войти через Google.",
+  "authPasswordHelp": "Войдите по номеру телефона или email и паролю. Нет аккаунта — зарегистрируйтесь.",
   "authSavePassword": "Сохранить пароль",
-  "authShowPassword": "Показать/скрыть пароль"
+  "authShowPassword": "Показать/скрыть пароль",
+  "authRegister": "Регистрация",
+  "authNoAccount": "Нет аккаунта?",
+  "authRegisterSubtitle": "Выберите удобный способ — это займёт минуту.",
+  "authRegisterEmail": "По email",
+  "authRegisterPhone": "По номеру телефона",
+  "authRegisterPhoneHint": "Введите номер на странице входа — аккаунт создастся автоматически по SMS-коду.",
+  "authEmailLabel": "Email",
+  "authNameLabel": "Ваше имя",
+  "authEmailCodeSent": "Код из 6 цифр отправлен на {email}. Проверьте также папку «Спам».",
+  "@authEmailCodeSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authEmailUnavailable": "Регистрация по email пока закрыта. Войдите через Google или по телефону.",
+  "authChangeEmail": "Изменить email",
+  "authCreateAccount": "Создать аккаунт",
+  "authHaveAccount": "Уже есть аккаунт? Войти",
+  "authGoogleFailed": "Не удалось войти через Google: {reason}",
+  "@authGoogleFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "authResetIdentifier": "Номер телефона или email"
 }

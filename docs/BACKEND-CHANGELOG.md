@@ -23,6 +23,39 @@
 
 ---
 
+## 2026-11-06
+
+### 🆕 Email orqali ro'yxatdan o'tish (kod bilan) va pochta sozlamasi
+
+- `POST /auth/email/code` `{email, purpose: "register"|"reset"}` — emailga 6 xonali
+  kod (10 daqiqa). `409` — email band, `404` — tiklash uchun hisob yo'q,
+  `503` — pochta sozlanmagan (productionda).
+- `POST /auth/email/register` `{email, code, password(≥12), first_name?}` → `TokenPair`
+  (`is_new_user: true`).
+- `POST /auth/email/reset` `{email, code, password}` → `TokenPair`, eski sessiyalar bekor.
+- `GET /auth/methods` endi `email: bool` ham qaytaradi.
+- Admin panel → Sozlash → **Pochta**: SMTP (host, port, SSL/STARTTLS, login, App
+  password, jo'natuvchi). Saqlashdan oldin serverga ulanib tekshiriladi, parol qaytmaydi.
+  `GET/PUT/DELETE /admin/email`, `POST /admin/email/test`.
+- Google orqali kirishda: shu email bilan **faqat email orqali ochilgan** hisob bo'lsa,
+  Google unga ulanadi (yangi hisob ochilmaydi). Telefon hisobidagi email uchun 409 qoladi.
+- Kod himoyasi telefon OTP bilan bir xil: faqat HMAC, 5 urinish, kuniga 15 xato,
+  15 daqiqada 5 kod, manzildan soatiga 10 so'rov.
+
+**UI da nima kerak:** «Ro'yxatdan o'tish» ekrani — Google, email (kod → parol),
+telefon. Parolni tiklash email bilan ham (identifikatorda `@` bo'lsa).
+
+### 🔧 Lenta tezroq: kichik suratlar va kesh
+
+- Har yuklangan surat yonida `<nom>-t.jpg` (640 px) saqlanadi; lenta kartochkasining
+  `image_url` i shu nusxa (~15–40 KB, asl surat ~200 KB). E'lon sahifasidagi
+  `photos` — asl suratlar. Eskilari: `python -m app.make_thumbs` (har deployda o'zi).
+- `/media/*` javoblari `Cache-Control: public, max-age=2592000, immutable`.
+
+**UI da nima kerak:** hech narsa — URL shakli o'zgarmadi.
+
+---
+
 ## 2026-11-04
 
 ### 🆕 Eskiz (SMS) va Google kalitlari admin paneldan

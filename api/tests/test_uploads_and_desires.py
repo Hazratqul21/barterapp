@@ -70,7 +70,7 @@ listing = {
 }
 st, created = call("POST", "/listings", listing, token=tok)
 ok("e'lon yaratildi", st == 201, created.get("title") if st == 201 else created)
-ok("rasm biriktirildi", created["image_url"] == up["url"])
+ok("rasm biriktirildi", created["image_url"] in (up["url"], up["url"][:-4] + "-t.jpg"), created["image_url"])
 
 # 5. moslik hosil bo'ldimi
 st, matches = call("GET", "/matches", token=tok)

@@ -26,7 +26,7 @@ from app.core.security import current_moderator
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.common import ApiModel
-from app.services import google_clients, settings_store, sms
+from app.services import google_clients, mailer, settings_store, sms
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -247,3 +247,119 @@ async def set_google(
     )
     await db.commit()
     return await _google_status(db)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pochta — SMTP (email orqali ro'yxatdan o'tish kodlari)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class SmtpStatus(ApiModel):
+    ready: bool
+    host: str | None = None
+    port: int | None = None
+    security: str | None = None
+    #: `ab***@mab.uz` — login. Parol hech qachon qaytarilmaydi.
+    username_hint: str | None = None
+    from_email: str | None = None
+    from_name: str | None = None
+    #: Ilovada email orqali ro'yxatdan o'tish hozir ochiqmi.
+    email_signup_open: bool
+
+
+async def _smtp_status(db: AsyncSession) -> SmtpStatus:
+    creds = await mailer.credentials(db)
+    return SmtpStatus(
+        ready=creds is not None,
+        host=creds.host if creds else None,
+        port=creds.port if creds else None,
+        security=creds.security if creds else None,
+        username_hint=_mask(creds.username) if creds else None,
+        from_email=creds.from_email if creds else None,
+        from_name=creds.from_name if creds else None,
+        email_signup_open=await mailer.email_signup_open(db),
+    )
+
+
+class SmtpIn(ApiModel):
+    host: str = Field(min_length=3, max_length=200)
+    port: int = Field(default=465, ge=1, le=65535)
+    security: str = Field(default="ssl", pattern="^(ssl|starttls)$")
+    username: str = Field(min_length=1, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
+    #: Bo'sh bo'lsa — login (odatda u email).
+    from_email: str | None = Field(default=None, max_length=200)
+    from_name: str = Field(default="MAB", max_length=80)
+
+
+@router.get("/email", response_model=SmtpStatus)
+async def smtp_status(
+    _: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> SmtpStatus:
+    return await _smtp_status(db)
+
+
+@router.put("/email", response_model=SmtpStatus)
+async def set_smtp(
+    payload: SmtpIn,
+    _: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> SmtpStatus:
+    """Saqlashdan **oldin** pochta serveriga ulanib, login qilib ko'riladi."""
+    from_email = (payload.from_email or payload.username).strip()
+    if "@" not in from_email:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Jo'natuvchi email manzilini yozing (masalan, no-reply@mab.uz).",
+        )
+    creds = mailer.SmtpCredentials(
+        host=payload.host.strip(),
+        port=payload.port,
+        username=payload.username.strip(),
+        password=payload.password,
+        from_email=from_email,
+        from_name=payload.from_name.strip() or "MAB",
+        security=payload.security,
+    )
+    try:
+        await mailer.check(creds)
+    except mailer.MailError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    await settings_store.put(db, settings_store.SMTP, creds.to_json())
+    await db.commit()
+    log.info("SMTP hisobi panelda almashtirildi (%s)", creds.host)
+    return await _smtp_status(db)
+
+
+@router.delete("/email", response_model=SmtpStatus)
+async def clear_smtp(
+    _: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> SmtpStatus:
+    await settings_store.drop(db, settings_store.SMTP)
+    await db.commit()
+    return await _smtp_status(db)
+
+
+class SmtpTestIn(ApiModel):
+    to: str = Field(min_length=3, max_length=320, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@router.post("/email/test")
+async def test_smtp(
+    payload: SmtpTestIn,
+    _: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    if not await mailer.ready(db):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pochta hisobi qo'yilmagan.")
+    try:
+        await mailer.send(
+            db,
+            payload.to,
+            "MAB: sinov xati",
+            "Bu MAB admin panelidan yuborilgan sinov xati. Pochta sozlamasi ishlayapti.",
+        )
+    except mailer.MailError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    return {"ok": True}

@@ -16,7 +16,8 @@ import '../../../core/widgets/photo_picker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../feed/data/listing_repository.dart';
-import '../../auth/data/auth_repository.dart' show regionsProvider;
+import '../../auth/data/auth_repository.dart'
+    show authStateProvider, regionsProvider;
 import '../data/listing_draft.dart';
 import '../data/trade_repository.dart';
 
@@ -465,6 +466,17 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
     final p = palette(context);
     final theme = Theme.of(context);
     final last = _step == _steps - 1;
+
+    // Rasm darhol serverga yuklanadi va bu hisob talab qiladi. Kirmagan
+    // odam ilgari shu yerga tushib, surat qo'shardi — yuklash 401 bilan
+    // yiqilar, «Keyingisi» esa hech qachon yoqilmasdi.
+    if (!ref.watch(authStateProvider)) {
+      return Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        appBar: AppBar(title: Text(l.createTitle)),
+        body: SignInPrompt(reason: l.createSignInReason),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,

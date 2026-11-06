@@ -47,6 +47,8 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
     }
   }
 
+  bool get _isEmail => _identifier.text.contains('@');
+
   Future<void> _submit() => _run(() async {
     final l = L.of(context);
     if ((widget.manage || _reset) &&
@@ -57,6 +59,12 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
     final repo = ref.read(authRepositoryProvider);
     final fresh = widget.manage
         ? await repo.setPassword(_password.text, _current.text)
+        : _reset && _isEmail
+        ? await repo.resetEmailPassword(
+            _identifier.text.trim().toLowerCase(),
+            _code.text.trim(),
+            _password.text,
+          )
         : _reset
         ? await repo.resetPassword(
             _identifier.text.trim(),
@@ -90,6 +98,7 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
       autocorrect: !secret,
       enableSuggestions: !secret,
       autofillHints: hints,
+      onChanged: (_) => setState(() {}),
       maxLength: secret ? 128 : null,
       decoration: InputDecoration(
         labelText: label,
@@ -107,8 +116,10 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final methods = ref.watch(loginMethodsProvider).value;
+    // Tiklash kodi telefon raqamiga SMS bilan yoki emailga xat bilan boradi.
     final phoneEnabled =
-        ref.watch(loginMethodsProvider).value?['phone'] == true;
+        (methods?[_isEmail ? 'email' : 'phone'] as bool?) ?? false;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.manage ? l.authManagePassword : l.authPassword),
@@ -127,7 +138,7 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
                   if (!widget.manage)
                     _field(
                       _identifier,
-                      _reset ? l.authPhoneLabel : l.authIdentifier,
+                      _reset ? l.authResetIdentifier : l.authIdentifier,
                       hints: const [AutofillHints.username],
                     ),
                   if (widget.manage)
@@ -138,14 +149,24 @@ class _PasswordPageState extends ConsumerState<PasswordPage> {
                       hints: const [AutofillHints.password],
                     ),
                   if (_reset) ...[
-                    if (!phoneEnabled) Text(l.authPhoneUnavailable),
+                    if (!phoneEnabled)
+                      Text(
+                        _isEmail
+                            ? l.authEmailUnavailable
+                            : l.authPhoneUnavailable,
+                      ),
                     OutlinedButton(
                       onPressed: !phoneEnabled || _busy || _resendIn > 0
                           ? null
                           : () => _run(() async {
-                              await ref
-                                  .read(authRepositoryProvider)
-                                  .requestCode(_identifier.text.trim());
+                              final repo = ref.read(authRepositoryProvider);
+                              final id = _identifier.text.trim();
+                              _isEmail
+                                  ? await repo.requestEmailCode(
+                                      id.toLowerCase(),
+                                      purpose: 'reset',
+                                    )
+                                  : await repo.requestCode(id);
                               if (mounted) {
                                 setState(() {
                                   _sent = true;

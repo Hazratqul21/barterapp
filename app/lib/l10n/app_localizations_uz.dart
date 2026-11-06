@@ -667,6 +667,10 @@ class LUz extends L {
   String get createTitle => 'Barter yaratish';
 
   @override
+  String get createSignInReason =>
+      'E\'lon joylash uchun hisobga kiring yoki ro‘yxatdan o‘ting — suratlar shu hisobga yuklanadi.';
+
+  @override
   String get createGive => 'Nima beraman';
 
   @override
@@ -1475,11 +1479,62 @@ class LUz extends L {
 
   @override
   String get authPasswordHelp =>
-      'Parolni avval kirgan hisobingizning Sozlamalar bo‘limida o‘rnating. Google hisobingiz bo‘lsa, Google orqali qayta kirishingiz mumkin.';
+      'Telefon raqami yoki email va parolingiz bilan kiring. Hisobingiz bo‘lmasa — ro‘yxatdan o‘ting.';
 
   @override
   String get authSavePassword => 'Parolni saqlash';
 
   @override
   String get authShowPassword => 'Parolni ko‘rsatish/yashirish';
+
+  @override
+  String get authRegister => 'Ro‘yxatdan o‘tish';
+
+  @override
+  String get authNoAccount => 'Hisobingiz yo‘qmi?';
+
+  @override
+  String get authRegisterSubtitle => 'Qulay usulni tanlang — bir daqiqa oladi.';
+
+  @override
+  String get authRegisterEmail => 'Email bilan';
+
+  @override
+  String get authRegisterPhone => 'Telefon raqam bilan';
+
+  @override
+  String get authRegisterPhoneHint =>
+      'Kirish sahifasida raqamingizni kiriting — SMS kod bilan hisob avtomatik ochiladi.';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authNameLabel => 'Ismingiz';
+
+  @override
+  String authEmailCodeSent(String email) {
+    return '$email manziliga 6 xonali kod yuborildi. Spam papkasini ham tekshiring.';
+  }
+
+  @override
+  String get authEmailUnavailable =>
+      'Email orqali ro‘yxatdan o‘tish hozircha yopiq. Google yoki telefon orqali kiring.';
+
+  @override
+  String get authChangeEmail => 'Emailni o‘zgartirish';
+
+  @override
+  String get authCreateAccount => 'Hisob ochish';
+
+  @override
+  String get authHaveAccount => 'Hisobingiz bormi? Kirish';
+
+  @override
+  String authGoogleFailed(String reason) {
+    return 'Google orqali kirib bo‘lmadi: $reason';
+  }
+
+  @override
+  String get authResetIdentifier => 'Telefon raqami yoki email';
 }

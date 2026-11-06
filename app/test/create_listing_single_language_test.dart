@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:barter_app/core/network/api_client.dart';
 import 'package:barter_app/core/theme/app_theme.dart';
 import 'package:barter_app/features/auth/data/auth_repository.dart'
-    show regionsProvider;
+    show AuthState, authStateProvider, regionsProvider;
 import 'package:barter_app/features/trade/data/listing_draft.dart';
 import 'package:barter_app/features/trade/data/trade_repository.dart';
 import 'package:barter_app/features/trade/presentation/create_listing_page.dart';
@@ -72,6 +72,7 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           tradeRepositoryProvider.overrideWithValue(repo),
           regionsProvider.overrideWith((ref) async => const ['Toshkent']),
+          authStateProvider.overrideWith(_SignedIn.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -132,4 +133,11 @@ void main() {
       'en': isNotEmpty,
     });
   });
+}
+
+/// Yaratish sahifasi kirmagan odamga kirishni taklif qiladi; bu testlar
+/// kirgan foydalanuvchining oqimini tekshiradi.
+class _SignedIn extends AuthState {
+  @override
+  bool build() => true;
 }

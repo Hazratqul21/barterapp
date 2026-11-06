@@ -666,6 +666,10 @@ class LEn extends L {
   String get createTitle => 'Create barter';
 
   @override
+  String get createSignInReason =>
+      'Sign in or create an account to post a listing — photos are uploaded to your account.';
+
+  @override
   String get createGive => 'What I offer';
 
   @override
@@ -1468,11 +1472,63 @@ class LEn extends L {
 
   @override
   String get authPasswordHelp =>
-      'Set a password in Settings after signing in. For a Google account, you can sign in again with Google.';
+      'Sign in with your phone number or email and password. No account yet — sign up.';
 
   @override
   String get authSavePassword => 'Save password';
 
   @override
   String get authShowPassword => 'Show/hide password';
+
+  @override
+  String get authRegister => 'Sign up';
+
+  @override
+  String get authNoAccount => 'No account yet?';
+
+  @override
+  String get authRegisterSubtitle =>
+      'Pick a way that suits you — it takes a minute.';
+
+  @override
+  String get authRegisterEmail => 'With email';
+
+  @override
+  String get authRegisterPhone => 'With phone number';
+
+  @override
+  String get authRegisterPhoneHint =>
+      'Enter your number on the sign-in page — the account is created with the SMS code.';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authNameLabel => 'Your name';
+
+  @override
+  String authEmailCodeSent(String email) {
+    return 'A 6-digit code was sent to $email. Check the spam folder too.';
+  }
+
+  @override
+  String get authEmailUnavailable =>
+      'Email sign-up is closed for now. Use Google or your phone.';
+
+  @override
+  String get authChangeEmail => 'Change email';
+
+  @override
+  String get authCreateAccount => 'Create account';
+
+  @override
+  String get authHaveAccount => 'Have an account? Sign in';
+
+  @override
+  String authGoogleFailed(String reason) {
+    return 'Google sign-in failed: $reason';
+  }
+
+  @override
+  String get authResetIdentifier => 'Phone number or email';
 }

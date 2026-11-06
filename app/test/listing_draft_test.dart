@@ -12,6 +12,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:barter_app/features/auth/data/auth_repository.dart'
+    show AuthState, authStateProvider;
 
 /// A half-written listing used to vanish on an incoming call or a closed app.
 ListingDraft _draft({DateTime? savedAt, List<String> photos = const []}) =>
@@ -35,7 +37,10 @@ Future<SharedPreferences> _prefs([Map<String, Object> values = const {}]) {
 Future<void> _pumpCreate(WidgetTester tester, SharedPreferences prefs) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        authStateProvider.overrideWith(_SignedIn.new),
+      ],
       child: MaterialApp(
         theme: AppTheme.light(),
         locale: const Locale('uz'),
@@ -229,4 +234,11 @@ void main() {
       expect(find.text('Qoralama topildi'), findsNothing);
     });
   });
+}
+
+/// Yaratish sahifasi kirmagan odamga kirishni taklif qiladi; bu testlar
+/// kirgan foydalanuvchining oqimini tekshiradi.
+class _SignedIn extends AuthState {
+  @override
+  bool build() => true;
 }
