@@ -47,6 +47,8 @@ from app.services.presenter import listing_card, listing_detail, trader_brief
 router = APIRouter(prefix="/listings", tags=["listings"])
 
 PAGE_SIZE = 20
+#: Lenta tepasida bir vaqtda ko'rinadigan ko'tarilgan e'lonlar soni.
+PROMOTED_SLOTS = 4
 
 
 class FeedSort(str, enum.Enum):
@@ -213,14 +215,7 @@ async def list_listings(
             "Eng kichik narx eng kattasidan katta bo'lishi mumkin emas.",
         )
 
-    query = (
-        select(Listing)
-        .options(
-            selectinload(Listing.translations),
-            selectinload(Listing.photos),
-        )
-        .where(Listing.status == ListingStatus.active)
-    )
+    query = select(Listing).where(Listing.status == ListingStatus.active)
 
     if viewer is not None:
         query = query.where(Listing.owner_id != viewer.id)
@@ -279,11 +274,43 @@ async def list_listings(
             )
         )
 
-    query = _paginate(query, sort, cursor).limit(limit + 1)
+    eager = (selectinload(Listing.translations), selectinload(Listing.photos))
+
+    # Ko'tarilgan (boost) e'lonlar: «Yangi» tartibida birinchi sahifaning
+    # tepasida, xuddi shu filtrlar bilan. Uzoqroq muddatga to'lagan yuqoriroq.
+    # Ular oddiy ro'yxatdan har sahifada chiqarib tashlanadi — bir e'lon
+    # lentada ikki marta ko'rinmasin.
+    promoted: list[Listing] = []
+    if sort is FeedSort.new:
+        promoted_ids = (
+            query.with_only_columns(Listing.id)
+            .where(billing.premium_active())
+            .order_by(Listing.premium_until.desc().nulls_first(), Listing.id)
+            .limit(PROMOTED_SLOTS)
+        )
+        if cursor is None:
+            promoted = list(
+                (
+                    await db.scalars(
+                        select(Listing)
+                        .options(*eager)
+                        .where(Listing.id.in_(promoted_ids))
+                        .order_by(
+                            Listing.premium_until.desc().nulls_first(), Listing.id
+                        )
+                    )
+                ).all()
+            )
+        query = query.where(Listing.id.notin_(promoted_ids))
+
+    query = _paginate(query.options(*eager), sort, cursor).limit(limit + 1)
 
     rows = list((await db.scalars(query)).unique().all())
     has_more = len(rows) > limit
     rows = rows[:limit]
+    # Kursor oddiy ro'yxatning oxirgisidan olinadi; ko'tarilganlar faqat tepaga.
+    last = rows[-1] if rows else None
+    rows = promoted + rows
 
     owners = await _owners_for(db, rows)
     saved = await favorite_ids(
@@ -328,8 +355,8 @@ async def list_listings(
         await db.commit()
 
     next_cursor = (
-        _encode_cursor(_sort_key(sort, rows[-1]), rows[-1].id)
-        if has_more and rows
+        _encode_cursor(_sort_key(sort, last), last.id)
+        if has_more and last is not None
         else None
     )
     return Page[ListingCard](items=items, next_cursor=next_cursor)

@@ -116,6 +116,14 @@ async def fulfil(db: AsyncSession, order: PaymentOrder) -> None:
             listing.premium_until = start + timedelta(days=order.duration_days or 1)
 
 
+def premium_active(now: datetime | None = None):
+    """`premium_now` ning SQL shakli: boost muddati tugamagan e'lonlar."""
+    now = now or datetime.now(UTC)
+    return Listing.is_premium.is_(True) & (
+        Listing.premium_until.is_(None) | (Listing.premium_until > now)
+    )
+
+
 def premium_now(listing: Listing, now: datetime | None = None) -> bool:
     """Boost muddati tugagan e'lon premium bo'lib ko'rinmasin."""
     if not listing.is_premium:
