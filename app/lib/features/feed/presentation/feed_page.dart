@@ -156,7 +156,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                                     padding: const EdgeInsets.only(bottom: 12),
                                     child: Row(
                                       children: [
-                                        const BrandMark(size: 32),
+                                        const BrandMark(size: 36),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Align(

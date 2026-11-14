@@ -1418,14 +1418,67 @@ class BrandMark extends StatelessWidget {
       semanticLabel: 'MAB',
       filterQuality: FilterQuality.high,
     );
-    if (animate && !shouldReduceMotion(context)) {
-      top = top.animate().fadeIn(duration: M3Motion.short4);
+    if (dark) {
+      if (animate && !shouldReduceMotion(context)) {
+        top = top.animate().fadeIn(duration: M3Motion.short4);
+      }
+      return SizedBox(
+        width: size * 2.5,
+        height: size,
+        child: Center(child: top),
+      );
     }
-    return SizedBox(
-      width: size * 2.5,
+    // Light grounds: the mark sits on its own raised tile — a gold rim like
+    // the category tiles, a sand face lit from the top-left and a soft shadow
+    // under it — so the bevelled letters read as embossed, not printed.
+    final radius = size * 0.3;
+    Widget tile = Container(
+      width: size * 2.75,
       height: size,
-      child: Center(child: top),
+      padding: EdgeInsets.all(size * 0.045 + 1),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            BrandColors.goldLight,
+            BrandColors.gold500,
+            BrandColors.goldDeep,
+          ],
+          stops: [0, 0.55, 1],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: BrandColors.goldDeep.withValues(alpha: 0.28),
+            blurRadius: size * 0.35,
+            spreadRadius: -size * 0.06,
+            offset: Offset(0, size * 0.14),
+          ),
+        ],
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius - size * 0.045 - 1),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [BrandColors.sandLight, BrandColors.sandDeep],
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: size * 0.18,
+            vertical: size * 0.13,
+          ),
+          child: Center(child: top),
+        ),
+      ),
     );
+    if (animate && !shouldReduceMotion(context)) {
+      tile = tile.animate().fadeIn(duration: M3Motion.short4);
+    }
+    return tile;
   }
 }
 
