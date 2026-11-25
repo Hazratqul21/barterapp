@@ -384,7 +384,8 @@ E'lon joylangandan keyin mosliklar **darrov** qayta hisoblanadi.
 tarjima qilingan e'lon lentaga tushmasligi kerak.
 
 - `latitude`/`longitude` bo'sh bo'lsa foydalanuvchi profilidan olinadi.
-- `402` qaytishi mumkin: bepul e'lon kvotasi tugagan (`free_listings_left`).
+- `402` qaytishi mumkin: pullik rejim yoqilgan va bepul e'lonlar tugagan
+  (`free_listings_left`). Biznes hisobga ham tegishli, faqat moderator ozod.
   Biznes hisoblar kvotadan ozod.
 
 ### `PATCH /listings/{listing_id}` 🔒 → `ListingDetail`

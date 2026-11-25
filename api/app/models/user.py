@@ -104,6 +104,8 @@ class User(Base, UUIDPrimaryKey, Timestamps):
     free_listings_left: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="2"
     )
+    #: Birinchi foydalanuvchilar aksiyasi qachon berilgan (quota.py).
+    promo_granted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     #: Hisob o'chirilgan payt. Qator qoladi, ichidagi shaxsiy ma'lumot esa

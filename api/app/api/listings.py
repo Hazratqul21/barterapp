@@ -23,7 +23,7 @@ from app.models.listing import (
     ListingWant,
     ListingWantTranslation,
 )
-from app.models.user import User, UserType
+from app.models.user import User
 from app.schemas.common import Page
 from app.models.offer import Offer, OfferItem, OfferStatus
 from app.schemas.listing import (
@@ -431,9 +431,8 @@ async def create_listing(
     with the author's words, so every locale has a row to read.
 
     Free listings are metered: everyone gets a small monthly quota, after which
-    the plan charges per listing or by subscription. Businesses are exempt while
-    subscription billing is still to be built — better to let a paying segment
-    work than to block it behind an unfinished payment flow.
+    the plan charges per listing, businesses included. Only moderators are
+    exempt: they post the marketplace's own samples and announcements.
     """
     listing_limit.check(source(request, me))
 
@@ -445,7 +444,8 @@ async def create_listing(
 
     # The meter only runs once the admin turns paid listings on. Until prices
     # are set there is nothing to buy, and a 402 with no way to pay is a wall.
-    metered = me.user_type != UserType.business and await billing.listing_fee_enabled(db)
+    # Biznes hisob ham to'laydi: hisob turi to'lovni chetlab o'tish yo'li bo'lmasin.
+    metered = not me.is_moderator and await billing.listing_fee_enabled(db)
     if metered:
         # Spent here, in one statement, inside this transaction: reading the
         # count and writing it back later let eight parallel requests publish

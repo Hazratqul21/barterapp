@@ -23,6 +23,29 @@
 
 ---
 
+## 2026-11-25
+
+### Yangi: bepul e'lonlar soni, birinchi foydalanuvchilar aksiyasi, Payme kaliti panelda
+
+- Admin panel → To'lovlar: **Payme kassasi** (merchant ID, kalit, sinov/jangovar;
+  kalit qaytmaydi, `.env` dan ustun) va **Bepul e'lonlar va aksiya**.
+  `PUT/DELETE /admin/billing/payme`, `PUT /admin/billing/quota`,
+  `POST /admin/billing/quota/grant` (aksiyani oldin kirganlarga tarqatish).
+- `GET /admin/billing` da yangi: `payme_source`, `payme_merchant_hint`,
+  `payme_fingerprint`, `quota {free_listings, promo_users, promo_listings, promo_used}`.
+- Yangi hisob `free_listings_left` ni paneldagi sondan oladi (sukut 2).
+- Pullik rejimda **biznes hisob endi ozod emas**, faqat moderator ozod.
+- Pullik e'lonni Payme ulanmagan holda yoqib bo'lmaydi (`409`). Payme kaliti
+  o'chirilib, boshqasi qolmasa pullik rejim o'zi o'chadi.
+- Migratsiya `cfa0c0de0024`: `users.promo_granted_at`.
+
+**UI da nima kerak:** majburiy narsa yo'q. Xohlasa, e'lon joylash ekranida
+`GET /payments/status` dagi `free_listings_left` ni ko'rsatish mumkin. Do'kon
+ilovalarida to'lov yopiq bo'lgani uchun pullik rejim yoqilsa, u yerda `402`
+olgan odam to'lay olmaydi.
+
+---
+
 ## 2026-11-06
 
 ### 🆕 Email orqali ro'yxatdan o'tish (kod bilan) va pochta sozlamasi

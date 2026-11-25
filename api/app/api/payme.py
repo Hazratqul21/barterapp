@@ -28,7 +28,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.db.session import get_db
 from app.models.listing import Listing, ListingStatus
 from app.models.payment import (
@@ -137,8 +136,9 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
-def _authorized(request: Request) -> bool:
-    if not settings.payme_enabled:
+async def _authorized(request: Request, db: AsyncSession) -> bool:
+    creds = await billing.payme_credentials(db)
+    if creds is None:
         return False
     header = request.headers.get("authorization", "")
     if not header.startswith("Basic "):
@@ -153,7 +153,7 @@ def _authorized(request: Request) -> bool:
     # Baytlar bo'yicha: compare_digest ASCII bo'lmagan matnda xato beradi,
     # ya'ni "ключ" kabi parol 500 qaytarardi, -32504 emas.
     return login == "Paycom" and hmac.compare_digest(
-        password.encode(), settings.payme_key.encode()
+        password.encode(), creds.key.encode()
     )
 
 
@@ -438,7 +438,7 @@ async def payme_endpoint(request: Request, db: AsyncSession = Depends(get_db)) -
         return _error(None, _bad_request())
     rpc_id = payload.get("id")
 
-    if not _authorized(request):
+    if not await _authorized(request, db):
         return _error(rpc_id, _auth_error())
 
     method = METHODS.get(payload.get("method"))

@@ -21,7 +21,6 @@ from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.locale import resolve_locale
 from app.core.security import current_user
 from app.db.session import get_db
@@ -92,10 +91,12 @@ def product_out(product: Product, locale: str) -> ProductOut:
     )
 
 
-def order_out(order: PaymentOrder, locale: str) -> OrderOut:
+def order_out(
+    order: PaymentOrder, locale: str, payme: billing.PaymeCredentials | None
+) -> OrderOut:
     out = OrderOut.model_validate(order)
-    if order.status == OrderStatus.pending and settings.payme_enabled:
-        out.checkout_url = billing.checkout_url(order, locale)
+    if order.status == OrderStatus.pending and payme is not None:
+        out.checkout_url = billing.checkout_url(order, payme, locale)
     return out
 
 
@@ -104,7 +105,7 @@ async def billing_status(
     me: User = Depends(current_user), db: AsyncSession = Depends(get_db)
 ) -> BillingStatus:
     return BillingStatus(
-        payments_enabled=settings.payme_enabled,
+        payments_enabled=await billing.payme_credentials(db) is not None,
         listing_fee_enabled=await billing.listing_fee_enabled(db),
         free_listings_left=me.free_listings_left,
     )
@@ -130,7 +131,8 @@ async def create_order(
     me: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ) -> OrderOut:
-    if not settings.payme_enabled:
+    payme = await billing.payme_credentials(db)
+    if payme is None:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "To'lov tizimi hali ulanmagan."
         )
@@ -158,7 +160,7 @@ async def create_order(
     db.add(order)
     await db.commit()
     await db.refresh(order)
-    return order_out(order, locale)
+    return order_out(order, locale, payme)
 
 
 @router.get("/orders", response_model=list[OrderOut])
@@ -176,7 +178,8 @@ async def my_orders(
             .limit(limit)
         )
     ).all()
-    return [order_out(o, locale) for o in rows]
+    payme = await billing.payme_credentials(db)
+    return [order_out(o, locale, payme) for o in rows]
 
 
 @router.get("/orders/{order_id}", response_model=OrderOut)
@@ -189,4 +192,4 @@ async def get_order(
     order = await db.get(PaymentOrder, order_id)
     if order is None or order.user_id != me.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Buyurtma topilmadi.")
-    return order_out(order, locale)
+    return order_out(order, locale, await billing.payme_credentials(db))

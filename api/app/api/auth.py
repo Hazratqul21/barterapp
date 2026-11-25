@@ -30,7 +30,7 @@ from app.models.social import VerificationStep
 from app.models.user import LoginAttempt, OtpChallenge, RefreshToken, User
 from app.services.login_credentials import check_password, hash_password, google_identity
 from app.schemas.user import GoogleLogin, PasswordLogin, PasswordSet, PasswordReset
-from app.services import google_clients, mailer
+from app.services import google_clients, mailer, quota
 from app.services.sms import SmsError, eskiz_ready, otp_text_for, sms_for
 from app.schemas.user import (
     OtpRequest,
@@ -277,6 +277,7 @@ async def _create_user(
         last_seen_at=datetime.now(UTC),
     )
     db.add(user)
+    await quota.grant_on_signup(db, user)
     await db.flush()
 
     for step, hint, weight in STARTER_STEPS:

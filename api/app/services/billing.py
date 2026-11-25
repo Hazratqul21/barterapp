@@ -7,12 +7,14 @@ chaqiradi, narx mantiqi esa bitta joyda qoladi.
 
 from __future__ import annotations
 
-from sqlalchemy import update
-
 import base64
+import json
+import logging
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -20,6 +22,8 @@ from app.models.listing import Listing
 from app.models.payment import OrderStatus, PaymentOrder, Product, ProductKind
 from app.models.user import User
 from app.services import settings_store
+
+log = logging.getLogger("barter.billing")
 
 #: Admin paneldagi kalit: "true" bo'lsa bepul kvota tugaganda e'lon pullik.
 #: Sukut bo'yicha o'chiq — narxlar belgilanmaguncha hech kim to'lovga
@@ -50,7 +54,44 @@ async def listing_fee_enabled(db: AsyncSession) -> bool:
     return (await settings_store.get(db, LISTING_FEE_ENABLED)) == "true"
 
 
-def checkout_url(order: PaymentOrder, locale: str = "uz") -> str:
+#: Faqat shu ikkitasi: panel orqali to'lov begona sahifaga burilmasin.
+CHECKOUT_LIVE = "https://checkout.paycom.uz"
+CHECKOUT_TEST = "https://test.paycom.uz"
+
+
+@dataclass(frozen=True)
+class PaymeCredentials:
+    merchant_id: str
+    key: str
+    checkout_url: str
+    source: str  # "panel" | "env"
+
+
+async def payme_credentials(db: AsyncSession) -> PaymeCredentials | None:
+    """Panel ustun, keyin `.env`. Ikkalasi ham bo'sh bo'lsa — to'lov o'chiq."""
+    raw = await settings_store.get(db, settings_store.PAYME)
+    if raw:
+        try:
+            data = json.loads(raw)
+            return PaymeCredentials(
+                merchant_id=data["merchant_id"],
+                key=data["key"],
+                checkout_url=CHECKOUT_TEST if data["test"] else CHECKOUT_LIVE,
+                source="panel",
+            )
+        except (ValueError, TypeError, KeyError):
+            log.error("Bazadagi Payme sozlamasi o'qilmadi — e'tiborsiz qoldirildi.")
+    if settings.payme_enabled:
+        return PaymeCredentials(
+            merchant_id=settings.payme_merchant_id,
+            key=settings.payme_key,
+            checkout_url=settings.payme_checkout_url,
+            source="env",
+        )
+    return None
+
+
+def checkout_url(order: PaymentOrder, creds: PaymeCredentials, locale: str = "uz") -> str:
     """
     Payme to'lov sahifasi. Karta raqami, muddati va SMS kod shu sahifada
     kiritiladi — ular bizning serverga umuman kelmaydi.
@@ -58,7 +99,7 @@ def checkout_url(order: PaymentOrder, locale: str = "uz") -> str:
     return_url = settings.payme_return_url.replace("{order_id}", str(order.id))
     params = ";".join(
         [
-            f"m={settings.payme_merchant_id}",
+            f"m={creds.merchant_id}",
             f"ac.order_id={order.id}",
             f"a={order.amount_minor}",
             f"l={locale if locale in ('uz', 'ru', 'en') else 'uz'}",
@@ -66,7 +107,7 @@ def checkout_url(order: PaymentOrder, locale: str = "uz") -> str:
         ]
     )
     encoded = base64.b64encode(params.encode()).decode()
-    return f"{settings.payme_checkout_url.rstrip('/')}/{encoded}"
+    return f"{creds.checkout_url.rstrip('/')}/{encoded}"
 
 
 def new_order(
