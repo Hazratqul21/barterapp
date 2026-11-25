@@ -23,6 +23,38 @@
 
 ---
 
+## 2026-11-25
+
+### Yangi (ekran kerak) va buzuvchi: shaxsni tasdiqlash hujjat bilan
+
+- Ilgari `POST /me/verification/{step}` hech narsa yuklamay bosqichni "kutilmoqda"
+  qilardi va uni hech kim ko'ra olmasdi. Endi: surat yuklash, rozilik, admin
+  panelda **Tasdiqlash** bo'limi (ko'rish, tasdiqlash, sabab bilan rad etish).
+- `PUT /me/verification/{step}/documents/{kind}` — surat; turlar: `passport` →
+  `front` (majburiy), `back`; `video` → `selfie`; `business` → `certificate`.
+- `POST /me/verification/{step}` endi `{consent: true}` talab qiladi.
+  **Buzuvchi:** tanasiz so'rov `409` oladi (matni: ilovani yangilang).
+- `DELETE /me/verification/{step}` — fikridan qaytish.
+- Bosqichlarda yangi maydonlar: `required`, `optional`, `uploaded`,
+  `reject_reason`, `submitted_at`. Yangi holat yo'q: rad etilgani `todo`.
+- `bank` bosqichi olib tashlandi. Vaznlar: telefon 20, pasport 35, selfi 30,
+  korxona 15. Pasport + selfi = 65, ya'ni Google/email hisobi ham Tasdiqlangan
+  (60) bo'la oladi. Selfi faqat pasportdan keyin.
+- Suratlar `/media` da emas: shifrlanib (AES-256-GCM, kalit `JWT_SECRET` dan)
+  bazada turadi, qaror chiqishi bilan o'chadi. Topshirilmagani 3 kunda, hisob
+  bilan birga darhol o'chadi. `JWT_SECRET` almashtirilsa, kutilayotgan suratlar
+  ochilmaydi — foydalanuvchidan qayta so'raladi. Zaxira nusxada (14 kun)
+  shifrlangan holda qolishi mumkin.
+- Migratsiya `cea0c0de0023`: hujjatsiz "kutilmoqda" qatorlari `todo` ga qaytadi,
+  ball va `is_verified` bosqichlardan qayta hisoblanadi.
+
+**UI da nima kerak:** `/settings/verify` ekranida har bosqichga surat tanlash,
+rozilik belgisi, rad sababi va "qaytarib olish". `video` bosqichining matni
+"30 soniyalik video" emas, "hujjat ushlab olingan selfi". `bank` ni olib tashlash.
+Maxfiylik siyosatiga hujjat suratlari haqida band qo'shish kerak.
+
+---
+
 ## 2026-11-06
 
 ### 🆕 Email orqali ro'yxatdan o'tish (kod bilan) va pochta sozlamasi

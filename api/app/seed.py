@@ -32,6 +32,7 @@ from app.models.social import Notification, PaymentMethod, VerificationStep
 from app.models.desire import Desire
 from app.models.listing import ListingTag as Tag
 from app.models.user import OtpChallenge, RefreshToken, User, UserType
+from app.services import verification
 
 NOW = datetime.now(UTC)
 
@@ -557,21 +558,15 @@ async def run() -> None:
         await db.flush()
 
         for spec in PEOPLE:
-            for step, hint, weight in [
-                ("phone", "SMS orqali tasdiqlangan", 20),
-                ("passport", "Pasport yoki JSHSHIR", 25),
-                ("business", "Korxona hujjatlari", 25),
-                ("bank", "Escrow to‘lovlari uchun", 20),
-                ("video", "30 soniyalik selfie video", 10),
-            ]:
-                done = spec["is_verified"] and step in {"phone", "passport", "business"}
+            for step, hint, weight in verification.STARTER_STEPS:
+                done = spec["is_verified"] and step in {"phone", "passport", "video"}
                 db.add(
                     VerificationStep(
                         user_id=users[spec["key"]].id,
                         step=step,
                         hint=hint,
                         weight=weight,
-                        state="done" if done else ("pending" if step == "bank" else "todo"),
+                        state="done" if done else "todo",
                     )
                 )
 

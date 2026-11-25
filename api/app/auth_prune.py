@@ -16,10 +16,12 @@ import argparse
 import asyncio
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 
 from app.db.session import SessionLocal
+from app.models.social import VerificationDocument, VerificationState, VerificationStep
 from app.models.user import OtpChallenge, RefreshToken
+from app.services.verification import ABANDONED_AFTER
 
 
 async def main(*, dry_run: bool) -> None:
@@ -32,15 +34,32 @@ async def main(*, dry_run: bool) -> None:
         RefreshToken.revoked_at < token_cutoff,
     )
 
+    # Yuklab, topshirilmagan hujjat suratlari: ko'rib chiqilayotganiga tegilmaydi.
+    waiting = (
+        select(VerificationStep.id)
+        .where(
+            VerificationStep.user_id == VerificationDocument.user_id,
+            VerificationStep.step == VerificationDocument.step,
+            VerificationStep.state == VerificationState.pending,
+        )
+        .exists()
+    )
+    document_where = and_(VerificationDocument.created_at < now - ABANDONED_AFTER, ~waiting)
+
     async with SessionLocal() as db:
         otps = await db.scalar(select(func.count()).select_from(OtpChallenge).where(otp_where))
         tokens = await db.scalar(select(func.count()).select_from(RefreshToken).where(token_where))
+        documents = await db.scalar(
+            select(func.count()).select_from(VerificationDocument).where(document_where)
+        )
         if not dry_run:
+            await db.execute(delete(VerificationDocument).where(document_where))
             await db.execute(delete(OtpChallenge).where(otp_where))
             await db.execute(delete(RefreshToken).where(token_where))
             await db.commit()
 
-    print(f"{'[quruq yurish] ' if dry_run else ''}kodlar: {otps} ta · sessiyalar: {tokens} ta")
+    print(f"{'[quruq yurish] ' if dry_run else ''}kodlar: {otps} ta · sessiyalar: {tokens} ta"
+          f" · hujjatlar: {documents} ta")
 
 
 if __name__ == "__main__":

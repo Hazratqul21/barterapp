@@ -926,23 +926,43 @@ Tahlil uchun kerak emas, sizib chiqish uchun yetarli. 20 tadan ortiq maydon
 
 ```json
 {
-  "trust_score": 92,
+  "trust_score": 20,
   "steps": [
-    { "step": "phone",    "state": "done",    "hint": "SMS orqali tasdiqlangan", "weight": 20 },
-    { "step": "passport", "state": "done",    "hint": "Pasport yoki JSHSHIR",    "weight": 25 },
-    { "step": "business", "state": "done",    "hint": "Korxona hujjatlari",      "weight": 25 },
-    { "step": "bank",     "state": "pending", "hint": "Escrow to‘lovlari uchun", "weight": 20 },
-    { "step": "video",    "state": "todo",    "hint": "30 soniyalik selfie",     "weight": 10 }
+    { "step": "passport", "state": "todo", "hint": "Pasport yoki JSHSHIR", "weight": 35,
+      "required": ["front"], "optional": ["back"], "uploaded": [],
+      "reject_reason": "Surat xira", "submitted_at": null },
+    { "step": "video",    "state": "todo", "weight": 30, "required": ["selfie"], "...": "" },
+    { "step": "phone",    "state": "done", "weight": 20, "required": [], "...": "" },
+    { "step": "business", "state": "todo", "weight": 15, "required": ["certificate"], "...": "" }
   ]
 }
 ```
 
-`state`: `todo` | `pending` | `done`.
-`trust_score` = tasdiqlangan bosqichlar vaznlari yig'indisi.
+`state`: `todo` | `pending` | `done`. Rad etilgan bosqich `todo` ga qaytadi,
+sababi `reject_reason` da. `trust_score` = tasdiqlangan bosqichlar vaznlari
+yig'indisi; 60 dan boshlab `is_verified`. `video` — selfi (nomi tarixiy).
+
+### `PUT /me/verification/{step}/documents/{kind}` 🔒 → `VerificationOut`
+
+`multipart/form-data`, maydon `file` (JPG/PNG/WEBP, 12 MB gacha). Borini
+almashtiradi. `409` — ko'rib chiqilmoqda yoki tasdiqlangan, `404` — bunday tur yo'q.
 
 ### `POST /me/verification/{step}` 🔒 → `VerificationOut`
 
-Bosqichni `pending` ga o'tkazadi. Allaqachon `done` bo'lsa → `409`.
+Tana: `{ "consent": true }`. Bosqichni `pending` ga o'tkazadi. `409` — majburiy
+surat yuklanmagan, allaqachon topshirilgan/tasdiqlangan yoki selfi pasportdan
+oldin topshirildi; `422` — rozilik yo'q.
+
+### `DELETE /me/verification/{step}` 🔒 → `VerificationOut`
+
+Topshirilganini qaytarib oladi, suratlar shu zahoti o'chadi.
+
+### Moderator: `/admin/verifications` 🔒
+
+- `GET /admin/verifications` — kutilayotganlar, eskisidan boshlab
+- `GET /admin/verifications/{id}/documents/{kind}` — surat (`image/jpeg`, `no-store`)
+- `POST /admin/verifications/{id}/approve` → `204`
+- `POST /admin/verifications/{id}/reject` `{ "reason": "..." }` → `204`
 
 ### `GET /me/payment-methods` 🔒 → `PaymentMethodOut[]`
 

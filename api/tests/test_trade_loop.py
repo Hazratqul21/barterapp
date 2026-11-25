@@ -109,7 +109,7 @@ with httpx.Client(base_url=BASE, timeout=20) as c:
         )
 
     ver = c.get("/me/verification", headers=H_J).json()
-    check("verification steps listed", len(ver["steps"]) == 5, f"trust {ver['trust_score']}")
+    check("verification steps listed", len(ver["steps"]) == 4, f"trust {ver['trust_score']}")
 
     cards = c.get("/me/payment-methods", headers=H_J).json()
     check("cards listed", len(cards) == 2)

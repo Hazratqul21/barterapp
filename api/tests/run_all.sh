@@ -43,6 +43,7 @@ for t in tests/test_config_guard.py \
          tests/test_integrations_admin.py \
          tests/test_email_auth.py \
          tests/test_events.py \
+         tests/test_verification.py \
          tests/test_account_deletion.py \
          tests/test_feed_blocks.py \
          tests/test_admin_push.py \

@@ -44,6 +44,7 @@ from app.models.social import (  # noqa: F401
     Match,
     Notification,
     PaymentMethod,
+    VerificationDocument,
     VerificationStep,
 )
 from app.models.user import EmailChallenge, OtpChallenge, User, UserType  # noqa: F401
@@ -86,5 +87,6 @@ __all__ = [
     "Review",
     "User",
     "UserType",
+    "VerificationDocument",
     "VerificationStep",
 ]

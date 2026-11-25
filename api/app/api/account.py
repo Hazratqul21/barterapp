@@ -17,8 +17,6 @@ from app.models.social import (
     Match,
     Notification,
     PaymentMethod,
-    VerificationState,
-    VerificationStep,
 )
 from app.models.user import User
 from app.schemas.common import Money
@@ -28,8 +26,6 @@ from app.schemas.trade import (
     NotificationOut,
     PaymentMethodOut,
     SettlementOut,
-    VerificationOut,
-    VerificationStepOut,
 )
 from app.services import stats
 from app.services.matching import explain, haversine_km, rebuild_matches
@@ -172,68 +168,6 @@ async def dismiss_match(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Moslik topilmadi.")
     match.dismissed_at = datetime.now(UTC)
     await db.commit()
-
-
-# ----------------------------------------------------------------- verification
-
-
-@router.get("/me/verification", response_model=VerificationOut)
-async def read_verification(
-    me: User = Depends(current_user), db: AsyncSession = Depends(get_db)
-) -> VerificationOut:
-    steps = (
-        await db.scalars(
-            select(VerificationStep)
-            .where(VerificationStep.user_id == me.id)
-            .order_by(VerificationStep.weight.desc())
-        )
-    ).all()
-    return VerificationOut(
-        trust_score=me.trust_score,
-        steps=[
-            VerificationStepOut(
-                step=s.step, state=s.state, hint=s.hint, weight=s.weight
-            )
-            for s in steps
-        ],
-    )
-
-
-@router.post("/me/verification/{step}", response_model=VerificationOut)
-async def submit_step(
-    step: str,
-    me: User = Depends(current_user),
-    db: AsyncSession = Depends(get_db),
-) -> VerificationOut:
-    """
-    Submitting a step puts it in review. The trust score is then recomputed from
-    the steps themselves, so the number on the profile always adds up.
-    """
-    row = await db.scalar(
-        select(VerificationStep).where(
-            VerificationStep.user_id == me.id, VerificationStep.step == step
-        )
-    )
-    if row is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Bunday bosqich yo‘q.")
-    if row.state == VerificationState.done:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "Bu bosqich allaqachon tasdiqlangan."
-        )
-
-    row.state = VerificationState.pending
-    await db.flush()
-
-    steps = (
-        await db.scalars(
-            select(VerificationStep).where(VerificationStep.user_id == me.id)
-        )
-    ).all()
-    me.trust_score = sum(s.weight for s in steps if s.state == VerificationState.done)
-    me.is_verified = me.trust_score >= 60
-    await db.commit()
-
-    return await read_verification(me=me, db=db)
 
 
 # --------------------------------------------------------------------- payments

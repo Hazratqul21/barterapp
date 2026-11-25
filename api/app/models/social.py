@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     UniqueConstraint,
     text,
@@ -100,7 +101,7 @@ class VerificationStep(Base, UUIDPrimaryKey, Timestamps):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    # phone | passport | business | bank | video
+    # phone | passport | business | video (selfi)
     step: Mapped[str] = mapped_column(String(40), nullable=False)
     state: Mapped[VerificationState] = mapped_column(
         Enum(VerificationState, name="verification_state"),
@@ -109,9 +110,37 @@ class VerificationStep(Base, UUIDPrimaryKey, Timestamps):
     )
     hint: Mapped[str | None] = mapped_column(String(200))
     weight: Mapped[int] = mapped_column(Integer, nullable=False, server_default="20")
+    #: Oxirgi rad sababi; qayta topshirilganda tozalanadi.
+    reject_reason: Mapped[str | None] = mapped_column(String(300))
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consented_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "step", name="uq_verification_step"),
+    )
+
+
+class VerificationDocument(Base, UUIDPrimaryKey):
+    """Shifrlangan hujjat surati. Qaror chiqishi bilan o'chiriladi."""
+
+    __tablename__ = "verification_documents"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    step: Mapped[str] = mapped_column(String(40), nullable=False)
+    kind: Mapped[str] = mapped_column(String(40), nullable=False)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "step", "kind", name="uq_verification_document"),
     )
 
 
