@@ -31,6 +31,8 @@ from app.api import (
     payments,
     uploads,
     users,
+    verification,
+    verification_admin,
 )
 from app.core.config import settings
 from app.db.session import SessionLocal
@@ -66,6 +68,7 @@ MAX_ADMIN_BYTES = 4 * 1024 * 1024
 def _body_limit(path: str) -> int:
     if (
         path.startswith("/uploads")
+        or (path.startswith("/me/verification/") and "/documents/" in path)
         or (path.startswith("/admin/legal/") and path.endswith("/file"))
         or (path.startswith("/admin/categories/") and path.endswith("/image"))
     ):
@@ -178,6 +181,8 @@ app.include_router(listings.router)
 app.include_router(offers.router)
 app.include_router(chat.router)
 app.include_router(account.router)
+app.include_router(verification.router)
+app.include_router(verification_admin.router)
 app.include_router(uploads.router)
 app.include_router(moderation.router)
 app.include_router(devices.router)

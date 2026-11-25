@@ -30,7 +30,7 @@ from app.models.social import VerificationStep
 from app.models.user import LoginAttempt, OtpChallenge, RefreshToken, User
 from app.services.login_credentials import check_password, hash_password, google_identity
 from app.schemas.user import GoogleLogin, PasswordLogin, PasswordSet, PasswordReset
-from app.services import google_clients, mailer
+from app.services import google_clients, mailer, verification
 from app.services.sms import SmsError, eskiz_ready, otp_text_for, sms_for
 from app.schemas.user import (
     OtpRequest,
@@ -48,16 +48,6 @@ MAX_ATTEMPTS = 5
 #: Per-code attempts alone reset with each new code: five codes in fifteen
 #: minutes, five guesses each, is 2,400 guesses a day at one account.
 MAX_FAILED_PER_DAY = 15
-
-# The steps every account starts with; weights add up to the trust score.
-STARTER_STEPS = [
-    ("phone", "SMS orqali tasdiqlangan", 20),
-    ("passport", "Pasport yoki JSHSHIR", 25),
-    ("business", "Korxona hujjatlari", 25),
-    ("bank", "Escrow to‘lovlari uchun", 20),
-    ("video", "30 soniyalik selfie video", 10),
-]
-
 
 log = logging.getLogger("barter.auth")
 
@@ -279,7 +269,7 @@ async def _create_user(
     db.add(user)
     await db.flush()
 
-    for step, hint, weight in STARTER_STEPS:
+    for step, hint, weight in verification.STARTER_STEPS:
         db.add(
             VerificationStep(
                 user_id=user.id,

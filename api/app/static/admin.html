@@ -67,6 +67,7 @@
   <nav id="nav" class="hide">
     <button data-tab="blocks" class="on">Lenta</button>
     <button data-tab="reports">Shikoyatlar</button>
+    <button data-tab="verify">Tasdiqlash</button>
     <button data-tab="disputes">Nizolar</button>
     <button data-tab="push">Bildirishnoma</button>
     <button data-tab="billing">To‘lovlar</button>
@@ -224,6 +225,24 @@
         <th>Nima haqida</th><th>Sabab</th><th>Izoh</th>
         <th>Soni</th><th>Kim</th><th></th>
       </tr></thead><tbody id="reportRows"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ── Shaxsni tasdiqlash ────────────────────────────────────────── -->
+  <section id="verify" class="hide">
+    <div class="card">
+      <h2>Tasdiqlash arizalari — eskisidan boshlab</h2>
+      <p class="hint">Hujjatdagi ism profildagi bilan, selfidagi yuz odam
+        qo‘lida ushlab turgan hujjatdagi surat bilan mos kelishini tekshiring. Selfi faqat pasport tasdiqlangach tasdiqlanadi.
+        Qaror chiqishi bilan suratlar serverdan o‘chiriladi; har ko‘rish jurnalga yoziladi.</p>
+      <table><thead><tr>
+        <th>Kim</th><th>Bosqich</th><th>Topshirilgan</th><th>Hujjatlar</th><th></th>
+      </tr></thead><tbody id="verifyRows"></tbody></table>
+    </div>
+    <div class="card hide" id="verifyView">
+      <h2 id="verifyTitle"></h2>
+      <img id="verifyImg" alt="Hujjat surati" style="max-width:100%;border-radius:10px">
+      <div style="margin-top:10px"><button class="act ghost" onclick="closeVerify()">Yopish</button></div>
     </div>
   </section>
 
@@ -738,7 +757,7 @@ function signOut() {
   $('login').classList.remove('hide');
   $('nav').classList.add('hide');
   $('out').classList.add('hide');
-  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'verify', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
 }
 
 async function start() {
@@ -755,12 +774,13 @@ async function start() {
 }
 
 function show(tab) {
-  ['blocks', 'reports', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
+  ['blocks', 'reports', 'verify', 'disputes', 'billing', 'legal', 'cats', 'stats', 'push', 'setup'].forEach(t => $(t).classList.add('hide'));
   $(tab).classList.remove('hide');
   document.querySelectorAll('#nav button').forEach(b =>
     b.classList.toggle('on', b.dataset.tab === tab));
   if (tab === 'blocks') loadBlocks();
   if (tab === 'reports') loadReports();
+  if (tab === 'verify') loadVerify();
   if (tab === 'disputes') loadDisputes();
   if (tab === 'billing') loadBilling();
   if (tab === 'legal') loadLegal();
@@ -929,6 +949,81 @@ async function archive(listingId, reportId) {
     await api('/admin/listings/' + listingId + '/archive', { method: 'POST' });
     await decide(reportId, 'actioned');
   } catch (e) { say(e.message); }
+}
+
+// ── Shaxsni tasdiqlash ────────────────────────────────────────────────
+
+const VERIFY_STEPS = { passport: 'Pasport / ID karta', video: 'Selfi', business: 'Korxona' };
+const VERIFY_KINDS = { front: 'Old tomoni', back: 'Orqa tomoni', selfie: 'Selfi', certificate: 'Guvohnoma' };
+
+async function loadVerify() {
+  closeVerify();
+  try {
+    const rows = await api('/admin/verifications');
+    $('verifyRows').innerHTML = rows.length ? rows.map(r => {
+      const locked = r.step === 'video' && !r.passport_done;
+      const company = r.step === 'business'
+        ? `<br>${esc(r.company || '—')} · STIR ${esc(r.tax_id || '—')}` : '';
+      return `<tr>
+        <td><b>${esc((r.first_name + ' ' + r.last_name).trim() || '—')}</b><br>
+            <span class="pill">${esc(r.phone || r.email || '—')}</span>${company}</td>
+        <td>${esc(VERIFY_STEPS[r.step] || r.step)}</td>
+        <td>${r.submitted_at ? esc(new Date(r.submitted_at).toLocaleString('uz')) : '—'}</td>
+        <td>${r.documents.map(k =>
+          `<button class="act ghost" onclick="viewDoc('${esc(r.id)}','${esc(k)}')">${esc(VERIFY_KINDS[k] || k)}</button>`).join(' ')}</td>
+        <td>${r.is_me ? 'O‘zingizniki' : `
+          <button class="act" ${locked ? 'disabled style="opacity:.4;cursor:not-allowed" title="Avval pasportni tasdiqlang"' : ''}
+            onclick="approveVerify('${esc(r.id)}')">Tasdiqlash</button>
+          <button class="act danger" onclick="rejectVerify('${esc(r.id)}')">Rad etish</button>`}</td>
+      </tr>`; }).join('') :
+      '<tr><td colspan="5" style="color:var(--faint)">Kutilayotgan ariza yo‘q.</td></tr>';
+  } catch (e) { say(e.message); }
+}
+
+function closeVerify() {
+  $('verifyImg').removeAttribute('src');
+  $('verifyView').classList.add('hide');
+}
+
+async function viewDoc(id, kind) {
+  closeVerify();
+  try {
+    // Havola emas, so'rov: surat faqat token bilan ochiladi. CSP blob: ga
+    // ruxsat bermaydi, shuning uchun data: ko'rinishida chiziladi.
+    const res = await fetch(`${API}/admin/verifications/${id}/documents/${kind}`,
+      { headers: { Authorization: 'Bearer ' + TOKEN } });
+    if (res.status === 401) { signOut(); throw new Error('Sessiya tugadi.'); }
+    if (!res.ok) {
+      let detail = 'Xatolik ' + res.status;
+      try { detail = (await res.json()).detail || detail; } catch {}
+      throw new Error(detail);
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      $('verifyImg').src = reader.result;
+      $('verifyTitle').textContent = VERIFY_KINDS[kind] || kind;
+      $('verifyView').classList.remove('hide');
+      $('verifyView').scrollIntoView({ behavior: 'smooth' });
+    };
+    reader.readAsDataURL(await res.blob());
+  } catch (e) { say(e.message); }
+}
+
+async function approveVerify(id) {
+  if (!confirm('Hujjatlar tasdiqlansinmi? Suratlar o‘chiriladi.')) return;
+  try {
+    await api(`/admin/verifications/${id}/approve`, { method: 'POST' });
+    say('Tasdiqlandi.', true); loadVerify();
+  } catch (e) { say(e.message); }
+}
+
+async function rejectVerify(id) {
+  const reason = (prompt('Rad etish sababi (foydalanuvchi ko‘radi):') || '').trim();
+  if (!reason) return;
+  try {
+    await api(`/admin/verifications/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
+    say('Rad etildi.', true); loadVerify();
+  } catch (e) { say(typeof e.message === 'string' ? e.message : 'Xatolik'); }
 }
 
 // ── Nizolar ───────────────────────────────────────────────────────────

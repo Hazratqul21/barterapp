@@ -36,7 +36,8 @@ from app.models.notify_pref import NotificationSetting
 from app.models.offer import Offer, OfferStatus
 from app.models.payment import OrderStatus, PaymentOrder
 from app.models.user import RefreshToken, User
-from app.services import agreements
+from app.models.social import VerificationState, VerificationStep
+from app.services import agreements, verification
 
 #: Bekor qilinishi kerak bo'lgan savdo holatlari. Yakunlanganiga tegilmaydi —
 #: u tarix, ochig'i esa qarshi tomonni javob kutib qoldirmasligi kerak.
@@ -157,6 +158,16 @@ async def delete_account(db: AsyncSession, user: User) -> None:
     await db.execute(delete(Favorite).where(Favorite.user_id == user.id))
     await db.execute(
         delete(NotificationSetting).where(NotificationSetting.user_id == user.id)
+    )
+    # Pasport va selfi suratlari kutilayotgan bo'lsa ham qolmaydi, ariza yopiladi.
+    await verification.drop_documents(db, user.id)
+    await db.execute(
+        update(VerificationStep)
+        .where(
+            VerificationStep.user_id == user.id,
+            VerificationStep.state == VerificationState.pending,
+        )
+        .values(state=VerificationState.todo)
     )
     # O'zi qo'ygan bloklar ham. Uni bloklaganlarniki qoladi: bu boshqa
     # odamning qarori va uni bekor qilish bu yerdan mumkin emas.

@@ -152,6 +152,12 @@ class VerificationStepOut(ApiModel):
     state: VerificationState
     hint: str | None = None
     weight: int
+    #: Topshirish uchun kerakli / ixtiyoriy suratlar va allaqachon yuklanganlari.
+    required: list[str] = []
+    optional: list[str] = []
+    uploaded: list[str] = []
+    reject_reason: str | None = None
+    submitted_at: datetime | None = None
 
 
 class VerificationOut(ApiModel):
