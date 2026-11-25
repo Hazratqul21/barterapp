@@ -7,6 +7,8 @@ chunki Payme to'lovni aynan o'sha summa bilan tekshiradi.
 
 from __future__ import annotations
 
+import json
+import logging
 import uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -16,15 +18,16 @@ from pydantic import Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.security import current_moderator
 from app.db.session import get_db
 from app.models.payment import OrderStatus, PaymentOrder, Product, ProductKind
 from app.models.user import User
 from app.schemas.common import ApiModel
-from app.services import billing, settings_store
+from app.services import billing, quota, settings_store
 
 router = APIRouter(prefix="/admin/billing", tags=["admin"])
+
+log = logging.getLogger("barter.billing")
 
 
 class ProductIn(ApiModel):
@@ -85,11 +88,47 @@ class ProductAdminOut(ApiModel):
     paid_orders: int = 0
 
 
+class QuotaOut(ApiModel):
+    free_listings: int
+    promo_users: int
+    promo_listings: int
+    #: Aksiya allaqachon nechta odamga berilgan.
+    promo_used: int
+
+
+class QuotaIn(ApiModel):
+    free_listings: int = Field(ge=0, le=1000)
+    promo_users: int = Field(default=0, ge=0, le=1_000_000)
+    promo_listings: int = Field(default=0, ge=0, le=1000)
+
+
+class GrantOut(ApiModel):
+    granted: int
+
+
+class PaymeIn(ApiModel):
+    #: Kassa ID'si — 24 belgili (Payme kabineti → kassa → "ID").
+    merchant_id: str = Field(min_length=10, max_length=64, pattern=r"^[0-9A-Za-z]+$")
+    key: str = Field(min_length=8, max_length=200)
+    #: True — test.paycom.uz (sinov kaliti), False — checkout.paycom.uz.
+    test: bool = True
+
+    @field_validator("merchant_id", "key", mode="before")
+    @classmethod
+    def _trim(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
 class BillingOverview(ApiModel):
     payme_configured: bool
+    #: "panel" | "env" | None. Kalitning o'zi hech qachon qaytmaydi.
+    payme_source: str | None
+    payme_merchant_hint: str | None
+    payme_fingerprint: str | None
     #: Sinov (test.paycom.uz) yoki jangovar (checkout.paycom.uz).
     payme_checkout_url: str
     listing_fee_enabled: bool
+    quota: QuotaOut
     products: list[ProductAdminOut]
 
 
@@ -120,9 +159,20 @@ async def _overview(db: AsyncSession) -> BillingOverview:
             )
         ).all()
     )
+    payme = await billing.payme_credentials(db)
+    free = await quota.read(db)
     return BillingOverview(
-        payme_configured=settings.payme_enabled,
-        payme_checkout_url=settings.payme_checkout_url,
+        payme_configured=payme is not None,
+        payme_source=payme.source if payme else None,
+        payme_merchant_hint=f"{payme.merchant_id[:4]}…{payme.merchant_id[-4:]}" if payme else None,
+        payme_fingerprint=settings_store.fingerprint(payme.key) if payme else None,
+        payme_checkout_url=payme.checkout_url if payme else "",
+        quota=QuotaOut(
+            free_listings=free.free_listings,
+            promo_users=free.promo_users,
+            promo_listings=free.promo_listings,
+            promo_used=await quota.promo_used(db),
+        ),
         listing_fee_enabled=await billing.listing_fee_enabled(db),
         products=[
             ProductAdminOut(
@@ -167,9 +217,65 @@ async def update_settings(
                 status.HTTP_409_CONFLICT,
                 "Avval kamida bitta faol, narxi belgilangan e'lon tarifini qo'shing.",
             )
+        if await billing.payme_credentials(db) is None:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "Avval Payme'ni ulang: aks holda odam to'lay olmaydi.",
+            )
     await settings_store.put(
         db, billing.LISTING_FEE_ENABLED, "true" if payload.listing_fee_enabled else "false"
     )
+    await db.commit()
+    return await _overview(db)
+
+
+@router.put("/quota", response_model=BillingOverview)
+async def update_quota(
+    payload: QuotaIn,
+    _: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> BillingOverview:
+    """Faqat bundan keyingi hisoblarga ta'sir qiladi."""
+    await quota.write(db, quota.Quota(**payload.model_dump()))
+    await db.commit()
+    return await _overview(db)
+
+
+@router.post("/quota/grant", response_model=GrantOut)
+async def grant_promo(
+    _: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> GrantOut:
+    """Aksiyani oldin ro'yxatdan o'tganlarga, kirgan tartibida beradi."""
+    granted = await quota.grant_to_existing(db)
+    await db.commit()
+    return GrantOut(granted=granted)
+
+
+@router.put("/payme", response_model=BillingOverview)
+async def set_payme(
+    payload: PaymeIn,
+    _: User = Depends(current_moderator),
+    db: AsyncSession = Depends(get_db),
+) -> BillingOverview:
+    """
+    Kassa kalitini qo'yadi. Payme'da kalitni oldindan tekshiradigan so'rov
+    yo'q: to'g'riligi kabinetdagi "sandbox" sinovida bilinadi.
+    """
+    await settings_store.put(db, settings_store.PAYME, json.dumps(payload.model_dump()))
+    await db.commit()
+    log.info("Payme kassasi panelda almashtirildi (test=%s)", payload.test)
+    return await _overview(db)
+
+
+@router.delete("/payme", response_model=BillingOverview)
+async def clear_payme(
+    _: User = Depends(current_moderator), db: AsyncSession = Depends(get_db)
+) -> BillingOverview:
+    await settings_store.drop(db, settings_store.PAYME)
+    await db.flush()
+    if await billing.payme_credentials(db) is None:
+        # To'lab bo'lmaydigan devor qolmasin.
+        await settings_store.put(db, billing.LISTING_FEE_ENABLED, "false")
     await db.commit()
     return await _overview(db)
 

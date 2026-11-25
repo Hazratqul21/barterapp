@@ -479,7 +479,40 @@
         </label>
       </div>
       <p class="hint">O‘chiq bo‘lsa e‘lon joylash cheklanmaydi. Yoqishdan oldin kamida bitta
-        faol «e‘lon paketi» tarifi bo‘lishi kerak.</p>
+        faol «e‘lon paketi» tarifi va ulangan Payme bo‘lishi kerak. Android ilovasida
+        to‘lov yopiq: bepuli tugagan odam faqat saytda to‘lay oladi.</p>
+    </div>
+    <div class="card">
+      <h2>Payme kassasi</h2>
+      <p class="hint">Payme Business kabineti → kassa. Kalit saqlangach qayta ko‘rsatilmaydi.
+        Payme’dagi manzil (endpoint): <code>https://api.mab.uz/payments/payme</code>,
+        rekvizit nomi: <code>order_id</code>.</p>
+      <label>Merchant ID (kassa ID’si)</label>
+      <input id="pmId" autocomplete="off">
+      <label>Kalit</label>
+      <input id="pmKey" type="password" autocomplete="new-password">
+      <label>Rejim</label>
+      <select id="pmTest"><option value="true">Sinov (test.paycom.uz)</option>
+        <option value="false">Jangovar (checkout.paycom.uz)</option></select>
+      <div class="bar">
+        <button class="act" onclick="savePayme()">Saqlash</button>
+        <button class="act danger" onclick="clearPayme()">Olib tashlash</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Bepul e‘lonlar va aksiya</h2>
+      <label>Har yangi foydalanuvchiga bepul e‘lon</label>
+      <input id="qFree" inputmode="numeric">
+      <label>Aksiya: birinchi nechta foydalanuvchiga (0 — aksiya yo‘q)</label>
+      <input id="qUsers" inputmode="numeric">
+      <label>Ularga nechta bepul e‘lon</label>
+      <input id="qPromo" inputmode="numeric">
+      <p class="hint" id="qUsed"></p>
+      <div class="bar">
+        <button class="act" onclick="saveQuota()">Saqlash</button>
+        <button class="act ghost" onclick="grantPromo()">Oldin kirganlarga ham berish</button>
+      </div>
+      <p class="hint">Yangi son keyingi ro‘yxatdan o‘tganlarga ta‘sir qiladi.</p>
     </div>
     <div class="card">
       <h2 id="pTitle">Tarif qo‘shish / o‘zgartirish</h2>
@@ -1315,8 +1348,15 @@ function editProduct(code) {
 function renderBilling(b) {
   PRODUCTS = b.products;
   $('billStatus').innerHTML = b.payme_configured
-    ? `Payme ulangan · <code>${esc(b.payme_checkout_url)}</code>`
-    : 'Payme hali ulanmagan: serverda <code>PAYME_MERCHANT_ID</code> va <code>PAYME_KEY</code> bo‘sh.';
+    ? `Payme ulangan (${b.payme_source === 'panel' ? 'panel' : 'server .env'}) ·
+       <code>${esc(b.payme_checkout_url)}</code> · kassa <code>${esc(b.payme_merchant_hint)}</code> ·
+       kalit izi <code>${esc(b.payme_fingerprint)}</code>`
+    : 'Payme hali ulanmagan: pastda kassa ID’si va kalitini kiriting.';
+  $('qFree').value = b.quota.free_listings;
+  $('qUsers').value = b.quota.promo_users;
+  $('qPromo').value = b.quota.promo_listings;
+  $('qUsed').textContent = b.quota.promo_users
+    ? `Aksiyadan foydalangan: ${b.quota.promo_used} / ${b.quota.promo_users}` : '';
   $('feeOn').checked = b.listing_fee_enabled;
   $('productRows').innerHTML = b.products.length ? b.products.map(p => `<tr>
       <td><code>${esc(p.code)}</code></td>
@@ -1352,6 +1392,45 @@ async function saveFee() {
     }));
     say('Saqlandi.', true);
   } catch (e) { $('feeOn').checked = !$('feeOn').checked; say(e.message); }
+}
+
+async function savePayme() {
+  const merchant_id = $('pmId').value.trim(), key = $('pmKey').value.trim();
+  if (!merchant_id || !key) return say('Merchant ID va kalitni kiriting.');
+  const test = $('pmTest').value === 'true';
+  if (!test && !confirm('Jangovar rejim: haqiqiy pul yechiladi. Davom etamizmi?')) return;
+  try {
+    renderBilling(await api('/admin/billing/payme', {
+      method: 'PUT', body: JSON.stringify({ merchant_id, key, test }),
+    }));
+    $('pmId').value = ''; $('pmKey').value = '';
+    say('Payme saqlandi.', true);
+  } catch (e) { say(typeof e.message === 'string' && !e.message.startsWith('[object')
+    ? e.message : 'Merchant ID yoki kalit noto‘g‘ri yozilgan.'); }
+}
+
+async function clearPayme() {
+  if (!confirm('Payme kaliti olib tashlanadi. To‘lov to‘xtaydi va pullik e‘lon o‘chadi.')) return;
+  try { renderBilling(await api('/admin/billing/payme', { method: 'DELETE' })); say('Olib tashlandi.', true); }
+  catch (e) { say(e.message); }
+}
+
+async function saveQuota() {
+  const n = id => Number($(id).value);
+  const body = { free_listings: n('qFree'), promo_users: n('qUsers'), promo_listings: n('qPromo') };
+  if (Object.values(body).some(v => !Number.isInteger(v) || v < 0)) return say('Butun son kiriting.');
+  try {
+    renderBilling(await api('/admin/billing/quota', { method: 'PUT', body: JSON.stringify(body) }));
+    say('Saqlandi.', true);
+  } catch (e) { say('Son chegaradan tashqarida.'); }
+}
+
+async function grantPromo() {
+  if (!confirm('Aksiya oldin ro‘yxatdan o‘tganlarga kirgan tartibida beriladi. Davom etamizmi?')) return;
+  try {
+    const r = await api('/admin/billing/quota/grant', { method: 'POST' });
+    say(r.granted + ' ta foydalanuvchiga berildi.', true); loadBilling();
+  } catch (e) { say(e.message); }
 }
 
 async function saveProduct() {

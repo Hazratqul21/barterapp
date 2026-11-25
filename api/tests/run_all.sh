@@ -48,6 +48,7 @@ for t in tests/test_config_guard.py \
          tests/test_admin_push.py \
          tests/test_firebase_setup.py \
          tests/test_payme.py \
+         tests/test_quota.py \
          tests/test_legal.py \
          tests/test_google_auth.py \
          tests/test_integrity.py \

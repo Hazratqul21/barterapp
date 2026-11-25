@@ -33,7 +33,13 @@ GOOGLE_CLIENT = "google_client"
 #: SMTP hisobi (JSON): host, port, login, parol, jo'natuvchi. Maxfiy.
 SMTP = "smtp"
 
-SECRET_KEYS = {FCM_SERVICE_ACCOUNT, ESKIZ, SMTP}
+#: Bepul e'lonlar soni va birinchi foydalanuvchilar aksiyasi (JSON).
+LISTING_QUOTA = "listing_quota"
+
+#: Payme kassasi (JSON): merchant ID, kalit, sinov rejimi. Maxfiy.
+PAYME = "payme"
+
+SECRET_KEYS = {FCM_SERVICE_ACCOUNT, ESKIZ, SMTP, PAYME}
 
 
 async def get(db: AsyncSession, key: str) -> str | None:
