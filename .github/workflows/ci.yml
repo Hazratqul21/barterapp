@@ -89,6 +89,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Qotirilgan: yangi stable (3.50) material/cupertino importlarini
+          # eskirgan deb belgilaydi va kod o'zgarmasa ham CI yiqiladi.
+          flutter-version: 3.47.9
           cache: true
       - run: flutter --version
       - run: flutter pub get
