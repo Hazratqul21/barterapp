@@ -91,7 +91,17 @@ fi
 install -D -m 644 "$STAGE/nginx/mab-legal.conf" /etc/nginx/snippets/mab-legal.conf
 install -D -m 644 "$STAGE/nginx/mab-web-headers.conf" /etc/nginx/snippets/mab-web-headers.conf
 install -D -m 644 "$STAGE/nginx/mab-gzip.conf" /etc/nginx/snippets/mab-gzip.conf
+install -D -m 644 "$STAGE/nginx/mab-web-cache.conf" /etc/nginx/snippets/mab-web-cache.conf
 install -D -m 644 "$STAGE/nginx/mab-http.conf" /etc/nginx/conf.d/mab-http.conf
+# HTTP/2 — alohida faylda: eski nginx (<1.25.1) `http2 on` ni bilmaydi yoki
+# boshqa joyda yoqilgan bo'lsa, faqat shu fayl olib tashlanadi.
+# Brotli — tayyor .br nusxalar; modul bo'lmasa gzip qoladi.
+OPTIONAL="/etc/nginx/conf.d/mab-http2.conf /etc/nginx/conf.d/mab-brotli.conf"
+try_optional() {  # $1 — fayl, stdin — mazmuni
+  cat > "$1"
+  nginx -t >/dev/null 2>&1 || { rm -f "$1"; echo "O'tkazib yuborildi: $1"; }
+}
+rm -f $OPTIONAL
 # harden_server.sh ning eski sarlavha fayli: endi mab-web-headers.conf (sayt)
 # va API'ning o'zi (main.py) beradi. Ikki marta yuborilmasin.
 [ -f /etc/nginx/snippets/mab-security-headers.conf ] && \
@@ -116,10 +126,17 @@ if [ -f "$CONF" ]; then
     sed -i "s|$ROOT_RE|&\n\1include snippets/mab-gzip.conf;|" "$CONF"
     sed -i 's|^\(\s*\)client_max_body_size 16m;|&\n\1include snippets/mab-gzip.conf;|' "$CONF"
   }
+  # Kesh qoidalari: sayt blokiga (root qatoridan keyin).
+  grep -q "mab-web-cache.conf" "$CONF" \
+    || sed -i "s|$ROOT_RE|&\n\1include snippets/mab-web-cache.conf;|" "$CONF"
   # .well-known fayllari .json qoidasiga tushib qolmasin.
   sed -i 's|^\(\s*\)location /.well-known/ {|\1location ^~ /.well-known/ {|' "$CONF"
 fi
 if nginx -t 2>/dev/null; then
+  echo "http2 on;" | try_optional /etc/nginx/conf.d/mab-http2.conf
+  dpkg -s libnginx-mod-http-brotli-static >/dev/null 2>&1 \
+    || apt-get install -y -q libnginx-mod-http-brotli-static >/dev/null 2>&1 || true
+  try_optional /etc/nginx/conf.d/mab-brotli.conf < "$STAGE/nginx/mab-brotli.conf"
   systemctl reload nginx
 else
   echo "nginx sozlamasi xato bo'ldi — eski holatiga qaytarildi:"

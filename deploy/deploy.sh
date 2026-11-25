@@ -60,10 +60,8 @@ if [ "$DO_WEB" = 1 ]; then
          --dart-define=API_BASE_URL="$API_URL")
   # flutter build bu faylni o'zgartiradi; repoda o'zgarish qolmasin.
   (cd "$ROOT" && git checkout -q -- app/analysis_options.yaml 2>/dev/null || true)
-  # nginx gzip_static uchun tayyor siqilgan nusxalar: har so'rovda siqmaydi.
-  find "$ROOT/app/build/web" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.wasm' \
-       -o -name '*.json' -o -name '*.css' -o -name '*.svg' -o -name '*.ttf' -o -name '*.otf' \) \
-       -size +1k -exec gzip -kf9 {} \;
+  # Heshli nomlar, preload va tayyor .gz/.br nusxalar.
+  bash "$ROOT/deploy/web_prepare.sh" "$ROOT/app/build/web"
   rsync -az --delete "$ROOT/app/build/web/" "$SERVER:$STAGE/web/"
 fi
 

@@ -106,6 +106,8 @@ systemctl enable mab-api.service mab-push.timer mab-maintenance.timer mab-backup
 step "nginx"
 install -D -m 644 "$HERE/nginx/mab-legal.conf" /etc/nginx/snippets/mab-legal.conf
 install -D -m 644 "$HERE/nginx/mab-web-headers.conf" /etc/nginx/snippets/mab-web-headers.conf
+install -D -m 644 "$HERE/nginx/mab-gzip.conf" /etc/nginx/snippets/mab-gzip.conf
+install -D -m 644 "$HERE/nginx/mab-web-cache.conf" /etc/nginx/snippets/mab-web-cache.conf
 install -D -m 644 "$HERE/nginx/mab-http.conf" /etc/nginx/conf.d/mab-http.conf
 NGINX_CONF=/etc/nginx/sites-available/mab.conf
 # certbot HTTPS'ni shu faylga yozadi. Qayta ishga tushirishda uni ustidan
