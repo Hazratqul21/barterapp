@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../core/features.dart';
 import '../../../core/widgets/legal_links.dart';
 import '../../billing/payments_availability.dart';
 
@@ -175,13 +176,15 @@ class SettingsPage extends ConsumerWidget {
                       type: MaterialType.transparency,
                       child: Column(
                         children: [
-                          _SettingsTile(
-                            icon: Symbols.verified_user_rounded,
-                            title: l.verifyTitle,
-                            onTap: () => context.push('/settings/verify'),
-                          ),
-                          if (paymentsInApp) ...[
+                          if (identityVerificationEnabled) ...[
+                            _SettingsTile(
+                              icon: Symbols.verified_user_rounded,
+                              title: l.verifyTitle,
+                              onTap: () => context.push('/settings/verify'),
+                            ),
                             const _Divider(),
+                          ],
+                          if (paymentsInApp) ...[
                             _SettingsTile(
                               icon: Symbols.sell_rounded,
                               title: l.billingTitle,
@@ -193,8 +196,8 @@ class SettingsPage extends ConsumerWidget {
                               title: l.paymentsTitle,
                               onTap: () => context.push('/settings/payments'),
                             ),
+                            const _Divider(),
                           ],
-                          const _Divider(),
                           _SettingsTile(
                             icon: Symbols.block_rounded,
                             title: l.blockedTitle,

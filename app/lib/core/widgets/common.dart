@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import '../features.dart';
 import '../art/category_marks.dart';
 import '../art/illustrations.dart';
 import '../../l10n/app_localizations.dart';
@@ -591,8 +592,9 @@ class TraderAvatar extends StatelessWidget {
 
 /// The trust facts about a trader in one line: ★ rating · closed deals ·
 /// verification. Honest by construction — an unverified account says so in a
-/// neutral tone, and a trader with no history reads "new member" instead of
-/// a row of dashes and zeros that looks like a bad record.
+/// neutral tone (once verifying is possible, see features.dart), and a trader
+/// with no history reads "new member" instead of a row of dashes and zeros
+/// that looks like a bad record.
 class TrustLine extends StatelessWidget {
   const TrustLine({super.key, required this.trader, this.compact = false});
 
@@ -635,7 +637,7 @@ class TrustLine extends StatelessWidget {
         ],
         TextSpan(text: l.listingTrades(trader.deals)),
       ],
-      if (!compact) ...[
+      if (!compact && (trader.isVerified || identityVerificationEnabled)) ...[
         const TextSpan(text: '  ·  '),
         if (trader.isVerified) ...[
           WidgetSpan(
