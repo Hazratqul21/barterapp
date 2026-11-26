@@ -51,7 +51,8 @@ void main() {
     );
     expect(line, contains('Yangi a’zo'));
     expect(line, isNot(contains('0 ta savdo')));
-    expect(line, contains('Tasdiqlanmagan hisob'));
+    // Tasdiqlash o'chiq: odamni u qila olmaydigan narsa uchun belgilamaymiz.
+    expect(line, isNot(contains('Tasdiqlanmagan')));
   });
 
   testWidgets('deals without a rating show no star', (tester) async {

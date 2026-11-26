@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../core/features.dart';
 import '../../../core/router/web_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
@@ -186,7 +187,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                           ),
                           Gap.h6,
                           // VERIFICATION PROMO BANNER
-                          if (!isVerified)
+                          if (identityVerificationEnabled && !isVerified)
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: Gap.x4,
@@ -231,15 +232,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                                 ),
                               ),
                             ),
-                          if (!isVerified) Gap.h4,
+                          if (identityVerificationEnabled && !isVerified)
+                            Gap.h4,
                         ]),
                       ),
 
                       // TRUST SCORE
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _TrustScoreHeaderDelegate(me: me),
-                      ),
+                      if (identityVerificationEnabled)
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _TrustScoreHeaderDelegate(me: me),
+                        ),
 
                       SliverList(
                         delegate: SliverChildListDelegate([

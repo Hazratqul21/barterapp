@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import '../../../core/features.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/common.dart';
@@ -36,7 +37,9 @@ class _FeedBannerState extends ConsumerState<FeedBanner> {
   _Nudge? _pick(Me? me, int listingCount) {
     if (me == null) return null;
     if (listingCount == 0) return _Nudge.createListing;
-    if (me.trustScore < 60) return _Nudge.verify;
+    if (identityVerificationEnabled && me.trustScore < 60) {
+      return _Nudge.verify;
+    }
     return null;
   }
 
